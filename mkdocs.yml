@@ -1,5 +1,5 @@
-site_name: "okareo python sdk"
-repo_url: https://github.com/okareo-ai/okareo
+site_name: "Okareo Python SDK"
+repo_url: https://github.com/okareo-ai/okareo-python-sdk
 
 theme:
   name: material

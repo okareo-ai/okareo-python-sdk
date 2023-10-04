@@ -44,7 +44,7 @@ repos:
         pass_filenames: false
       - id: flake8
         name: flake8
-        entry: poetry run flake8 --exclude=src/okareo/okareo_api_client/*
+        entry: poetry run flake8 --exclude=src/okareo_api_client/*
         language: system
         types: [python]
       - id: kacl-verify

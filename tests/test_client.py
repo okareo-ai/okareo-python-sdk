@@ -1,7 +1,7 @@
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo.okareo_api_client.models.http_validation_error import HTTPValidationError
+from okareo_api_client.models.http_validation_error import HTTPValidationError
 
 
 def test_can_instantiate() -> None:

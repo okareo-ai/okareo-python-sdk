@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okareo"
-version = "0.0.4"
+version = "0.0.5"
 description = "Python SDK for intercating with Okareo Cloud APIs"
 authors = [
     "berni <info@okareo.com>",
@@ -8,9 +8,9 @@ authors = [
 license = "MIT"
 readme = "README.md"
 
-documentation = "https://okareo-ai.github.io/okareo"
-homepage = "https://okareo-ai.github.io/okareo"
-repository = "https://github.com/okareo-ai/okareo"
+documentation = "https://okareo-ai.github.io/okareo-python-sdk"
+homepage = "https://okareo-ai.github.io/okareo-python-sdk"
+repository = "https://github.com/okareo-ai/okareo-python-sdk"
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -85,7 +85,7 @@ exclude_lines = [
 ]
 [tool.coverage.run]
 omit = [
-    "src/okareo/okareo_api_client/*",
+    "src/okareo_api_client/*",
 ]
 
 [tool.mypy]
