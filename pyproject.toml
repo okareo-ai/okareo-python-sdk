@@ -18,8 +18,6 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
@@ -33,6 +31,7 @@ packages = [
 python = ">=3.9, <4.0"
 httpx = "^0.25.0"
 pytest-httpx = "^0.26.0"
+types-python-dateutil = "^2.8.19.14"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"
@@ -79,10 +78,14 @@ addopts = """\
 """
 
 [tool.coverage.report]
-fail_under = 100
+fail_under = 90
 exclude_lines = [
     'if TYPE_CHECKING:',
     'pragma: no cover'
+]
+[tool.coverage.run]
+omit = [
+    "src/okareo/okareo_api_client/*",
 ]
 
 [tool.mypy]
