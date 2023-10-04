@@ -14,7 +14,7 @@
 
 ---
 
-Python SDK for intercating with Okareo Cloud APIs
+Python SDK for interacting with Okareo Cloud APIs
 
 ## Installation
 
