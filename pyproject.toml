@@ -79,10 +79,14 @@ addopts = """\
 """
 
 [tool.coverage.report]
-fail_under = 100
+fail_under = 90
 exclude_lines = [
     'if TYPE_CHECKING:',
     'pragma: no cover'
+]
+[tool.coverage.run]
+omit = [
+    "src/okareo/okareo_api_client/*",
 ]
 
 [tool.mypy]

@@ -44,4 +44,4 @@ jobs:
       - uses: ./.github/actions/python-poetry-env
         with:
           python-version: ${{ matrix.python-version }}
-      - run: poetry run pytest --cov-fail-under=90
+      - run: poetry run pytest
