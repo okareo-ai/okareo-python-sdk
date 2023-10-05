@@ -38,16 +38,16 @@ class Okareo:
 
     def add_data_point(
         self,
-        input_: dict | str,
-        result: dict | str,
+        input_: Union[dict, str],
+        result: Union[dict, str],
         feedback: int,
         context_token: str,
-        error_message: str | None = None,
-        error_code: str | None = None,
-        input_datetime: datetime | None = None,
-        result_datetime: datetime | None = None,
-        project_id: int | None = None,
-        tags: List[str] | None = None,
+        error_message: Union[str, None] = None,
+        error_code: Union[str, None] = None,
+        input_datetime: Union[datetime, None] = None,
+        result_datetime: Union[datetime, None] = None,
+        project_id: Union[int, None] = None,
+        tags: Union[List[str], None] = None,
     ) -> None:
         body = {
             "tags": tags or [],
