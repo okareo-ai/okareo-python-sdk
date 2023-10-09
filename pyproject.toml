@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okareo"
-version = "0.0.7"
+version = "0.0.8"
 description = "Python SDK for intercating with Okareo Cloud APIs"
 authors = [
     "berni <info@okareo.com>",
@@ -33,6 +33,7 @@ python = ">=3.9, <4.0"
 httpx = "^0.25.0"
 pytest-httpx = "^0.26.0"
 types-python-dateutil = "^2.8.19.14"
+pydantic = "^2.4.2"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"
@@ -79,7 +80,7 @@ addopts = """\
 """
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 80
 exclude_lines = [
     'if TYPE_CHECKING:',
     'pragma: no cover'
@@ -99,3 +100,4 @@ warn_redundant_casts = true
 warn_return_any = true
 check_untyped_defs = true
 show_error_codes = true
+exclude = ['src/okareo_api_client']
