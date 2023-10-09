@@ -22,3 +22,6 @@ jobs:
         with:
             PATTERNS: |
                 src/**/
+      - name: "There's difference between spec and generated code"
+        if: env.GIT_DIFF
+        run: exit 1
