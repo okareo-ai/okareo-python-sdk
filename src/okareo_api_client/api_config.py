@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 
 class APIConfig(BaseModel):
-    base_path: str = "http://localhost:8000/"
+    base_path: str = "https://api.okareo.com/"
     verify: Union[bool, str] = True
 
     def get_access_token(self) -> Optional[str]:
