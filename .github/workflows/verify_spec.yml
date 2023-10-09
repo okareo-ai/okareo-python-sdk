@@ -17,10 +17,11 @@ jobs:
       - name: Check workflow files
         run: make openapi/generate
         shell: bash
-      - uses: technote-space/get-diff-action@v6
-        with:
-            PATTERNS: |
-                src/**/*
-      - name: "There's difference between spec and generated code"
-        if: env.GIT_DIFF
-        run: exit 1
+      - id: diffcheck
+        shell: bash
+        run: |
+          CHANGED_FILE=$(git diff --name-only src/okareo_api_client)
+          if [ -n "$CHANGED_FILE" ]; then
+            echo "Spec does not match code"
+            exit 1
+          fi
