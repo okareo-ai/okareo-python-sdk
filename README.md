@@ -40,6 +40,16 @@ poetry install
 poetry shell
 ```
 
+### Update/regenerate client api code
+
+Our client code is auto-generated from the OpenAPI spec of the Okareo API. In order to update the code in repo install
+[openapi-generators](https://github.com/openapi-generators/openapi-python-client) and make sure it's running on your system.
+
+Then, updating the client code to the latest spec is as easy as running
+```sh
+make openapi/generate
+```
+
 ### Testing
 
 ```sh

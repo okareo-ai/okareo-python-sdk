@@ -20,6 +20,7 @@ repos:
         entry: poetry run autoflake -r -i --remove-all-unused-imports --remove-unused-variables
         language: system
         types: [ python ]
+        exclude: "src\/okareo_api_client\/.*"
       - id: isort
         name: isort
         entry: poetry run isort
@@ -30,11 +31,13 @@ repos:
         entry: poetry run black
         language: system
         types: [python]
+        exclude: "src\/okareo_api_client\/.*"
       - id: pyupgrade
         name: pyupgrade
         entry: poetry run pyupgrade --py37-plus
         language: system
         types: [python]
+        exclude: "src\/okareo_api_client\/.*"
       - id: mypy
         name: mypy
         entry: poetry run mypy .
