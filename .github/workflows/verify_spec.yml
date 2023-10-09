@@ -2,7 +2,6 @@ name: Verify OpenAPI spec
 
 on:
   pull_request:
-  push:
     branches:
       - "**"
 
@@ -21,7 +20,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6
         with:
             PATTERNS: |
-                src/**/
+                src/**/*
       - name: "There's difference between spec and generated code"
         if: env.GIT_DIFF
         run: exit 1
