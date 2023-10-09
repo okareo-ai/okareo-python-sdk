@@ -1,0 +1,26 @@
+name: Verify OpenAPI spec
+
+on:
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  verify-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install openapi-python-generator
+      - name: Check workflow files
+        run: make openapi/generate
+        shell: bash
+      - uses: technote-space/get-diff-action@v6
+        with:
+            PATTERNS: |
+                src/**/*
+      - name: "There's difference between spec and generated code"
+        if: env.GIT_DIFF
+        run: exit 1
