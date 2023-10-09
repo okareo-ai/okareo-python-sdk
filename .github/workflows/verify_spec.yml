@@ -16,6 +16,6 @@ jobs:
           python-version: '3.10'
       - run: pip install openapi-python-generator
       - name: Check workflow files
-        run: openapi/generate
+        run: make openapi/generate
         shell: bash
       - uses: technote-space/get-diff-action@v6
