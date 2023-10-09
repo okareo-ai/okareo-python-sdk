@@ -19,3 +19,6 @@ jobs:
         run: make openapi/generate
         shell: bash
       - uses: technote-space/get-diff-action@v6
+        with:
+            PATTERNS: |
+                src/**/
