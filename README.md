@@ -43,12 +43,24 @@ poetry shell
 ### Update/regenerate client api code
 
 Our client code is auto-generated from the OpenAPI spec of the Okareo API. In order to update the code in repo install
-[openapi-generators](https://github.com/openapi-generators/openapi-python-client) and make sure it's running on your system.
+[openapi-generators](https://github.com/openapi-generators/openapi-python-client).
 
-Then, updating the client code to the latest spec is as easy as running
+Then, updating the client code to the latest production server spec is as easy as running.
+```sh
+make openapi/update
+```
+or, you you want to use your development api server spc, you can use it as a source with
+```sh
+OPENAPI_SPEC="http://localhost:8000/openapi.json" make openapi/update
+```
+
+If you have the `openapi.json` already in the project dir you can simply run
 ```sh
 make openapi/generate
 ```
+to only trigger code generation, without fetching the OpenAPI spec json.
+
+
 
 ### Testing
 
