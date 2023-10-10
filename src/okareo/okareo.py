@@ -8,6 +8,7 @@ from okareo_api_client.models import (
     GenerationList,
     ModelUnderTestResponse,
     ModelUnderTestSchema,
+    DatapointResponse,
 )
 from okareo_api_client.services.None_service import (
     healthcheck_v0_health_get,
@@ -16,16 +17,15 @@ from okareo_api_client.services.None_service import (
     register_model_v0_register_model_post,
 )
 
-
 class Okareo:
     """A class for interacting with Okareo API"""
 
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    def api_health_check(self) -> str:
-        """A simple function to test the connection"""
-        return healthcheck_v0_health_get()
+#    def api_health_check(self) -> str:
+#        """A simple function to test the connection"""
+#        return healthcheck_v0_health_get()
 
     def get_generations(self) -> Union[List[GenerationList], None]:
         """Get a list of generations"""
@@ -58,7 +58,7 @@ class Okareo:
         mut_id: int,
         input_obj: Union[dict, str],
         result_obj: Union[dict, str],
-        feedback: [Union, int] = None,
+        feedback: Union[int, None] = None,
         context_token: Union[str, None] = None,
         error_message: Union[str, None] = None,
         error_code: Union[str, None] = None,
@@ -66,7 +66,7 @@ class Okareo:
         result_datetime: Union[datetime, None] = None,
         project_id: Union[int, None] = None,
         tags: Union[List[str], None] = None,
-    ) -> None:
+    ) -> DatapointResponse:
         body = {
             "tags": tags or [],
             "input": json.dumps(input_obj),
