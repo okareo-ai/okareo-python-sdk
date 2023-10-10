@@ -3,7 +3,7 @@ from pytest_httpx import HTTPXMock
 from okareo import Okareo
 from datetime import datetime
 
-def test_add_datapoint(httpx_mock: HTTPXMock):
+def test_add_datapoint(httpx_mock: HTTPXMock) -> None:
     fixture = {"id": "1", "project_id": "1", "mut_id":"1"}
     httpx_mock.add_response(status_code=201, json=fixture)
     okareo = Okareo("api-key")

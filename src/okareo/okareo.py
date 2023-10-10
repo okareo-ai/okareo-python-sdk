@@ -58,8 +58,8 @@ class Okareo:
         context_token: Union[str, None] = None,
         error_message: Union[str, None] = None,
         error_code: Union[str, None] = None,
-        input_datetime: Union[datetime, None] = None,
-        result_datetime: Union[datetime, None] = None,
+        input_datetime: Union[str, None] = None,
+        result_datetime: Union[str, None] = None,
         project_id: Union[int, None] = None,
         tags: Union[List[str], None] = None,
     ) -> DatapointResponse:
