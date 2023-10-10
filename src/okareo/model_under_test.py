@@ -1,15 +1,12 @@
 import json
 from typing import List, Union
 
-from okareo_api_client.api_config import HTTPException
 from okareo_api_client.models import (
-    ModelUnderTestResponse,
     DatapointResponse,
     DatapointSchema,
+    ModelUnderTestResponse,
 )
-from okareo_api_client.services.None_service import (
-    add_datapoint_v0_datapoints_post,
-)
+from okareo_api_client.services.None_service import add_datapoint_v0_datapoints_post
 
 
 class ModelUnderTest:
