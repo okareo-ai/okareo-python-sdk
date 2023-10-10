@@ -6,10 +6,6 @@
 
 ---
 
-**Documentation**: [https://okareo-ai.github.io/okareo](https://okareo-ai.github.io/okareo-python-sdk)
-
-**Source Code**: [https://github.com/okareo-ai/okareo](https://github.com/okareo-ai/okareo-python-sdk)
-
 **PyPI**: [https://pypi.org/project/okareo/](https://pypi.org/project/okareo/)
 
 ---
@@ -21,6 +17,10 @@ Python SDK for interacting with Okareo Cloud APIs
 ```sh
 pip install okareo
 ```
+
+## Get Started Example
+
+Please see & run this notebook: 
 
 ## Development
 
