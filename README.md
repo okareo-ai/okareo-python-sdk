@@ -20,7 +20,7 @@ pip install okareo
 
 ## Get Started Example
 
-Please see & run this notebook:
+Please see and run this notebook: https://github.com/okareo-ai/okareo-python-sdk/blob/main/examples/example.ipynb
 
 ## Development
 
