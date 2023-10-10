@@ -10,6 +10,7 @@ from okareo_api_client.models import (
     ModelUnderTestSchema,
 )
 from okareo_api_client.services.None_service import (
+    healthcheck_v0_health_get,
     add_datapoint_v0_datapoints_post,
     get_generations_v0_generations_get,
     register_model_v0_register_model_post,
@@ -22,6 +23,10 @@ class Okareo:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
+    def api_health_check(self) -> str:
+        """A simple function to test the connection"""
+        return healthcheck_v0_health_get()
+
     def get_generations(self) -> Union[List[GenerationList], None]:
         """Get a list of generations"""
         data = get_generations_v0_generations_get(self.api_key)
@@ -30,13 +35,25 @@ class Okareo:
             raise
         return data
 
-    def register_model(self) -> ModelUnderTestResponse:
-        data = ModelUnderTestSchema(name="test-model", tags=["aaa", "bbb", "ccc"])
-        return register_model_v0_register_model_post(self.api_key, data)
+    def register_model(
+        self,
+        name: str,
+        tags: Union[List[str], None] = [],
+        project_id: Union[int, None] = None,
+    ) -> ModelUnderTestResponse:
+        data = {
+            "name": name,
+            "tags": tags,
+            "project_id": project_id,
+        }
+        return register_model_v0_register_model_post(
+            self.api_key, 
+            ModelUnderTestSchema.model_validate(data, strict=True)
+        )
 
     def add_data_point(
         self,
-        input_: Union[dict, str],
+        input: Union[dict, str],
         result: Union[dict, str],
         feedback: int,
         context_token: str,
@@ -46,11 +63,11 @@ class Okareo:
         input_datetime: Union[datetime, None] = None,
         result_datetime: Union[datetime, None] = None,
         project_id: Union[int, None] = None,
-        tags: Union[List[str], None] = None,
+        tags: Union[List[str], None] = [],
     ) -> None:
         body = {
             "tags": tags or [],
-            "input": json.dumps(input_),
+            "input": json.dumps(input),
             "result": json.dumps(result),
             "context_token": context_token,
             "feedback": feedback,
@@ -61,7 +78,7 @@ class Okareo:
             "project_id": project_id,
             "mut_id": mut_id,
         }
-        add_datapoint_v0_datapoints_post(
+        return add_datapoint_v0_datapoints_post(
             self.api_key,
             DatapointSchema.model_validate(body, strict=True),
         )
