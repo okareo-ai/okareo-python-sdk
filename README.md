@@ -20,7 +20,7 @@ pip install okareo
 
 ## Get Started Example
 
-Please see & run this notebook: 
+Please see & run this notebook:
 
 ## Development
 
