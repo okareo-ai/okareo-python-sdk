@@ -9,10 +9,7 @@ def main() -> None:
     okareo = Okareo(API_KEY)
     print("Generations: ", okareo.get_generations())
 
-    mut = okareo.register_model(
-        name="Example Model",
-        tags=["testing", "example"]
-    )
+    mut = okareo.register_model(name="Example Model", tags=["testing", "example"])
 
     okareo.add_data_point(
         input_obj={"in-json": "input data"},

@@ -1,21 +1,20 @@
 import json
-from datetime import datetime
 from typing import List, Union
 
 from okareo_api_client.api_config import HTTPException
 from okareo_api_client.models import (
+    DatapointResponse,
     DatapointSchema,
     GenerationList,
     ModelUnderTestResponse,
     ModelUnderTestSchema,
-    DatapointResponse,
 )
 from okareo_api_client.services.None_service import (
-    healthcheck_v0_health_get,
     add_datapoint_v0_datapoints_post,
     get_generations_v0_generations_get,
     register_model_v0_register_model_post,
 )
+
 
 class Okareo:
     """A class for interacting with Okareo API"""
@@ -45,8 +44,7 @@ class Okareo:
             "project_id": project_id,
         }
         return register_model_v0_register_model_post(
-            self.api_key, 
-            ModelUnderTestSchema.model_validate(data, strict=True)
+            self.api_key, ModelUnderTestSchema.model_validate(data, strict=True)
         )
 
     def add_data_point(
