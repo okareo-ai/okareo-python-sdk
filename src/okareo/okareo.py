@@ -38,9 +38,11 @@ class Okareo:
     def register_model(
         self,
         name: str,
-        tags: Union[List[str], None] = [],
+        tags: Union[List[str], None] = None,
         project_id: Union[int, None] = None,
     ) -> ModelUnderTestResponse:
+        if tags is None:
+            tags = []
         data = {
             "name": name,
             "tags": tags,
