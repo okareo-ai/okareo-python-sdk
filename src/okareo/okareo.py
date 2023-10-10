@@ -1,9 +1,9 @@
 import json
-from datetime import datetime
 from typing import List, Union
 
 from okareo_api_client.api_config import HTTPException
 from okareo_api_client.models import (
+    DatapointResponse,
     DatapointSchema,
     GenerationList,
     ModelUnderTestResponse,
@@ -30,28 +30,41 @@ class Okareo:
             raise
         return data
 
-    def register_model(self) -> ModelUnderTestResponse:
-        data = ModelUnderTestSchema(name="test-model", tags=["aaa", "bbb", "ccc"])
-        return register_model_v0_register_model_post(self.api_key, data)
+    def register_model(
+        self,
+        name: str,
+        tags: Union[List[str], None] = None,
+        project_id: Union[int, None] = None,
+    ) -> ModelUnderTestResponse:
+        if tags is None:
+            tags = []
+        data = {
+            "name": name,
+            "tags": tags,
+            "project_id": project_id,
+        }
+        return register_model_v0_register_model_post(
+            self.api_key, ModelUnderTestSchema.model_validate(data, strict=True)
+        )
 
     def add_data_point(
         self,
-        input_: Union[dict, str],
-        result: Union[dict, str],
-        feedback: int,
-        context_token: str,
         mut_id: int,
+        input_obj: Union[dict, str],
+        result_obj: Union[dict, str],
+        feedback: Union[int, None] = None,
+        context_token: Union[str, None] = None,
         error_message: Union[str, None] = None,
         error_code: Union[str, None] = None,
-        input_datetime: Union[datetime, None] = None,
-        result_datetime: Union[datetime, None] = None,
+        input_datetime: Union[str, None] = None,
+        result_datetime: Union[str, None] = None,
         project_id: Union[int, None] = None,
         tags: Union[List[str], None] = None,
-    ) -> None:
+    ) -> DatapointResponse:
         body = {
             "tags": tags or [],
-            "input": json.dumps(input_),
-            "result": json.dumps(result),
+            "input": json.dumps(input_obj),
+            "result": json.dumps(result_obj),
             "context_token": context_token,
             "feedback": feedback,
             "error_message": error_message,
@@ -61,7 +74,7 @@ class Okareo:
             "project_id": project_id,
             "mut_id": mut_id,
         }
-        add_datapoint_v0_datapoints_post(
+        return add_datapoint_v0_datapoints_post(
             self.api_key,
             DatapointSchema.model_validate(body, strict=True),
         )
