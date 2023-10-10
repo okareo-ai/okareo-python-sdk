@@ -11,6 +11,6 @@ class DatapointResponse(BaseModel):
 
     id: int = Field(alias="id")
 
-    project_id: Optional[Union[int, Any]] = Field(alias="project_id", default=None)
+    project_id: Optional[int] = Field(alias="project_id", default=None)
 
     mut_id: Optional[int] = Field(alias="mut_id", default=None)
