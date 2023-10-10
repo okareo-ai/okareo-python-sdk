@@ -23,10 +23,6 @@ class Okareo:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-#    def api_health_check(self) -> str:
-#        """A simple function to test the connection"""
-#        return healthcheck_v0_health_get()
-
     def get_generations(self) -> Union[List[GenerationList], None]:
         """Get a list of generations"""
         data = get_generations_v0_generations_get(self.api_key)
