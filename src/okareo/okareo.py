@@ -1,19 +1,13 @@
-import json
 from typing import List, Union
 
 from okareo_api_client.api_config import HTTPException
-from okareo_api_client.models import (
-    DatapointResponse,
-    DatapointSchema,
-    GenerationList,
-    ModelUnderTestResponse,
-    ModelUnderTestSchema,
-)
+from okareo_api_client.models import GenerationList, ModelUnderTestSchema
 from okareo_api_client.services.None_service import (
-    add_datapoint_v0_datapoints_post,
     get_generations_v0_generations_get,
     register_model_v0_register_model_post,
 )
+
+from .model_under_test import ModelUnderTest
 
 
 class Okareo:
@@ -35,7 +29,7 @@ class Okareo:
         name: str,
         tags: Union[List[str], None] = None,
         project_id: Union[int, None] = None,
-    ) -> ModelUnderTestResponse:
+    ) -> ModelUnderTest:
         if tags is None:
             tags = []
         data = {
@@ -43,38 +37,7 @@ class Okareo:
             "tags": tags,
             "project_id": project_id,
         }
-        return register_model_v0_register_model_post(
+        registered_model = register_model_v0_register_model_post(
             self.api_key, ModelUnderTestSchema.model_validate(data, strict=True)
         )
-
-    def add_data_point(
-        self,
-        mut_id: int,
-        input_obj: Union[dict, str],
-        result_obj: Union[dict, str],
-        feedback: Union[int, None] = None,
-        context_token: Union[str, None] = None,
-        error_message: Union[str, None] = None,
-        error_code: Union[str, None] = None,
-        input_datetime: Union[str, None] = None,
-        result_datetime: Union[str, None] = None,
-        project_id: Union[int, None] = None,
-        tags: Union[List[str], None] = None,
-    ) -> DatapointResponse:
-        body = {
-            "tags": tags or [],
-            "input": json.dumps(input_obj),
-            "result": json.dumps(result_obj),
-            "context_token": context_token,
-            "feedback": feedback,
-            "error_message": error_message,
-            "error_code": error_code,
-            "input_datetime": input_datetime,
-            "result_datetime": result_datetime,
-            "project_id": project_id,
-            "mut_id": mut_id,
-        }
-        return add_datapoint_v0_datapoints_post(
-            self.api_key,
-            DatapointSchema.model_validate(body, strict=True),
-        )
+        return ModelUnderTest(self.api_key, registered_model)

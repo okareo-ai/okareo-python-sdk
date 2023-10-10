@@ -59,6 +59,9 @@ python-kacl = "*"
 pyupgrade = "*"
 tryceratops = "*"
 
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.25.2"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
