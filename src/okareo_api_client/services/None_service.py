@@ -92,7 +92,7 @@ def get_project_v0_project__project_id__get(
     return ProjectResponse(**response.json()) if response.json() is not None else ProjectResponse()
 
 
-def get_project_v0_project__project_id__put(
+def update_project_v0_project__project_id__put(
     project_id: int, api_key: str, data: ProjectSchema, api_config_override: Optional[APIConfig] = None
 ) -> ProjectResponse:
     api_config = api_config_override if api_config_override else APIConfig()

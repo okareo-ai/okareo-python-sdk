@@ -13,4 +13,4 @@ class ProjectResponse(BaseModel):
 
     name: str = Field(alias="name")
 
-    tags: Union[List[str], Any] = Field(alias="tags")
+    tags: Optional[List[str]] = Field(alias="tags", default=None)

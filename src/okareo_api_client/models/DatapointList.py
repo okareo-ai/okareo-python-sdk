@@ -13,10 +13,12 @@ class DatapointList(BaseModel):
 
     tags: List[str] = Field(alias="tags")
 
-    feedback: Union[int, Any] = Field(alias="feedback")
+    feedback: Optional[int] = Field(alias="feedback", default=None)
 
-    error_message: Union[str, Any] = Field(alias="error_message")
+    error_message: Optional[str] = Field(alias="error_message", default=None)
 
-    error_code: Union[str, Any] = Field(alias="error_code")
+    error_code: Optional[str] = Field(alias="error_code", default=None)
 
     time_created: str = Field(alias="time_created")
+
+    project_id: Optional[int] = Field(alias="project_id", default=None)
