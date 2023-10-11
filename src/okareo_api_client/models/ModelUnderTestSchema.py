@@ -13,4 +13,4 @@ class ModelUnderTestSchema(BaseModel):
 
     tags: Optional[List[str]] = Field(alias="tags", default=None)
 
-    project_id: Optional[int] = Field(alias="project_id", default=None)
+    project_id: Optional[Union[int, Any]] = Field(alias="project_id", default=None)
