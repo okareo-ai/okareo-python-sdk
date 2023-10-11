@@ -32,12 +32,9 @@ class Okareo:
     ) -> ModelUnderTest:
         if tags is None:
             tags = []
-        data = {
-            "name": name,
-            "tags": tags
-        }
+        data = {"name": name, "tags": tags}
         if project_id is not None:
-            data["project_id"] = project_id
+            data["project_id"] = project_id  # type: ignore
         registered_model = register_model_v0_register_model_post(
             self.api_key, ModelUnderTestSchema.model_validate(data, strict=True)
         )
