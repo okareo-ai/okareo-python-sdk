@@ -1,5 +1,7 @@
 import functools
-from typing import Callable, List, ParamSpec, TypeVar, Union
+from typing import Callable, List, Union
+
+from typing_extensions import ParamSpec, TypeVar
 
 from okareo_api_client.api_config import HTTPException
 from okareo_api_client.models import GenerationList, ModelUnderTestSchema
