@@ -34,9 +34,10 @@ class Okareo:
             tags = []
         data = {
             "name": name,
-            "tags": tags,
-            "project_id": project_id,
+            "tags": tags
         }
+        if project_id is not None:
+            data["project_id"] = project_id
         registered_model = register_model_v0_register_model_post(
             self.api_key, ModelUnderTestSchema.model_validate(data, strict=True)
         )
