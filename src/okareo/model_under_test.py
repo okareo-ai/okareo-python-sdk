@@ -8,6 +8,8 @@ from okareo_api_client.models import (
 )
 from okareo_api_client.services.None_service import add_datapoint_v0_datapoints_post
 
+from .common import API_CONFIG
+
 
 class ModelUnderTest:
     def __init__(self, api_key: str, mut: ModelUnderTestResponse):
@@ -46,4 +48,5 @@ class ModelUnderTest:
         return add_datapoint_v0_datapoints_post(
             self.api_key,
             DatapointSchema.model_validate(body, strict=True),
+            api_config_override=API_CONFIG,
         )

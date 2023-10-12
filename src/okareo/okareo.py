@@ -7,6 +7,7 @@ from okareo_api_client.services.None_service import (
     register_model_v0_register_model_post,
 )
 
+from .common import API_CONFIG
 from .model_under_test import ModelUnderTest
 
 
@@ -18,7 +19,9 @@ class Okareo:
 
     def get_generations(self) -> Union[List[GenerationList], None]:
         """Get a list of generations"""
-        data = get_generations_v0_generations_get(self.api_key)
+        data = get_generations_v0_generations_get(
+            self.api_key, api_config_override=API_CONFIG
+        )
         if isinstance(data, HTTPException):
             print(f"Unexpected {data=}, {type(data)=}")
             raise
@@ -36,6 +39,8 @@ class Okareo:
         if project_id is not None:
             data["project_id"] = project_id  # type: ignore
         registered_model = register_model_v0_register_model_post(
-            self.api_key, ModelUnderTestSchema.model_validate(data, strict=True)
+            self.api_key,
+            ModelUnderTestSchema.model_validate(data, strict=True),
+            api_config_override=API_CONFIG,
         )
         return ModelUnderTest(self.api_key, registered_model)
