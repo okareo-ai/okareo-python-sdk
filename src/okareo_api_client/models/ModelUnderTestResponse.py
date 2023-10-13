@@ -16,3 +16,5 @@ class ModelUnderTestResponse(BaseModel):
     name: str = Field(alias="name")
 
     tags: List[str] = Field(alias="tags")
+
+    datapoint_count: Optional[Union[int, Any]] = Field(alias="datapoint_count", default=None)

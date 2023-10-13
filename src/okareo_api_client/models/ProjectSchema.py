@@ -9,6 +9,6 @@ class ProjectSchema(BaseModel):
 
     """
 
-    name: Optional[str] = Field(alias="name", default=None)
+    name: Optional[Union[str, Any]] = Field(alias="name", default=None)
 
-    tags: Optional[List[str]] = Field(alias="tags", default=None)
+    tags: Optional[Union[List[str], Any]] = Field(alias="tags", default=None)
