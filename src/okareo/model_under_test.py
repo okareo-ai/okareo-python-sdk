@@ -1,19 +1,18 @@
 import json
-from typing import List, Union
+from typing import List, Union, cast
 
 from okareo_api_client.models import (
     DatapointResponse,
     DatapointSchema,
     ModelUnderTestResponse,
 )
-from okareo_api_client.services.None_service import add_datapoint_v0_datapoints_post
 
-from .common import API_CONFIG
+from .client import HTTPXHandler
 
 
 class ModelUnderTest:
-    def __init__(self, api_key: str, mut: ModelUnderTestResponse):
-        self.api_key = api_key
+    def __init__(self, httpx_handler: HTTPXHandler, mut: ModelUnderTestResponse):
+        self.httpx_handler = httpx_handler
         self.mut_id = mut.id
         self.project_id = mut.project_id
         self.name = mut.name
@@ -45,8 +44,12 @@ class ModelUnderTest:
             "project_id": self.project_id,
             "mut_id": self.mut_id,
         }
-        return add_datapoint_v0_datapoints_post(
-            self.api_key,
-            DatapointSchema.model_validate(body, strict=True),
-            api_config_override=API_CONFIG,
+        request = DatapointSchema.model_validate(body, strict=True)
+        response = self.httpx_handler.request(
+            method=HTTPXHandler.POST,
+            endpoint="/v0/datapoints",
+            request_data=request,
+            response_model=DatapointResponse,
         )
+
+        return cast(DatapointResponse, response)
