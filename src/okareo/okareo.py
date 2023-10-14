@@ -1,4 +1,7 @@
-from typing import List, Union
+import functools
+from typing import Callable, List, Union
+
+from typing_extensions import ParamSpec, TypeVar
 
 from okareo_api_client.api_config import HTTPException
 from okareo_api_client.models import GenerationList, ModelUnderTestSchema
@@ -9,6 +12,9 @@ from okareo_api_client.services.None_service import (
 
 from .common import API_CONFIG
 from .model_under_test import ModelUnderTest
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 class Okareo:
@@ -44,3 +50,29 @@ class Okareo:
             api_config_override=API_CONFIG,
         )
         return ModelUnderTest(self.api_key, registered_model)
+
+    def instrument(self, tags: Union[List[str], None] = None) -> Callable:
+        def decorator_instrument(func: Callable[P, T]) -> Callable[P, T]:
+            @functools.wraps(func)
+            def wrapper_instrument(*args: P.args, **kwargs: P.kwargs) -> T:
+                # do something before
+                result = func(*args, **kwargs)
+                # add result data point
+                mut = kwargs["model"]
+                if not mut:
+                    print(f"Model under test not provided {kwargs=}")
+                    raise
+
+                mut.add_data_point(  # type: ignore
+                    kwargs["input"],
+                    result,
+                    kwargs["feedback"],
+                    kwargs["context_token"],
+                    tags=tags,
+                )
+
+                return result
+
+            return wrapper_instrument
+
+        return decorator_instrument

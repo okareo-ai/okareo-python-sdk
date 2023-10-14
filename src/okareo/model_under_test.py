@@ -1,5 +1,7 @@
 import json
-from typing import List, Union
+from contextlib import contextmanager
+from datetime import datetime
+from typing import Iterator, List, Union
 
 from okareo_api_client.models import (
     DatapointResponse,
@@ -11,6 +13,14 @@ from okareo_api_client.services.None_service import add_datapoint_v0_datapoints_
 from .common import API_CONFIG
 
 
+class DataPoint:
+    def __init__(self) -> None:
+        self.result_obj: dict | None = None
+
+    def set_result_obj(self, result_obj: dict) -> None:
+        self.result_obj = result_obj
+
+
 class ModelUnderTest:
     def __init__(self, api_key: str, mut: ModelUnderTestResponse):
         self.api_key = api_key
@@ -18,6 +28,23 @@ class ModelUnderTest:
         self.project_id = mut.project_id
         self.name = mut.name
         self.tags = mut.tags
+
+    @contextmanager
+    def instrument(
+        self,
+        input_obj: Union[dict, str],
+        feedback: Union[int, None] = None,
+        context_token: Union[str, None] = None,
+        tags: Union[List[str], None] = None,
+    ) -> Iterator[DataPoint]:
+        data_point = DataPoint()
+        yield data_point
+        if not data_point.result_obj:
+            print(f"result_obj not set, {type(data_point.result_obj)=}")
+            raise
+        self.add_data_point(
+            input_obj, data_point.result_obj, feedback, context_token, tags=tags
+        )
 
     def add_data_point(
         self,
@@ -40,8 +67,8 @@ class ModelUnderTest:
             "feedback": feedback,
             "error_message": error_message,
             "error_code": error_code,
-            "input_datetime": input_datetime,
-            "result_datetime": result_datetime,
+            "input_datetime": input_datetime or datetime.now().isoformat(),
+            "result_datetime": result_datetime or datetime.now().isoformat(),
             "project_id": self.project_id,
             "mut_id": self.mut_id,
         }
