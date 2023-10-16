@@ -11,8 +11,18 @@ class ScenarioSetResponse(BaseModel):
 
     """
 
+    scenario_id: Optional[Union[str, Any]] = Field(alias="scenario_id", default=None)
+
+    project_id: int = Field(alias="project_id")
+
+    time_created: str = Field(alias="time_created")
+
     type: str = Field(alias="type")
 
-    seed_data: List[SeedData] = Field(alias="seed_data")
+    tags: Optional[Union[List[str], Any]] = Field(alias="tags", default=None)
 
-    scenario_input: Optional[List[str]] = Field(alias="scenario_input", default=None)
+    name: Optional[Union[str, Any]] = Field(alias="name", default=None)
+
+    seed_data: Optional[Union[List[SeedData], Any]] = Field(alias="seed_data", default=None)
+
+    scenario_input: Optional[Union[List[str], Any]] = Field(alias="scenario_input", default=None)

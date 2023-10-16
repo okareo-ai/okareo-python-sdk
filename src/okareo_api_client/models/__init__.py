@@ -10,6 +10,7 @@ from .ModelUnderTestResponse import *
 from .ModelUnderTestSchema import *
 from .ProjectResponse import *
 from .ProjectSchema import *
+from .ScenarioDataPoinResponse import *
 from .ScenarioSetCreate import *
 from .ScenarioSetResponse import *
 from .SeedData import *

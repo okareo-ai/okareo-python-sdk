@@ -356,6 +356,71 @@ def create_scenario_set_v0_scenario_sets_post(
     return ScenarioSetResponse(**response.json()) if response.json() is not None else ScenarioSetResponse()
 
 
+def get_scenario_sets_v0_scenario_sets__get(
+    api_key: str,
+    scenario_id: Optional[Union[str, Any]] = None,
+    project_id: Optional[Union[int, Any]] = None,
+    api_config_override: Optional[APIConfig] = None,
+) -> List[ScenarioSetResponse]:
+    api_config = api_config_override if api_config_override else APIConfig()
+
+    base_path = api_config.base_path
+    path = f"/v0/scenario_sets/"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer { api_config.get_access_token() }",
+        "api-key": api_key,
+    }
+    query_params: Dict[str, Any] = {"scenario_id": scenario_id, "project_id": project_id}
+
+    query_params = {key: value for (key, value) in query_params.items() if value is not None}
+
+    with httpx.Client(base_url=base_path, verify=api_config.verify) as client:
+        response = client.request(
+            "get",
+            httpx.URL(path),
+            headers=headers,
+            params=query_params,
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(response.status_code, f" failed with status code: {response.status_code}")
+
+    return [ScenarioSetResponse(**item) for item in response.json()]
+
+
+def get_scenario_set_data_points_v0_scenario_data_points__scenario_id__get(
+    scenario_id: str, api_key: str, api_config_override: Optional[APIConfig] = None
+) -> List[ScenarioDataPoinResponse]:
+    api_config = api_config_override if api_config_override else APIConfig()
+
+    base_path = api_config.base_path
+    path = f"/v0/scenario_data_points/{scenario_id}"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer { api_config.get_access_token() }",
+        "api-key": api_key,
+    }
+    query_params: Dict[str, Any] = {}
+
+    query_params = {key: value for (key, value) in query_params.items() if value is not None}
+
+    with httpx.Client(base_url=base_path, verify=api_config.verify) as client:
+        response = client.request(
+            "get",
+            httpx.URL(path),
+            headers=headers,
+            params=query_params,
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(response.status_code, f" failed with status code: {response.status_code}")
+
+    return [ScenarioDataPoinResponse(**item) for item in response.json()]
+
+
 def get_datapoints_v0_find_datapoints_post(
     api_key: str, data: DatapointSearch, api_config_override: Optional[APIConfig] = None
 ) -> List[DatapointListItem]:
