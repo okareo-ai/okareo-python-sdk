@@ -13,4 +13,4 @@ class ScenarioDataPoinResponse(BaseModel):
 
     result: str = Field(alias="result")
 
-    meta_data: Optional[Union[Any, Any]] = Field(alias="meta_data", default=None)
+    meta_data: Optional[str] = Field(alias="meta_data", default=None)

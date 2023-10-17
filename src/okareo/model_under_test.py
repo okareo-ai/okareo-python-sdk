@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import List, Union, cast
 
 from okareo_api_client.models import (
@@ -28,7 +29,7 @@ class ModelUnderTest:
         error_code: Union[str, None] = None,
         input_datetime: Union[str, None] = None,
         result_datetime: Union[str, None] = None,
-        project_id: Union[int, None] = None,
+        project_id: Union[str, None] = None,
         tags: Union[List[str], None] = None,
     ) -> DatapointResponse:
         body = {
@@ -39,12 +40,12 @@ class ModelUnderTest:
             "feedback": feedback,
             "error_message": error_message,
             "error_code": error_code,
-            "input_datetime": input_datetime,
-            "result_datetime": result_datetime,
+            "input_datetime": input_datetime or datetime.now().isoformat(),
+            "result_datetime": result_datetime or datetime.now().isoformat(),
             "project_id": self.project_id,
             "mut_id": self.mut_id,
         }
-        request = DatapointSchema.model_validate(body, strict=True)
+        request = DatapointSchema.parse_obj(body)
         response = self.httpx_handler.request(
             method=HTTPXHandler.POST,
             endpoint="/v0/datapoints",

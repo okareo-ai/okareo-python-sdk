@@ -358,8 +358,8 @@ def create_scenario_set_v0_scenario_sets_post(
 
 def get_scenario_sets_v0_scenario_sets__get(
     api_key: str,
-    scenario_id: Optional[Union[str, Any]] = None,
-    project_id: Optional[Union[int, Any]] = None,
+    scenario_id: Optional[str] = None,
+    project_id: Optional[int] = None,
     api_config_override: Optional[APIConfig] = None,
 ) -> List[ScenarioSetResponse]:
     api_config = api_config_override if api_config_override else APIConfig()

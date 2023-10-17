@@ -11,7 +11,7 @@ class ScenarioSetCreate(BaseModel):
 
     """
 
-    project_id: Optional[Union[int, Any]] = Field(alias="project_id", default=None)
+    project_id: Optional[str] = Field(alias="project_id", default=None)
 
     name: str = Field(alias="name")
 
