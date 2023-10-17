@@ -9,7 +9,7 @@ class ProjectResponse(BaseModel):
 
     """
 
-    id: int = Field(alias="id")
+    id: str = Field(alias="id")
 
     name: str = Field(alias="name")
 

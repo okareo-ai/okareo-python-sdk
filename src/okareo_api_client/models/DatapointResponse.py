@@ -9,8 +9,8 @@ class DatapointResponse(BaseModel):
 
     """
 
-    id: int = Field(alias="id")
+    id: str = Field(alias="id")
 
-    project_id: Optional[int] = Field(alias="project_id", default=None)
+    project_id: Optional[str] = Field(alias="project_id", default=None)
 
-    mut_id: Optional[int] = Field(alias="mut_id", default=None)
+    mut_id: Optional[str] = Field(alias="mut_id", default=None)

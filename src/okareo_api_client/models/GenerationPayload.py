@@ -9,7 +9,7 @@ class GenerationPayload(BaseModel):
 
     """
 
-    schema: str = Field(alias="schema")
+    json_schema: Optional[str] = Field(alias="json_schema", default=None)
 
     view: str = Field(alias="view")
 

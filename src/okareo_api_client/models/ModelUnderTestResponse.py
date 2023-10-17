@@ -9,12 +9,12 @@ class ModelUnderTestResponse(BaseModel):
 
     """
 
-    id: int = Field(alias="id")
+    id: str = Field(alias="id")
 
-    project_id: int = Field(alias="project_id")
+    project_id: str = Field(alias="project_id")
 
     name: str = Field(alias="name")
 
     tags: List[str] = Field(alias="tags")
 
-    datapoint_count: Optional[Union[int, Any]] = Field(alias="datapoint_count", default=None)
+    datapoint_count: Optional[int] = Field(alias="datapoint_count", default=None)
