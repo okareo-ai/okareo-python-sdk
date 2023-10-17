@@ -25,8 +25,4 @@ class ScenarioSetResponse(BaseModel):
 
     seed_data: Optional[List[Optional[SeedData]]] = Field(alias="seed_data", default=None)
 
-    name: Optional[Union[str, Any]] = Field(alias="name", default=None)
-
-    seed_data: Optional[Union[List[SeedData], Any]] = Field(alias="seed_data", default=None)
-
-    scenario_input: Optional[Union[List[str], Any]] = Field(alias="scenario_input", default=None)
+    scenario_input: Optional[List[str]] = Field(alias="scenario_input", default=None)
