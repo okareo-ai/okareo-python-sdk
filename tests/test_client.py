@@ -15,4 +15,4 @@ def test_returns_json(httpx_mock: HTTPXMock) -> None:
     generations = okareo.get_generations()
     assert generations
     assert not isinstance(generations, HTTPException)
-    assert [g.dict() for g in generations] == fixture
+    assert [g.model_dump() for g in generations] == fixture
