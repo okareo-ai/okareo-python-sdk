@@ -5,6 +5,8 @@ import httpx
 from httpx._models import Response
 from pydantic import BaseModel
 
+from .common import NotJSONError
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -85,16 +87,14 @@ class HTTPXHandler:
     ) -> Any:
         if response_model:
             if not is_json_response:
-                raise ValueError(
-                    "Expected JSON response, but received non-JSON content."
-                )
+                raise NotJSONError()
 
             try:
                 json_content = response.json()
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as exc:
                 raise ValueError(
                     f"Failed to decode response as JSON. Content: {response.text}"
-                )
+                ) from exc
 
             if isinstance(json_content, list):
                 return [response_model(**item) for item in json_content]
