@@ -45,7 +45,7 @@ class Okareo:
         data = {"name": name, "tags": tags}
         if project_id is not None:
             data["project_id"] = project_id  # type: ignore
-        request = ModelUnderTestSchema.parse_obj(data)
+        request = ModelUnderTestSchema.model_validate(data)
         registered_model = self.httpx_handler.request(
             method=HTTPXHandler.POST,
             endpoint="/v0/register_model",

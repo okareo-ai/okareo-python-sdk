@@ -45,7 +45,7 @@ class ModelUnderTest:
             "project_id": self.project_id,
             "mut_id": self.mut_id,
         }
-        request = DatapointSchema.parse_obj(body)
+        request = DatapointSchema.model_validate(body)
         response = self.httpx_handler.request(
             method=HTTPXHandler.POST,
             endpoint="/v0/datapoints",
