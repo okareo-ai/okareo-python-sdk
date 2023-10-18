@@ -14,12 +14,12 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
     """
     Attributes:
         name (str):
-        project_id (Union[Unset, int]):
+        project_id (Union[Unset, str]):
         file (Union[Unset, File]):
     """
 
     name: str
-    project_id: Union[Unset, int] = UNSET
+    project_id: Union[Unset, str] = UNSET
     file: Union[Unset, File] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 

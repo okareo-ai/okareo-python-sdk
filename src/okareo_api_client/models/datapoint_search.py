@@ -20,7 +20,7 @@ class DatapointSearch:
         feedback (Union[Unset, int]):
         error_code (Union[Unset, str]):
         context_token (Union[Unset, str]):
-        project_id (Union[Unset, int]):
+        project_id (Union[Unset, str]):
         mut_id (Union[Unset, str]):
     """
 
@@ -30,7 +30,7 @@ class DatapointSearch:
     feedback: Union[Unset, int] = UNSET
     error_code: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET
-    project_id: Union[Unset, int] = UNSET
+    project_id: Union[Unset, str] = UNSET
     mut_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 

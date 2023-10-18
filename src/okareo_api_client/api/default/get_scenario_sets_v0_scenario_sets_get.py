@@ -13,7 +13,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, int] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -71,14 +71,14 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, int] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
     Args:
         scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, int]):
+        project_id (Union[Unset, None, str]):
         api_key (str):
 
     Raises:
@@ -106,14 +106,14 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, int] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
     Args:
         scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, int]):
+        project_id (Union[Unset, None, str]):
         api_key (str):
 
     Raises:
@@ -136,14 +136,14 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, int] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
     Args:
         scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, int]):
+        project_id (Union[Unset, None, str]):
         api_key (str):
 
     Raises:
@@ -169,14 +169,14 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, int] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
     Args:
         scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, int]):
+        project_id (Union[Unset, None, str]):
         api_key (str):
 
     Raises:

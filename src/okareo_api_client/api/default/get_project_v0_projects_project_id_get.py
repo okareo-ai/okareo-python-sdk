@@ -7,24 +7,22 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.project_response import ProjectResponse
-from ...models.project_schema import ProjectSchema
 from ...types import Response
 
 
 def _get_kwargs(
+    project_id: str,
     *,
-    json_body: ProjectSchema,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
     return {
-        "method": "post",
-        "url": "/v0/project",
-        "json": json_json_body,
+        "method": "get",
+        "url": "/v0/projects/{project_id}".format(
+            project_id=project_id,
+        ),
         "headers": headers,
     }
 
@@ -58,21 +56,21 @@ def _build_response(
 
 
 def sync_detailed(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ProjectSchema,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, ProjectResponse]]:
-    """Create Project
+    """Get Project
 
-     Create a project
+     Get a project
 
     Returns:
-        the id, name, and tags for the created project
+        the requested project
 
     Args:
+        project_id (str):
         api_key (str):
-        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -83,7 +81,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -95,21 +93,21 @@ def sync_detailed(
 
 
 def sync(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ProjectSchema,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
-    """Create Project
+    """Get Project
 
-     Create a project
+     Get a project
 
     Returns:
-        the id, name, and tags for the created project
+        the requested project
 
     Args:
+        project_id (str):
         api_key (str):
-        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -120,28 +118,28 @@ def sync(
     """
 
     return sync_detailed(
+        project_id=project_id,
         client=client,
-        json_body=json_body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ProjectSchema,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, ProjectResponse]]:
-    """Create Project
+    """Get Project
 
-     Create a project
+     Get a project
 
     Returns:
-        the id, name, and tags for the created project
+        the requested project
 
     Args:
+        project_id (str):
         api_key (str):
-        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -152,7 +150,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -162,21 +160,21 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ProjectSchema,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
-    """Create Project
+    """Get Project
 
-     Create a project
+     Get a project
 
     Returns:
-        the id, name, and tags for the created project
+        the requested project
 
     Args:
+        project_id (str):
         api_key (str):
-        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -188,8 +186,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
+            project_id=project_id,
             client=client,
-            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

@@ -6,32 +6,34 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.model_under_test_response import ModelUnderTestResponse
+from ...models.project_response import ProjectResponse
+from ...models.project_schema import ProjectSchema
 from ...types import Response
 
 
 def _get_kwargs(
-    mut_id: int,
     *,
+    json_body: ProjectSchema,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
+    json_json_body = json_body.to_dict()
+
     return {
-        "method": "get",
-        "url": "/v0/model_under_test/{mut_id}".format(
-            mut_id=mut_id,
-        ),
+        "method": "post",
+        "url": "/v0/projects",
+        "json": json_json_body,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
     if response.status_code == HTTPStatus.CREATED:
-        response_201 = ModelUnderTestResponse.from_dict(response.json())
+        response_201 = ProjectResponse.from_dict(response.json())
 
         return response_201
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
@@ -46,7 +48,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Response[Union[HTTPValidationError, ProjectResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -56,32 +58,32 @@ def _build_response(
 
 
 def sync_detailed(
-    mut_id: int,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: ProjectSchema,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
-    """Get Model Under Test
+) -> Response[Union[HTTPValidationError, ProjectResponse]]:
+    """Create Project
 
-     Get a model under test
+     Create a project
 
     Returns:
-        the requested model under test
+        the id, name, and tags for the created project
 
     Args:
-        mut_id (int):
         api_key (str):
+        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ModelUnderTestResponse]]
+        Response[Union[HTTPValidationError, ProjectResponse]]
     """
 
     kwargs = _get_kwargs(
-        mut_id=mut_id,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -93,64 +95,64 @@ def sync_detailed(
 
 
 def sync(
-    mut_id: int,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: ProjectSchema,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
-    """Get Model Under Test
+) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
+    """Create Project
 
-     Get a model under test
+     Create a project
 
     Returns:
-        the requested model under test
+        the id, name, and tags for the created project
 
     Args:
-        mut_id (int):
         api_key (str):
+        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ModelUnderTestResponse]
+        Union[HTTPValidationError, ProjectResponse]
     """
 
     return sync_detailed(
-        mut_id=mut_id,
         client=client,
+        json_body=json_body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    mut_id: int,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: ProjectSchema,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
-    """Get Model Under Test
+) -> Response[Union[HTTPValidationError, ProjectResponse]]:
+    """Create Project
 
-     Get a model under test
+     Create a project
 
     Returns:
-        the requested model under test
+        the id, name, and tags for the created project
 
     Args:
-        mut_id (int):
         api_key (str):
+        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ModelUnderTestResponse]]
+        Response[Union[HTTPValidationError, ProjectResponse]]
     """
 
     kwargs = _get_kwargs(
-        mut_id=mut_id,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -160,34 +162,34 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    mut_id: int,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: ProjectSchema,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
-    """Get Model Under Test
+) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
+    """Create Project
 
-     Get a model under test
+     Create a project
 
     Returns:
-        the requested model under test
+        the id, name, and tags for the created project
 
     Args:
-        mut_id (int):
         api_key (str):
+        json_body (ProjectSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ModelUnderTestResponse]
+        Union[HTTPValidationError, ProjectResponse]
     """
 
     return (
         await asyncio_detailed(
-            mut_id=mut_id,
             client=client,
+            json_body=json_body,
             api_key=api_key,
         )
     ).parsed
