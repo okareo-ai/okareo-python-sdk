@@ -1,8 +1,6 @@
 """ Contains all the data models used in inputs/outputs """
 
-from .body_scenario_sets_upload_v0_scenario_sets_upload_post import (
-    BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
-)
+from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
 from .datapoint_list_item import DatapointListItem
 from .datapoint_response import DatapointResponse
 from .datapoint_schema import DatapointSchema
