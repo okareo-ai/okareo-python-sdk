@@ -1,19 +1,22 @@
 import json
 from datetime import datetime
-from typing import List, Union, cast
+from typing import List, Union
 
+from okareo_api_client.api.default import add_datapoint_v0_datapoints_post
+from okareo_api_client.client import Client
 from okareo_api_client.models import (
     DatapointResponse,
     DatapointSchema,
     ModelUnderTestResponse,
 )
-
-from .client import HTTPXHandler
+from okareo_api_client.models.http_validation_error import HTTPValidationError
 
 
 class ModelUnderTest:
-    def __init__(self, httpx_handler: HTTPXHandler, mut: ModelUnderTestResponse):
-        self.httpx_handler = httpx_handler
+    def __init__(self, client: Client, api_key: str, mut: ModelUnderTestResponse):
+        self.client = client
+        self.api_key = api_key
+
         self.mut_id = mut.id
         self.project_id = mut.project_id
         self.name = mut.name
@@ -45,12 +48,16 @@ class ModelUnderTest:
             "project_id": self.project_id,
             "mut_id": self.mut_id,
         }
-        request = DatapointSchema.model_validate(body)
-        response = self.httpx_handler.request(
-            method=HTTPXHandler.POST,
-            endpoint="/v0/datapoints",
-            request_data=request,
-            response_model=DatapointResponse,
+        response = add_datapoint_v0_datapoints_post.sync(
+            client=self.client,
+            api_key=self.api_key,
+            json_body=DatapointSchema.from_dict(body),
         )
+        if isinstance(response, HTTPValidationError):
+            print(f"Unexpected {response=}, {type(response)=}")
+            raise
+        if not response:
+            print("Empty response from API")
+        assert response is not None
 
-        return cast(DatapointResponse, response)
+        return response
