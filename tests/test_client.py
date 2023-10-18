@@ -1,7 +1,7 @@
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo_api_client.api_config import HTTPException
+from okareo_api_client.models.http_validation_error import HTTPValidationError
 
 
 def test_can_instantiate() -> None:
@@ -14,5 +14,5 @@ def test_returns_json(httpx_mock: HTTPXMock) -> None:
     okareo = Okareo("api-key")
     generations = okareo.get_generations()
     assert generations
-    assert not isinstance(generations, HTTPException)
-    assert [g.model_dump() for g in generations] == fixture
+    assert not isinstance(generations, HTTPValidationError)
+    assert [g.to_dict() for g in generations] == fixture

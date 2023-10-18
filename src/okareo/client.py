@@ -1,13 +1,10 @@
 import json
-from typing import Any, Dict, NoReturn, Optional, Type, TypeVar
+from typing import Any, Dict, NoReturn, Optional
 
 import httpx
 from httpx._models import Response
-from pydantic import BaseModel
 
 from .common import NotJSONError
-
-T = TypeVar("T", bound=BaseModel)
 
 
 class HTTPXHandler:
@@ -26,9 +23,9 @@ class HTTPXHandler:
         self,
         method: str,
         endpoint: str,
-        request_data: Optional[BaseModel] = None,
+        request_data: Optional[Any] = None,
         path_params: Optional[Dict[str, str]] = None,
-        response_model: Optional[Type[T]] = None,
+        response_model: Optional[Any] = None,
     ) -> Any:
         path = endpoint.format(**path_params) if path_params else endpoint
 
@@ -82,7 +79,7 @@ class HTTPXHandler:
     def get_return_type(
         self,
         response: Response,
-        response_model: Optional[Type[T]],
+        response_model: Optional[Any],
         is_json_response: bool,
     ) -> Any:
         if response_model:
