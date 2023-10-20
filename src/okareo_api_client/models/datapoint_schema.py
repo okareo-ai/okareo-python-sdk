@@ -24,6 +24,7 @@ class DatapointSchema:
         error_message (Union[Unset, str]):
         error_code (Union[Unset, str]):
         context_token (Union[Unset, str]):
+        test_run_id (Union[Unset, str]):
     """
 
     input_datetime: datetime.datetime
@@ -36,6 +37,7 @@ class DatapointSchema:
     error_message: Union[Unset, str] = UNSET
     error_code: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET
+    test_run_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -54,6 +56,7 @@ class DatapointSchema:
         error_message = self.error_message
         error_code = self.error_code
         context_token = self.context_token
+        test_run_id = self.test_run_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -79,6 +82,8 @@ class DatapointSchema:
             field_dict["error_code"] = error_code
         if context_token is not UNSET:
             field_dict["context_token"] = context_token
+        if test_run_id is not UNSET:
+            field_dict["test_run_id"] = test_run_id
 
         return field_dict
 
@@ -105,6 +110,8 @@ class DatapointSchema:
 
         context_token = d.pop("context_token", UNSET)
 
+        test_run_id = d.pop("test_run_id", UNSET)
+
         datapoint_schema = cls(
             input_datetime=input_datetime,
             result_datetime=result_datetime,
@@ -116,6 +123,7 @@ class DatapointSchema:
             error_message=error_message,
             error_code=error_code,
             context_token=context_token,
+            test_run_id=test_run_id,
         )
 
         datapoint_schema.additional_properties = d

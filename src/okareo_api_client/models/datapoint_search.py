@@ -22,6 +22,7 @@ class DatapointSearch:
         context_token (Union[Unset, str]):
         project_id (Union[Unset, str]):
         mut_id (Union[Unset, str]):
+        test_run_id (Union[Unset, str]):
     """
 
     tags: Union[Unset, List[str]] = UNSET
@@ -32,6 +33,7 @@ class DatapointSearch:
     context_token: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     mut_id: Union[Unset, str] = UNSET
+    test_run_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -52,6 +54,7 @@ class DatapointSearch:
         context_token = self.context_token
         project_id = self.project_id
         mut_id = self.mut_id
+        test_run_id = self.test_run_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -72,6 +75,8 @@ class DatapointSearch:
             field_dict["project_id"] = project_id
         if mut_id is not UNSET:
             field_dict["mut_id"] = mut_id
+        if test_run_id is not UNSET:
+            field_dict["test_run_id"] = test_run_id
 
         return field_dict
 
@@ -104,6 +109,8 @@ class DatapointSearch:
 
         mut_id = d.pop("mut_id", UNSET)
 
+        test_run_id = d.pop("test_run_id", UNSET)
+
         datapoint_search = cls(
             tags=tags,
             from_date=from_date,
@@ -113,6 +120,7 @@ class DatapointSearch:
             context_token=context_token,
             project_id=project_id,
             mut_id=mut_id,
+            test_run_id=test_run_id,
         )
 
         datapoint_search.additional_properties = d

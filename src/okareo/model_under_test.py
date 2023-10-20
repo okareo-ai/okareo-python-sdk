@@ -46,6 +46,7 @@ class ModelUnderTest:
         result_datetime: Union[str, None] = None,
         project_id: Union[str, None] = None,
         tags: Union[List[str], None] = None,
+        test_run_id: Union[None, str] = None,
     ) -> DatapointResponse:
         body = {
             "tags": tags or [],
@@ -59,6 +60,7 @@ class ModelUnderTest:
             "result_datetime": result_datetime or datetime.now().isoformat(),
             "project_id": self.project_id,
             "mut_id": self.mut_id,
+            "test_run_id": test_run_id,
         }
         response = add_datapoint_v0_datapoints_post.sync(
             client=self.client,
@@ -117,6 +119,7 @@ class ModelUnderTest:
                         input_datetime=input_datetime,  # start of model invocation
                         result_obj=model_response,  # json.dumps() the result objects from the model
                         result_datetime=str(datetime.now()),  # end of model invocation
+                        test_run_id=test_run_item.id,
                     )  # todo need to store test_run_id in datapoint
 
                     test_data_point_payload = TestDataPointPayload(

@@ -25,6 +25,7 @@ class DatapointListItem:
         context_token (Union[Unset, str]):
         mut_id (Union[Unset, str]):
         project_id (Union[Unset, str]):
+        test_run_id (Union[Unset, str]):
     """
 
     id: str
@@ -38,6 +39,7 @@ class DatapointListItem:
     context_token: Union[Unset, str] = UNSET
     mut_id: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
+    test_run_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -64,6 +66,7 @@ class DatapointListItem:
         context_token = self.context_token
         mut_id = self.mut_id
         project_id = self.project_id
+        test_run_id = self.test_run_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -92,6 +95,8 @@ class DatapointListItem:
             field_dict["mut_id"] = mut_id
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if test_run_id is not UNSET:
+            field_dict["test_run_id"] = test_run_id
 
         return field_dict
 
@@ -135,6 +140,8 @@ class DatapointListItem:
 
         project_id = d.pop("project_id", UNSET)
 
+        test_run_id = d.pop("test_run_id", UNSET)
+
         datapoint_list_item = cls(
             id=id,
             tags=tags,
@@ -147,6 +154,7 @@ class DatapointListItem:
             context_token=context_token,
             mut_id=mut_id,
             project_id=project_id,
+            test_run_id=test_run_id,
         )
 
         datapoint_list_item.additional_properties = d
