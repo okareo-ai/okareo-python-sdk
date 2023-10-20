@@ -1,15 +1,27 @@
 import json
 from datetime import datetime
-from typing import List, Union
+from typing import Callable, List, Tuple, Union
 
-from okareo_api_client.api.default import add_datapoint_v0_datapoints_post
+from okareo_api_client.api.default import (
+    add_datapoint_v0_datapoints_post,
+    add_test_data_point_v0_test_data_point_post,
+    add_test_run_v0_test_runs_post,
+    get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
+    update_test_run_v0_test_runs_test_run_id_put,
+)
 from okareo_api_client.client import Client
+from okareo_api_client.errors import UnexpectedStatus
 from okareo_api_client.models import (
     DatapointResponse,
     DatapointSchema,
     ModelUnderTestResponse,
+    TestDataPointPayload,
+    TestRunItem,
+    TestRunPayload,
 )
 from okareo_api_client.models.http_validation_error import HTTPValidationError
+
+from .metrics import MultiClassMetrics
 
 
 class ModelUnderTest:
@@ -61,3 +73,85 @@ class ModelUnderTest:
         assert response is not None
 
         return response
+
+    def run_test(
+        self,
+        scenario_id: str,
+        model_invoker: Callable[[str], Tuple[str, str]],
+        test_run_name: str = "",
+    ) -> None:
+        try:
+            response = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
+                client=self.client, api_key=self.api_key, scenario_id=scenario_id
+            )
+
+            metrics = MultiClassMetrics()
+
+            test_run_payload = TestRunPayload(
+                mut_id=self.mut_id,
+                scenario_set_id=scenario_id,
+                name=test_run_name,
+                type="invariant",  # todo make this an enum
+                start_time=datetime.now(),
+                end_time=datetime.now(),  # TODO getting around server error, it's updated later
+            )
+
+            test_run_item = add_test_run_v0_test_runs_post.sync(
+                client=self.client, api_key=self.api_key, json_body=test_run_payload
+            )
+            if not isinstance(test_run_item, TestRunItem):
+                raise TypeError(
+                    f"Expected test_run_item to be of type TestRunItem, but got {type(test_run_item)} instead."
+                )
+
+            if isinstance(response, list):
+                for data_point in response:
+                    input_datetime = str(datetime.now())
+
+                    actual, model_response = model_invoker(data_point.input_)
+
+                    metrics.update(data_point.result, actual)
+
+                    self.add_data_point(
+                        input_obj=data_point.input_,  # todo get full request from inovker
+                        input_datetime=input_datetime,  # start of model invocation
+                        result_obj=model_response,  # json.dumps() the result objects from the model
+                        result_datetime=str(datetime.now()),  # end of model invocation
+                    )  # todo need to store test_run_id in datapoint
+
+                    test_data_point_payload = TestDataPointPayload(
+                        test_run_id=test_run_item.id,
+                        scenario_data_point_id=data_point.id,
+                        metric_type="multi-class-classifier",
+                        metric_value=json.dumps(
+                            {"expected": data_point.result, "actual": actual}
+                        ),
+                    )
+
+                    add_test_data_point_v0_test_data_point_post.sync(
+                        client=self.client,
+                        api_key=self.api_key,
+                        json_body=test_data_point_payload,
+                    )
+
+            # update completed test run with end time and test data point count
+
+            test_run_payload.end_time = datetime.now()
+            # test_run_payload.test_data_point_count = len(response) #todo
+            test_run_item = update_test_run_v0_test_runs_test_run_id_put.sync(
+                client=self.client,
+                api_key=self.api_key,
+                test_run_id=test_run_item.id,
+                json_body=test_run_payload,
+            )
+
+        except UnexpectedStatus as e:
+            print(e.content)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+        # todo store both of these in the test run
+        complete_class_results = metrics.compute_weighted_average_metrics()
+
+        metrics.display_confusion_matrix()
+        print(complete_class_results)

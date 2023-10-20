@@ -16,6 +16,8 @@ class DatapointListItem:
     Attributes:
         id (str):
         tags (Union[Unset, List[str]]):
+        input_datetime (Union[Unset, datetime.datetime]):
+        result_datetime (Union[Unset, datetime.datetime]):
         feedback (Union[Unset, int]):
         error_message (Union[Unset, str]):
         error_code (Union[Unset, str]):
@@ -27,6 +29,8 @@ class DatapointListItem:
 
     id: str
     tags: Union[Unset, List[str]] = UNSET
+    input_datetime: Union[Unset, datetime.datetime] = UNSET
+    result_datetime: Union[Unset, datetime.datetime] = UNSET
     feedback: Union[Unset, int] = UNSET
     error_message: Union[Unset, str] = UNSET
     error_code: Union[Unset, str] = UNSET
@@ -41,6 +45,14 @@ class DatapointListItem:
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
+
+        input_datetime: Union[Unset, str] = UNSET
+        if not isinstance(self.input_datetime, Unset):
+            input_datetime = self.input_datetime.isoformat()
+
+        result_datetime: Union[Unset, str] = UNSET
+        if not isinstance(self.result_datetime, Unset):
+            result_datetime = self.result_datetime.isoformat()
 
         feedback = self.feedback
         error_message = self.error_message
@@ -62,6 +74,10 @@ class DatapointListItem:
         )
         if tags is not UNSET:
             field_dict["tags"] = tags
+        if input_datetime is not UNSET:
+            field_dict["input_datetime"] = input_datetime
+        if result_datetime is not UNSET:
+            field_dict["result_datetime"] = result_datetime
         if feedback is not UNSET:
             field_dict["feedback"] = feedback
         if error_message is not UNSET:
@@ -86,6 +102,20 @@ class DatapointListItem:
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
+        _input_datetime = d.pop("input_datetime", UNSET)
+        input_datetime: Union[Unset, datetime.datetime]
+        if isinstance(_input_datetime, Unset):
+            input_datetime = UNSET
+        else:
+            input_datetime = isoparse(_input_datetime)
+
+        _result_datetime = d.pop("result_datetime", UNSET)
+        result_datetime: Union[Unset, datetime.datetime]
+        if isinstance(_result_datetime, Unset):
+            result_datetime = UNSET
+        else:
+            result_datetime = isoparse(_result_datetime)
+
         feedback = d.pop("feedback", UNSET)
 
         error_message = d.pop("error_message", UNSET)
@@ -108,6 +138,8 @@ class DatapointListItem:
         datapoint_list_item = cls(
             id=id,
             tags=tags,
+            input_datetime=input_datetime,
+            result_datetime=result_datetime,
             feedback=feedback,
             error_message=error_message,
             error_code=error_code,

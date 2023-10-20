@@ -6,6 +6,7 @@ from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_generations_v0_generations_get,
+    get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
 )
@@ -15,6 +16,9 @@ from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_
 from okareo_api_client.models.generation_list import GenerationList
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
+from okareo_api_client.models.scenario_data_poin_response import (
+    ScenarioDataPoinResponse,
+)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
@@ -31,7 +35,9 @@ class Okareo:
         self, api_key: str, base_path: str = BASE_URL, timeout: float = HTTPX_TIME_OUT
     ):
         self.api_key = api_key
-        self.client = Client(base_url=base_path)
+        self.client = Client(
+            base_url=base_path, raise_on_unexpected_status=True
+        )  # otherwise everything except 201 and 422 is swallowed
 
     def get_generations(self) -> Union[List[GenerationList], None]:
         """Get a list of generations"""
@@ -113,6 +119,24 @@ class Okareo:
     ) -> ScenarioSetResponse:
         response = generate_scenario_set_v0_scenario_sets_generate_post.sync(
             client=self.client, api_key=self.api_key, json_body=create_request
+        )
+
+        if isinstance(response, HTTPValidationError):
+            print(f"Unexpected {response=}, {type(response)=}")
+            raise
+        if not response:
+            print("Empty response from API")
+        assert response is not None
+
+        return response
+
+    def get_scenario_data_points(
+        self, scenario_id: str
+    ) -> List[ScenarioDataPoinResponse]:
+        response = (
+            get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
+                client=self.client, api_key=self.api_key, scenario_id=scenario_id
+            )
         )
 
         if isinstance(response, HTTPValidationError):

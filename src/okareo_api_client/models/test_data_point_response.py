@@ -1,46 +1,31 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="ScenarioDataPoinResponse")
+T = TypeVar("T", bound="TestDataPointResponse")
 
 
 @_attrs_define
-class ScenarioDataPoinResponse:
+class TestDataPointResponse:
     """
     Attributes:
         id (str):
-        input_ (str):
-        result (str):
-        meta_data (Union[Unset, str]):
     """
 
     id: str
-    input_: str
-    result: str
-    meta_data: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
-        input_ = self.input_
-        result = self.result
-        meta_data = self.meta_data
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "input": input_,
-                "result": result,
             }
         )
-        if meta_data is not UNSET:
-            field_dict["meta_data"] = meta_data
 
         return field_dict
 
@@ -49,21 +34,12 @@ class ScenarioDataPoinResponse:
         d = src_dict.copy()
         id = d.pop("id")
 
-        input_ = d.pop("input")
-
-        result = d.pop("result")
-
-        meta_data = d.pop("meta_data", UNSET)
-
-        scenario_data_poin_response = cls(
+        test_data_point_response = cls(
             id=id,
-            input_=input_,
-            result=result,
-            meta_data=meta_data,
         )
 
-        scenario_data_poin_response.additional_properties = d
-        return scenario_data_poin_response
+        test_data_point_response.additional_properties = d
+        return test_data_point_response
 
     @property
     def additional_keys(self) -> List[str]:

@@ -5,42 +5,46 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ScenarioDataPoinResponse")
+T = TypeVar("T", bound="TestDataPointItem")
 
 
 @_attrs_define
-class ScenarioDataPoinResponse:
+class TestDataPointItem:
     """
     Attributes:
         id (str):
-        input_ (str):
-        result (str):
-        meta_data (Union[Unset, str]):
+        scenario_data_point_id (str):
+        test_run_id (str):
+        metric_type (str):
+        metric_value (Union[Unset, str]):
     """
 
     id: str
-    input_: str
-    result: str
-    meta_data: Union[Unset, str] = UNSET
+    scenario_data_point_id: str
+    test_run_id: str
+    metric_type: str
+    metric_value: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
-        input_ = self.input_
-        result = self.result
-        meta_data = self.meta_data
+        scenario_data_point_id = self.scenario_data_point_id
+        test_run_id = self.test_run_id
+        metric_type = self.metric_type
+        metric_value = self.metric_value
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "input": input_,
-                "result": result,
+                "scenario_data_point_id": scenario_data_point_id,
+                "test_run_id": test_run_id,
+                "metric_type": metric_type,
             }
         )
-        if meta_data is not UNSET:
-            field_dict["meta_data"] = meta_data
+        if metric_value is not UNSET:
+            field_dict["metric_value"] = metric_value
 
         return field_dict
 
@@ -49,21 +53,24 @@ class ScenarioDataPoinResponse:
         d = src_dict.copy()
         id = d.pop("id")
 
-        input_ = d.pop("input")
+        scenario_data_point_id = d.pop("scenario_data_point_id")
 
-        result = d.pop("result")
+        test_run_id = d.pop("test_run_id")
 
-        meta_data = d.pop("meta_data", UNSET)
+        metric_type = d.pop("metric_type")
 
-        scenario_data_poin_response = cls(
+        metric_value = d.pop("metric_value", UNSET)
+
+        test_data_point_item = cls(
             id=id,
-            input_=input_,
-            result=result,
-            meta_data=meta_data,
+            scenario_data_point_id=scenario_data_point_id,
+            test_run_id=test_run_id,
+            metric_type=metric_type,
+            metric_value=metric_value,
         )
 
-        scenario_data_poin_response.additional_properties = d
-        return scenario_data_poin_response
+        test_data_point_item.additional_properties = d
+        return test_data_point_item
 
     @property
     def additional_keys(self) -> List[str]:
