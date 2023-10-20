@@ -21,6 +21,7 @@ class TestRunPayload:
         type (Union[Unset, str]):
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
+        calculate_model_metrics (Union[Unset, bool]):
     """
 
     mut_id: Union[Unset, str] = UNSET
@@ -30,6 +31,7 @@ class TestRunPayload:
     type: Union[Unset, str] = UNSET
     start_time: Union[Unset, datetime.datetime] = UNSET
     end_time: Union[Unset, datetime.datetime] = UNSET
+    calculate_model_metrics: Union[Unset, bool] = False
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -49,6 +51,8 @@ class TestRunPayload:
         if not isinstance(self.end_time, Unset):
             end_time = self.end_time.isoformat()
 
+        calculate_model_metrics = self.calculate_model_metrics
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -66,6 +70,8 @@ class TestRunPayload:
             field_dict["start_time"] = start_time
         if end_time is not UNSET:
             field_dict["end_time"] = end_time
+        if calculate_model_metrics is not UNSET:
+            field_dict["calculate_model_metrics"] = calculate_model_metrics
 
         return field_dict
 
@@ -96,6 +102,8 @@ class TestRunPayload:
         else:
             end_time = isoparse(_end_time)
 
+        calculate_model_metrics = d.pop("calculate_model_metrics", UNSET)
+
         test_run_payload = cls(
             mut_id=mut_id,
             scenario_set_id=scenario_set_id,
@@ -104,6 +112,7 @@ class TestRunPayload:
             type=type,
             start_time=start_time,
             end_time=end_time,
+            calculate_model_metrics=calculate_model_metrics,
         )
 
         test_run_payload.additional_properties = d

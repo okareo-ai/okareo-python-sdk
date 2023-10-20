@@ -24,6 +24,7 @@ class TestRunItem:
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
         test_data_point_count (Union[Unset, int]):
+        model_metrics (Union[Unset, str]):
     """
 
     id: str
@@ -36,6 +37,7 @@ class TestRunItem:
     start_time: Union[Unset, datetime.datetime] = UNSET
     end_time: Union[Unset, datetime.datetime] = UNSET
     test_data_point_count: Union[Unset, int] = UNSET
+    model_metrics: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -58,6 +60,7 @@ class TestRunItem:
             end_time = self.end_time.isoformat()
 
         test_data_point_count = self.test_data_point_count
+        model_metrics = self.model_metrics
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -81,6 +84,8 @@ class TestRunItem:
             field_dict["end_time"] = end_time
         if test_data_point_count is not UNSET:
             field_dict["test_data_point_count"] = test_data_point_count
+        if model_metrics is not UNSET:
+            field_dict["model_metrics"] = model_metrics
 
         return field_dict
 
@@ -117,6 +122,8 @@ class TestRunItem:
 
         test_data_point_count = d.pop("test_data_point_count", UNSET)
 
+        model_metrics = d.pop("model_metrics", UNSET)
+
         test_run_item = cls(
             id=id,
             project_id=project_id,
@@ -128,6 +135,7 @@ class TestRunItem:
             start_time=start_time,
             end_time=end_time,
             test_data_point_count=test_data_point_count,
+            model_metrics=model_metrics,
         )
 
         test_run_item.additional_properties = d

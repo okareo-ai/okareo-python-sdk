@@ -21,8 +21,6 @@ from okareo_api_client.models import (
 )
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 
-from .metrics import MultiClassMetrics
-
 
 class ModelUnderTest:
     def __init__(self, client: Client, api_key: str, mut: ModelUnderTestResponse):
@@ -87,8 +85,6 @@ class ModelUnderTest:
                 client=self.client, api_key=self.api_key, scenario_id=scenario_id
             )
 
-            metrics = MultiClassMetrics()
-
             test_run_payload = TestRunPayload(
                 mut_id=self.mut_id,
                 scenario_set_id=scenario_id,
@@ -111,8 +107,6 @@ class ModelUnderTest:
                     input_datetime = str(datetime.now())
 
                     actual, model_response = model_invoker(data_point.input_)
-
-                    metrics.update(data_point.result, actual)
 
                     self.add_data_point(
                         input_obj=data_point.input_,  # todo get full request from inovker
@@ -140,6 +134,9 @@ class ModelUnderTest:
             # update completed test run with end time and test data point count
 
             test_run_payload.end_time = datetime.now()
+            test_run_payload.calculate_model_metrics = (
+                True  # trigger server side calculation
+            )
             # test_run_payload.test_data_point_count = len(response) #todo
             test_run_item = update_test_run_v0_test_runs_test_run_id_put.sync(
                 client=self.client,
@@ -152,9 +149,3 @@ class ModelUnderTest:
             print(e.content)
         except Exception as e:
             print(f"An error occurred: {e}")
-
-        # todo store both of these in the test run
-        complete_class_results = metrics.compute_weighted_average_metrics()
-
-        metrics.display_confusion_matrix()
-        print(complete_class_results)
