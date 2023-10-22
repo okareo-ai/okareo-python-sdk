@@ -7,6 +7,7 @@ from okareo_api_client.api.default import (
     add_test_data_point_v0_test_data_point_post,
     add_test_run_v0_test_runs_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
+    get_test_run_v0_test_runs_test_run_id_get,
     update_test_run_v0_test_runs_test_run_id_put,
 )
 from okareo_api_client.client import Client
@@ -74,12 +75,13 @@ class ModelUnderTest:
 
         return response
 
+    # TODO this is moving to the server
     def run_test(
         self,
         scenario_id: str,
         model_invoker: Callable[[str], Tuple[str, str]],
         test_run_name: str = "",
-    ) -> None:
+    ) -> TestRunItem:
         try:
             response = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
                 client=self.client, api_key=self.api_key, scenario_id=scenario_id
@@ -144,8 +146,33 @@ class ModelUnderTest:
                 test_run_id=test_run_item.id,
                 json_body=test_run_payload,
             )
+            return self.validate_return_type(test_run_item)
 
         except UnexpectedStatus as e:
             print(e.content)
+            raise
         except Exception as e:
             print(f"An error occurred: {e}")
+            raise
+
+    def get_test_run(self, test_run_id: str) -> TestRunItem:
+        try:
+            response = get_test_run_v0_test_runs_test_run_id_get.sync(
+                client=self.client, api_key=self.api_key, test_run_id=test_run_id
+            )
+
+            return self.validate_return_type(response)
+        except UnexpectedStatus as e:
+            print(e.content)
+            raise
+
+    def validate_return_type(
+        self, response: HTTPValidationError | TestRunItem | None
+    ) -> TestRunItem:
+        if isinstance(response, HTTPValidationError):
+            error_message = f"error: {response}, {response.detail}"
+            print(error_message)
+            raise TypeError(error_message)
+        if not response:
+            raise TypeError("Empty response from Okareo API")
+        return response

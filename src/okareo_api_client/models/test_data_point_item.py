@@ -1,9 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
+if TYPE_CHECKING:
+    from ..models.test_data_point_item_metric_value import TestDataPointItemMetricValue
+
 
 T = TypeVar("T", bound="TestDataPointItem")
 
@@ -16,14 +18,14 @@ class TestDataPointItem:
         scenario_data_point_id (str):
         test_run_id (str):
         metric_type (str):
-        metric_value (Union[Unset, str]):
+        metric_value (TestDataPointItemMetricValue):
     """
 
     id: str
     scenario_data_point_id: str
     test_run_id: str
     metric_type: str
-    metric_value: Union[Unset, str] = UNSET
+    metric_value: "TestDataPointItemMetricValue"
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -31,7 +33,7 @@ class TestDataPointItem:
         scenario_data_point_id = self.scenario_data_point_id
         test_run_id = self.test_run_id
         metric_type = self.metric_type
-        metric_value = self.metric_value
+        metric_value = self.metric_value.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -41,15 +43,16 @@ class TestDataPointItem:
                 "scenario_data_point_id": scenario_data_point_id,
                 "test_run_id": test_run_id,
                 "metric_type": metric_type,
+                "metric_value": metric_value,
             }
         )
-        if metric_value is not UNSET:
-            field_dict["metric_value"] = metric_value
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.test_data_point_item_metric_value import TestDataPointItemMetricValue
+
         d = src_dict.copy()
         id = d.pop("id")
 
@@ -59,7 +62,7 @@ class TestDataPointItem:
 
         metric_type = d.pop("metric_type")
 
-        metric_value = d.pop("metric_value", UNSET)
+        metric_value = TestDataPointItemMetricValue.from_dict(d.pop("metric_value"))
 
         test_data_point_item = cls(
             id=id,

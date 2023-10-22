@@ -1,0 +1,14 @@
+from enum import Enum
+
+
+class ScenarioType(str, Enum):
+    CONDITIONAL = "CONDITIONAL"
+    LABEL_REVERSE_INVARIANT = "LABEL_REVERSE_INVARIANT"
+    NAMED_ENTITY_SUBSTITUTION = "NAMED_ENTITY_SUBSTITUTION"
+    NEGATION = "NEGATION"
+    REPHRASE_INVARIANT = "REPHRASE_INVARIANT"
+    ROUNDTRIP_INVARIANT = "ROUNDTRIP_INVARIANT"
+    SEED = "SEED"
+
+    def __str__(self) -> str:
+        return str(self.value)

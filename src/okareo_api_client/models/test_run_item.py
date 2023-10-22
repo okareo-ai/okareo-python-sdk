@@ -1,11 +1,15 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
+
 
 T = TypeVar("T", bound="TestRunItem")
 
@@ -24,7 +28,7 @@ class TestRunItem:
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
         test_data_point_count (Union[Unset, int]):
-        model_metrics (Union[Unset, str]):
+        model_metrics (Union[Unset, TestRunItemModelMetrics]):
     """
 
     id: str
@@ -37,7 +41,7 @@ class TestRunItem:
     start_time: Union[Unset, datetime.datetime] = UNSET
     end_time: Union[Unset, datetime.datetime] = UNSET
     test_data_point_count: Union[Unset, int] = UNSET
-    model_metrics: Union[Unset, str] = UNSET
+    model_metrics: Union[Unset, "TestRunItemModelMetrics"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -60,7 +64,9 @@ class TestRunItem:
             end_time = self.end_time.isoformat()
 
         test_data_point_count = self.test_data_point_count
-        model_metrics = self.model_metrics
+        model_metrics: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.model_metrics, Unset):
+            model_metrics = self.model_metrics.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -91,6 +97,8 @@ class TestRunItem:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
+
         d = src_dict.copy()
         id = d.pop("id")
 
@@ -122,7 +130,12 @@ class TestRunItem:
 
         test_data_point_count = d.pop("test_data_point_count", UNSET)
 
-        model_metrics = d.pop("model_metrics", UNSET)
+        _model_metrics = d.pop("model_metrics", UNSET)
+        model_metrics: Union[Unset, TestRunItemModelMetrics]
+        if isinstance(_model_metrics, Unset):
+            model_metrics = UNSET
+        else:
+            model_metrics = TestRunItemModelMetrics.from_dict(_model_metrics)
 
         test_run_item = cls(
             id=id,

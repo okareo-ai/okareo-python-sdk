@@ -19,11 +19,14 @@ from .scenario_data_poin_response import ScenarioDataPoinResponse
 from .scenario_set_create import ScenarioSetCreate
 from .scenario_set_generate import ScenarioSetGenerate
 from .scenario_set_response import ScenarioSetResponse
+from .scenario_type import ScenarioType
 from .seed_data import SeedData
 from .test_data_point_item import TestDataPointItem
+from .test_data_point_item_metric_value import TestDataPointItemMetricValue
 from .test_data_point_payload import TestDataPointPayload
 from .test_data_point_response import TestDataPointResponse
 from .test_run_item import TestRunItem
+from .test_run_item_model_metrics import TestRunItemModelMetrics
 from .test_run_payload import TestRunPayload
 from .validation_error import ValidationError
 
@@ -47,11 +50,14 @@ __all__ = (
     "ScenarioSetCreate",
     "ScenarioSetGenerate",
     "ScenarioSetResponse",
+    "ScenarioType",
     "SeedData",
     "TestDataPointItem",
+    "TestDataPointItemMetricValue",
     "TestDataPointPayload",
     "TestDataPointResponse",
     "TestRunItem",
+    "TestRunItemModelMetrics",
     "TestRunPayload",
     "ValidationError",
 )
