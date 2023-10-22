@@ -167,7 +167,7 @@ class ModelUnderTest:
             raise
 
     def validate_return_type(
-        self, response: HTTPValidationError | TestRunItem | None
+        self, response: Union[HTTPValidationError, TestRunItem, None]
     ) -> TestRunItem:
         if isinstance(response, HTTPValidationError):
             error_message = f"error: {response}, {response.detail}"
