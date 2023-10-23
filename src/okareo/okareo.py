@@ -1,6 +1,7 @@
 import os
 from typing import Any, List, Union
 
+from okareo.error import CreateScenarioError
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
@@ -83,7 +84,7 @@ class Okareo:
         # fake repetitive code
         if isinstance(response, HTTPValidationError):
             print(f"Unexpected {response=}, {type(response)=}")
-            raise
+            raise CreateScenarioError(f"Unable to create a scenario set: {response=}")
         if not response:
             print("Empty response from API")
         assert response is not None
