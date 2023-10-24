@@ -25,7 +25,8 @@ classifiers = [
 
 packages = [
     { include = "okareo", from = "src" },
-    { include = "okareo_api_client", from = "src" }
+    { include = "okareo_api_client", from = "src" },
+    { include = "tests", from = "." }
 ]
 
 [tool.poetry.dependencies]

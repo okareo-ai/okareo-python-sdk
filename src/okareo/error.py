@@ -1,0 +1,2 @@
+class CreateScenarioError(Exception):
+    pass

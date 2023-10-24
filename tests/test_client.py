@@ -1,26 +1,46 @@
+import uuid
+from urllib.parse import urlparse
+
 import pytest
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
+from okareo.common import BASE_URL
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
+from okareo_api_client.types import UNSET
+from tests.common import API_KEY, OkareoAPIhost, integration
+
+
+@pytest.fixture
+def non_mocked_hosts() -> list:
+    return [urlparse(BASE_URL).hostname]
 
 
 def test_can_instantiate() -> None:
     Okareo("api-key")
 
 
-def test_returns_json(httpx_mock: HTTPXMock) -> None:
+@integration
+def test_returns_json(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     fixture = [{"hash": "ff64e2c", "time_created": "2023-09-28T08:47:29.637000+00:00"}]
-    httpx_mock.add_response(json=fixture)
-    okareo = Okareo("api-key")
+    print("okareo_api", okareo_api)
+    if okareo_api.is_mock:
+        httpx_mock.add_response(json=fixture)
+
+    print("DEBUG INFO", API_KEY, okareo_api.path)
+    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     generations = okareo.get_generations()
     assert generations
     assert not isinstance(generations, HTTPValidationError)
-    assert [g.to_dict() for g in generations] == fixture
+    if okareo_api.is_mock:
+        assert [g.to_dict() for g in generations] == fixture
+    else:
+        assert len(generations) > 0
 
 
-def test_create_scenario_set(httpx_mock: HTTPXMock) -> None:
+@integration
+def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     # Mocking a successful response
     mock_response = {
         "scenario_id": "scenario_id",
@@ -31,24 +51,35 @@ def test_create_scenario_set(httpx_mock: HTTPXMock) -> None:
         # ... any other fields ...
     }
 
-    httpx_mock.add_response(json=mock_response, status_code=201)
+    if okareo_api.is_mock:
+        httpx_mock.add_response(json=mock_response, status_code=201)
 
-    okareo = Okareo("api-key")
+    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     scenario_request = ScenarioSetCreate(
-        name="test_scenario", seed_data=[], number_examples=10, project_id="project_id"
+        name="test_scenario",
+        seed_data=[],
+        number_examples=10,
+        project_id="project_id" if okareo_api.is_mock else UNSET,
     )
     scenario_response = okareo.create_scenario_set(scenario_request)
 
-    assert scenario_response.scenario_id == "scenario_id"
+    if okareo_api.is_mock:
+        assert scenario_response.scenario_id == "scenario_id"
+    else:
+        assert scenario_response.scenario_id
+        uuid.UUID(scenario_response.scenario_id)
     assert scenario_response.name == "test_scenario"
 
 
-def test_error_handling(httpx_mock: HTTPXMock) -> None:
+@integration
+def test_error_handling(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     # Mocking an error response
-    httpx_mock.add_response(json={"detail": "Some error"}, status_code=400)
+    if okareo_api.is_mock:
+        httpx_mock.add_response(json={"detail": "Some error"}, status_code=400)
 
-    okareo = Okareo("api-key")
+    okareo = Okareo("wrong-api-key", base_path=okareo_api.path)
 
     # Expecting the method to raise an exception
-    with pytest.raises(Exception, match="Unexpected"):
-        okareo.get_generations()
+    if okareo_api.is_mock:
+        with pytest.raises(Exception, match="Unexpected"):
+            okareo.get_generations()
