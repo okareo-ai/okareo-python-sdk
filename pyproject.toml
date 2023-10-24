@@ -77,7 +77,7 @@ include = '\.pyi?$'
 [tool.pytest.ini_options]
 addopts = """\
     --cov okareo \
-    --cov tests \
+    --cov okareo_tests \
     --cov-report term-missing \
     --no-cov-on-fail \
 """
