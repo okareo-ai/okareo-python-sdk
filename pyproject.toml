@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okareo"
-version = "0.0.18"
+version = "0.0.19"
 description = "Python SDK for intercating with Okareo Cloud APIs"
 authors = [
     "berni <info@okareo.com>",
@@ -26,7 +26,7 @@ classifiers = [
 packages = [
     { include = "okareo", from = "src" },
     { include = "okareo_api_client", from = "src" },
-    { include = "tests", from = "." }
+    { include = "okareo_tests", from = "." }
 ]
 
 [tool.poetry.dependencies]

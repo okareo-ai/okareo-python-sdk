@@ -2,6 +2,7 @@ import uuid
 from urllib.parse import urlparse
 
 import pytest
+from okareo_tests.common import API_KEY, OkareoAPIhost, integration
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
@@ -9,7 +10,6 @@ from okareo.common import BASE_URL
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.types import UNSET
-from tests.common import API_KEY, OkareoAPIhost, integration
 
 
 @pytest.fixture
