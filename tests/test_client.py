@@ -28,6 +28,7 @@ def test_returns_json(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     if okareo_api.is_mock:
         httpx_mock.add_response(json=fixture)
 
+    print("DEBUG INFO", API_KEY, okareo_api.path)
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     generations = okareo.get_generations()
     assert generations
