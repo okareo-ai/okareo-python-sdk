@@ -67,8 +67,25 @@ to only trigger code generation, without fetching the OpenAPI spec json.
 
 ### Testing
 
+
+In order to run the tests from okareo_tests directory use pytest
 ```sh
-pytest
+poetry pytest
+```
+
+Some of the tests use `@integration` decorator which injects `okareo_api` parameter into the tested function which can be then used to run the test against mocked version of the Okareo API and the actual running server.
+```python
+@integration
+def test_function(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost):
+  if f okareo_api.is_mock:
+    ...
+  integration_env_path = okareo_api.path
+  ...
+```
+
+In case you want to point them at a different API backend, you can utilize the `BASE_URL` environment variable
+```sh
+BASE_URL="http://localhost:8000" poetry run pytest
 ```
 
 ### Documentation
