@@ -33,6 +33,7 @@ packages = [
 python = ">=3.9, <4.0"
 httpx = ">=0.23"
 types-python-dateutil = "^2.8.19.14"
+langchain = "^0.0.321"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"
@@ -58,6 +59,7 @@ pytest-cov = "*"
 python-kacl = "*"
 pyupgrade = "*"
 tryceratops = "*"
+openai = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.2"
