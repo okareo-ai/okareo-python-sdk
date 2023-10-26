@@ -49,8 +49,8 @@ class ModelUnderTest:
     ) -> DatapointResponse:
         body = {
             "tags": tags or [],
-            "input": json.dumps(input_obj),
-            "result": json.dumps(result_obj),
+            "input": json.dumps(input_obj, default=str),
+            "result": json.dumps(result_obj, default=str),
             "context_token": context_token,
             "feedback": feedback,
             "error_message": error_message,
