@@ -58,6 +58,8 @@ pytest-cov = "*"
 python-kacl = "*"
 pyupgrade = "*"
 tryceratops = "*"
+langchain = "^0.0.321"
+openai = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.2"
