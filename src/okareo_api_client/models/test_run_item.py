@@ -29,6 +29,7 @@ class TestRunItem:
         end_time (Union[Unset, datetime.datetime]):
         test_data_point_count (Union[Unset, int]):
         model_metrics (Union[Unset, TestRunItemModelMetrics]):
+        error_matrix (Union[Unset, List[Any]]):
     """
 
     id: str
@@ -42,6 +43,7 @@ class TestRunItem:
     end_time: Union[Unset, datetime.datetime] = UNSET
     test_data_point_count: Union[Unset, int] = UNSET
     model_metrics: Union[Unset, "TestRunItemModelMetrics"] = UNSET
+    error_matrix: Union[Unset, List[Any]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -68,6 +70,10 @@ class TestRunItem:
         if not isinstance(self.model_metrics, Unset):
             model_metrics = self.model_metrics.to_dict()
 
+        error_matrix: Union[Unset, List[Any]] = UNSET
+        if not isinstance(self.error_matrix, Unset):
+            error_matrix = self.error_matrix
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -92,6 +98,8 @@ class TestRunItem:
             field_dict["test_data_point_count"] = test_data_point_count
         if model_metrics is not UNSET:
             field_dict["model_metrics"] = model_metrics
+        if error_matrix is not UNSET:
+            field_dict["error_matrix"] = error_matrix
 
         return field_dict
 
@@ -137,6 +145,8 @@ class TestRunItem:
         else:
             model_metrics = TestRunItemModelMetrics.from_dict(_model_metrics)
 
+        error_matrix = cast(List[Any], d.pop("error_matrix", UNSET))
+
         test_run_item = cls(
             id=id,
             project_id=project_id,
@@ -149,6 +159,7 @@ class TestRunItem:
             end_time=end_time,
             test_data_point_count=test_data_point_count,
             model_metrics=model_metrics,
+            error_matrix=error_matrix,
         )
 
         test_run_item.additional_properties = d

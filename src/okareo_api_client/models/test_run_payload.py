@@ -5,6 +5,7 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
+from ..models.test_run_type import TestRunType
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="TestRunPayload")
@@ -18,7 +19,7 @@ class TestRunPayload:
         scenario_set_id (Union[Unset, str]):
         name (Union[Unset, str]):
         tags (Union[Unset, List[str]]):
-        type (Union[Unset, str]):
+        type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
         calculate_model_metrics (Union[Unset, bool]):
@@ -28,7 +29,7 @@ class TestRunPayload:
     scenario_set_id: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
-    type: Union[Unset, str] = UNSET
+    type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
     start_time: Union[Unset, datetime.datetime] = UNSET
     end_time: Union[Unset, datetime.datetime] = UNSET
     calculate_model_metrics: Union[Unset, bool] = False
@@ -42,7 +43,10 @@ class TestRunPayload:
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        type = self.type
+        type: Union[Unset, str] = UNSET
+        if not isinstance(self.type, Unset):
+            type = self.type.value
+
         start_time: Union[Unset, str] = UNSET
         if not isinstance(self.start_time, Unset):
             start_time = self.start_time.isoformat()
@@ -86,7 +90,12 @@ class TestRunPayload:
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
-        type = d.pop("type", UNSET)
+        _type = d.pop("type", UNSET)
+        type: Union[Unset, TestRunType]
+        if isinstance(_type, Unset):
+            type = UNSET
+        else:
+            type = TestRunType(_type)
 
         _start_time = d.pop("start_time", UNSET)
         start_time: Union[Unset, datetime.datetime]

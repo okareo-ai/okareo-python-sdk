@@ -19,6 +19,7 @@ from okareo_api_client.models import (
     TestDataPointPayload,
     TestRunItem,
     TestRunPayload,
+    TestRunType,
 )
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 
@@ -91,7 +92,7 @@ class ModelUnderTest:
                 mut_id=self.mut_id,
                 scenario_set_id=scenario_id,
                 name=test_run_name,
-                type="invariant",  # todo make this an enum
+                type=TestRunType.MULTI_CLASS_CLASSIFICATION,
                 start_time=datetime.now(),
                 end_time=datetime.now(),  # TODO getting around server error, it's updated later
             )
@@ -99,10 +100,7 @@ class ModelUnderTest:
             test_run_item = add_test_run_v0_test_runs_post.sync(
                 client=self.client, api_key=self.api_key, json_body=test_run_payload
             )
-            if not isinstance(test_run_item, TestRunItem):
-                raise TypeError(
-                    f"Expected test_run_item to be of type TestRunItem, but got {type(test_run_item)} instead."
-                )
+            test_run_item = self.validate_return_type(test_run_item)
 
             if isinstance(response, list):
                 for data_point in response:

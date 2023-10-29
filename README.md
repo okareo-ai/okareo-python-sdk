@@ -68,9 +68,11 @@ to only trigger code generation, without fetching the OpenAPI spec json.
 ### Testing
 
 
-In order to run the tests from okareo_tests directory use pytest
+In order to run the tests from okareo_tests directory use pytest.
+For tests to run you need to have the `API_KEY` environment variable set to a valid API key.
+
 ```sh
-poetry pytest
+poetry run pytest
 ```
 
 Some of the tests use `@integration` decorator which injects `okareo_api` parameter into the tested function which can be then used to run the test against mocked version of the Okareo API and the actual running server.

@@ -11,27 +11,25 @@ if TYPE_CHECKING:
     from ..models.seed_data import SeedData
 
 
-T = TypeVar("T", bound="ScenarioSetResponse")
+T = TypeVar("T", bound="ScenarioSetUpdate")
 
 
 @_attrs_define
-class ScenarioSetResponse:
+class ScenarioSetUpdate:
     """
     Attributes:
-        scenario_id (str):
-        project_id (str):
-        time_created (datetime.datetime):
-        type (str):
+        project_id (Union[Unset, str]):
+        time_created (Union[Unset, datetime.datetime]):
+        type (Union[Unset, str]):
         tags (Union[Unset, List[str]]):
         name (Union[Unset, str]):
         seed_data (Union[Unset, List['SeedData']]):
         scenario_input (Union[Unset, List[str]]):
     """
 
-    scenario_id: str
-    project_id: str
-    time_created: datetime.datetime
-    type: str
+    project_id: Union[Unset, str] = UNSET
+    time_created: Union[Unset, datetime.datetime] = UNSET
+    type: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     name: Union[Unset, str] = UNSET
     seed_data: Union[Unset, List["SeedData"]] = UNSET
@@ -39,9 +37,10 @@ class ScenarioSetResponse:
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        scenario_id = self.scenario_id
         project_id = self.project_id
-        time_created = self.time_created.isoformat()
+        time_created: Union[Unset, str] = UNSET
+        if not isinstance(self.time_created, Unset):
+            time_created = self.time_created.isoformat()
 
         type = self.type
         tags: Union[Unset, List[str]] = UNSET
@@ -63,14 +62,13 @@ class ScenarioSetResponse:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "scenario_id": scenario_id,
-                "project_id": project_id,
-                "time_created": time_created,
-                "type": type,
-            }
-        )
+        field_dict.update({})
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
+        if time_created is not UNSET:
+            field_dict["time_created"] = time_created
+        if type is not UNSET:
+            field_dict["type"] = type
         if tags is not UNSET:
             field_dict["tags"] = tags
         if name is not UNSET:
@@ -87,13 +85,16 @@ class ScenarioSetResponse:
         from ..models.seed_data import SeedData
 
         d = src_dict.copy()
-        scenario_id = d.pop("scenario_id")
+        project_id = d.pop("project_id", UNSET)
 
-        project_id = d.pop("project_id")
+        _time_created = d.pop("time_created", UNSET)
+        time_created: Union[Unset, datetime.datetime]
+        if isinstance(_time_created, Unset):
+            time_created = UNSET
+        else:
+            time_created = isoparse(_time_created)
 
-        time_created = isoparse(d.pop("time_created"))
-
-        type = d.pop("type")
+        type = d.pop("type", UNSET)
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
@@ -108,8 +109,7 @@ class ScenarioSetResponse:
 
         scenario_input = cast(List[str], d.pop("scenario_input", UNSET))
 
-        scenario_set_response = cls(
-            scenario_id=scenario_id,
+        scenario_set_update = cls(
             project_id=project_id,
             time_created=time_created,
             type=type,
@@ -119,8 +119,8 @@ class ScenarioSetResponse:
             scenario_input=scenario_input,
         )
 
-        scenario_set_response.additional_properties = d
-        return scenario_set_response
+        scenario_set_update.additional_properties = d
+        return scenario_set_update
 
     @property
     def additional_keys(self) -> List[str]:

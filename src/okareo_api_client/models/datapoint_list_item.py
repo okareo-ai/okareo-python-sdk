@@ -1,11 +1,16 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.datapoint_list_item_input_type_0 import DatapointListItemInputType0
+    from ..models.datapoint_list_item_result_type_0 import DatapointListItemResultType0
+
 
 T = TypeVar("T", bound="DatapointListItem")
 
@@ -15,6 +20,8 @@ class DatapointListItem:
     """
     Attributes:
         id (str):
+        input_ (Union['DatapointListItemInputType0', str]):
+        result (Union['DatapointListItemResultType0', str]):
         tags (Union[Unset, List[str]]):
         input_datetime (Union[Unset, datetime.datetime]):
         result_datetime (Union[Unset, datetime.datetime]):
@@ -29,6 +36,8 @@ class DatapointListItem:
     """
 
     id: str
+    input_: Union["DatapointListItemInputType0", str]
+    result: Union["DatapointListItemResultType0", str]
     tags: Union[Unset, List[str]] = UNSET
     input_datetime: Union[Unset, datetime.datetime] = UNSET
     result_datetime: Union[Unset, datetime.datetime] = UNSET
@@ -43,7 +52,26 @@ class DatapointListItem:
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        from ..models.datapoint_list_item_input_type_0 import DatapointListItemInputType0
+        from ..models.datapoint_list_item_result_type_0 import DatapointListItemResultType0
+
         id = self.id
+        input_: Union[Dict[str, Any], str]
+
+        if isinstance(self.input_, DatapointListItemInputType0):
+            input_ = self.input_.to_dict()
+
+        else:
+            input_ = self.input_
+
+        result: Union[Dict[str, Any], str]
+
+        if isinstance(self.result, DatapointListItemResultType0):
+            result = self.result.to_dict()
+
+        else:
+            result = self.result
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
@@ -73,6 +101,8 @@ class DatapointListItem:
         field_dict.update(
             {
                 "id": id,
+                "input": input_,
+                "result": result,
             }
         )
         if tags is not UNSET:
@@ -102,8 +132,37 @@ class DatapointListItem:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.datapoint_list_item_input_type_0 import DatapointListItemInputType0
+        from ..models.datapoint_list_item_result_type_0 import DatapointListItemResultType0
+
         d = src_dict.copy()
         id = d.pop("id")
+
+        def _parse_input_(data: object) -> Union["DatapointListItemInputType0", str]:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                input_type_0 = DatapointListItemInputType0.from_dict(data)
+
+                return input_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["DatapointListItemInputType0", str], data)
+
+        input_ = _parse_input_(d.pop("input"))
+
+        def _parse_result(data: object) -> Union["DatapointListItemResultType0", str]:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                result_type_0 = DatapointListItemResultType0.from_dict(data)
+
+                return result_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["DatapointListItemResultType0", str], data)
+
+        result = _parse_result(d.pop("result"))
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
@@ -144,6 +203,8 @@ class DatapointListItem:
 
         datapoint_list_item = cls(
             id=id,
+            input_=input_,
+            result=result,
             tags=tags,
             input_datetime=input_datetime,
             result_datetime=result_datetime,
