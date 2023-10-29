@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
@@ -82,9 +82,10 @@ class ModelUnderTest:
         scenario_id: str,
         model_invoker: Callable[[str], Tuple[str, str]],
         test_run_name: str = "",
+        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
     ) -> TestRunItem:
         try:
-            response = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
+            scenario_data_points = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
                 client=self.client, api_key=self.api_key, scenario_id=scenario_id
             )
 
@@ -92,7 +93,7 @@ class ModelUnderTest:
                 mut_id=self.mut_id,
                 scenario_set_id=scenario_id,
                 name=test_run_name,
-                type=TestRunType.MULTI_CLASS_CLASSIFICATION,
+                type=test_run_type,
                 start_time=datetime.now(),
                 end_time=datetime.now(),  # TODO getting around server error, it's updated later
             )
@@ -102,14 +103,14 @@ class ModelUnderTest:
             )
             test_run_item = self.validate_return_type(test_run_item)
 
-            if isinstance(response, list):
-                for data_point in response:
+            if isinstance(scenario_data_points, list):
+                for scenario_data_point in scenario_data_points:
                     input_datetime = str(datetime.now())
 
-                    actual, model_response = model_invoker(data_point.input_)
+                    actual, model_response = model_invoker(scenario_data_point.input_)
 
                     self.add_data_point(
-                        input_obj=data_point.input_,  # todo get full request from inovker
+                        input_obj=scenario_data_point.input_,  # todo get full request from inovker
                         input_datetime=input_datetime,  # start of model invocation
                         result_obj=model_response,  # json.dumps() the result objects from the model
                         result_datetime=str(datetime.now()),  # end of model invocation
@@ -118,10 +119,10 @@ class ModelUnderTest:
 
                     test_data_point_payload = TestDataPointPayload(
                         test_run_id=test_run_item.id,
-                        scenario_data_point_id=data_point.id,
-                        metric_type="multi-class-classifier",
-                        metric_value=json.dumps(
-                            {"expected": data_point.result, "actual": actual}
+                        scenario_data_point_id=scenario_data_point.id,
+                        metric_type=test_run_type.value,  # same as test_run_item.type for now
+                        metric_value=self.get_metric_value_by_run_type(
+                            test_run_type, scenario_data_point.result, actual
                         ),
                     )
 
@@ -152,6 +153,22 @@ class ModelUnderTest:
         except Exception as e:
             print(f"An error occurred: {e}")
             raise
+
+    def get_metric_value_by_run_type(
+        self, test_run_type: TestRunType, result: Any, actual: str
+    ) -> str:
+        if test_run_type == TestRunType.MULTI_CLASS_CLASSIFICATION:
+            if not isinstance(result, str):
+                raise TypeError(
+                    f"Expected result to be a string, but got {type(result)}"
+                )
+            metric_value = json.dumps({"expected": result, "actual": actual})
+        elif test_run_type == TestRunType.INFORMATION_RETRIEVAL:
+            metric_value = json.dumps({"retrieved_ids_with_scores": actual})
+        else:
+            raise ValueError(f"Unsupported test run type: {test_run_type}")
+
+        return metric_value
 
     def get_test_run(self, test_run_id: str) -> TestRunItem:
         try:
