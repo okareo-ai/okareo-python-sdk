@@ -77,7 +77,7 @@ class CallbackHandler(BaseCallbackHandler):
         error: BaseException,
         *,
         run_id: UUID,
-        parent_run_id: UUID | None = ...,
+        parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> Any:
         """Run when LLM errors."""
