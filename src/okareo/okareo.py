@@ -6,6 +6,7 @@ from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
+    get_datapoints_v0_find_datapoints_post,
     get_generations_v0_generations_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
@@ -14,6 +15,8 @@ from okareo_api_client.api.default import (
 from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
     BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
 )
+from okareo_api_client.models.datapoint_list_item import DatapointListItem
+from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.generation_list import GenerationList
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
@@ -156,3 +159,16 @@ class Okareo:
         if not response:
             print("Empty response from API")
         assert response is not None
+
+    def find_datapoints(self, context_token: str) -> List[DatapointListItem]:
+        data = get_datapoints_v0_find_datapoints_post.sync(
+            client=self.client,
+            api_key=self.api_key,
+            json_body=DatapointSearch(context_token=context_token),
+        )
+        if isinstance(data, HTTPValidationError):
+            print(f"Unexpected {data=}, {type(data)=}")
+            raise
+        if not data:
+            return []
+        return data

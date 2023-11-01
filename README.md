@@ -22,6 +22,22 @@ pip install okareo
 
 Please see and run this notebook: https://github.com/okareo-ai/okareo-python-sdk/blob/main/examples/example.ipynb
 
+## Using Okareo LangChain Callbacks Handler
+
+We provide a LangChain callback handler that lets you easily integrate your current workflows with the Okareo platform.
+
+Inegrating them into your chain is as easy as simply importing the SDK add adding following
+```
+from okareo.callbacks import CallbackHandler
+...
+handler = CallbackHandler(mut_name="my-model", context_token="context-token")
+llm = OpenAI(temperature=0.3, callbacks=[handler])
+
+```
+During the LangChain LLM runs we will collect input and output information so you can analyze it further with the Okareo toolkit.
+
+You can also see an usage example in [./examples/langchain.py](./examples/langchain.py)
+
 ## Development
 
 * Clone this repository
