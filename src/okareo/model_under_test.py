@@ -80,7 +80,7 @@ class ModelUnderTest:
     def run_test(
         self,
         scenario_id: str,
-        model_invoker: Callable[[str], Tuple[str, str]],
+        model_invoker: Callable[[str], Tuple[Any, Any]],
         test_run_name: str = "",
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
     ) -> TestRunItem:

@@ -1,0 +1,60 @@
+{"input": "I can't log into my account. Can you assist?", "result": "support"}
+{"input": "The website keeps crashing when I try to check out. What should I do?", "result": "support"}
+{"input": "How do I reset my password?", "result": "support"}
+{"input": "The images on the product page aren't loading. Can you help?", "result": "support"}
+{"input": "I'm having trouble applying a discount code.", "result": "support"}
+{"input": "How do I navigate to the 'Sustainability Initiatives' page?", "result": "support"}
+{"input": "I can't find the 'Help Center'. Where is it located?", "result": "support"}
+{"input": "The 'Live Chat' feature isn't working for me. How can I get in touch?", "result": "support"}
+{"input": "How do I use the 'Wishlist' feature?", "result": "support"}
+{"input": "The site is asking for two-factor authentication, but I'm not receiving the code.", "result": "support"}
+{"input": "Can you recommend some top-rated products?", "result": "product"}
+{"input": "I'm looking for eco-friendly products. What do you suggest?", "result": "product"}
+{"input": "Are there any new product launches I should know about?", "result": "product"}
+{"input": "Tell me more about your exclusive designer collaborations.", "result": "product"}
+{"input": "What products are currently on flash sale?", "result": "product"}
+{"input": "I'm interested in ethical brands. Can you show me some options?", "result": "product"}
+{"input": "What's the most popular product in the electronics category?", "result": "product"}
+{"input": "I heard about a new collection release. Where can I find it?", "result": "product"}
+{"input": "Are there any limited-time offers I should be aware of?", "result": "product"}
+{"input": "Which brands are featured prominently on WebBizz?", "result": "product"}
+{"input": "How long does delivery usually take?", "result": "shipping"}
+{"input": "I ordered a product last week. Can I track its status?", "result": "shipping"}
+{"input": "Do 'Premium Club' members get expedited shipping?", "result": "shipping"}
+{"input": "I haven't received my order yet. Who can I contact?", "result": "shipping"}
+{"input": "What are the shipping charges for international delivery?", "result": "shipping"}
+{"input": "How do I change the delivery address for my current order?", "result": "shipping"}
+{"input": "Are there any shipping promotions currently?", "result": "shipping"}
+{"input": "What's the standard delivery time for eco-friendly products?", "result": "shipping"}
+{"input": "I need to expedite my delivery. Is that possible?", "result": "shipping"}
+{"input": "Do you offer free shipping on any products?", "result": "shipping"}
+{"input": "I'm not satisfied with my product. How can I return it?", "result": "returns"}
+{"input": "What's the return policy for 'Premium Club' members?", "result": "returns"}
+{"input": "The product arrived damaged. How can I get a replacement?", "result": "returns"}
+{"input": "How long is the return window for purchases?", "result": "returns"}
+{"input": "Do I have to pay for return shipping?", "result": "returns"}
+{"input": "I returned an item. When can I expect my refund?", "result": "returns"}
+{"input": "Can I exchange a product instead of returning it?", "result": "returns"}
+{"input": "I lost the original packaging. Can I still return the product?", "result": "returns"}
+{"input": "How do I initiate a return request?", "result": "returns"}
+{"input": "Is the return policy the same for sale items?", "result": "returns"}
+{"input": "Are there any ongoing discounts or promotions?", "result": "pricing"}
+{"input": "How do I apply for the 'WebBizz Rewards' loyalty program?", "result": "pricing"}
+{"input": "I have a discount code. Where do I enter it?", "result": "pricing"}
+{"input": "Do 'Premium Club' members get additional discounts?", "result": "pricing"}
+{"input": "How do I check my 'WebBizz Rewards' points?", "result": "pricing"}
+{"input": "Are there any exclusive deals for newsletter subscribers?", "result": "pricing"}
+{"input": "What are the benefits of the 'Premium Club' membership?", "result": "pricing"}
+{"input": "I saw a price drop on a product I bought last week. Can I get a price adjustment?", "result": "pricing"}
+{"input": "How frequently do you have sales?", "result": "pricing"}
+{"input": "Do you offer student discounts?", "result": "pricing"}
+{"input": "I received the wrong product. How can this be resolved?", "result": "complaints"}
+{"input": "The product quality is not as described on the website.", "result": "complaints"}
+{"input": "I've had a bad experience with your customer service.", "result": "complaints"}
+{"input": "My order was missing a few items. Who can I speak to?", "result": "complaints"}
+{"input": "The product I received looks used. I want a replacement.", "result": "complaints"}
+{"input": "I was overcharged for my order. How can I get a refund?", "result": "complaints"}
+{"input": "The delivery was delayed multiple times without any notice.", "result": "complaints"}
+{"input": "I found misleading information on a product page.", "result": "complaints"}
+{"input": "I have concerns about the security of my personal data.", "result": "complaints"}
+{"input": "The 'Live Chat' representative was not helpful.", "result": "complaints"}

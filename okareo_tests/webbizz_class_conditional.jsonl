@@ -1,0 +1,60 @@
+{"input": "Considering your exclusive designer collaborations, could you provide some further detail?", "result": "product"}
+{"input": "Encountering difficulty with logging into my account, could you lend a helping hand?", "result": "support"}
+{"input": "Encountering problems while applying a discount code, what help could I get?", "result": "support"}
+{"input": "Given an order, what is the typical delivery duration?", "result": "shipping"}
+{"input": "Given my need to expedite my delivery, is that a possibility?", "result": "shipping"}
+{"input": "Given that I've had a bad experience, how will your customer service improve?", "result": "complaints"}
+{"input": "Given that you ordered a product last week, is it possible for you to track its current status?", "result": "shipping"}
+{"input": "Given the circumstance that I was delivered the wrong product, what could be the solution to resolve this?", "result": "complaints"}
+{"input": "Given the current promotions, are there any limited-time offers I should be conscious of?", "result": "product"}
+{"input": "Given the current sale, does the return policy remain as usual?", "result": "returns"}
+{"input": "Given the current time, are there any available shipping promotions?", "result": "shipping"}
+{"input": "Given your interest in ethical brands, could I possibly present some options for you?", "result": "product"}
+{"input": "Having returned an item, when might I anticipate my refund?", "result": "returns"}
+{"input": "In the event of any new product launches, what essential details should I be aware of?", "result": "product"}
+{"input": "In the event that a purchase has been made, how long is the window for returns?", "result": "returns"}
+{"input": "In the event that I feel overcharged for my order, how could I pursue a refund?", "result": "complaints"}
+{"input": "In the event that I lost the original packaging, is returning the product still an option?", "result": "returns"}
+{"input": "In the event that I need to initiate a return request, how would I go about it?", "result": "returns"}
+{"input": "In the event that I need to reset my password, how can I go about it?", "result": "support"}
+{"input": "In the event that I need to return this item, would I be responsible for paying the shipping fees?", "result": "returns"}
+{"input": "In the event that I noticed a price drop on a product I purchased last week, could I possibly request a price adjustment?", "result": "pricing"}
+{"input": "In the event that I voice my concerns, what measures are taken for the security of my personal data?", "result": "complaints"}
+{"input": "In the event that I want to alter the delivery address for my current order, how might I go about this?", "result": "shipping"}
+{"input": "In the event that my order has a few items missing, who would be the appropriate person to converse with?", "result": "complaints"}
+{"input": "In the event that my order hasn't arrived, who would be the appropriate person to reach out to?", "result": "shipping"}
+{"input": "In the event that the 'Live Chat' feature isn't functioning, what are my other contact options?", "result": "support"}
+{"input": "In the event that the 'Live Chat' representative did not provide adequate assistance, how could your issue be resolved?", "result": "complaints"}
+{"input": "In the event that the delivery is international, what would be the shipping charges?", "result": "shipping"}
+{"input": "In the event that the delivery underwent multiple unannounced delays, what might be the implications?", "result": "complaints"}
+{"input": "In the event that the product has arrived damaged, what steps should I take to secure a replacement?", "result": "returns"}
+{"input": "In the event that the site is requiring two-factor authentication and I'm not receiving the code, what could be the problem?", "result": "support"}
+{"input": "In the event that the website keeps crashing when you are trying to check out, what actions should be taken?", "result": "support"}
+{"input": "In the event that there are ongoing discounts or promotions, could you provide details?", "result": "pricing"}
+{"input": "In the event that you are a 'Premium Club' member, what would be the return policy?", "result": "returns"}
+{"input": "In the event that you are a 'Premium Club' member, will expedited shipping be available to you?", "result": "shipping"}
+{"input": "In the event that you are subscribed to our newsletter, are there any exclusive deals available?", "result": "pricing"}
+{"input": "In the event that you have special rates for students, could you enlighten me about them?", "result": "pricing"}
+{"input": "In the event that you order eco-friendly products, what would be the standard delivery time?", "result": "shipping"}
+{"input": "In the event that you want to navigate to the 'Sustainability Initiatives' page, how would you go about it?", "result": "support"}
+{"input": "In the event that you wish to verify your 'WebBizz Rewards' points, how might you go about it?", "result": "pricing"}
+{"input": "In the event that you're curious, what's the most sought-after product in the electronics category?", "result": "product"}
+{"input": "In the event that you're searching for currently discounted products, which ones are on flash sale?", "result": "product"}
+{"input": "Looking to discover the new collection release you've heard about, where might you locate it?", "result": "product"}
+{"input": "Looking to WebBizz, which brands are prominently featured?", "result": "product"}
+{"input": "Preparing to join the 'WebBizz Rewards' loyalty program, what steps should I follow?", "result": "pricing"}
+{"input": "Searching for eco-friendly products, what recommendations can you provide?", "result": "product"}
+{"input": "Searching for high-quality items, could you possibly suggest some top-rated products?", "result": "product"}
+{"input": "Searching for the 'Help Center', where might you find it located?", "result": "support"}
+{"input": "Should you be a 'Premium Club' member, do you receive additional discounts?", "result": "pricing"}
+{"input": "Should you be unsatisfied with your product, how might you proceed to return it?", "result": "returns"}
+{"input": "Should you encounter misleading information on a product page, how would you go about addressing this issue?", "result": "complaints"}
+{"input": "Should you find that the product quality does not match the description on the website...", "result": "complaints"}
+{"input": "Should you have a discount code, where might it be entered?", "result": "pricing"}
+{"input": "Should you have a moment, could you help me with an issue regarding the product images not loading on the page?", "result": "support"}
+{"input": "Should you have a product that is dissatisfactory, would it be possible to exchange instead of returning it?", "result": "returns"}
+{"input": "Should you have any items on offer that come with free shipping?", "result": "shipping"}
+{"input": "Should you join the 'Premium Club', what benefits would you enjoy?", "result": "pricing"}
+{"input": "Should you offer a sale, how often does it typically happen?", "result": "pricing"}
+{"input": "Should you receive a product that appears used, would you be desiring a replacement?", "result": "complaints"}
+{"input": "Thinking of utilizing the 'Wishlist' feature, how might I go about it?", "result": "support"}

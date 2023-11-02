@@ -1,0 +1,60 @@
+{"input": "Are any of your products available with free delivery?", "result": "shipping"}
+{"input": "Are there any recent product releases I need to be aware of?", "result": "product"}
+{"input": "Are there extra discounts for 'Premium Club' members?", "result": "pricing"}
+{"input": "Can I speed up the delivery of my order?", "result": "shipping"}
+{"input": "Can you provide additional information about your unique designer partnerships?", "result": "product"}
+{"input": "Can you provide me with some choices for brands that prioritize ethics?", "result": "product"}
+{"input": "Can you recommend some environmentally friendly items?", "result": "product"}
+{"input": "Can you tell me about the return policy for members of 'Premium Club'?", "result": "returns"}
+{"input": "Can you tell me the advantages of the 'Premium Club' membership?", "result": "pricing"}
+{"input": "Could you suggest a few highly-rated items?", "result": "product"}
+{"input": "Do newsletter subscribers get any special offers?", "result": "pricing"}
+{"input": "Do you have any special promotions going on right now that I should know about?", "result": "product"}
+{"input": "Does the return policy apply to items on sale in the same way?", "result": "returns"}
+{"input": "Every time I attempt to check out, the site keeps failing. Any advice on what to do?", "result": "support"}
+{"input": "How long does it usually take for eco-friendly items to be delivered?", "result": "shipping"}
+{"input": "I am unable to locate the 'Help Center'. Can you tell me where it can be found?", "result": "support"}
+{"input": "I am unhappy with the product I received. What process should I follow to return it?", "result": "returns"}
+{"input": "I can't seem to use the 'Live Chat' function. What other contact options do I have?", "result": "support"}
+{"input": "I got news about a new collection launch. Can you guide me where to locate it?", "result": "product"}
+{"input": "I noticed the cost of an item I purchased last week has gone down. Am I eligible for a price correction?", "result": "pricing"}
+{"input": "I purchased an item last week. Can I follow its progress?", "result": "shipping"}
+{"input": "I was sent an incorrect item. What can be done to fix this?", "result": "complaints"}
+{"input": "I'm experiencing issues while trying to utilize a discount code.", "result": "support"}
+{"input": "I'm having trouble viewing the pictures on the product page. Can you assist?", "result": "support"}
+{"input": "I'm not getting the two-factor authentication code when this site prompts for it.", "result": "support"}
+{"input": "I'm unable to access my account. Can you help?", "result": "support"}
+{"input": "I'm worried about the safety of my personal information.", "result": "complaints"}
+{"input": "I've been billed too much for my purchase. What's the process for obtaining a reimbursement?", "result": "complaints"}
+{"input": "Is expedited shipping available for 'Premium Club' members?", "result": "shipping"}
+{"input": "Is it possible to return the product even though I misplaced the original box?", "result": "returns"}
+{"input": "Is it possible to swap a product rather than returning it?", "result": "returns"}
+{"input": "Is the return shipping fee my responsibility?", "result": "returns"}
+{"input": "Is there a discount available for students?", "result": "pricing"}
+{"input": "Is there any current sales or deals happening?", "result": "pricing"}
+{"input": "Is there any ongoing shipping discount now?", "result": "shipping"}
+{"input": "My experience with your customer support was not satisfactory.", "result": "complaints"}
+{"input": "My order hasn't arrived yet. Who should I get in touch with?", "result": "shipping"}
+{"input": "Some items were not included in my order. Who may I contact?", "result": "complaints"}
+{"input": "The agent on the 'Live Chat' was not of much assistance.", "result": "complaints"}
+{"input": "The item delivered to me appears to be secondhand. I need a new one as a substitute.", "result": "complaints"}
+{"input": "The item I received is broken. What is the process to obtain a new one?", "result": "returns"}
+{"input": "The quality of the item doesn't match its description on the website.", "result": "complaints"}
+{"input": "There appears to be incorrect data on a product's page.", "result": "complaints"}
+{"input": "There were numerous unannounced postponements in the shipment.", "result": "complaints"}
+{"input": "What are the steps to change my password?", "result": "support"}
+{"input": "What are the steps to enroll in the 'WebBizz Rewards' loyalty scheme?", "result": "pricing"}
+{"input": "What are the steps to reach the 'Sustainability Initiatives' page?", "result": "support"}
+{"input": "What are the steps to start a return request?", "result": "returns"}
+{"input": "What brands are predominantly showcased on WebBizz?", "result": "product"}
+{"input": "What is the cost of delivering internationally?", "result": "shipping"}
+{"input": "What is the duration of the return period for items bought?", "result": "returns"}
+{"input": "What steps should I follow to modify the shipping address for my existing order?", "result": "shipping"}
+{"input": "What's the frequency of your sales events?", "result": "pricing"}
+{"input": "What's the normal duration for deliveries?", "result": "shipping"}
+{"input": "What's the procedure to utilize the 'Wishlist' feature?", "result": "support"}
+{"input": "What's the process to view my 'WebBizz Rewards' points?", "result": "pricing"}
+{"input": "When will I receive my refund for the item I sent back?", "result": "returns"}
+{"input": "Where should I input my promotional code?", "result": "pricing"}
+{"input": "Which is the top-selling item in the electronics section?", "result": "product"}
+{"input": "Which items are currently part of the flash sale?", "result": "product"}
