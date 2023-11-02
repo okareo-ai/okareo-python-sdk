@@ -20,7 +20,8 @@ pip install okareo
 
 ## Get Started Example
 
-Please see and run this notebook: https://github.com/okareo-ai/okareo-python-sdk/blob/main/examples/example.ipynb
+Please see and run this notebook: https://github.com/okareo-ai/okareo-python-sdk/blob/main/examples/scenario_set.ipynb
+See additional examples under: https://github.com/okareo-ai/okareo-python-sdk/tree/main/examples
 
 ## Using Okareo LangChain Callbacks Handler
 
