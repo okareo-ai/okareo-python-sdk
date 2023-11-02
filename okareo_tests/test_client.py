@@ -1,20 +1,13 @@
 import uuid
-from urllib.parse import urlparse
 
 import pytest
 from okareo_tests.common import API_KEY, OkareoAPIhost, integration
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo.common import BASE_URL
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.types import UNSET
-
-
-@pytest.fixture
-def non_mocked_hosts() -> list:
-    return [urlparse(BASE_URL).hostname]
 
 
 def test_can_instantiate() -> None:
@@ -24,11 +17,9 @@ def test_can_instantiate() -> None:
 @integration
 def test_returns_json(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     fixture = [{"hash": "ff64e2c", "time_created": "2023-09-28T08:47:29.637000+00:00"}]
-    print("okareo_api", okareo_api)
     if okareo_api.is_mock:
         httpx_mock.add_response(json=fixture)
 
-    print("DEBUG INFO", API_KEY, okareo_api.path)
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     generations = okareo.get_generations()
     assert generations

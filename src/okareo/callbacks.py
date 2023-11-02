@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import string
@@ -24,7 +25,7 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> None:
         """Initialize callback handler."""
         self.okareo = Okareo(api_key or os.environ["API_KEY"])
-        self.inputs: Dict[str, Any] = {}
+        self.inputs: List[Dict[str, Any]] = []
         self.context_token = context_token or "".join(
             random.choices(string.ascii_letters, k=10)
         )
@@ -38,19 +39,45 @@ class CallbackHandler(BaseCallbackHandler):
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> Any:
         """Run when LLM starts running."""
+        logging.debug("on_llm_start", serialized, prompts, kwargs)
+        self.inputs.append(
+            {
+                "prompts": prompts,
+                "invocation_params": kwargs["invocation_params"],
+            }
+        )
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> Any:
         """Run on new LLM token. Only available when streaming is enabled."""
+        logging.debug("on_llm_new_token", token, kwargs)
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
         """Run when LLM ends running."""
+        logging.debug("on_llm_end", response, kwargs)
+        model = self.registered_model
+        if not model:
+            model_name = (
+                response.llm_output.get("model_name", "<unknown>")
+                if response.llm_output
+                else "<unknown>"
+            )
+            model = self.okareo.register_model(name=model_name, tags=["langchain"])
+        model.add_data_point(
+            input_obj=self.inputs.pop(),
+            result_obj={
+                "outputs": response.generations,
+                "llm_output": response.llm_output,
+            },
+            context_token=self.context_token,
+            tags=["langchain"],
+        )
 
     def on_llm_error(
         self,
         error: BaseException,
         *,
         run_id: UUID,
-        parent_run_id: UUID | None = ...,
+        parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
         """Run when LLM errors."""
@@ -59,32 +86,34 @@ class CallbackHandler(BaseCallbackHandler):
         self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any
     ) -> Any:
         """Run when chain starts running."""
+        logging.debug("on_chain_start", serialized, inputs, kwargs)
         class_name = serialized.get("name", serialized.get("id", ["<unknown>"])[-1])
-        print(f"\n\n\033[1m> Entering new {class_name} chain...\033[0m")
 
         if not self.registered_model:
             self.registered_model = self.okareo.register_model(
                 name=class_name, tags=["langchain"]
             )
-        self.inputs = {
-            "input": inputs,
-            "kwargs": kwargs,
-            "serialized": serialized,
-        }
+        self.inputs.append(
+            {
+                "template": serialized.get("kwargs", {})
+                .get("prompt", {})
+                .get("kwargs", {})
+                .get("template", ""),
+                "input": inputs,
+                "tags": kwargs.get("tags", []),
+            }
+        )
 
     def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> Any:
         """Run when chain ends running."""
-        print("\n\033[1m> Finished chain.\033[0m")
-        print("Output: ", outputs)
+        logging.debug("on_chain_end", outputs, kwargs)
 
         assert self.registered_model
         self.registered_model.add_data_point(
-            input_obj={"in-json": self.inputs},
+            input_obj=self.inputs.pop(),
             result_obj={
-                "result-json": {
-                    "outputs": outputs,
-                    "kwargs": kwargs,
-                }
+                "outputs": outputs,
+                "tags": kwargs.get("tags", []),
             },
             context_token=self.context_token,
             tags=["langchain"],
@@ -95,14 +124,14 @@ class CallbackHandler(BaseCallbackHandler):
         error: BaseException,
         *,
         run_id: UUID,
-        parent_run_id: UUID | None = None,
+        parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
         """Run when chain errors."""
         print("\n\033[1m> Chain error\033[0m")
         assert self.registered_model
         self.registered_model.add_data_point(
-            input_obj={"in-json": self.inputs},
+            input_obj=self.inputs.pop(),
             result_obj={},
             context_token=self.context_token,
             tags=["langchain"],
@@ -113,16 +142,18 @@ class CallbackHandler(BaseCallbackHandler):
         self, serialized: Dict[str, Any], input_str: str, **kwargs: Any
     ) -> Any:
         """Run when tool starts running."""
+        logging.debug("on_tool_start", serialized, input_str, kwargs)
 
     def on_tool_end(self, output: str, **kwargs: Any) -> Any:
         """Run when tool ends running."""
+        logging.debug("on_tool_end", output, kwargs)
 
     def on_tool_error(
         self,
         error: BaseException,
         *,
         run_id: UUID,
-        parent_run_id: UUID | None = None,
+        parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
         """Run when tool errors."""
@@ -132,6 +163,8 @@ class CallbackHandler(BaseCallbackHandler):
 
     def on_agent_action(self, action: AgentAction, **kwargs: Any) -> Any:
         """Run on agent action."""
+        logging.debug("on_agent_action", action, kwargs)
 
     def on_agent_finish(self, finish: AgentFinish, **kwargs: Any) -> Any:
         """Run on agent end."""
+        logging.debug("on_agent_action", finish, kwargs)

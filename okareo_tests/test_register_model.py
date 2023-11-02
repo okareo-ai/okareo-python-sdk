@@ -11,6 +11,6 @@ def test_register_model(httpx_mock: HTTPXMock) -> None:
         "tags": ["ci-testing"],
     }
     httpx_mock.add_response(status_code=201, json=fixture)
-    okareo = Okareo("api-key")
+    okareo = Okareo("api-key", "http://mocked.com")
     mut = okareo.register_model(name="NotebookModel", tags=["ci-testing"])
     assert mut

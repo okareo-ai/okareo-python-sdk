@@ -93,6 +93,7 @@ exclude_lines = [
 [tool.coverage.run]
 omit = [
     "src/okareo_api_client/*",
+    "okareo_tests/*",
 ]
 
 [tool.mypy]
