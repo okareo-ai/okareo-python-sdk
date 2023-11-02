@@ -47,7 +47,7 @@ llm = OpenAI(temperature=0.3, callbacks=[handler])
 ```
 During the LangChain LLM runs we will collect input and output information so you can analyze it further with the Okareo toolkit.
 
-You can also see an usage example in [./examples/langchain.py](./examples/langchain.py)
+You can also see an usage example in [./examples/langchain_callback_example.py](./examples/langchain_callback_example.py)
 
 ## Development
 
