@@ -27,10 +27,10 @@ Python SDK for interacting with Okareo Cloud APIs
 
 ## Get Started Example
 
-Please see and run this notebook:
+Please see and run this notebook:<br>
 https://github.com/okareo-ai/okareo-python-sdk/blob/main/examples/scenario_set.ipynb
 
-See additional examples under:
+See additional examples under:<br>
 https://github.com/okareo-ai/okareo-python-sdk/tree/main/examples
 
 ## Using Okareo LangChain Callbacks Handler
