@@ -24,7 +24,7 @@ class CallbackHandler(BaseCallbackHandler):
         context_token: Optional[str] = None,
     ) -> None:
         """Initialize callback handler."""
-        self.okareo = Okareo(api_key or os.environ["API_KEY"])
+        self.okareo = Okareo(api_key or os.environ["OKAREO_API_KEY"])
         self.inputs: List[Dict[str, Any]] = []
         self.context_token = context_token or "".join(
             random.choices(string.ascii_letters, k=10)

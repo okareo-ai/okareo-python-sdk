@@ -46,4 +46,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: poetry run pytest
         env:
-            API_KEY: ${{ secrets.API_KEY }}
+            OKAREO_API_KEY: ${{ secrets.API_KEY }}

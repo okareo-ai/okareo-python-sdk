@@ -7,7 +7,7 @@ import pytest
 
 from okareo.common import BASE_URL
 
-API_KEY = os.environ.get("API_KEY", "no-api-key")
+API_KEY = os.environ.get("OKAREO_API_KEY", "no-api-key")
 
 
 class OkareoAPIhost:

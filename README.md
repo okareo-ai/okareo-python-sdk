@@ -14,14 +14,24 @@ Python SDK for interacting with Okareo Cloud APIs
 
 ## Installation
 
-```sh
-pip install okareo
-```
+1. Install the package
+    ```sh
+    pip install okareo
+    ```
+2. Get your API token from [https://app.okareo.com/](https://app.okareo.com/).
+   (Note: You will need to register first.)
+
+3. Go directly to the **"2. Create your API Token"** on the landing page in above app.
+
+4. Set the environment variable `OKAREO_API_KEY` to your generated API token.
 
 ## Get Started Example
 
-Please see and run this notebook: https://github.com/okareo-ai/okareo-python-sdk/blob/main/examples/scenario_set.ipynb
-See additional examples under: https://github.com/okareo-ai/okareo-python-sdk/tree/main/examples
+Please see and run this notebook:
+https://github.com/okareo-ai/okareo-python-sdk/blob/main/examples/scenario_set.ipynb
+
+See additional examples under:
+https://github.com/okareo-ai/okareo-python-sdk/tree/main/examples
 
 ## Using Okareo LangChain Callbacks Handler
 
@@ -86,7 +96,7 @@ to only trigger code generation, without fetching the OpenAPI spec json.
 
 
 In order to run the tests from okareo_tests directory use pytest.
-For tests to run you need to have the `API_KEY` environment variable set to a valid API key.
+For tests to run you need to have the `OKAREO_API_KEY` environment variable set to a valid API key.
 
 ```sh
 poetry run pytest
