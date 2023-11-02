@@ -5,7 +5,7 @@ from unittest import mock
 from langchain.chains import LLMChain
 from langchain.llms.fake import FakeListLLM
 from langchain.prompts import PromptTemplate
-from okareo_tests.common import API_KEY, OkareoAPIhost, integration
+from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_string
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
@@ -19,7 +19,7 @@ def test_llm_generates_datapoints(
 ) -> None:
     mut_resp = ModelUnderTestResponse("id", "my-project", "langchain_test", ["ci-run"])
 
-    context_token = "".join(random.choices(string.ascii_letters, k=10))
+    context_token = random_string(10)
     if okareo_api.is_mock:
         httpx_mock.add_response(json=mut_resp.to_dict(), status_code=201)
 
@@ -79,7 +79,7 @@ def test_chain_generates_datapoints(
 ) -> None:
     mut_resp = ModelUnderTestResponse("id", "my-project", "langchain_test", ["ci-run"])
 
-    context_token = "".join(random.choices(string.ascii_letters, k=10))
+    context_token = random_string(10)
     if okareo_api.is_mock:
         httpx_mock.add_response(json=mut_resp.to_dict(), status_code=201)
 

@@ -1,4 +1,6 @@
 import os
+import random
+import string
 from typing import Any, Callable
 
 import pytest
@@ -20,3 +22,7 @@ def integration(func: Callable) -> Any:
         OkareoAPIhost(BASE_URL, False),
     ]
     return pytest.mark.parametrize("okareo_api", params)(func)
+
+
+def random_string(length: int) -> str:
+    return "".join(random.choices(string.ascii_letters, k=length))
