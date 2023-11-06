@@ -37,7 +37,12 @@ https://github.com/okareo-ai/okareo-python-sdk/tree/main/examples
 
 We provide a LangChain callback handler that lets you easily integrate your current workflows with the Okareo platform.
 
-Inegrating them into your chain is as easy as simply importing the SDK add adding following
+If don't have LangChain dependencies installed in your environment, you can install the base ones (that will help you run the examples) with:
+```sh
+pip install okareo[langchain]
+```
+
+Integrating callbacks into your chain is as easy as importing the SDK in your module add adding the following
 ```
 from okareo.callbacks import CallbackHandler
 ...
