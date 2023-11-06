@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okareo"
-version = "0.0.22"
+version = "0.0.23"
 description = "Python SDK for intercating with Okareo Cloud APIs"
 authors = [
     "berni <info@okareo.com>",
@@ -33,6 +33,11 @@ packages = [
 python = ">=3.9, <4.0"
 httpx = ">=0.23"
 types-python-dateutil = "^2.8.19.14"
+langchain = {version = "^0.0.321", optional = true}
+openai = {version = "^0.28.1", optional = true}
+
+[tool.poetry.extras]
+langchain = ["langchain", "openai"]
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"
@@ -58,8 +63,6 @@ pytest-cov = "*"
 python-kacl = "*"
 pyupgrade = "*"
 tryceratops = "*"
-langchain = "^0.0.321"
-openai = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.2"
