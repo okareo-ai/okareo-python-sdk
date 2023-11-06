@@ -145,10 +145,14 @@ def test_load_retrieval(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
         import random
 
         selected_ids = random.sample(article_ids, 5)
-        scores = [5, 4, 3, 2, 1]
+        rounded_random_scores = sorted(
+            [round(random.random(), 2) for _ in range(5)], reverse=True
+        )
+
         # higher score value means more relevant
         parsed_ids_with_scores = [
-            (selected_id, score) for selected_id, score in zip(selected_ids, scores)
+            (selected_id, score)
+            for selected_id, score in zip(selected_ids, rounded_random_scores)
         ]
 
         model_response = {"matches": "additional context from the model"}
