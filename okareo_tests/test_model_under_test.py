@@ -4,6 +4,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
+from okareo.model_under_test import OpenAIModel
 from okareo_api_client.models import TestRunItem
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 
@@ -17,7 +18,14 @@ def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
     }
     httpx_mock.add_response(status_code=201, json=fixture)
     okareo = Okareo("api-key", "http://mocked.com")
-    return okareo.register_model(name="NotebookModel", tags=["ci-testing"])
+    return okareo.register_model(
+        OpenAIModel(
+            name="NotebookModel",
+            model_id="",
+            temperature=-1,
+        ),
+        tags=["ci-testing"],
+    )
 
 
 def test_add_datapoint(httpx_mock: HTTPXMock) -> None:

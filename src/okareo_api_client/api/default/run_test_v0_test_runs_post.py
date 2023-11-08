@@ -12,7 +12,6 @@ from ...types import Response
 
 
 def _get_kwargs(
-    test_run_id: str,
     *,
     json_body: TestRunPayload,
     api_key: str,
@@ -23,10 +22,8 @@ def _get_kwargs(
     json_json_body = json_body.to_dict()
 
     return {
-        "method": "put",
-        "url": "/v0/test_runs/{test_run_id}".format(
-            test_run_id=test_run_id,
-        ),
+        "method": "post",
+        "url": "/v0/test_runs",
         "json": json_json_body,
         "headers": headers,
     }
@@ -61,21 +58,19 @@ def _build_response(
 
 
 def sync_detailed(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, TestRunItem]]:
-    """Update Test Run
+    """Run Test
 
-     Update a Test Run
+     Runs a test
 
     Returns:
-        the updated Test Run
+        the test run entry
 
     Args:
-        test_run_id (str):
         api_key (str):
         json_body (TestRunPayload):
 
@@ -88,7 +83,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        test_run_id=test_run_id,
         json_body=json_body,
         api_key=api_key,
     )
@@ -101,21 +95,19 @@ def sync_detailed(
 
 
 def sync(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, TestRunItem]]:
-    """Update Test Run
+    """Run Test
 
-     Update a Test Run
+     Runs a test
 
     Returns:
-        the updated Test Run
+        the test run entry
 
     Args:
-        test_run_id (str):
         api_key (str):
         json_body (TestRunPayload):
 
@@ -128,7 +120,6 @@ def sync(
     """
 
     return sync_detailed(
-        test_run_id=test_run_id,
         client=client,
         json_body=json_body,
         api_key=api_key,
@@ -136,21 +127,19 @@ def sync(
 
 
 async def asyncio_detailed(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, TestRunItem]]:
-    """Update Test Run
+    """Run Test
 
-     Update a Test Run
+     Runs a test
 
     Returns:
-        the updated Test Run
+        the test run entry
 
     Args:
-        test_run_id (str):
         api_key (str):
         json_body (TestRunPayload):
 
@@ -163,7 +152,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        test_run_id=test_run_id,
         json_body=json_body,
         api_key=api_key,
     )
@@ -174,21 +162,19 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, TestRunItem]]:
-    """Update Test Run
+    """Run Test
 
-     Update a Test Run
+     Runs a test
 
     Returns:
-        the updated Test Run
+        the test run entry
 
     Args:
-        test_run_id (str):
         api_key (str):
         json_body (TestRunPayload):
 
@@ -202,7 +188,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            test_run_id=test_run_id,
             client=client,
             json_body=json_body,
             api_key=api_key,

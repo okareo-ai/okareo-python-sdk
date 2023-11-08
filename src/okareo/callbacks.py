@@ -8,6 +8,7 @@ from uuid import UUID
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema import AgentAction, AgentFinish, LLMResult
 
+from okareo.model_under_test import OpenAIModel
 from okareo.okareo import Okareo
 
 
@@ -32,7 +33,12 @@ class CallbackHandler(BaseCallbackHandler):
         self.registered_model = None
         if mut_name:
             self.registered_model = self.okareo.register_model(
-                name=mut_name, tags=["langchain"]
+                OpenAIModel(
+                    name=mut_name,
+                    model_id="",
+                    temperature=-1,
+                ),
+                tags=["langchain"],
             )
 
     def on_llm_start(
@@ -61,7 +67,14 @@ class CallbackHandler(BaseCallbackHandler):
                 if response.llm_output
                 else "<unknown>"
             )
-            model = self.okareo.register_model(name=model_name, tags=["langchain"])
+            model = self.okareo.register_model(
+                OpenAIModel(
+                    name=model_name,
+                    model_id="",
+                    temperature=-1,
+                ),
+                tags=["langchain"],
+            )
         model.add_data_point(
             input_obj=self.inputs.pop(),
             result_obj={
@@ -91,7 +104,12 @@ class CallbackHandler(BaseCallbackHandler):
 
         if not self.registered_model:
             self.registered_model = self.okareo.register_model(
-                name=class_name, tags=["langchain"]
+                OpenAIModel(
+                    name=class_name,
+                    model_id="",
+                    temperature=-1,
+                ),
+                tags=["langchain"],
             )
         self.inputs.append(
             {

@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.test_run_type import TestRunType
 from ..types import UNSET, Unset
@@ -15,8 +14,9 @@ T = TypeVar("T", bound="TestRunPayload")
 class TestRunPayload:
     """
     Attributes:
-        mut_id (Union[Unset, str]):
-        scenario_set_id (Union[Unset, str]):
+        mut_id (str):
+        scenario_id (str):
+        api_key (Union[Unset, str]):
         name (Union[Unset, str]):
         tags (Union[Unset, List[str]]):
         type (Union[Unset, TestRunType]): An enumeration.
@@ -25,8 +25,9 @@ class TestRunPayload:
         calculate_model_metrics (Union[Unset, bool]):
     """
 
-    mut_id: Union[Unset, str] = UNSET
-    scenario_set_id: Union[Unset, str] = UNSET
+    mut_id: str
+    scenario_id: str
+    api_key: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     type: Union[Unset, TestRunType] = UNSET
@@ -37,58 +38,50 @@ class TestRunPayload:
 
     def to_dict(self) -> Dict[str, Any]:
         mut_id = self.mut_id
-        scenario_set_id = self.scenario_set_id
+        scenario_id = self.scenario_id
+        api_key = self.api_key
         name = self.name
-        tags: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.tags, Unset):
-            tags = self.tags
-
         type: Union[Unset, str] = UNSET
         if not isinstance(self.type, Unset):
             type = self.type.value
 
-        start_time: Union[Unset, str] = UNSET
-        if not isinstance(self.start_time, Unset):
-            start_time = self.start_time.isoformat()
+        tags: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.tags, Unset):
+            tags = self.tags
 
-        end_time: Union[Unset, str] = UNSET
-        if not isinstance(self.end_time, Unset):
-            end_time = self.end_time.isoformat()
-
-        calculate_model_metrics = self.calculate_model_metrics
+        project_id = self.project_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if mut_id is not UNSET:
-            field_dict["mut_id"] = mut_id
-        if scenario_set_id is not UNSET:
-            field_dict["scenario_set_id"] = scenario_set_id
+        field_dict.update(
+            {
+                "mut_id": mut_id,
+                "scenario_id": scenario_id,
+            }
+        )
+        if api_key is not UNSET:
+            field_dict["api_key"] = api_key
         if name is not UNSET:
             field_dict["name"] = name
-        if tags is not UNSET:
-            field_dict["tags"] = tags
         if type is not UNSET:
             field_dict["type"] = type
-        if start_time is not UNSET:
-            field_dict["start_time"] = start_time
-        if end_time is not UNSET:
-            field_dict["end_time"] = end_time
-        if calculate_model_metrics is not UNSET:
-            field_dict["calculate_model_metrics"] = calculate_model_metrics
+        if tags is not UNSET:
+            field_dict["tags"] = tags
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        mut_id = d.pop("mut_id", UNSET)
+        mut_id = d.pop("mut_id")
 
-        scenario_set_id = d.pop("scenario_set_id", UNSET)
+        scenario_id = d.pop("scenario_id")
+
+        api_key = d.pop("api_key", UNSET)
 
         name = d.pop("name", UNSET)
-
-        tags = cast(List[str], d.pop("tags", UNSET))
 
         _type = d.pop("type", UNSET)
         type: Union[Unset, TestRunType]
@@ -97,31 +90,18 @@ class TestRunPayload:
         else:
             type = TestRunType(_type)
 
-        _start_time = d.pop("start_time", UNSET)
-        start_time: Union[Unset, datetime.datetime]
-        if isinstance(_start_time, Unset):
-            start_time = UNSET
-        else:
-            start_time = isoparse(_start_time)
+        tags = cast(List[str], d.pop("tags", UNSET))
 
-        _end_time = d.pop("end_time", UNSET)
-        end_time: Union[Unset, datetime.datetime]
-        if isinstance(_end_time, Unset):
-            end_time = UNSET
-        else:
-            end_time = isoparse(_end_time)
-
-        calculate_model_metrics = d.pop("calculate_model_metrics", UNSET)
+        project_id = d.pop("project_id", UNSET)
 
         test_run_payload = cls(
             mut_id=mut_id,
-            scenario_set_id=scenario_set_id,
+            scenario_id=scenario_id,
+            api_key=api_key,
             name=name,
-            tags=tags,
             type=type,
-            start_time=start_time,
-            end_time=end_time,
-            calculate_model_metrics=calculate_model_metrics,
+            tags=tags,
+            project_id=project_id,
         )
 
         test_run_payload.additional_properties = d
