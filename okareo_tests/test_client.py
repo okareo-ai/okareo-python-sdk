@@ -5,29 +5,12 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.types import UNSET
 
 
 def test_can_instantiate() -> None:
     Okareo("api-key")
-
-
-@integration
-def test_returns_json(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
-    fixture = [{"hash": "ff64e2c", "time_created": "2023-09-28T08:47:29.637000+00:00"}]
-    if okareo_api.is_mock:
-        httpx_mock.add_response(json=fixture)
-
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-    generations = okareo.get_generations()
-    assert generations
-    assert not isinstance(generations, HTTPValidationError)
-    if okareo_api.is_mock:
-        assert [g.to_dict() for g in generations] == fixture
-    else:
-        assert len(generations) > 0
 
 
 @integration

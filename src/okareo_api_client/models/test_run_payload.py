@@ -19,7 +19,7 @@ class TestRunPayload:
         scenario_set_id (Union[Unset, str]):
         name (Union[Unset, str]):
         tags (Union[Unset, List[str]]):
-        type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
+        type (Union[Unset, TestRunType]): An enumeration.
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
         calculate_model_metrics (Union[Unset, bool]):
@@ -29,7 +29,7 @@ class TestRunPayload:
     scenario_set_id: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
-    type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
+    type: Union[Unset, TestRunType] = UNSET
     start_time: Union[Unset, datetime.datetime] = UNSET
     end_time: Union[Unset, datetime.datetime] = UNSET
     calculate_model_metrics: Union[Unset, bool] = False
