@@ -27,6 +27,7 @@ from okareo_api_client.models.scenario_data_poin_response import (
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
+from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.types import UNSET, File, Unset
 
 from .common import BASE_URL, HTTPX_TIME_OUT
@@ -124,6 +125,24 @@ class Okareo:
         except UnexpectedStatus as e:
             print(e.content)
             raise
+
+    def generate_scenarios(
+        self,
+        source_scenario_id: str,
+        name: str,
+        number_examples: int,
+        project_id: Union[Unset, str] = UNSET,
+        generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT,
+    ) -> ScenarioSetResponse:
+        return self.generate_scenario_set(
+            ScenarioSetGenerate(
+                source_scenario_id=source_scenario_id,
+                name=name,
+                number_examples=number_examples,
+                project_id=project_id,
+                generation_type=generation_type,
+            )
+        )
 
     def generate_scenario_set(
         self, create_request: ScenarioSetGenerate
