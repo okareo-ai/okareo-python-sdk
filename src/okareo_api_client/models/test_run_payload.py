@@ -1,4 +1,3 @@
-import datetime
 from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
@@ -18,23 +17,18 @@ class TestRunPayload:
         scenario_id (str):
         api_key (Union[Unset, str]):
         name (Union[Unset, str]):
+        type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
         tags (Union[Unset, List[str]]):
-        type (Union[Unset, TestRunType]): An enumeration.
-        start_time (Union[Unset, datetime.datetime]):
-        end_time (Union[Unset, datetime.datetime]):
-        calculate_model_metrics (Union[Unset, bool]):
+        project_id (Union[Unset, str]):
     """
 
     mut_id: str
     scenario_id: str
-    project_id: str
     api_key: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
+    type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
     tags: Union[Unset, List[str]] = UNSET
-    type: Union[Unset, TestRunType] = UNSET
-    start_time: Union[Unset, datetime.datetime] = UNSET
-    end_time: Union[Unset, datetime.datetime] = UNSET
-    calculate_model_metrics: Union[Unset, bool] = False
+    project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
