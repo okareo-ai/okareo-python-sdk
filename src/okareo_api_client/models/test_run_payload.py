@@ -27,6 +27,7 @@ class TestRunPayload:
 
     mut_id: str
     scenario_id: str
+    project_id: str
     api_key: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
