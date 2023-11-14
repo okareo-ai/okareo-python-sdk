@@ -18,6 +18,7 @@ class TestRunPayload:
         api_key (Union[Unset, str]):
         name (Union[Unset, str]):
         type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
+        calculate_metrics (Union[Unset, bool]):
         tags (Union[Unset, List[str]]):
         project_id (Union[Unset, str]):
     """
@@ -27,6 +28,7 @@ class TestRunPayload:
     api_key: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
+    calculate_metrics: Union[Unset, bool] = False
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -40,6 +42,7 @@ class TestRunPayload:
         if not isinstance(self.type, Unset):
             type = self.type.value
 
+        calculate_metrics = self.calculate_metrics
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
@@ -60,6 +63,8 @@ class TestRunPayload:
             field_dict["name"] = name
         if type is not UNSET:
             field_dict["type"] = type
+        if calculate_metrics is not UNSET:
+            field_dict["calculate_metrics"] = calculate_metrics
         if tags is not UNSET:
             field_dict["tags"] = tags
         if project_id is not UNSET:
@@ -85,6 +90,8 @@ class TestRunPayload:
         else:
             type = TestRunType(_type)
 
+        calculate_metrics = d.pop("calculate_metrics", UNSET)
+
         tags = cast(List[str], d.pop("tags", UNSET))
 
         project_id = d.pop("project_id", UNSET)
@@ -95,6 +102,7 @@ class TestRunPayload:
             api_key=api_key,
             name=name,
             type=type,
+            calculate_metrics=calculate_metrics,
             tags=tags,
             project_id=project_id,
         )

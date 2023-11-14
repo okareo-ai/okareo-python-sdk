@@ -49,7 +49,14 @@ class OpenAIModel(BaseModel):
 
 @_attrs_define
 class CohereModel(BaseModel):
-    temperature: float
+    name: str
+    type = "cohere"
+    model_id: str
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+        }
 
 
 @_attrs_define
@@ -120,6 +127,7 @@ class ModelUnderTest:
         name: str,
         api_key: str,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
+        calculate_metrics: bool = False,
     ) -> TestRunItem:
         try:
             response = run_test_v0_test_runs_post.sync(
@@ -132,6 +140,7 @@ class ModelUnderTest:
                     name=name,
                     type=test_run_type,
                     project_id=self.project_id,
+                    calculate_metrics=calculate_metrics,
                 ),
             )
         except UnexpectedStatus as e:
