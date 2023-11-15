@@ -1,10 +1,14 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..models.test_run_type import TestRunType
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.vector_db_payload import VectorDbPayload
+
 
 T = TypeVar("T", bound="TestRunPayloadV2")
 
@@ -21,6 +25,7 @@ class TestRunPayloadV2:
         calculate_metrics (Union[Unset, bool]):
         tags (Union[Unset, List[str]]):
         project_id (Union[Unset, str]):
+        vector_db (Union[Unset, VectorDbPayload]):
     """
 
     mut_id: str
@@ -31,6 +36,7 @@ class TestRunPayloadV2:
     calculate_metrics: Union[Unset, bool] = False
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
+    vector_db: Union[Unset, "VectorDbPayload"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -48,6 +54,9 @@ class TestRunPayloadV2:
             tags = self.tags
 
         project_id = self.project_id
+        vector_db: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.vector_db, Unset):
+            vector_db = self.vector_db.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -69,11 +78,15 @@ class TestRunPayloadV2:
             field_dict["tags"] = tags
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if vector_db is not UNSET:
+            field_dict["vector_db"] = vector_db
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.vector_db_payload import VectorDbPayload
+
         d = src_dict.copy()
         mut_id = d.pop("mut_id")
 
@@ -96,6 +109,13 @@ class TestRunPayloadV2:
 
         project_id = d.pop("project_id", UNSET)
 
+        _vector_db = d.pop("vector_db", UNSET)
+        vector_db: Union[Unset, VectorDbPayload]
+        if isinstance(_vector_db, Unset):
+            vector_db = UNSET
+        else:
+            vector_db = VectorDbPayload.from_dict(_vector_db)
+
         test_run_payload_v2 = cls(
             mut_id=mut_id,
             scenario_id=scenario_id,
@@ -105,6 +125,7 @@ class TestRunPayloadV2:
             calculate_metrics=calculate_metrics,
             tags=tags,
             project_id=project_id,
+            vector_db=vector_db,
         )
 
         test_run_payload_v2.additional_properties = d

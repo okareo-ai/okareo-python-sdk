@@ -1,7 +1,7 @@
 import json
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from attrs import define as _attrs_define
 
@@ -28,11 +28,16 @@ from okareo_api_client.models import (
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
+from okareo_api_client.models.vector_db_payload import VectorDbPayload
+from okareo_api_client.models.vector_db_payload_params import VectorDbPayloadParams
+from okareo_api_client.models.vector_db_payload_type import VectorDbPayloadType
+from okareo_api_client.types import UNSET
 
 
 class BaseModel:
     name: str
     type: str
+    api_key: Optional[str]
 
     @abstractmethod
     def params(self) -> dict:
@@ -58,16 +63,28 @@ class CohereModel(BaseModel):
     name: str
     type = "cohere"
     model_id: str
+    model_type: str
 
     def params(self) -> dict:
-        return {
-            "model_id": self.model_id,
-        }
+        return {"model_id": self.model_id, "model_type": self.model_type}
 
 
 @_attrs_define
-class PineconeModel(BaseModel):
-    temperature: float
+class PineconeDb(BaseModel):
+    type = "pinecone"
+    name: str
+    index_name: str
+    region: str
+    project_id: str
+    api_key: str
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "index_name": self.index_name,
+            "region": self.region,
+            "project_id": self.project_id,
+        }
 
 
 @_attrs_define
@@ -164,7 +181,8 @@ class ModelUnderTest:
                         input_obj=scenario_data_point.input_,  # todo get full request from inovker
                         input_datetime=input_datetime,  # start of model invocation
                         result_obj=model_response,  # json.dumps() the result objects from the model
-                        result_datetime=str(datetime.now()),  # end of model invocation
+                        # end of model invocation
+                        result_datetime=str(datetime.now()),
                         test_run_id=test_run_item.id,
                     )  # todo need to store test_run_id in datapoint
 
@@ -212,6 +230,7 @@ class ModelUnderTest:
         api_key: str,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
+        vector_db: Optional[BaseModel] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
@@ -226,6 +245,13 @@ class ModelUnderTest:
                     type=test_run_type,
                     project_id=self.project_id,
                     calculate_metrics=calculate_metrics,
+                    vector_db=UNSET
+                    if not vector_db
+                    else VectorDbPayload(
+                        type=VectorDbPayloadType(vector_db.type),
+                        api_key=vector_db.api_key or "",
+                        params=VectorDbPayloadParams.from_dict(vector_db.params()),
+                    ),
                 ),
             )
         except UnexpectedStatus as e:

@@ -38,6 +38,9 @@ from .test_run_payload import TestRunPayload
 from .test_run_payload_v2 import TestRunPayloadV2
 from .test_run_type import TestRunType
 from .validation_error import ValidationError
+from .vector_db_payload import VectorDbPayload
+from .vector_db_payload_params import VectorDbPayloadParams
+from .vector_db_payload_type import VectorDbPayloadType
 
 __all__ = (
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
@@ -78,4 +81,7 @@ __all__ = (
     "TestRunPayloadV2",
     "TestRunType",
     "ValidationError",
+    "VectorDbPayload",
+    "VectorDbPayloadParams",
+    "VectorDbPayloadType",
 )
