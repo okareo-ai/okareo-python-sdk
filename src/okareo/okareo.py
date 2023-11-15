@@ -31,7 +31,7 @@ from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.types import UNSET, File, Unset
 
 from .common import BASE_URL, HTTPX_TIME_OUT
-from .model_under_test import ModelUnderTest
+from .model_under_test import BaseModel, ModelUnderTest
 
 
 class Okareo:
@@ -57,13 +57,24 @@ class Okareo:
 
     def register_model(
         self,
-        name: str,
+        name: Union[str, BaseModel],
         tags: Union[List[str], None] = None,
         project_id: Union[str, None] = None,
     ) -> ModelUnderTest:
         if tags is None:
             tags = []
-        data = {"name": name, "tags": tags}
+        # will rename name to model in the future api-breaking release
+        if isinstance(name, BaseModel):
+            data = {
+                "name": name.name,
+                "model": {
+                    "type": name.type,
+                    "params": name.params(),
+                },
+                "tags": tags,
+            }
+        else:
+            data = {"name": name, "tags": tags}
         if project_id is not None:
             data["project_id"] = project_id
         json_body = ModelUnderTestSchema.from_dict(data)

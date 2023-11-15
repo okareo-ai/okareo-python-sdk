@@ -1,6 +1,9 @@
 import json
+from abc import abstractmethod
 from datetime import datetime
 from typing import Any, Callable, List, Tuple, Union
+
+from attrs import define as _attrs_define
 
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
@@ -8,6 +11,7 @@ from okareo_api_client.api.default import (
     add_test_run_v0_test_runs_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
+    run_test_v0_test_run_post,
     update_test_run_v0_test_runs_test_run_id_put,
 )
 from okareo_api_client.client import Client
@@ -22,6 +26,53 @@ from okareo_api_client.models import (
     TestRunType,
 )
 from okareo_api_client.models.http_validation_error import HTTPValidationError
+from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
+from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
+
+
+class BaseModel:
+    name: str
+    type: str
+
+    @abstractmethod
+    def params(self) -> dict:
+        pass
+
+
+@_attrs_define
+class OpenAIModel(BaseModel):
+    name: str
+    type = "openai"
+    model_id: str
+    temperature: float
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+            "temperature": self.temperature,
+        }
+
+
+@_attrs_define
+class CohereModel(BaseModel):
+    name: str
+    type = "cohere"
+    model_id: str
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+        }
+
+
+@_attrs_define
+class PineconeModel(BaseModel):
+    temperature: float
+
+
+@_attrs_define
+class CustomModel(BaseModel):
+    url: str
 
 
 class ModelUnderTest:
@@ -153,6 +204,41 @@ class ModelUnderTest:
         except Exception as e:
             print(f"An error occurred: {e}")
             raise
+
+    def run_test_v2(
+        self,
+        scenario: ScenarioSetResponse,
+        name: str,
+        api_key: str,
+        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
+        calculate_metrics: bool = False,
+    ) -> TestRunItem:
+        """Server-based version of test-run execution"""
+        try:
+            response = run_test_v0_test_run_post.sync(
+                client=self.client,
+                api_key=self.api_key,
+                json_body=TestRunPayloadV2(
+                    mut_id=self.mut_id,
+                    api_key=api_key,
+                    scenario_id=scenario.scenario_id,
+                    name=name,
+                    type=test_run_type,
+                    project_id=self.project_id,
+                    calculate_metrics=calculate_metrics,
+                ),
+            )
+        except UnexpectedStatus as e:
+            print(f"Unexpected status {e=}, {e.content=}")
+            raise
+
+        if isinstance(response, HTTPValidationError):
+            print(f"Unexpected {response=}, {type(response)=}")
+            raise
+        if not response:
+            print("Empty response from API")
+        assert response is not None
+        return response
 
     def get_metric_value_by_run_type(
         self, test_run_type: TestRunType, result: Any, actual: str
