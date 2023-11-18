@@ -31,9 +31,16 @@ from .test_data_point_payload import TestDataPointPayload
 from .test_data_point_response import TestDataPointResponse
 from .test_run_item import TestRunItem
 from .test_run_item_model_metrics import TestRunItemModelMetrics
+from .test_run_model_payload import TestRunModelPayload
+from .test_run_model_payload_params import TestRunModelPayloadParams
+from .test_run_model_payload_type import TestRunModelPayloadType
 from .test_run_payload import TestRunPayload
+from .test_run_payload_v2 import TestRunPayloadV2
 from .test_run_type import TestRunType
 from .validation_error import ValidationError
+from .vector_db_payload import VectorDbPayload
+from .vector_db_payload_params import VectorDbPayloadParams
+from .vector_db_payload_type import VectorDbPayloadType
 
 __all__ = (
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
@@ -67,7 +74,14 @@ __all__ = (
     "TestDataPointResponse",
     "TestRunItem",
     "TestRunItemModelMetrics",
+    "TestRunModelPayload",
+    "TestRunModelPayloadParams",
+    "TestRunModelPayloadType",
     "TestRunPayload",
+    "TestRunPayloadV2",
     "TestRunType",
     "ValidationError",
+    "VectorDbPayload",
+    "VectorDbPayloadParams",
+    "VectorDbPayloadType",
 )
