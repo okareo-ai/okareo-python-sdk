@@ -64,9 +64,14 @@ class CohereModel(BaseModel):
     type = "cohere"
     model_id: str
     model_type: str
+    input_type: Optional[str] = None
 
     def params(self) -> dict:
-        return {"model_id": self.model_id, "model_type": self.model_type}
+        return {
+            "model_id": self.model_id,
+            "model_type": self.model_type,
+            "input_type": self.input_type,
+        }
 
 
 @_attrs_define
