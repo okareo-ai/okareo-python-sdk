@@ -1,5 +1,6 @@
 import os
 
+import pytest
 from okareo_tests.common import API_KEY, BASE_URL, random_string
 
 from okareo import Okareo
@@ -10,10 +11,17 @@ from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
 
 
-def test_run_test_v2_openai() -> None:
-    rnd = random_string(5)
-    okareo = Okareo(api_key=API_KEY, base_path=BASE_URL)
+@pytest.fixture
+def rnd() -> str:
+    return random_string(5)
 
+
+@pytest.fixture
+def okareo() -> Okareo:
+    return Okareo(api_key=API_KEY, base_path=BASE_URL)
+
+
+def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
             input_="We've got a beautiful day today",
@@ -51,9 +59,7 @@ def test_run_test_v2_openai() -> None:
     assert run_resp.name == f"openai-chat-run-{rnd}"
 
 
-def test_run_test_v2_cohere() -> None:
-    okareo = Okareo(api_key=API_KEY, base_path=BASE_URL)
-    rnd = random_string(5)
+def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(input_="are you able to set up in aws?", result="capabilities"),
         SeedData(
@@ -90,10 +96,7 @@ def test_run_test_v2_cohere() -> None:
     assert run_resp.name == f"cohere-classification-run-{rnd}"
 
 
-def test_run_test_v2_cohere_info_retrieval() -> None:
-    okareo = Okareo(api_key=API_KEY, base_path=BASE_URL)
-    rnd = random_string(5)
-
+def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
             input_="which IAM groups have access to s3?",
