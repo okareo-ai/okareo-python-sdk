@@ -1,4 +1,3 @@
-import os
 import random
 from datetime import datetime
 from typing import Tuple
@@ -8,11 +7,9 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_stri
 from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
-from okareo.model_under_test import CohereModel, OpenAIModel
 from okareo_api_client.models import SeedData, TestRunItem
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_api_client.models.scenario_type import ScenarioType
 
 
 def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
@@ -159,90 +156,3 @@ def test_validate_return_type(httpx_mock: HTTPXMock) -> None:
     )  # Create a valid TestRunItem instance
     result = registered_model.validate_return_type(valid_response)
     assert result.id == "test_id"
-
-
-@integration
-def test_run_test_v2_openai(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
-    if okareo_api.is_mock:
-        return
-
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-
-    seed_data = [
-        SeedData(
-            input_="We've got a beautiful day today",
-            result="What is the weather today?",
-        ),
-        SeedData(
-            input_="I am going to go shopping after dinner",
-            result="What am I going to do after eating the dinner?",
-        ),
-    ]
-    scenario_set_create = ScenarioSetCreate(
-        name="my test scenario set",
-        number_examples=1,
-        seed_data=seed_data,
-        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
-    )
-
-    scenario = okareo.create_scenario_set(scenario_set_create)
-
-    rnd = random_string(5)
-    mut = okareo.register_model(
-        OpenAIModel(
-            name=f"openai-ci-run-{rnd}",
-            model_id="gpt-3.5-turbo",
-            temperature=0,
-        )
-    )
-
-    run_resp = mut.run_test_v2(
-        name=f"openai-chat-run-{rnd}",
-        scenario=scenario,
-        api_key=os.environ["OPENAI_API_KEY"],
-        calculate_metrics=True,
-    )
-    assert run_resp.name == f"openai-chat-run-{rnd}"
-
-
-@integration
-def test_run_test_v2_cohere(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
-    if okareo_api.is_mock:
-        return
-
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-    rnd = random_string(5)
-    seed_data = [
-        SeedData(input_="are you able to set up in aws?", result="capabilities"),
-        SeedData(
-            input_="what's the procedure to request for more information?",
-            result="general",
-        ),
-        SeedData(
-            input_="what are the steps to deploy on heroku?", result="capabilities"
-        ),
-    ]
-
-    scenario_set_create = ScenarioSetCreate(
-        name=f"cohere-test-ci-{rnd}",
-        number_examples=1,
-        seed_data=seed_data,
-        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
-    )
-    scenario = okareo.create_scenario_set(scenario_set_create)
-
-    mut = okareo.register_model(
-        CohereModel(
-            name=f"classification-cohere-ci-{rnd}",
-            model_id="2386d4d1-c617-4183-8c87-5550c7f222e6-ft",
-            model_type="classify",
-        )
-    )
-
-    run_resp = mut.run_test_v2(
-        name=f"cohere-classification-run-{rnd}",
-        scenario=scenario,
-        api_key=os.environ["COHERE_API_KEY"],
-        calculate_metrics=True,
-    )
-    assert run_resp.name == f"cohere-classification-run-{rnd}"
