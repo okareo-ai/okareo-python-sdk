@@ -124,6 +124,7 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
                 index_name="my-test-index",
                 region="gcp-starter",
                 project_id="kwnp6kx",
+                top_k=3,
             ),
         ],
     )

@@ -80,12 +80,14 @@ class PineconeDb(BaseModel):
     index_name: str
     region: str
     project_id: str
+    top_k: int = 5
 
     def params(self) -> dict:
         return {
             "index_name": self.index_name,
             "region": self.region,
             "project_id": self.project_id,
+            "top_k": self.top_k,
         }
 
 
