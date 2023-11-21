@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-from typing import Tuple
+from typing import Optional, Tuple
 from unittest.mock import Mock
 
 import pytest
@@ -23,7 +23,7 @@ def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
     return okareo.register_model(name="NotebookModel", tags=["ci-testing"])
 
 
-def get_mut_fixture(name: str | None = None) -> dict:
+def get_mut_fixture(name: Optional[str] = None) -> dict:
     rnd_str = random_string(5)
     return {
         "id": "1",

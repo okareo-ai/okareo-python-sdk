@@ -100,7 +100,7 @@ class ModelUnderTest:
         client: Client,
         api_key: str,
         mut: ModelUnderTestResponse,
-        models: Dict[str, Any] | None = None,
+        models: Optional[Dict[str, Any]] = None,
     ):
         self.client = client
         self.api_key = api_key
@@ -236,9 +236,9 @@ class ModelUnderTest:
         self,
         scenario: ScenarioSetResponse,
         name: str,
-        api_key: str | None = None,
-        api_keys: dict | None = None,
-        metrics_kwargs: dict | None = None,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
     ) -> TestRunItem:
