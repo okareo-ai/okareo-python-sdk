@@ -36,6 +36,7 @@ from .test_run_item_model_metrics import TestRunItemModelMetrics
 from .test_run_payload import TestRunPayload
 from .test_run_payload_v2 import TestRunPayloadV2
 from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
+from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
 from .test_run_type import TestRunType
 from .validation_error import ValidationError
 
@@ -76,6 +77,7 @@ __all__ = (
     "TestRunPayload",
     "TestRunPayloadV2",
     "TestRunPayloadV2ApiKeys",
+    "TestRunPayloadV2MetricsKwargs",
     "TestRunType",
     "ValidationError",
 )

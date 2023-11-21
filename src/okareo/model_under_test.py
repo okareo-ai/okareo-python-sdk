@@ -31,6 +31,9 @@ from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
 from okareo_api_client.models.test_run_payload_v2_api_keys import (
     TestRunPayloadV2ApiKeys,
 )
+from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
+    TestRunPayloadV2MetricsKwargs,
+)
 
 
 class BaseModel:
@@ -234,6 +237,7 @@ class ModelUnderTest:
         name: str,
         api_key: str | None = None,
         api_keys: dict | None = None,
+        metrics_kwargs: dict | None = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
     ) -> TestRunItem:
@@ -253,6 +257,9 @@ class ModelUnderTest:
                     type=test_run_type,
                     project_id=self.project_id,
                     calculate_metrics=calculate_metrics,
+                    metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
+                        metrics_kwargs or {}
+                    ),
                 ),
             )
         except UnexpectedStatus as e:

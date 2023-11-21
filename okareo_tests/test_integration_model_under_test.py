@@ -137,5 +137,9 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
             "cohere": os.environ["COHERE_API_KEY"],
             "pinecone": os.environ["PINECONE_API_KEY"],
         },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
