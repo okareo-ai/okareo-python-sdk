@@ -1,15 +1,19 @@
 import random
 from datetime import datetime
 from typing import Tuple
+from unittest.mock import Mock
 
 import pytest
 from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_string
 from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
+from okareo.error import MissingApiKeyError, MissingVectorDbError
+from okareo.model_under_test import CohereModel, PineconeDb
 from okareo_api_client.models import SeedData, TestRunItem
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
+from okareo_api_client.models.test_run_type import TestRunType
 
 
 def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
@@ -26,6 +30,7 @@ def get_mut_fixture(name: str | None = None) -> dict:
         "project_id": "1",
         "name": name if name else f"CI-Test-Model-{rnd_str}",
         "tags": ["ci-testing"],
+        "time_created": "foo",
     }
 
 
@@ -156,3 +161,44 @@ def test_validate_return_type(httpx_mock: HTTPXMock) -> None:
     )  # Create a valid TestRunItem instance
     result = registered_model.validate_return_type(valid_response)
     assert result.id == "test_id"
+
+
+def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(status_code=201, json=get_mut_fixture())
+    okareo = Okareo("api-key", "http://mocked.com")
+    mut = okareo.register_model(
+        name="complex model test",
+        model=[
+            CohereModel(model_id="foo", model_type="embed"),
+            PineconeDb(index_name="bar", region="baz", project_id="fooz"),
+        ],
+    )
+
+    with pytest.raises(MissingApiKeyError):
+        mut.run_test_v2(
+            name="quick test",
+            scenario=Mock(),
+            calculate_metrics=True,
+            test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+            api_keys={"cohere": "foo"},
+        )
+
+
+def test_missing_vector_db_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(status_code=201, json=get_mut_fixture())
+    okareo = Okareo("api-key", "http://mocked.com")
+    mut = okareo.register_model(
+        name="complex model test",
+        model=[
+            CohereModel(model_id="foo", model_type="embed"),
+        ],
+    )
+
+    with pytest.raises(MissingVectorDbError):
+        mut.run_test_v2(
+            name="quick test",
+            scenario=Mock(),
+            calculate_metrics=True,
+            test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+            api_keys={"cohere": "foo"},
+        )

@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from attrs import define as _attrs_define
 
+from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
     add_test_data_point_v0_test_data_point_post,
@@ -242,10 +243,18 @@ class ModelUnderTest:
         calculate_metrics: bool = False,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
+        assert isinstance(self.models, dict)
+        model_names = list(self.models.keys())
+        run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
+
+        if len(model_names) != len(run_api_keys):
+            raise MissingApiKeyError("Number of models and API keys does not match")
+
+        if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
+            if "pinecone" not in model_names:
+                raise MissingVectorDbError("No vector database specified")
+
         try:
-            assert isinstance(self.models, dict)
-            model_name = list(self.models.keys())[0]
-            run_api_keys = api_keys if api_keys else {model_name: api_key}
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
                 api_key=self.api_key,
