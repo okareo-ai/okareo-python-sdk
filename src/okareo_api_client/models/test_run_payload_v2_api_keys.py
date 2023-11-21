@@ -3,14 +3,14 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="TestRunModelPayloadParams")
+T = TypeVar("T", bound="TestRunPayloadV2ApiKeys")
 
 
 @_attrs_define
-class TestRunModelPayloadParams:
+class TestRunPayloadV2ApiKeys:
     """ """
 
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: Dict[str, str] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         field_dict: Dict[str, Any] = {}
@@ -22,19 +22,19 @@ class TestRunModelPayloadParams:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        test_run_model_payload_params = cls()
+        test_run_payload_v2_api_keys = cls()
 
-        test_run_model_payload_params.additional_properties = d
-        return test_run_model_payload_params
+        test_run_payload_v2_api_keys.additional_properties = d
+        return test_run_payload_v2_api_keys
 
     @property
     def additional_keys(self) -> List[str]:
         return list(self.additional_properties.keys())
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> str:
         return self.additional_properties[key]
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: str) -> None:
         self.additional_properties[key] = value
 
     def __delitem__(self, key: str) -> None:

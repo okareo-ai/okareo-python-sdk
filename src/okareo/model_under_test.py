@@ -1,7 +1,7 @@
 import json
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from attrs import define as _attrs_define
 
@@ -28,14 +28,12 @@ from okareo_api_client.models import (
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
-from okareo_api_client.models.vector_db_payload import VectorDbPayload
-from okareo_api_client.models.vector_db_payload_params import VectorDbPayloadParams
-from okareo_api_client.models.vector_db_payload_type import VectorDbPayloadType
-from okareo_api_client.types import UNSET
+from okareo_api_client.models.test_run_payload_v2_api_keys import (
+    TestRunPayloadV2ApiKeys,
+)
 
 
 class BaseModel:
-    name: str
     type: str
     api_key: Optional[str]
 
@@ -46,7 +44,6 @@ class BaseModel:
 
 @_attrs_define
 class OpenAIModel(BaseModel):
-    name: str
     type = "openai"
     model_id: str
     temperature: float
@@ -60,7 +57,6 @@ class OpenAIModel(BaseModel):
 
 @_attrs_define
 class CohereModel(BaseModel):
-    name: str
     type = "cohere"
     model_id: str
     model_type: str
@@ -77,15 +73,12 @@ class CohereModel(BaseModel):
 @_attrs_define
 class PineconeDb(BaseModel):
     type = "pinecone"
-    name: str
     index_name: str
     region: str
     project_id: str
-    api_key: str
 
     def params(self) -> dict:
         return {
-            "name": self.name,
             "index_name": self.index_name,
             "region": self.region,
             "project_id": self.project_id,
@@ -98,7 +91,13 @@ class CustomModel(BaseModel):
 
 
 class ModelUnderTest:
-    def __init__(self, client: Client, api_key: str, mut: ModelUnderTestResponse):
+    def __init__(
+        self,
+        client: Client,
+        api_key: str,
+        mut: ModelUnderTestResponse,
+        models: Dict[str, Any] | None = None,
+    ):
         self.client = client
         self.api_key = api_key
 
@@ -106,6 +105,7 @@ class ModelUnderTest:
         self.project_id = mut.project_id
         self.name = mut.name
         self.tags = mut.tags
+        self.models = models
 
     def add_data_point(
         self,
@@ -232,31 +232,27 @@ class ModelUnderTest:
         self,
         scenario: ScenarioSetResponse,
         name: str,
-        api_key: str,
+        api_key: str | None = None,
+        api_keys: dict | None = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
-        vector_db: Optional[BaseModel] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
+            assert isinstance(self.models, dict)
+            model_name = list(self.models.keys())[0]
+            run_api_keys = api_keys if api_keys else {model_name: api_key}
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
                 api_key=self.api_key,
                 json_body=TestRunPayloadV2(
                     mut_id=self.mut_id,
-                    api_key=api_key,
+                    api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys),
                     scenario_id=scenario.scenario_id,
                     name=name,
                     type=test_run_type,
                     project_id=self.project_id,
                     calculate_metrics=calculate_metrics,
-                    vector_db=UNSET
-                    if not vector_db
-                    else VectorDbPayload(
-                        type=VectorDbPayloadType(vector_db.type),
-                        api_key=vector_db.api_key or "",
-                        params=VectorDbPayloadParams.from_dict(vector_db.params()),
-                    ),
                 ),
             )
         except UnexpectedStatus as e:

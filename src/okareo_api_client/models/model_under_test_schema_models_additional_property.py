@@ -3,11 +3,11 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="VectorDbPayloadParams")
+T = TypeVar("T", bound="ModelUnderTestSchemaModelsAdditionalProperty")
 
 
 @_attrs_define
-class VectorDbPayloadParams:
+class ModelUnderTestSchemaModelsAdditionalProperty:
     """ """
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -22,10 +22,10 @@ class VectorDbPayloadParams:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        vector_db_payload_params = cls()
+        model_under_test_schema_models_additional_property = cls()
 
-        vector_db_payload_params.additional_properties = d
-        return vector_db_payload_params
+        model_under_test_schema_models_additional_property.additional_properties = d
+        return model_under_test_schema_models_additional_property
 
     @property
     def additional_keys(self) -> List[str]:

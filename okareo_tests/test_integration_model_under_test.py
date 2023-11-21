@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from okareo_tests.common import API_KEY, BASE_URL, random_string
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb
@@ -18,7 +18,7 @@ def rnd() -> str:
 
 @pytest.fixture
 def okareo() -> Okareo:
-    return Okareo(api_key=API_KEY, base_path=BASE_URL)
+    return Okareo(api_key=API_KEY)
 
 
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
@@ -43,11 +43,11 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
 
     rnd = random_string(5)
     mut = okareo.register_model(
-        OpenAIModel(
-            name=f"openai-ci-run-{rnd}",
+        name=f"openai-ci-run-{rnd}",
+        model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
-        )
+        ),
     )
 
     run_resp = mut.run_test_v2(
@@ -80,11 +80,11 @@ def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     scenario = okareo.create_scenario_set(scenario_set_create)
 
     mut = okareo.register_model(
-        CohereModel(
-            name=f"classification-cohere-ci-{rnd}",
+        name=f"classification-cohere-ci-{rnd}",
+        model=CohereModel(
             model_id="2386d4d1-c617-4183-8c87-5550c7f222e6-ft",
             model_type="classify",
-        )
+        ),
     )
 
     run_resp = mut.run_test_v2(
@@ -113,26 +113,29 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
     scenario = okareo.create_scenario_set(scenario_set_create)
 
     mut = okareo.register_model(
-        CohereModel(
-            name=f"embed-english-light-v3.0-{rnd}",
-            model_id="embed-english-light-v3.0",
-            model_type="embed",
-            input_type="search_query",
-        )
+        name=f"embed-english-light-v3.0-{rnd}",
+        model=[
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+            PineconeDb(
+                index_name="my-test-index",
+                region="gcp-starter",
+                project_id="kwnp6kx",
+            ),
+        ],
     )
 
     run_resp = mut.run_test_v2(
         name=f"ci-pinecone-cohere-embed-{rnd}",
         scenario=scenario,
-        api_key=os.environ["COHERE_API_KEY"],
         calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
-        vector_db=PineconeDb(
-            name="my-test-index-bernitest-2",
-            index_name="my-test-index",
-            region="gcp-starter",
-            project_id="kwnp6kx",
-            api_key=os.environ["PINECONE_API_KEY"],
-        ),
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "pinecone": os.environ["PINECONE_API_KEY"],
+        },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
