@@ -1,7 +1,6 @@
 import os
 from typing import Any, List, Union
 
-from okareo.error import CreateScenarioError
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
@@ -20,6 +19,7 @@ from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.generation_list import GenerationList
 from okareo_api_client.models.http_validation_error import HTTPValidationError
+from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
@@ -82,12 +82,8 @@ class Okareo:
             client=self.client, api_key=self.api_key, json_body=json_body
         )
 
-        if isinstance(response, HTTPValidationError):
-            print(f"Unexpected {response=}, {type(response)=}")
-            raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
+        self.validate_response(response)
+        assert isinstance(response, ModelUnderTestResponse)
 
         return ModelUnderTest(client=self.client, api_key=self.api_key, mut=response)
 
@@ -97,13 +93,9 @@ class Okareo:
         response = create_scenario_set_v0_scenario_sets_post.sync(
             client=self.client, api_key=self.api_key, json_body=create_request
         )
-        # fake repetitive code
-        if isinstance(response, HTTPValidationError):
-            print(f"Unexpected {response=}, {type(response)=}")
-            raise CreateScenarioError(f"Unable to create a scenario set: {response=}")
-        if not response:
-            print("Empty response from API")
-        assert response is not None
+
+        self.validate_response(response)
+        assert isinstance(response, ScenarioSetResponse)
 
         return response
 
@@ -125,12 +117,8 @@ class Okareo:
                     multipart_data=multipart_body,
                 )
 
-            if isinstance(response, HTTPValidationError):
-                print(f"Unexpected {response=}, {type(response)=}")
-                raise
-            if not response:
-                print("Empty response from API")
-            assert response is not None
+            self.validate_response(response)
+            assert isinstance(response, ScenarioSetResponse)
 
             return response
         except UnexpectedStatus as e:
@@ -162,12 +150,8 @@ class Okareo:
             client=self.client, api_key=self.api_key, json_body=create_request
         )
 
-        if isinstance(response, HTTPValidationError):
-            print(f"Unexpected {response=}, {type(response)=}")
-            raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
+        self.validate_response(response)
+        assert isinstance(response, ScenarioSetResponse)
 
         return response
 
@@ -180,22 +164,18 @@ class Okareo:
             )
         )
 
-        if isinstance(response, HTTPValidationError):
-            print(f"Unexpected {response=}, {type(response)=}")
-            raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
+        self.validate_response(response)
+        assert isinstance(response, List)
 
         return response
 
     def validate_response(self, response: Any) -> None:
         if isinstance(response, HTTPValidationError):
-            print(f"Unexpected {response=}, {type(response)=}")
+            print(f"Unexpected HTTP error: {response}")
             raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
+        elif response is None:
+            print("Received no response (None) from the API")
+            raise ValueError("No response received")
 
     def find_datapoints(self, context_token: str) -> List[DatapointListItem]:
         data = get_datapoints_v0_find_datapoints_post.sync(
