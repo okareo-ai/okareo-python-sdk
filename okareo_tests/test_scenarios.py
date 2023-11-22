@@ -14,18 +14,8 @@ from okareo_api_client.models import (
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
-from okareo_api_client.types import Unset
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
-
-
-def check_seed_data(
-    expected_seed_data: List[SeedData], actual_seed_data: Unset | List[SeedData]
-) -> None:
-    if isinstance(actual_seed_data, List):
-        for i in range(3):
-            assert expected_seed_data[i].input_ == actual_seed_data[i].input_
-            assert expected_seed_data[i].result == actual_seed_data[i].result
 
 
 @pytest.fixture(scope="module")
@@ -87,7 +77,10 @@ def test_create_scenario_set(
     assert create_scenario_set.scenario_id
     assert create_scenario_set.project_id
     assert create_scenario_set.time_created
-    check_seed_data(seed_data, create_scenario_set.seed_data)
+    if isinstance(create_scenario_set.seed_data, List):
+        for i in range(3):
+            assert seed_data[i].input_ == create_scenario_set.seed_data[i].input_
+            assert seed_data[i].result == create_scenario_set.seed_data[i].result
 
 
 def test_generate_scenarios(
