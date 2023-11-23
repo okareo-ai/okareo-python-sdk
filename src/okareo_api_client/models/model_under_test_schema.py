@@ -6,7 +6,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.test_run_model_payload import TestRunModelPayload
+    from ..models.model_under_test_schema_models import ModelUnderTestSchemaModels
 
 
 T = TypeVar("T", bound="ModelUnderTestSchema")
@@ -17,22 +17,22 @@ class ModelUnderTestSchema:
     """
     Attributes:
         name (Union[Unset, str]):
-        model (Union[Unset, TestRunModelPayload]):
+        models (Union[Unset, ModelUnderTestSchemaModels]):
         tags (Union[Unset, List[str]]):
         project_id (Union[Unset, str]):
     """
 
     name: Union[Unset, str] = UNSET
-    model: Union[Unset, "TestRunModelPayload"] = UNSET
+    models: Union[Unset, "ModelUnderTestSchemaModels"] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
-        model: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.model, Unset):
-            model = self.model.to_dict()
+        models: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.models, Unset):
+            models = self.models.to_dict()
 
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
@@ -45,8 +45,8 @@ class ModelUnderTestSchema:
         field_dict.update({})
         if name is not UNSET:
             field_dict["name"] = name
-        if model is not UNSET:
-            field_dict["model"] = model
+        if models is not UNSET:
+            field_dict["models"] = models
         if tags is not UNSET:
             field_dict["tags"] = tags
         if project_id is not UNSET:
@@ -56,17 +56,17 @@ class ModelUnderTestSchema:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.test_run_model_payload import TestRunModelPayload
+        from ..models.model_under_test_schema_models import ModelUnderTestSchemaModels
 
         d = src_dict.copy()
         name = d.pop("name", UNSET)
 
-        _model = d.pop("model", UNSET)
-        model: Union[Unset, TestRunModelPayload]
-        if isinstance(_model, Unset):
-            model = UNSET
+        _models = d.pop("models", UNSET)
+        models: Union[Unset, ModelUnderTestSchemaModels]
+        if isinstance(_models, Unset):
+            models = UNSET
         else:
-            model = TestRunModelPayload.from_dict(_model)
+            models = ModelUnderTestSchemaModels.from_dict(_models)
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
@@ -74,7 +74,7 @@ class ModelUnderTestSchema:
 
         model_under_test_schema = cls(
             name=name,
-            model=model,
+            models=models,
             tags=tags,
             project_id=project_id,
         )

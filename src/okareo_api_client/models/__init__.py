@@ -15,6 +15,8 @@ from .generation_response import GenerationResponse
 from .http_validation_error import HTTPValidationError
 from .model_under_test_response import ModelUnderTestResponse
 from .model_under_test_schema import ModelUnderTestSchema
+from .model_under_test_schema_models import ModelUnderTestSchemaModels
+from .model_under_test_schema_models_additional_property import ModelUnderTestSchemaModelsAdditionalProperty
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
 from .scenario_data_poin_response import ScenarioDataPoinResponse
@@ -31,16 +33,12 @@ from .test_data_point_payload import TestDataPointPayload
 from .test_data_point_response import TestDataPointResponse
 from .test_run_item import TestRunItem
 from .test_run_item_model_metrics import TestRunItemModelMetrics
-from .test_run_model_payload import TestRunModelPayload
-from .test_run_model_payload_params import TestRunModelPayloadParams
-from .test_run_model_payload_type import TestRunModelPayloadType
 from .test_run_payload import TestRunPayload
 from .test_run_payload_v2 import TestRunPayloadV2
+from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
+from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
 from .test_run_type import TestRunType
 from .validation_error import ValidationError
-from .vector_db_payload import VectorDbPayload
-from .vector_db_payload_params import VectorDbPayloadParams
-from .vector_db_payload_type import VectorDbPayloadType
 
 __all__ = (
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
@@ -58,6 +56,8 @@ __all__ = (
     "HTTPValidationError",
     "ModelUnderTestResponse",
     "ModelUnderTestSchema",
+    "ModelUnderTestSchemaModels",
+    "ModelUnderTestSchemaModelsAdditionalProperty",
     "ProjectResponse",
     "ProjectSchema",
     "ScenarioDataPoinResponse",
@@ -74,14 +74,10 @@ __all__ = (
     "TestDataPointResponse",
     "TestRunItem",
     "TestRunItemModelMetrics",
-    "TestRunModelPayload",
-    "TestRunModelPayloadParams",
-    "TestRunModelPayloadType",
     "TestRunPayload",
     "TestRunPayloadV2",
+    "TestRunPayloadV2ApiKeys",
+    "TestRunPayloadV2MetricsKwargs",
     "TestRunType",
     "ValidationError",
-    "VectorDbPayload",
-    "VectorDbPayloadParams",
-    "VectorDbPayloadType",
 )

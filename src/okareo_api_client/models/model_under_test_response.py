@@ -16,6 +16,7 @@ class ModelUnderTestResponse:
         project_id (str):
         name (str):
         tags (List[str]):
+        time_created (str):
         datapoint_count (Union[Unset, int]):
     """
 
@@ -23,6 +24,7 @@ class ModelUnderTestResponse:
     project_id: str
     name: str
     tags: List[str]
+    time_created: str
     datapoint_count: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -32,6 +34,7 @@ class ModelUnderTestResponse:
         name = self.name
         tags = self.tags
 
+        time_created = self.time_created
         datapoint_count = self.datapoint_count
 
         field_dict: Dict[str, Any] = {}
@@ -42,6 +45,7 @@ class ModelUnderTestResponse:
                 "project_id": project_id,
                 "name": name,
                 "tags": tags,
+                "time_created": time_created,
             }
         )
         if datapoint_count is not UNSET:
@@ -60,6 +64,8 @@ class ModelUnderTestResponse:
 
         tags = cast(List[str], d.pop("tags"))
 
+        time_created = d.pop("time_created")
+
         datapoint_count = d.pop("datapoint_count", UNSET)
 
         model_under_test_response = cls(
@@ -67,6 +73,7 @@ class ModelUnderTestResponse:
             project_id=project_id,
             name=name,
             tags=tags,
+            time_created=time_created,
             datapoint_count=datapoint_count,
         )
 

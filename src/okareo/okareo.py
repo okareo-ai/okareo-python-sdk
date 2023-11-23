@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, Union
+from typing import Any, Dict, List, Union
 
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
@@ -57,24 +57,22 @@ class Okareo:
 
     def register_model(
         self,
-        name: Union[str, BaseModel],
+        name: str,
         tags: Union[List[str], None] = None,
         project_id: Union[str, None] = None,
+        model: Union[None, BaseModel, List[BaseModel]] = None,
     ) -> ModelUnderTest:
         if tags is None:
             tags = []
+        data: Dict[str, Any] = {"name": name, "tags": tags}
         # will rename name to model in the future api-breaking release
-        if isinstance(name, BaseModel):
-            data = {
-                "name": name.name,
-                "model": {
-                    "type": name.type,
-                    "params": name.params(),
-                },
-                "tags": tags,
-            }
-        else:
-            data = {"name": name, "tags": tags}
+        if isinstance(model, BaseModel) or (
+            isinstance(model, list) and all(isinstance(x, BaseModel) for x in model)
+        ):
+            models = model if isinstance(model, list) else [model]
+            data["models"] = {}
+            for model in models:
+                data["models"][model.type] = model.params()
         if project_id is not None:
             data["project_id"] = project_id
         json_body = ModelUnderTestSchema.from_dict(data)
@@ -85,7 +83,12 @@ class Okareo:
         self.validate_response(response)
         assert isinstance(response, ModelUnderTestResponse)
 
-        return ModelUnderTest(client=self.client, api_key=self.api_key, mut=response)
+        return ModelUnderTest(
+            client=self.client,
+            api_key=self.api_key,
+            mut=response,
+            models=data.get("models"),
+        )
 
     def create_scenario_set(
         self, create_request: ScenarioSetCreate

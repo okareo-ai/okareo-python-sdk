@@ -9,6 +9,7 @@ def test_register_model(httpx_mock: HTTPXMock) -> None:
         "project_id": "1",
         "name": "NotebookModel",
         "tags": ["ci-testing"],
+        "time_created": "foo",
     }
     httpx_mock.add_response(status_code=201, json=fixture)
     okareo = Okareo("api-key", "http://mocked.com")

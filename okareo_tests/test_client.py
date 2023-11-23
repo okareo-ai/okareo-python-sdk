@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 import pytest
 from okareo_tests.common import API_KEY, OkareoAPIhost, integration
@@ -6,11 +7,19 @@ from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
+from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
+from okareo_api_client.models.scenario_type import ScenarioType
+from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.types import UNSET
 
 
 def test_can_instantiate() -> None:
     Okareo("api-key")
+
+
+@pytest.fixture
+def okareo_client() -> Okareo:
+    return Okareo("foo", "http://mocked.com")
 
 
 @integration
@@ -57,3 +66,95 @@ def test_error_handling(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
     if okareo_api.is_mock:
         with pytest.raises(Exception, match="Unexpected"):
             okareo.get_generations()
+
+
+def test_register_model_raises_on_validation_error(
+    okareo_client: Okareo, httpx_mock: HTTPXMock
+) -> None:
+    httpx_mock.add_response(json={"wrong": "response format"}, status_code=200)
+    with pytest.raises(Exception, match="Unexpected status code"):
+        okareo_client.register_model("this should fail", project_id="42")
+
+
+def test_get_generations(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        json=[{"hash": "aas3e", "time_created": datetime.now().isoformat()}],
+        status_code=200,
+    )
+    generations = okareo_client.get_generations()
+    assert generations
+
+
+def test_get_generations_raises_on_validation_error(
+    okareo_client: Okareo, httpx_mock: HTTPXMock
+) -> None:
+    httpx_mock.add_response(text="wrong response format", status_code=422)
+    with pytest.raises(Exception, match="Expecting value"):
+        okareo_client.get_generations()
+
+
+def test_register_model_raises_on_empty_response(
+    okareo_client: Okareo, httpx_mock: HTTPXMock
+) -> None:
+    httpx_mock.add_response(status_code=422)
+    with pytest.raises(Exception, match="Expecting value"):
+        okareo_client.register_model("this should fail", project_id="42")
+
+
+def test_create_scenario_set_raises_on_validation_error(
+    okareo_client: Okareo, httpx_mock: HTTPXMock
+) -> None:
+    httpx_mock.add_response(json={"wrong": "response format"}, status_code=200)
+
+    seed_data = [
+        SeedData(input_="are you able to set up in aws?", result="capabilities"),
+    ]
+    scenario_set_create = ScenarioSetCreate(
+        name="my test scenario set x",
+        number_examples=1,
+        seed_data=seed_data,
+        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
+    )
+    with pytest.raises(Exception, match="Unexpected"):
+        okareo_client.create_scenario_set(create_request=scenario_set_create)
+
+
+def test_upload_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        json={
+            "scenario_id": "created-id",
+            "project_id": "new-project-id",
+            "time_created": datetime.now().isoformat(),
+            "type": "seed",
+        },
+        status_code=200,
+    )
+    okareo_client.upload_scenario_set(
+        scenario_name="my-test-scenario-1",
+        file_path="./okareo_tests/webbizz_class_seed.jsonl",
+    )
+
+
+def test_generate_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        json={
+            "scenario_id": "created-id",
+            "project_id": "new-project-id",
+            "time_created": datetime.now().isoformat(),
+            "type": "seed",
+        },
+        status_code=201,
+    )
+
+    okareo_client.generate_scenario_set(
+        ScenarioSetGenerate(
+            source_scenario_id="just-a-random-scenario-id",
+            name="my generation foo",
+            number_examples=22,
+        )
+    )
+
+
+def test_get_scenario_data_points(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(json={}, status_code=200)
+    okareo_client.get_scenario_data_points(scenario_id="scenario-id")

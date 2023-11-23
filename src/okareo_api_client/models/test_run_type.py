@@ -6,7 +6,6 @@ class TestRunType(str, Enum):
     INVARIANT = "invariant"
     MULTI_CLASS_CLASSIFICATION = "MULTI_CLASS_CLASSIFICATION"
     NL_GENERATION = "NL_GENERATION"
-    VECTOR_DB = "VECTOR_DB"
 
     def __str__(self) -> str:
         return str(self.value)

@@ -1,10 +1,11 @@
 import json
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from attrs import define as _attrs_define
 
+from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
     add_test_data_point_v0_test_data_point_post,
@@ -28,14 +29,15 @@ from okareo_api_client.models import (
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
-from okareo_api_client.models.vector_db_payload import VectorDbPayload
-from okareo_api_client.models.vector_db_payload_params import VectorDbPayloadParams
-from okareo_api_client.models.vector_db_payload_type import VectorDbPayloadType
-from okareo_api_client.types import UNSET
+from okareo_api_client.models.test_run_payload_v2_api_keys import (
+    TestRunPayloadV2ApiKeys,
+)
+from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
+    TestRunPayloadV2MetricsKwargs,
+)
 
 
 class BaseModel:
-    name: str
     type: str
     api_key: Optional[str]
 
@@ -46,7 +48,6 @@ class BaseModel:
 
 @_attrs_define
 class OpenAIModel(BaseModel):
-    name: str
     type = "openai"
     model_id: str
     temperature: float
@@ -60,30 +61,33 @@ class OpenAIModel(BaseModel):
 
 @_attrs_define
 class CohereModel(BaseModel):
-    name: str
     type = "cohere"
     model_id: str
     model_type: str
+    input_type: Optional[str] = None
 
     def params(self) -> dict:
-        return {"model_id": self.model_id, "model_type": self.model_type}
+        return {
+            "model_id": self.model_id,
+            "model_type": self.model_type,
+            "input_type": self.input_type,
+        }
 
 
 @_attrs_define
 class PineconeDb(BaseModel):
     type = "pinecone"
-    name: str
     index_name: str
     region: str
     project_id: str
-    api_key: str
+    top_k: int = 5
 
     def params(self) -> dict:
         return {
-            "name": self.name,
             "index_name": self.index_name,
             "region": self.region,
             "project_id": self.project_id,
+            "top_k": self.top_k,
         }
 
 
@@ -93,7 +97,13 @@ class CustomModel(BaseModel):
 
 
 class ModelUnderTest:
-    def __init__(self, client: Client, api_key: str, mut: ModelUnderTestResponse):
+    def __init__(
+        self,
+        client: Client,
+        api_key: str,
+        mut: ModelUnderTestResponse,
+        models: Optional[Dict[str, Any]] = None,
+    ):
         self.client = client
         self.api_key = api_key
 
@@ -101,6 +111,7 @@ class ModelUnderTest:
         self.project_id = mut.project_id
         self.name = mut.name
         self.tags = mut.tags
+        self.models = models
 
     def add_data_point(
         self,
@@ -227,30 +238,38 @@ class ModelUnderTest:
         self,
         scenario: ScenarioSetResponse,
         name: str,
-        api_key: str,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
-        vector_db: Optional[BaseModel] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
+        assert isinstance(self.models, dict)
+        model_names = list(self.models.keys())
+        run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
+
+        if len(model_names) != len(run_api_keys):
+            raise MissingApiKeyError("Number of models and API keys does not match")
+
+        if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
+            if "pinecone" not in model_names:
+                raise MissingVectorDbError("No vector database specified")
+
         try:
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
                 api_key=self.api_key,
                 json_body=TestRunPayloadV2(
                     mut_id=self.mut_id,
-                    api_key=api_key,
+                    api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys),
                     scenario_id=scenario.scenario_id,
                     name=name,
                     type=test_run_type,
                     project_id=self.project_id,
                     calculate_metrics=calculate_metrics,
-                    vector_db=UNSET
-                    if not vector_db
-                    else VectorDbPayload(
-                        type=VectorDbPayloadType(vector_db.type),
-                        api_key=vector_db.api_key or "",
-                        params=VectorDbPayloadParams.from_dict(vector_db.params()),
+                    metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
+                        metrics_kwargs or {}
                     ),
                 ),
             )

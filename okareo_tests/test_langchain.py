@@ -1,5 +1,6 @@
 import random
 import string
+from datetime import datetime
 from unittest import mock
 
 from langchain.chains import LLMChain
@@ -13,15 +14,23 @@ from okareo.callbacks import CallbackHandler
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
 
+def get_mut_response() -> dict:
+    return ModelUnderTestResponse(
+        "id",
+        "my-project",
+        "langchain_test",
+        ["ci-run"],
+        datetime.now().isoformat(),
+    ).to_dict()
+
+
 @integration
 def test_llm_generates_datapoints(
     httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
 ) -> None:
-    mut_resp = ModelUnderTestResponse("id", "my-project", "langchain_test", ["ci-run"])
-
     context_token = random_string(10)
     if okareo_api.is_mock:
-        httpx_mock.add_response(json=mut_resp.to_dict(), status_code=201)
+        httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
         handler = CallbackHandler(
@@ -48,11 +57,9 @@ def test_llm_generates_datapoints(
 def test_llm_auto_generate_model(
     httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
 ) -> None:
-    mut_resp = ModelUnderTestResponse("id", "my-project", "langchain_test", ["ci-run"])
-
     context_token = "".join(random.choices(string.ascii_letters, k=10))
     if okareo_api.is_mock:
-        httpx_mock.add_response(json=mut_resp.to_dict(), status_code=201)
+        httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
         handler = CallbackHandler(context_token=context_token)
@@ -77,11 +84,9 @@ def test_llm_auto_generate_model(
 def test_chain_generates_datapoints(
     httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
 ) -> None:
-    mut_resp = ModelUnderTestResponse("id", "my-project", "langchain_test", ["ci-run"])
-
     context_token = random_string(10)
     if okareo_api.is_mock:
-        httpx_mock.add_response(json=mut_resp.to_dict(), status_code=201)
+        httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
         handler = CallbackHandler(context_token=context_token)
