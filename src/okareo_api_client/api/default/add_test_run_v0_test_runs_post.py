@@ -5,6 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error_response import ErrorResponse
 from ...models.http_validation_error import HTTPValidationError
 from ...models.test_run_item import TestRunItem
 from ...models.test_run_payload import TestRunPayload
@@ -31,11 +32,15 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, TestRunItem]]:
+) -> Optional[Union[ErrorResponse, HTTPValidationError, TestRunItem]]:
     if response.status_code == HTTPStatus.CREATED:
         response_201 = TestRunItem.from_dict(response.json())
 
         return response_201
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -48,7 +53,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, TestRunItem]]:
+) -> Response[Union[ErrorResponse, HTTPValidationError, TestRunItem]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -62,7 +67,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
-) -> Response[Union[HTTPValidationError, TestRunItem]]:
+) -> Response[Union[ErrorResponse, HTTPValidationError, TestRunItem]]:
     """Add Test Run
 
      Add a test run
@@ -79,7 +84,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, TestRunItem]]
+        Response[Union[ErrorResponse, HTTPValidationError, TestRunItem]]
     """
 
     kwargs = _get_kwargs(
@@ -99,7 +104,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, TestRunItem]]:
+) -> Optional[Union[ErrorResponse, HTTPValidationError, TestRunItem]]:
     """Add Test Run
 
      Add a test run
@@ -116,7 +121,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, TestRunItem]
+        Union[ErrorResponse, HTTPValidationError, TestRunItem]
     """
 
     return sync_detailed(
@@ -131,7 +136,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
-) -> Response[Union[HTTPValidationError, TestRunItem]]:
+) -> Response[Union[ErrorResponse, HTTPValidationError, TestRunItem]]:
     """Add Test Run
 
      Add a test run
@@ -148,7 +153,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, TestRunItem]]
+        Response[Union[ErrorResponse, HTTPValidationError, TestRunItem]]
     """
 
     kwargs = _get_kwargs(
@@ -166,7 +171,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayload,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, TestRunItem]]:
+) -> Optional[Union[ErrorResponse, HTTPValidationError, TestRunItem]]:
     """Add Test Run
 
      Add a test run
@@ -183,7 +188,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, TestRunItem]
+        Union[ErrorResponse, HTTPValidationError, TestRunItem]
     """
 
     return (

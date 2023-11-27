@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
+from ...models.error_response import ErrorResponse
 from ...models.scenario_set_response import ScenarioSetResponse
 from ...types import UNSET, Response, Unset
 
@@ -36,7 +36,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
+) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     if response.status_code == HTTPStatus.OK:
         response_200 = []
         _response_200 = response.json()
@@ -46,8 +46,12 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -58,7 +62,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
+) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,8 +77,13 @@ def sync_detailed(
     scenario_id: Union[Unset, None, str] = UNSET,
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
+) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
+
+     Find all scenario sets based on either the project id or the scenario id
+
+    Returns:
+        a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
         scenario_id (Union[Unset, None, str]):
@@ -86,7 +95,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List['ScenarioSetResponse']]]
+        Response[Union[ErrorResponse, List['ScenarioSetResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -108,8 +117,13 @@ def sync(
     scenario_id: Union[Unset, None, str] = UNSET,
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
+) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
+
+     Find all scenario sets based on either the project id or the scenario id
+
+    Returns:
+        a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
         scenario_id (Union[Unset, None, str]):
@@ -121,7 +135,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List['ScenarioSetResponse']]
+        Union[ErrorResponse, List['ScenarioSetResponse']]
     """
 
     return sync_detailed(
@@ -138,8 +152,13 @@ async def asyncio_detailed(
     scenario_id: Union[Unset, None, str] = UNSET,
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
+) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
+
+     Find all scenario sets based on either the project id or the scenario id
+
+    Returns:
+        a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
         scenario_id (Union[Unset, None, str]):
@@ -151,7 +170,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List['ScenarioSetResponse']]]
+        Response[Union[ErrorResponse, List['ScenarioSetResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -171,8 +190,13 @@ async def asyncio(
     scenario_id: Union[Unset, None, str] = UNSET,
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List["ScenarioSetResponse"]]]:
+) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
+
+     Find all scenario sets based on either the project id or the scenario id
+
+    Returns:
+        a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
         scenario_id (Union[Unset, None, str]):
@@ -184,7 +208,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List['ScenarioSetResponse']]
+        Union[ErrorResponse, List['ScenarioSetResponse']]
     """
 
     return (

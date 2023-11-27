@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
+from ...models.error_response import ErrorResponse
 from ...models.scenario_data_poin_response import ScenarioDataPoinResponse
 from ...types import Response
 
@@ -29,7 +29,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, List["ScenarioDataPoinResponse"]]]:
+) -> Optional[Union[ErrorResponse, List["ScenarioDataPoinResponse"]]]:
     if response.status_code == HTTPStatus.OK:
         response_200 = []
         _response_200 = response.json()
@@ -39,8 +39,12 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -51,7 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, List["ScenarioDataPoinResponse"]]]:
+) -> Response[Union[ErrorResponse, List["ScenarioDataPoinResponse"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -65,8 +69,13 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[HTTPValidationError, List["ScenarioDataPoinResponse"]]]:
+) -> Response[Union[ErrorResponse, List["ScenarioDataPoinResponse"]]]:
     """Get Scenario Set Data Points
+
+     Get all scenarios datapoints
+
+    Returns:
+        a list of scenario datapoints
 
     Args:
         scenario_id (str):
@@ -77,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List['ScenarioDataPoinResponse']]]
+        Response[Union[ErrorResponse, List['ScenarioDataPoinResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -97,8 +106,13 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List["ScenarioDataPoinResponse"]]]:
+) -> Optional[Union[ErrorResponse, List["ScenarioDataPoinResponse"]]]:
     """Get Scenario Set Data Points
+
+     Get all scenarios datapoints
+
+    Returns:
+        a list of scenario datapoints
 
     Args:
         scenario_id (str):
@@ -109,7 +123,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List['ScenarioDataPoinResponse']]
+        Union[ErrorResponse, List['ScenarioDataPoinResponse']]
     """
 
     return sync_detailed(
@@ -124,8 +138,13 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[HTTPValidationError, List["ScenarioDataPoinResponse"]]]:
+) -> Response[Union[ErrorResponse, List["ScenarioDataPoinResponse"]]]:
     """Get Scenario Set Data Points
+
+     Get all scenarios datapoints
+
+    Returns:
+        a list of scenario datapoints
 
     Args:
         scenario_id (str):
@@ -136,7 +155,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List['ScenarioDataPoinResponse']]]
+        Response[Union[ErrorResponse, List['ScenarioDataPoinResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -154,8 +173,13 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List["ScenarioDataPoinResponse"]]]:
+) -> Optional[Union[ErrorResponse, List["ScenarioDataPoinResponse"]]]:
     """Get Scenario Set Data Points
+
+     Get all scenarios datapoints
+
+    Returns:
+        a list of scenario datapoints
 
     Args:
         scenario_id (str):
@@ -166,7 +190,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List['ScenarioDataPoinResponse']]
+        Union[ErrorResponse, List['ScenarioDataPoinResponse']]
     """
 
     return (

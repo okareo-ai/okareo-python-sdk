@@ -25,6 +25,7 @@ class ScenarioSetResponse:
         tags (Union[Unset, List[str]]):
         name (Union[Unset, str]):
         seed_data (Union[Unset, List['SeedData']]):
+        scenario_count (Union[Unset, int]):
         scenario_input (Union[Unset, List[str]]):
     """
 
@@ -35,6 +36,7 @@ class ScenarioSetResponse:
     tags: Union[Unset, List[str]] = UNSET
     name: Union[Unset, str] = UNSET
     seed_data: Union[Unset, List["SeedData"]] = UNSET
+    scenario_count: Union[Unset, int] = 0
     scenario_input: Union[Unset, List[str]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -57,6 +59,7 @@ class ScenarioSetResponse:
 
                 seed_data.append(seed_data_item)
 
+        scenario_count = self.scenario_count
         scenario_input: Union[Unset, List[str]] = UNSET
         if not isinstance(self.scenario_input, Unset):
             scenario_input = self.scenario_input
@@ -77,6 +80,8 @@ class ScenarioSetResponse:
             field_dict["name"] = name
         if seed_data is not UNSET:
             field_dict["seed_data"] = seed_data
+        if scenario_count is not UNSET:
+            field_dict["scenario_count"] = scenario_count
         if scenario_input is not UNSET:
             field_dict["scenario_input"] = scenario_input
 
@@ -106,6 +111,8 @@ class ScenarioSetResponse:
 
             seed_data.append(seed_data_item)
 
+        scenario_count = d.pop("scenario_count", UNSET)
+
         scenario_input = cast(List[str], d.pop("scenario_input", UNSET))
 
         scenario_set_response = cls(
@@ -116,6 +123,7 @@ class ScenarioSetResponse:
             tags=tags,
             name=name,
             seed_data=seed_data,
+            scenario_count=scenario_count,
             scenario_input=scenario_input,
         )
 
