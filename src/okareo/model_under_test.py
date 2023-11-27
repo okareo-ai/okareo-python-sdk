@@ -127,7 +127,7 @@ class ModelUnderTest:
         project_id: Union[str, None] = None,
         tags: Union[List[str], None] = None,
         test_run_id: Union[None, str] = None,
-    ) -> DatapointResponse | ErrorResponse:
+    ) -> Union[DatapointResponse, ErrorResponse]:
         body = {
             "tags": tags or [],
             "input": json.dumps(input_obj, default=str),
