@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
+from ...models.error_response import ErrorResponse
 from ...models.scenario_set_response import ScenarioSetResponse
 from ...models.scenario_set_update import ScenarioSetUpdate
 from ...types import Response
@@ -34,13 +34,21 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, ScenarioSetResponse]]:
+) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     if response.status_code == HTTPStatus.CREATED:
         response_201 = ScenarioSetResponse.from_dict(response.json())
 
         return response_201
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -51,7 +59,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, ScenarioSetResponse]]:
+) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,7 +74,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ScenarioSetUpdate,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ScenarioSetResponse]]:
+) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
 
      Update a Scenario Set
@@ -75,7 +83,7 @@ def sync_detailed(
         the updated Scenario Set
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to modify
         api_key (str):
         json_body (ScenarioSetUpdate):
 
@@ -84,7 +92,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ScenarioSetResponse]]
+        Response[Union[ErrorResponse, ScenarioSetResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -106,7 +114,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: ScenarioSetUpdate,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ScenarioSetResponse]]:
+) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
 
      Update a Scenario Set
@@ -115,7 +123,7 @@ def sync(
         the updated Scenario Set
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to modify
         api_key (str):
         json_body (ScenarioSetUpdate):
 
@@ -124,7 +132,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ScenarioSetResponse]
+        Union[ErrorResponse, ScenarioSetResponse]
     """
 
     return sync_detailed(
@@ -141,7 +149,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ScenarioSetUpdate,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ScenarioSetResponse]]:
+) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
 
      Update a Scenario Set
@@ -150,7 +158,7 @@ async def asyncio_detailed(
         the updated Scenario Set
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to modify
         api_key (str):
         json_body (ScenarioSetUpdate):
 
@@ -159,7 +167,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ScenarioSetResponse]]
+        Response[Union[ErrorResponse, ScenarioSetResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -179,7 +187,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: ScenarioSetUpdate,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ScenarioSetResponse]]:
+) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
 
      Update a Scenario Set
@@ -188,7 +196,7 @@ async def asyncio(
         the updated Scenario Set
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to modify
         api_key (str):
         json_body (ScenarioSetUpdate):
 
@@ -197,7 +205,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ScenarioSetResponse]
+        Union[ErrorResponse, ScenarioSetResponse]
     """
 
     return (

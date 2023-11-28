@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
+from ...models.error_response import ErrorResponse
 from ...models.model_under_test_response import ModelUnderTestResponse
 from ...models.model_under_test_schema import ModelUnderTestSchema
 from ...types import Response
@@ -34,13 +34,21 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
     if response.status_code == HTTPStatus.CREATED:
         response_201 = ModelUnderTestResponse.from_dict(response.json())
 
         return response_201
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -51,7 +59,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,7 +74,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -75,7 +83,7 @@ def sync_detailed(
         the updated model under test
 
     Args:
-        mut_id (str):
+        mut_id (str): The ID of the model under test to get
         api_key (str):
         json_body (ModelUnderTestSchema):
 
@@ -84,7 +92,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ModelUnderTestResponse]]
+        Response[Union[ErrorResponse, ModelUnderTestResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -106,7 +114,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -115,7 +123,7 @@ def sync(
         the updated model under test
 
     Args:
-        mut_id (str):
+        mut_id (str): The ID of the model under test to get
         api_key (str):
         json_body (ModelUnderTestSchema):
 
@@ -124,7 +132,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ModelUnderTestResponse]
+        Union[ErrorResponse, ModelUnderTestResponse]
     """
 
     return sync_detailed(
@@ -141,7 +149,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -150,7 +158,7 @@ async def asyncio_detailed(
         the updated model under test
 
     Args:
-        mut_id (str):
+        mut_id (str): The ID of the model under test to get
         api_key (str):
         json_body (ModelUnderTestSchema):
 
@@ -159,7 +167,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ModelUnderTestResponse]]
+        Response[Union[ErrorResponse, ModelUnderTestResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -179,7 +187,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
+) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -188,7 +196,7 @@ async def asyncio(
         the updated model under test
 
     Args:
-        mut_id (str):
+        mut_id (str): The ID of the model under test to get
         api_key (str):
         json_body (ModelUnderTestSchema):
 
@@ -197,7 +205,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ModelUnderTestResponse]
+        Union[ErrorResponse, ModelUnderTestResponse]
     """
 
     return (

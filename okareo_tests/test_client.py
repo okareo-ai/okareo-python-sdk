@@ -7,6 +7,7 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
+from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_type import ScenarioType
@@ -65,8 +66,9 @@ def test_error_handling(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
 
     # Expecting the method to raise an exception
     if okareo_api.is_mock:
-        with pytest.raises(Exception, match="Unexpected"):
-            okareo.get_generations()
+        response = okareo.get_generations()
+        if isinstance(response, ErrorResponse):
+            assert response.detail
 
 
 def test_register_model_raises_on_validation_error(

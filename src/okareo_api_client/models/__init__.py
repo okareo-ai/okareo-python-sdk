@@ -7,12 +7,12 @@ from .datapoint_list_item_result_type_0 import DatapointListItemResultType0
 from .datapoint_response import DatapointResponse
 from .datapoint_schema import DatapointSchema
 from .datapoint_search import DatapointSearch
+from .error_response import ErrorResponse
 from .find_test_data_point_payload import FindTestDataPointPayload
 from .general_find_payload import GeneralFindPayload
 from .generation_list import GenerationList
 from .generation_payload import GenerationPayload
 from .generation_response import GenerationResponse
-from .http_validation_error import HTTPValidationError
 from .model_under_test_response import ModelUnderTestResponse
 from .model_under_test_schema import ModelUnderTestSchema
 from .model_under_test_schema_models import ModelUnderTestSchemaModels
@@ -38,7 +38,6 @@ from .test_run_payload_v2 import TestRunPayloadV2
 from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
 from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
 from .test_run_type import TestRunType
-from .validation_error import ValidationError
 
 __all__ = (
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
@@ -48,12 +47,12 @@ __all__ = (
     "DatapointResponse",
     "DatapointSchema",
     "DatapointSearch",
+    "ErrorResponse",
     "FindTestDataPointPayload",
     "GeneralFindPayload",
     "GenerationList",
     "GenerationPayload",
     "GenerationResponse",
-    "HTTPValidationError",
     "ModelUnderTestResponse",
     "ModelUnderTestSchema",
     "ModelUnderTestSchemaModels",
@@ -79,5 +78,4 @@ __all__ = (
     "TestRunPayloadV2ApiKeys",
     "TestRunPayloadV2MetricsKwargs",
     "TestRunType",
-    "ValidationError",
 )

@@ -17,8 +17,8 @@ from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_
 )
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
+from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.generation_list import GenerationList
-from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.scenario_data_poin_response import (
@@ -45,14 +45,11 @@ class Okareo:
             base_url=base_path, raise_on_unexpected_status=True
         )  # otherwise everything except 201 and 422 is swallowed
 
-    def get_generations(self) -> Union[List[GenerationList], None]:
+    def get_generations(self) -> Union[List[GenerationList], ErrorResponse, None]:
         """Get a list of generations"""
         data = get_generations_v0_generations_get.sync(
             client=self.client, api_key=self.api_key
         )
-        if isinstance(data, HTTPValidationError):
-            print(f"Unexpected {data=}, {type(data)=}")
-            raise
         return data
 
     def register_model(
@@ -173,22 +170,18 @@ class Okareo:
         return response
 
     def validate_response(self, response: Any) -> None:
-        if isinstance(response, HTTPValidationError):
-            print(f"Unexpected HTTP error: {response}")
-            raise
-        elif response is None:
+        if response is None:
             print("Received no response (None) from the API")
             raise ValueError("No response received")
 
-    def find_datapoints(self, context_token: str) -> List[DatapointListItem]:
+    def find_datapoints(
+        self, context_token: str
+    ) -> Union[List[DatapointListItem], ErrorResponse]:
         data = get_datapoints_v0_find_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
             json_body=DatapointSearch(context_token=context_token),
         )
-        if isinstance(data, HTTPValidationError):
-            print(f"Unexpected {data=}, {type(data)=}")
-            raise
         if not data:
             return []
         return data

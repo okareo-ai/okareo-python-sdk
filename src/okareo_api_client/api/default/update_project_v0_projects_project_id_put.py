@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
+from ...models.error_response import ErrorResponse
 from ...models.project_response import ProjectResponse
 from ...models.project_schema import ProjectSchema
 from ...types import Response
@@ -34,13 +34,21 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
+) -> Optional[Union[ErrorResponse, ProjectResponse]]:
     if response.status_code == HTTPStatus.CREATED:
         response_201 = ProjectResponse.from_dict(response.json())
 
         return response_201
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -51,7 +59,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, ProjectResponse]]:
+) -> Response[Union[ErrorResponse, ProjectResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,7 +74,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ProjectSchema,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ProjectResponse]]:
+) -> Response[Union[ErrorResponse, ProjectResponse]]:
     """Update Project
 
      Update a project
@@ -75,7 +83,7 @@ def sync_detailed(
         the requested project
 
     Args:
-        project_id (str):
+        project_id (str): The ID of the project to get
         api_key (str):
         json_body (ProjectSchema):
 
@@ -84,7 +92,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ProjectResponse]]
+        Response[Union[ErrorResponse, ProjectResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -106,7 +114,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: ProjectSchema,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
+) -> Optional[Union[ErrorResponse, ProjectResponse]]:
     """Update Project
 
      Update a project
@@ -115,7 +123,7 @@ def sync(
         the requested project
 
     Args:
-        project_id (str):
+        project_id (str): The ID of the project to get
         api_key (str):
         json_body (ProjectSchema):
 
@@ -124,7 +132,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ProjectResponse]
+        Union[ErrorResponse, ProjectResponse]
     """
 
     return sync_detailed(
@@ -141,7 +149,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ProjectSchema,
     api_key: str,
-) -> Response[Union[HTTPValidationError, ProjectResponse]]:
+) -> Response[Union[ErrorResponse, ProjectResponse]]:
     """Update Project
 
      Update a project
@@ -150,7 +158,7 @@ async def asyncio_detailed(
         the requested project
 
     Args:
-        project_id (str):
+        project_id (str): The ID of the project to get
         api_key (str):
         json_body (ProjectSchema):
 
@@ -159,7 +167,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, ProjectResponse]]
+        Response[Union[ErrorResponse, ProjectResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -179,7 +187,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: ProjectSchema,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, ProjectResponse]]:
+) -> Optional[Union[ErrorResponse, ProjectResponse]]:
     """Update Project
 
      Update a project
@@ -188,7 +196,7 @@ async def asyncio(
         the requested project
 
     Args:
-        project_id (str):
+        project_id (str): The ID of the project to get
         api_key (str):
         json_body (ProjectSchema):
 
@@ -197,7 +205,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, ProjectResponse]
+        Union[ErrorResponse, ProjectResponse]
     """
 
     return (

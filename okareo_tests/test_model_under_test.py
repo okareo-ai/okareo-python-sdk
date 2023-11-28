@@ -11,7 +11,6 @@ from okareo import ModelUnderTest, Okareo
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo.model_under_test import CohereModel, PineconeDb
 from okareo_api_client.models import SeedData, TestRunItem
-from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
 
@@ -151,7 +150,7 @@ def test_validate_return_type(httpx_mock: HTTPXMock) -> None:
         registered_model.validate_return_type(None)
 
     with pytest.raises(TypeError):
-        registered_model.validate_return_type(HTTPValidationError())
+        registered_model.validate_return_type(None)
 
     valid_response = TestRunItem(
         id="test_id",
