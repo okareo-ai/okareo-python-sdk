@@ -27,7 +27,6 @@ from okareo_api_client.models import (
     TestRunType,
 )
 from okareo_api_client.models.error_response import ErrorResponse
-from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
 from okareo_api_client.models.test_run_payload_v2_api_keys import (
@@ -147,9 +146,6 @@ class ModelUnderTest:
             api_key=self.api_key,
             json_body=DatapointSchema.from_dict(body),
         )
-        if isinstance(response, HTTPValidationError):
-            print(f"Unexpected {response=}, {type(response)=}")
-            raise
         if not response:
             print("Empty response from API")
         assert response is not None
@@ -278,9 +274,7 @@ class ModelUnderTest:
             print(f"Unexpected status {e=}, {e.content=}")
             raise
 
-        if isinstance(response, HTTPValidationError) or isinstance(
-            response, ErrorResponse
-        ):
+        if isinstance(response, ErrorResponse):
             error_message = f"error: {response}, {response.detail}"
             print(error_message)
             raise
@@ -317,11 +311,9 @@ class ModelUnderTest:
             raise
 
     def validate_return_type(
-        self, response: Union[ErrorResponse, HTTPValidationError, TestRunItem, None]
+        self, response: Union[ErrorResponse, TestRunItem, None]
     ) -> TestRunItem:
-        if isinstance(response, HTTPValidationError) or isinstance(
-            response, ErrorResponse
-        ):
+        if isinstance(response, ErrorResponse):
             error_message = f"error: {response}, {response.detail}"
             print(error_message)
             raise TypeError(error_message)
