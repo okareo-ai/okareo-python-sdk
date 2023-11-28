@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import datetime
 
@@ -131,7 +132,7 @@ def test_upload_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> No
     )
     okareo_client.upload_scenario_set(
         scenario_name="my-test-scenario-1",
-        file_path="./okareo_tests/webbizz_class_seed.jsonl",
+        file_path=os.path.join(os.path.dirname(__file__), "webbizz_class_seed.jsonl"),
     )
 
 
