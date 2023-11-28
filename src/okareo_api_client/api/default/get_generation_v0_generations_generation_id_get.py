@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
+from ...models.error_response import ErrorResponse
 from ...types import Response
 
 
@@ -28,12 +28,20 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, str]]:
+) -> Optional[Union[ErrorResponse, str]]:
     if response.status_code == HTTPStatus.OK:
         response_200 = cast(str, response.json())
         return response_200
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -44,7 +52,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, str]]:
+) -> Response[Union[ErrorResponse, str]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -58,7 +66,7 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[HTTPValidationError, str]]:
+) -> Response[Union[ErrorResponse, str]]:
     """Get Generation
 
      gets a specific generation by id/hash for the given user.
@@ -67,7 +75,7 @@ def sync_detailed(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str):
+        generation_id (str): The ID of the generation to get
         api_key (str):
 
     Raises:
@@ -75,7 +83,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, str]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
@@ -95,7 +103,7 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[HTTPValidationError, str]]:
+) -> Optional[Union[ErrorResponse, str]]:
     """Get Generation
 
      gets a specific generation by id/hash for the given user.
@@ -104,7 +112,7 @@ def sync(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str):
+        generation_id (str): The ID of the generation to get
         api_key (str):
 
     Raises:
@@ -112,7 +120,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, str]
+        Union[ErrorResponse, str]
     """
 
     return sync_detailed(
@@ -127,7 +135,7 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[HTTPValidationError, str]]:
+) -> Response[Union[ErrorResponse, str]]:
     """Get Generation
 
      gets a specific generation by id/hash for the given user.
@@ -136,7 +144,7 @@ async def asyncio_detailed(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str):
+        generation_id (str): The ID of the generation to get
         api_key (str):
 
     Raises:
@@ -144,7 +152,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, str]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
@@ -162,7 +170,7 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[HTTPValidationError, str]]:
+) -> Optional[Union[ErrorResponse, str]]:
     """Get Generation
 
      gets a specific generation by id/hash for the given user.
@@ -171,7 +179,7 @@ async def asyncio(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str):
+        generation_id (str): The ID of the generation to get
         api_key (str):
 
     Raises:
@@ -179,7 +187,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, str]
+        Union[ErrorResponse, str]
     """
 
     return (
