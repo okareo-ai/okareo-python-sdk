@@ -41,11 +41,6 @@ def sync_detailed(
 ) -> Response[Any]:
     """Healthcheck
 
-     Check the health of Okareo server
-
-    Returns:
-        status of server
-
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -68,11 +63,6 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
 ) -> Response[Any]:
     """Healthcheck
-
-     Check the health of Okareo server
-
-    Returns:
-        status of server
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

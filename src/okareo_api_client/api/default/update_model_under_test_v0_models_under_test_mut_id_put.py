@@ -5,7 +5,6 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
 from ...models.http_validation_error import HTTPValidationError
 from ...models.model_under_test_response import ModelUnderTestResponse
 from ...models.model_under_test_schema import ModelUnderTestSchema
@@ -35,15 +34,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]:
+) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
     if response.status_code == HTTPStatus.CREATED:
         response_201 = ModelUnderTestResponse.from_dict(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -56,7 +51,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]:
+) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -71,7 +66,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Response[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]:
+) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -89,7 +84,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]
+        Response[Union[HTTPValidationError, ModelUnderTestResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -111,7 +106,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Optional[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]:
+) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -129,7 +124,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]
+        Union[HTTPValidationError, ModelUnderTestResponse]
     """
 
     return sync_detailed(
@@ -146,7 +141,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Response[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]:
+) -> Response[Union[HTTPValidationError, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -164,7 +159,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]
+        Response[Union[HTTPValidationError, ModelUnderTestResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -184,7 +179,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: ModelUnderTestSchema,
     api_key: str,
-) -> Optional[Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]]:
+) -> Optional[Union[HTTPValidationError, ModelUnderTestResponse]]:
     """Update Model Under Test
 
      Update a model under test
@@ -202,7 +197,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, HTTPValidationError, ModelUnderTestResponse]
+        Union[HTTPValidationError, ModelUnderTestResponse]
     """
 
     return (
