@@ -64,8 +64,8 @@ def test_error_handling(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
 
     # Expecting the method to raise an exception
     if okareo_api.is_mock:
-        with pytest.raises(Exception, match="Unexpected"):
-            okareo.get_generations()
+        response = okareo.get_generations()
+        assert response.detail
 
 
 def test_register_model_raises_on_validation_error(
