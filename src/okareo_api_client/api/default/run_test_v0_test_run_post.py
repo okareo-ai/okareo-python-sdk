@@ -73,10 +73,12 @@ def sync_detailed(
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Run Test
 
-     Test the scenarios on the model from the model ID and scenario ID from the request body
+     Runs tests on a model (mut_id) using previously generated scenario.
+    Feeds the scenario data (scenario_id) into the model and evaulates results
+    depending on the test type specified.
 
     Returns:
-        the test run data which includes the generated metrics from the run
+        The test run data which includes the evaluated metrics from the run.
 
     Args:
         api_key (str):
@@ -110,10 +112,12 @@ def sync(
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Run Test
 
-     Test the scenarios on the model from the model ID and scenario ID from the request body
+     Runs tests on a model (mut_id) using previously generated scenario.
+    Feeds the scenario data (scenario_id) into the model and evaulates results
+    depending on the test type specified.
 
     Returns:
-        the test run data which includes the generated metrics from the run
+        The test run data which includes the evaluated metrics from the run.
 
     Args:
         api_key (str):
@@ -142,10 +146,12 @@ async def asyncio_detailed(
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Run Test
 
-     Test the scenarios on the model from the model ID and scenario ID from the request body
+     Runs tests on a model (mut_id) using previously generated scenario.
+    Feeds the scenario data (scenario_id) into the model and evaulates results
+    depending on the test type specified.
 
     Returns:
-        the test run data which includes the generated metrics from the run
+        The test run data which includes the evaluated metrics from the run.
 
     Args:
         api_key (str):
@@ -177,10 +183,12 @@ async def asyncio(
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Run Test
 
-     Test the scenarios on the model from the model ID and scenario ID from the request body
+     Runs tests on a model (mut_id) using previously generated scenario.
+    Feeds the scenario data (scenario_id) into the model and evaulates results
+    depending on the test type specified.
 
     Returns:
-        the test run data which includes the generated metrics from the run
+        The test run data which includes the evaluated metrics from the run.
 
     Args:
         api_key (str):

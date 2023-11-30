@@ -12,8 +12,8 @@ T = TypeVar("T", bound="ProjectSchema")
 class ProjectSchema:
     """
     Attributes:
-        name (Union[Unset, str]):
-        tags (Union[Unset, List[str]]):
+        name (Union[Unset, str]): Name of the project
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter projects in the Okareo app
     """
 
     name: Union[Unset, str] = UNSET

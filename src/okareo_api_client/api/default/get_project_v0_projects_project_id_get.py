@@ -77,7 +77,7 @@ def sync_detailed(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): The ID of the project
         api_key (str):
 
     Raises:
@@ -114,7 +114,7 @@ def sync(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): The ID of the project
         api_key (str):
 
     Raises:
@@ -146,7 +146,7 @@ async def asyncio_detailed(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): The ID of the project
         api_key (str):
 
     Raises:
@@ -181,7 +181,7 @@ async def asyncio(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): The ID of the project
         api_key (str):
 
     Raises:

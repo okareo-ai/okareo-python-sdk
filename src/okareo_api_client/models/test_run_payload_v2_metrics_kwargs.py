@@ -8,7 +8,7 @@ T = TypeVar("T", bound="TestRunPayloadV2MetricsKwargs")
 
 @_attrs_define
 class TestRunPayloadV2MetricsKwargs:
-    """ """
+    """Dictionary of metrics to be measured"""
 
     additional_properties: Dict[str, List[int]] = _attrs_field(init=False, factory=dict)
 

@@ -83,7 +83,7 @@ def sync_detailed(
         the updated model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model under test
         api_key (str):
         json_body (ModelUnderTestSchema):
 
@@ -123,7 +123,7 @@ def sync(
         the updated model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model under test
         api_key (str):
         json_body (ModelUnderTestSchema):
 
@@ -158,7 +158,7 @@ async def asyncio_detailed(
         the updated model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model under test
         api_key (str):
         json_body (ModelUnderTestSchema):
 
@@ -196,7 +196,7 @@ async def asyncio(
         the updated model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model under test
         api_key (str):
         json_body (ModelUnderTestSchema):
 

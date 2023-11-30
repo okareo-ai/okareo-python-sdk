@@ -8,7 +8,7 @@ T = TypeVar("T", bound="TestRunPayloadV2ApiKeys")
 
 @_attrs_define
 class TestRunPayloadV2ApiKeys:
-    """ """
+    """Dictionary that maps model type to the respective API keys"""
 
     additional_properties: Dict[str, str] = _attrs_field(init=False, factory=dict)
 

@@ -35,6 +35,7 @@ from okareo_api_client.models.test_run_payload_v2_api_keys import (
 from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
     TestRunPayloadV2MetricsKwargs,
 )
+from okareo_api_client.types import UNSET, Unset
 
 
 class BaseModel:
@@ -121,8 +122,8 @@ class ModelUnderTest:
         context_token: Union[str, None] = None,
         error_message: Union[str, None] = None,
         error_code: Union[str, None] = None,
-        input_datetime: Union[str, None] = None,
-        result_datetime: Union[str, None] = None,
+        input_datetime: Union[str, Unset] = UNSET,
+        result_datetime: Union[str, Unset] = UNSET,
         project_id: Union[str, None] = None,
         tags: Union[List[str], None] = None,
         test_run_id: Union[None, str] = None,
@@ -135,8 +136,12 @@ class ModelUnderTest:
             "feedback": feedback,
             "error_message": error_message,
             "error_code": error_code,
-            "input_datetime": input_datetime or datetime.now().isoformat(),
-            "result_datetime": result_datetime or datetime.now().isoformat(),
+            "input_datetime": datetime.now().isoformat()
+            if input_datetime == UNSET and input_obj is not None
+            else input_datetime,
+            "result_datetime": datetime.now().isoformat()
+            if result_datetime == UNSET and result_obj is not None
+            else result_datetime,
             "project_id": self.project_id,
             "mut_id": self.mut_id,
             "test_run_id": test_run_id,

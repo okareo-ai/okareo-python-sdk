@@ -13,10 +13,10 @@ T = TypeVar("T", bound="ScenarioSetGenerate")
 class ScenarioSetGenerate:
     """
     Attributes:
-        source_scenario_id (str):
-        name (str):
-        number_examples (int):
-        project_id (Union[Unset, str]):
+        source_scenario_id (str): ID for the scenario set that the generated scenario set will use as a source
+        name (str): Name of the generated scenario set
+        number_examples (int): Number of examples to be generated for the scenario set
+        project_id (Union[Unset, str]): ID for the project
         generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
     """
 

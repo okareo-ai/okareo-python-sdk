@@ -12,7 +12,7 @@ T = TypeVar("T", bound="ModelUnderTestSchemaModels")
 
 @_attrs_define
 class ModelUnderTestSchemaModels:
-    """ """
+    """Models to be added for testing"""
 
     additional_properties: Dict[str, "ModelUnderTestSchemaModelsAdditionalProperty"] = _attrs_field(
         init=False, factory=dict

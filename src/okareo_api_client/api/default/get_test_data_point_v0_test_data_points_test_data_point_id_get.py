@@ -77,7 +77,7 @@ def sync_detailed(
         the Test Run
 
     Args:
-        test_data_point_id (str):
+        test_data_point_id (str): The ID of the test data point to return
         api_key (str):
 
     Raises:
@@ -114,7 +114,7 @@ def sync(
         the Test Run
 
     Args:
-        test_data_point_id (str):
+        test_data_point_id (str): The ID of the test data point to return
         api_key (str):
 
     Raises:
@@ -146,7 +146,7 @@ async def asyncio_detailed(
         the Test Run
 
     Args:
-        test_data_point_id (str):
+        test_data_point_id (str): The ID of the test data point to return
         api_key (str):
 
     Raises:
@@ -181,7 +181,7 @@ async def asyncio(
         the Test Run
 
     Args:
-        test_data_point_id (str):
+        test_data_point_id (str): The ID of the test data point to return
         api_key (str):
 
     Raises:

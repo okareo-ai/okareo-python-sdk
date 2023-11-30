@@ -14,24 +14,25 @@ T = TypeVar("T", bound="DatapointSchema")
 class DatapointSchema:
     """
     Attributes:
-        input_datetime (datetime.datetime):
-        result_datetime (datetime.datetime):
-        mut_id (Union[Unset, str]):
-        input_ (Union[Unset, str]):
-        result (Union[Unset, str]):
-        tags (Union[Unset, List[str]]):
-        feedback (Union[Unset, int]):
+        mut_id (Union[Unset, str]): Model ID
+        input_ (Union[Unset, str]): Inputted value into the model
+        input_datetime (Union[Unset, datetime.datetime]): Datetime for the input
+        result (Union[Unset, str]): Outputted value from the model based on the input
+        result_datetime (Union[Unset, datetime.datetime]): Datetime for the result
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
+        feedback (Union[Unset, int]): Feedback is an integer value that measures user feedback from the datapoint result
         error_message (Union[Unset, str]):
         error_code (Union[Unset, str]):
-        context_token (Union[Unset, str]):
-        test_run_id (Union[Unset, str]):
+        context_token (Union[Unset, str]): Context token is a unique token to link various datapoints which originate
+            from the same context
+        test_run_id (Union[Unset, str]): ID of testrun
     """
 
-    input_datetime: datetime.datetime
-    result_datetime: datetime.datetime
     mut_id: Union[Unset, str] = UNSET
     input_: Union[Unset, str] = UNSET
+    input_datetime: Union[Unset, datetime.datetime] = UNSET
     result: Union[Unset, str] = UNSET
+    result_datetime: Union[Unset, datetime.datetime] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     feedback: Union[Unset, int] = UNSET
     error_message: Union[Unset, str] = UNSET
@@ -41,13 +42,17 @@ class DatapointSchema:
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        input_datetime = self.input_datetime.isoformat()
-
-        result_datetime = self.result_datetime.isoformat()
-
         mut_id = self.mut_id
         input_ = self.input_
+        input_datetime: Union[Unset, str] = UNSET
+        if not isinstance(self.input_datetime, Unset):
+            input_datetime = self.input_datetime.isoformat()
+
         result = self.result
+        result_datetime: Union[Unset, str] = UNSET
+        if not isinstance(self.result_datetime, Unset):
+            result_datetime = self.result_datetime.isoformat()
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
@@ -60,18 +65,17 @@ class DatapointSchema:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "input_datetime": input_datetime,
-                "result_datetime": result_datetime,
-            }
-        )
+        field_dict.update({})
         if mut_id is not UNSET:
             field_dict["mut_id"] = mut_id
         if input_ is not UNSET:
             field_dict["input"] = input_
+        if input_datetime is not UNSET:
+            field_dict["input_datetime"] = input_datetime
         if result is not UNSET:
             field_dict["result"] = result
+        if result_datetime is not UNSET:
+            field_dict["result_datetime"] = result_datetime
         if tags is not UNSET:
             field_dict["tags"] = tags
         if feedback is not UNSET:
@@ -90,15 +94,25 @@ class DatapointSchema:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        input_datetime = isoparse(d.pop("input_datetime"))
-
-        result_datetime = isoparse(d.pop("result_datetime"))
-
         mut_id = d.pop("mut_id", UNSET)
 
         input_ = d.pop("input", UNSET)
 
+        _input_datetime = d.pop("input_datetime", UNSET)
+        input_datetime: Union[Unset, datetime.datetime]
+        if isinstance(_input_datetime, Unset):
+            input_datetime = UNSET
+        else:
+            input_datetime = isoparse(_input_datetime)
+
         result = d.pop("result", UNSET)
+
+        _result_datetime = d.pop("result_datetime", UNSET)
+        result_datetime: Union[Unset, datetime.datetime]
+        if isinstance(_result_datetime, Unset):
+            result_datetime = UNSET
+        else:
+            result_datetime = isoparse(_result_datetime)
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
@@ -113,11 +127,11 @@ class DatapointSchema:
         test_run_id = d.pop("test_run_id", UNSET)
 
         datapoint_schema = cls(
-            input_datetime=input_datetime,
-            result_datetime=result_datetime,
             mut_id=mut_id,
             input_=input_,
+            input_datetime=input_datetime,
             result=result,
+            result_datetime=result_datetime,
             tags=tags,
             feedback=feedback,
             error_message=error_message,

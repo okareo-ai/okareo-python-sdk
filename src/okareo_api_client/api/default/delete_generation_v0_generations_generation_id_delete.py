@@ -78,7 +78,7 @@ def sync_detailed(
         Object: Deleted true with 204 status code
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:
@@ -118,7 +118,7 @@ def sync(
         Object: Deleted true with 204 status code
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:
@@ -153,7 +153,7 @@ async def asyncio_detailed(
         Object: Deleted true with 204 status code
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:
@@ -191,7 +191,7 @@ async def asyncio(
         Object: Deleted true with 204 status code
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:

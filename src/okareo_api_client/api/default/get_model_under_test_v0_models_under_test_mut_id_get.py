@@ -77,7 +77,7 @@ def sync_detailed(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model
         api_key (str):
 
     Raises:
@@ -114,7 +114,7 @@ def sync(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model
         api_key (str):
 
     Raises:
@@ -146,7 +146,7 @@ async def asyncio_detailed(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model
         api_key (str):
 
     Raises:
@@ -181,7 +181,7 @@ async def asyncio(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model under test to get
+        mut_id (str): The ID of the model
         api_key (str):
 
     Raises:

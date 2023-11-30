@@ -170,6 +170,10 @@ class Okareo:
         return response
 
     def validate_response(self, response: Any) -> None:
+        if isinstance(response, ErrorResponse):
+            error_message = f"error: {response}, {response.detail}"
+            print(error_message)
+            raise TypeError(error_message)
         if response is None:
             print("Received no response (None) from the API")
             raise ValueError("No response received")

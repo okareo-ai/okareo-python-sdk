@@ -90,8 +90,8 @@ def sync_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, str]):
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -130,8 +130,8 @@ def sync(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, str]):
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -165,8 +165,8 @@ async def asyncio_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, str]):
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -203,8 +203,8 @@ async def asyncio(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]):
-        project_id (Union[Unset, None, str]):
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:

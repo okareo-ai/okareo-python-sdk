@@ -13,8 +13,8 @@ T = TypeVar("T", bound="BodyScenarioSetsUploadV0ScenarioSetsUploadPost")
 class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
     """
     Attributes:
-        name (str):
-        project_id (Union[Unset, str]):
+        name (str): Name of the Scenario Set
+        project_id (Union[Unset, str]): Project ID or None for default project
         file (Union[Unset, File]):
     """
 
