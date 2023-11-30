@@ -14,7 +14,7 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
     """
     Attributes:
         name (str): Name of the Scenario Set
-        project_id (Union[Unset, str]): Project ID or null for default project
+        project_id (Union[Unset, str]): Project ID or None for default project
         file (Union[Unset, File]):
     """
 
