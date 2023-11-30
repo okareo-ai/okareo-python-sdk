@@ -24,24 +24,28 @@ def okareo() -> Okareo:
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
-            input_="We've got a beautiful day today",
-            result="What is the weather today?",
+            input_="I have some quality concerns with your product, who can I talk to?",
+            result="complaints",
         ),
         SeedData(
-            input_="I am going to go shopping after dinner",
-            result="What am I going to do after eating the dinner?",
+            input_="The product is not working as expected, I'd like to return it?",
+            result="returns",
+        ),
+        SeedData(
+            input_="I'd like to purchase additional filters for my model, how much are they?",
+            result="pricing",
         ),
     ]
+    rnd = random_string(5)
     scenario_set_create = ScenarioSetCreate(
-        name="my test scenario set",
+        name=f"openai-scenario-set-{rnd}",
         number_examples=1,
         seed_data=seed_data,
-        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
+        generation_type=ScenarioType.REPHRASE_INVARIANT,
     )
 
     scenario = okareo.create_scenario_set(scenario_set_create)
 
-    rnd = random_string(5)
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
         model=OpenAIModel(
@@ -75,7 +79,7 @@ def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
         name=f"cohere-test-ci-{rnd}",
         number_examples=1,
         seed_data=seed_data,
-        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
+        generation_type=ScenarioType.REPHRASE_INVARIANT,
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
