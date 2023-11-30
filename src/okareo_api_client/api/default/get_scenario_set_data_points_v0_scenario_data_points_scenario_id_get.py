@@ -82,7 +82,7 @@ def sync_detailed(
         a list of scenario datapoints
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to download
         api_key (str):
 
     Raises:
@@ -119,7 +119,7 @@ def sync(
         a list of scenario datapoints
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to download
         api_key (str):
 
     Raises:
@@ -151,7 +151,7 @@ async def asyncio_detailed(
         a list of scenario datapoints
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to download
         api_key (str):
 
     Raises:
@@ -186,7 +186,7 @@ async def asyncio(
         a list of scenario datapoints
 
     Args:
-        scenario_id (str):
+        scenario_id (str): The ID of the scenario set to download
         api_key (str):
 
     Raises:

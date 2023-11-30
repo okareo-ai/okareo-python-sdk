@@ -18,15 +18,16 @@ T = TypeVar("T", bound="TestRunPayloadV2")
 class TestRunPayloadV2:
     """
     Attributes:
-        mut_id (str):
-        api_keys (TestRunPayloadV2ApiKeys):
-        scenario_id (str):
-        metrics_kwargs (Union[Unset, TestRunPayloadV2MetricsKwargs]):
-        name (Union[Unset, str]):
+        mut_id (str): ID of the model
+        api_keys (TestRunPayloadV2ApiKeys): Dictionary that maps model type to the respective API keys
+        scenario_id (str): ID of the scenario set
+        metrics_kwargs (Union[Unset, TestRunPayloadV2MetricsKwargs]): Dictionary of metrics to be measured
+        name (Union[Unset, str]): Name of the test run
         type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
-        calculate_metrics (Union[Unset, bool]):
-        tags (Union[Unset, List[str]]):
-        project_id (Union[Unset, str]):
+        calculate_metrics (Union[Unset, bool]): Boolean value indicating if metrics should be calculated for the test
+            run
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
+        project_id (Union[Unset, str]): ID of the project
     """
 
     mut_id: str

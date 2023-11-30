@@ -12,11 +12,11 @@ T = TypeVar("T", bound="GeneralFindPayload")
 class GeneralFindPayload:
     """
     Attributes:
-        id (Union[Unset, str]):
-        project_id (Union[Unset, str]):
-        mut_id (Union[Unset, str]):
-        scenario_set_id (Union[Unset, str]):
-        tags (Union[Unset, List[str]]):
+        id (Union[Unset, str]): ID for the testrun
+        project_id (Union[Unset, str]): ID for the project
+        mut_id (Union[Unset, str]): ID of the model
+        scenario_set_id (Union[Unset, str]): ID of the scenario set
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
     """
 
     id: Union[Unset, str] = UNSET

@@ -16,10 +16,10 @@ T = TypeVar("T", bound="ModelUnderTestSchema")
 class ModelUnderTestSchema:
     """
     Attributes:
-        name (Union[Unset, str]):
-        models (Union[Unset, ModelUnderTestSchemaModels]):
-        tags (Union[Unset, List[str]]):
-        project_id (Union[Unset, str]):
+        name (Union[Unset, str]): Name of the model
+        models (Union[Unset, ModelUnderTestSchemaModels]): Models to be added for testing
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter models in the Okareo app
+        project_id (Union[Unset, str]): ID of the project
     """
 
     name: Union[Unset, str] = UNSET

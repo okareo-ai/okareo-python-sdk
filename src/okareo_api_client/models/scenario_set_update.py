@@ -18,12 +18,12 @@ T = TypeVar("T", bound="ScenarioSetUpdate")
 class ScenarioSetUpdate:
     """
     Attributes:
-        project_id (Union[Unset, str]):
+        project_id (Union[Unset, str]): ID for the project
         time_created (Union[Unset, datetime.datetime]):
-        type (Union[Unset, str]):
-        tags (Union[Unset, List[str]]):
-        name (Union[Unset, str]):
-        seed_data (Union[Unset, List['SeedData']]):
+        type (Union[Unset, str]): Generation type of scenario
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter scenario sets in the Okareo app
+        name (Union[Unset, str]): Name of the scenario set
+        seed_data (Union[Unset, List['SeedData']]): Seed data is a list of dictionaries, each with an input and result
         scenario_input (Union[Unset, List[str]]):
     """
 

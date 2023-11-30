@@ -75,7 +75,7 @@ def sync_detailed(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:
@@ -112,7 +112,7 @@ def sync(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:
@@ -144,7 +144,7 @@ async def asyncio_detailed(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:
@@ -179,7 +179,7 @@ async def asyncio(
         list: An array of generation' objects.
 
     Args:
-        generation_id (str): The ID of the generation to get
+        generation_id (str): The ID of the generation
         api_key (str):
 
     Raises:

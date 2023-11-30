@@ -17,10 +17,10 @@ T = TypeVar("T", bound="ScenarioSetCreate")
 class ScenarioSetCreate:
     """
     Attributes:
-        name (str):
-        seed_data (List['SeedData']):
-        number_examples (int):
-        project_id (Union[Unset, str]):
+        name (str): Name of the scenario set
+        seed_data (List['SeedData']): Seed data is a list of dictionaries, each with an input and result
+        number_examples (int): Number of examples
+        project_id (Union[Unset, str]): ID for the project
         generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
     """
 

@@ -15,14 +15,14 @@ T = TypeVar("T", bound="TestRunPayload")
 class TestRunPayload:
     """
     Attributes:
-        mut_id (Union[Unset, str]):
-        scenario_set_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        tags (Union[Unset, List[str]]):
+        mut_id (Union[Unset, str]): ID of model
+        scenario_set_id (Union[Unset, str]): ID of scenario set
+        name (Union[Unset, str]): Name of test run
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
         type (Union[Unset, TestRunType]): An enumeration.
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
-        calculate_model_metrics (Union[Unset, bool]):
+        calculate_model_metrics (Union[Unset, bool]): Boolean value indicating if model metrics should be calculated
     """
 
     mut_id: Union[Unset, str] = UNSET

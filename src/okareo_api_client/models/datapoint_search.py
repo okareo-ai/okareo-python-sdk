@@ -14,15 +14,16 @@ T = TypeVar("T", bound="DatapointSearch")
 class DatapointSearch:
     """
     Attributes:
-        tags (Union[Unset, List[str]]):
-        from_date (Union[Unset, datetime.datetime]):  Default: isoparse('2022-12-31T23:59:59.999999').
-        to_date (Union[Unset, datetime.datetime]):
-        feedback (Union[Unset, int]):
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
+        from_date (Union[Unset, datetime.datetime]): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
+        to_date (Union[Unset, datetime.datetime]): Latest date
+        feedback (Union[Unset, int]): Feedback is an integer value that measures user feedback from the datapoint result
         error_code (Union[Unset, str]):
-        context_token (Union[Unset, str]):
-        project_id (Union[Unset, str]):
-        mut_id (Union[Unset, str]):
-        test_run_id (Union[Unset, str]):
+        context_token (Union[Unset, str]): Context token is a unique token to link various datapoints which originate
+            from the same context
+        project_id (Union[Unset, str]): Project ID
+        mut_id (Union[Unset, str]): Model ID
+        test_run_id (Union[Unset, str]): Test run ID
     """
 
     tags: Union[Unset, List[str]] = UNSET

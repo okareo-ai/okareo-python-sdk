@@ -83,7 +83,7 @@ def sync_detailed(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): ID of the project
         api_key (str):
         json_body (ProjectSchema):
 
@@ -123,7 +123,7 @@ def sync(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): ID of the project
         api_key (str):
         json_body (ProjectSchema):
 
@@ -158,7 +158,7 @@ async def asyncio_detailed(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): ID of the project
         api_key (str):
         json_body (ProjectSchema):
 
@@ -196,7 +196,7 @@ async def asyncio(
         the requested project
 
     Args:
-        project_id (str): The ID of the project to get
+        project_id (str): ID of the project
         api_key (str):
         json_body (ProjectSchema):
 

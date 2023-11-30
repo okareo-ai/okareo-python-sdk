@@ -14,7 +14,7 @@ class GenerationPayload:
     Attributes:
         view (str):
         json_schema (Union[Unset, str]):
-        return_results (Union[Unset, bool]):
+        return_results (Union[Unset, bool]): Boolean value indicating if results of the generation should be returned
     """
 
     view: str

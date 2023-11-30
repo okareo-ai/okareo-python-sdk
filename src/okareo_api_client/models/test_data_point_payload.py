@@ -12,8 +12,8 @@ T = TypeVar("T", bound="TestDataPointPayload")
 class TestDataPointPayload:
     """
     Attributes:
-        test_run_id (Union[Unset, str]):
-        scenario_data_point_id (Union[Unset, str]):
+        test_run_id (Union[Unset, str]): ID for the testrun
+        scenario_data_point_id (Union[Unset, str]): ID of the scenario data point
         metric_type (Union[Unset, str]):
         metric_value (Union[Unset, str]):
     """
