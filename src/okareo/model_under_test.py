@@ -115,8 +115,8 @@ class ModelUnderTest:
 
     def add_data_point(
         self,
-        input_obj: Union[dict, str] = None,
-        result_obj: Union[dict, str] = None,
+        input_obj: Union[dict, str, None] = None,
+        result_obj: Union[dict, str, None] = None,
         feedback: Union[int, None] = None,
         context_token: Union[str, None] = None,
         error_message: Union[str, None] = None,
