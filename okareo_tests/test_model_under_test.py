@@ -45,6 +45,23 @@ def test_register_model(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
 
 
 @integration
+def test_add_datapoint_optional_integration(
+    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
+) -> None:
+    fixture = get_mut_fixture()
+    if okareo_api.is_mock:
+        httpx_mock.add_response(status_code=201, json=fixture)
+
+    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+    mut = okareo.register_model(name=fixture["name"], tags=fixture["tags"])
+    dp = mut.add_data_point(
+        feedback=0,
+        context_token="SOME_CONTEXT_TOKEN",
+    )
+    assert dp
+
+
+@integration
 def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     mut_fixture = get_mut_fixture()
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
