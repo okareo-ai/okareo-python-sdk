@@ -125,6 +125,17 @@ def test_add_datapoint(httpx_mock: HTTPXMock) -> None:
     assert dp
 
 
+def test_add_datapoint_only_context_and_feedback(httpx_mock: HTTPXMock) -> None:
+    registered_model = helper_register_model(httpx_mock)
+    fixture = {"id": "1", "project_id": "1", "mut_id": "1"}
+    httpx_mock.add_response(status_code=201, json=fixture)
+    dp = registered_model.add_data_point(
+        feedback=0,
+        context_token="SOME_CONTEXT_TOKEN",
+    )
+    assert dp
+
+
 def test_get_test_run(httpx_mock: HTTPXMock) -> None:
     registered_model = helper_register_model(httpx_mock)
 
