@@ -22,29 +22,11 @@ def okareo() -> Okareo:
 
 
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
-    seed_data = [
-        SeedData(
-            input_="I have some quality concerns with your product, who can I talk to?",
-            result="complaints",
-        ),
-        SeedData(
-            input_="The product is not working as expected, I'd like to return it?",
-            result="returns",
-        ),
-        SeedData(
-            input_="I'd like to purchase additional filters for my model, how much are they?",
-            result="pricing",
-        ),
-    ]
     rnd = random_string(5)
-    scenario_set_create = ScenarioSetCreate(
-        name=f"openai-scenario-set-{rnd}",
-        number_examples=1,
-        seed_data=seed_data,
-        generation_type=ScenarioType.REPHRASE_INVARIANT,
+    file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
+    scenario = okareo.upload_scenario_set(
+        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
     )
-
-    scenario = okareo.create_scenario_set(scenario_set_create)
 
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
@@ -58,6 +40,7 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
         name=f"openai-chat-run-{rnd}",
         scenario=scenario,
         api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
