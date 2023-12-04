@@ -255,7 +255,7 @@ class ModelUnderTest:
             raise MissingApiKeyError("Number of models and API keys does not match")
 
         if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
-            if "pinecone" not in model_names:
+            if "chromadb" not in model_names and "pinecone" not in model_names:
                 raise MissingVectorDbError("No vector database specified")
 
         try:
