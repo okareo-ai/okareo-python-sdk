@@ -93,6 +93,21 @@ class PineconeDb(BaseModel):
 
 
 @_attrs_define
+class ChromaDb(BaseModel):
+    type = "chromadb"
+    index_name: str
+    project_id: str
+    top_k: int = 5
+
+    def params(self) -> dict:
+        return {
+            "index_name": self.index_name,
+            "project_id": self.project_id,
+            "top_k": self.top_k,
+        }
+
+
+@_attrs_define
 class CustomModel(BaseModel):
     url: str
 
