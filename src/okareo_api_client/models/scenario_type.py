@@ -11,7 +11,6 @@ class ScenarioType(str, Enum):
     SEED = "SEED"
     TEXT_REVERSE_LABELED = "TEXT_REVERSE_LABELED"
     TEXT_REVERSE_QUESTION = "TEXT_REVERSE_QUESTION"
-    INFORMATION_RETRIEVAL = "INFORMATION_RETRIEVAL"
 
     def __str__(self) -> str:
         return str(self.value)
