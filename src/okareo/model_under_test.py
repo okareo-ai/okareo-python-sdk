@@ -96,7 +96,10 @@ class PineconeDb(BaseModel):
 class ChromaDb(BaseModel):
     type = "chromadb"
     index_name: str
-    project_id: str
+    project_id: str    
+    collection_name: str = "default"
+    documents: list[str] = []
+    ids: list[str] = []
     top_k: int = 5
 
     def params(self) -> dict:
@@ -104,6 +107,9 @@ class ChromaDb(BaseModel):
             "index_name": self.index_name,
             "project_id": self.project_id,
             "top_k": self.top_k,
+            "documents": self.documents,
+            "ids": self.ids,
+            "collection_name": self.collection_name,
         }
 
 
