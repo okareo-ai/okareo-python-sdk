@@ -57,7 +57,8 @@ class AsyncProcessorMixin:
             except Exception as e:
                 print("Error performing async call", e)
                 attempts += 1
-            time.sleep(0.1)
+            # .1, .2, .4, .8, 1.6, 3.2, ...
+            time.sleep(0.1 * 2 ** (attempts - 1))
         return None
 
     def worker(self) -> None:
@@ -68,19 +69,16 @@ class AsyncProcessorMixin:
                 if self.done:
                     break  # if flag has changed
                 if not self.queue:
-                    print("Q Empty, wait")
                     self.condition.wait(timeout)
 
             idx = 0
             entries = []
-            print("PROCESS IT", self.queue)
             while idx < _DEFAULT_MAX_BATCH_SIZE and self.queue:
                 entries.append(self.queue.popleft())
 
             for entry in entries:
                 func, data = entry
-                response = self._perform_call(func, data)
-                print("Got response", response)
+                self._perform_call(func, data)
 
     def flush(self) -> None:
         # signal the worker thread to finish and then wait for it

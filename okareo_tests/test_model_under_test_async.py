@@ -93,6 +93,6 @@ def test_retry_on_error(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
             feedback=0,
             context_token="SOME_CONTEXT_TOKEN",
         )
-        time.sleep(1)
+        time.sleep(2)
         # there should be up to 5 retries
         assert endpoint.sync.call_count == 5
