@@ -179,7 +179,7 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
                 index_name="test-index",
                 project_id="kwnp6kx",
                 top_k=3,
-                collection_name="test-collection",
+                collection_name="test-collection-cohere",
             ),
             CohereModel(
                 model_id="embed-english-light-v3.0",
