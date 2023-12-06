@@ -189,7 +189,7 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     )
 
     run_resp = mut.run_test_v2(
-        name=f"ci-embedded-chromadb-{rnd}",
+        name=f"ci-cohere-chromadb-{rnd}",
         scenario=scenario,
         calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
@@ -202,5 +202,4 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
             "map_at_k": [1, 2],
         },
     )
-    assert run_resp.name == f"ci-embedded-chromadb-{rnd}"
-    
+    assert run_resp.name == f"ci-cohere-chromadb-{rnd}"
