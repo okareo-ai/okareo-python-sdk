@@ -159,7 +159,7 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
 def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
-            input_="which IAM groups have access to s3?",
+            input_="What range of products does WebBizz offer, and how do they ensure diversity and quality in their offerings?",
             result="3cee94071d1bbbac096c0996987d8bb2",
         ),
     ]
@@ -209,7 +209,7 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
 def test_run_test_openai_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
-            input_="which IAM groups have access to s3?",
+            input_="How does WebBizz enhance the online shopping experience through its user interface and customer support services?",
             result="3cee94071d1bbbac096c0996987d8bb2",
         ),
     ]
