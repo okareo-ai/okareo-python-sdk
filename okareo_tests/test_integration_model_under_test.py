@@ -46,9 +46,9 @@ def test_run_test_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
                 collection_name="test",
             ),
             CohereModel(
-                model_id="curie",
-                max_tokens=10,
+                model_id="embed-english-light-v3.0",
                 model_type="embed",
+                input_type="search_query",
             ),
         ],
     )
