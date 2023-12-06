@@ -40,8 +40,9 @@ class AsyncProcessorMixin:
             self._data_dropped = True
         self.queue.append((func, data))
 
-        with self.condition:
-            self.condition.notify()
+        if len(self.queue) >= _DEFAULT_MAX_BATCH_SIZE:
+            with self.condition:
+                self.condition.notify()
         return True
 
     def _perform_call(self, func: Callable, data: Any) -> Union[Any, None]:
