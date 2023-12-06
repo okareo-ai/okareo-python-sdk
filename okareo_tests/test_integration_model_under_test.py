@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -170,7 +171,14 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
-
+    
+    documents = [ "This is a test document", "This is another test document" ]
+    ids = [
+        str(uuid.uuid4()) for _ in range(len(documents))
+    ]
+ 
+    collection_name = f"test-collection-{str(uuid.uuid4())}"
+    print(f"collection_name: {collection_name}")
     mut = okareo.register_model(
         name=f"chromadb-{rnd}",
         model=[
@@ -178,7 +186,9 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
                 index_name="my-test-index",
                 project_id="kwnp6kx",
                 top_k=3,
-                collection_name="test-collection-{rnd}",
+                collection_name=collection_name,
+                documents=documents,
+                ids=ids,
             ),
             CohereModel(
                 model_id="embed-english-light-v3.0",
