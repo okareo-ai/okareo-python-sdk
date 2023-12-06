@@ -52,11 +52,15 @@ class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
     temperature: float
+    system_prompt_template: str
+    user_prompt_template: Optional[str] = None
 
     def params(self) -> dict:
         return {
             "model_id": self.model_id,
             "temperature": self.temperature,
+            "system_prompt_template": self.system_prompt_template,
+            "user_prompt_template": self.user_prompt_template,
         }
 
 

@@ -182,6 +182,16 @@ def test_load_retrieval(okareo: Okareo, rnd: str) -> None:
     assert retrieval_test_run.model_metrics
 
 
+TEST_SUMMARIZE_TEMPLATE = """
+Provide a brief summary of the following paragraph of text:
+
+{input}
+
+Summary:
+
+"""
+
+
 def test_load_generation(okareo: Okareo, rnd: str) -> None:
     file_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
@@ -197,6 +207,8 @@ def test_load_generation(okareo: Okareo, rnd: str) -> None:
         model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
         ),
     )
 

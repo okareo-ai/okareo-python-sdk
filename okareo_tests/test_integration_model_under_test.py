@@ -21,6 +21,16 @@ def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
+TEST_SUMMARIZE_TEMPLATE = """
+Provide a brief summary of the following paragraph of text:
+
+{input}
+
+Summary:
+
+"""
+
+
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     rnd = random_string(5)
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
@@ -33,6 +43,8 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
         model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
         ),
     )
 
