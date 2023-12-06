@@ -43,6 +43,7 @@ def rnd() -> str:
 def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
+
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     rnd = random_string(5)
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_1_test_article.jsonl")
