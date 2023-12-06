@@ -68,7 +68,7 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
 
-@pytest.mark.skip
+
 def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(input_="are you able to set up in aws?", result="capabilities"),
@@ -105,7 +105,7 @@ def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     )
     assert run_resp.name == f"cohere-classification-run-{rnd}"
 
-@pytest.mark.skip
+
 def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
@@ -155,7 +155,7 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
     
-@pytest.mark.skip
+
 def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
@@ -172,23 +172,14 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
     
-    documents = [ "This is a test document", "This is another test document" ]
-    ids = [
-        str(uuid.uuid4()) for _ in range(len(documents))
-    ]
- 
-    collection_name = f"test-collection-{str(uuid.uuid4())}"
-    print(f"collection_name: {collection_name}")
     mut = okareo.register_model(
         name=f"chromadb-{rnd}",
         model=[
             ChromaDb(
-                index_name="my-test-index",
+                index_name="test-index",
                 project_id="kwnp6kx",
                 top_k=3,
-                collection_name=collection_name,
-                documents=documents,
-                ids=ids,
+                collection_name="test-collection",
             ),
             CohereModel(
                 model_id="embed-english-light-v3.0",
