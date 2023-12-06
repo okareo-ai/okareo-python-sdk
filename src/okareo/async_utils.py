@@ -40,7 +40,7 @@ class AsyncProcessorMixin:
             self._data_dropped = True
         self.queue.append((func, data))
 
-        if len(self.queue) >= _DEFAULT_MAX_BATCH_SIZE:
+        if len(self.queue) >= int(_DEFAULT_MAX_BATCH_SIZE):
             with self.condition:
                 self.condition.notify()
         return True

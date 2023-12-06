@@ -96,3 +96,33 @@ def test_retry_on_error(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
         time.sleep(3)
         # there should be up to 5 retries
         assert endpoint.sync.call_count == 5
+
+
+def test_send_once_above_queue_size_threshold(
+    okareo_client: Okareo, httpx_mock: HTTPXMock
+) -> None:
+    fixture = get_mut_fixture()
+    httpx_mock.add_response(status_code=201, json=fixture)
+
+    mut = okareo_client.register_model(name=fixture["name"], tags=fixture["tags"])
+
+    with mock.patch(
+        "okareo.model_under_test.add_datapoint_v0_datapoints_post"
+    ) as endpoint:
+        with mock.patch("okareo.async_utils._DEFAULT_MAX_BATCH_SIZE", return_value=2):
+            endpoint.sync = Mock()
+            mut.add_data_point_async(
+                feedback=0,
+                context_token="SOME_CONTEXT_TOKEN",
+            )
+            assert not endpoint.sync.called
+            mut.add_data_point_async(
+                feedback=1,
+                context_token="SOME_CONTEXT_TOKEN",
+            )
+            mut.add_data_point_async(
+                feedback=2,
+                context_token="SOME_CONTEXT_TOKEN",
+            )
+
+            assert not endpoint.sync.called
