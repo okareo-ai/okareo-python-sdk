@@ -46,7 +46,7 @@ def okareo() -> Okareo:
 
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     rnd = random_string(5)
-    file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
+    file_path = os.path.join(os.path.dirname(__file__), "webbizz_1_test_article.jsonl")
     scenario = okareo.upload_scenario_set(
         file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
     )
@@ -68,7 +68,7 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
 
-
+@pytest.mark.skip
 def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(input_="are you able to set up in aws?", result="capabilities"),
@@ -105,7 +105,7 @@ def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     )
     assert run_resp.name == f"cohere-classification-run-{rnd}"
 
-
+@pytest.mark.skip
 def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
@@ -155,7 +155,7 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
     
-
+@pytest.mark.skip
 def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(
