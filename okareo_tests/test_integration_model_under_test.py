@@ -43,7 +43,6 @@ def rnd() -> str:
 def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
-
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     rnd = random_string(5)
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_1_test_article.jsonl")
@@ -165,7 +164,7 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     ]
 
     scenario_set_create = ScenarioSetCreate(
-        name=f"ci-chromadb-retrieval-{rnd}",
+        name=f"ci-cohere-chromadb-retrieval-{rnd}",
         number_examples=1,
         seed_data=seed_data,
         generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
@@ -173,7 +172,7 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     scenario = okareo.create_scenario_set(scenario_set_create)
     
     mut = okareo.register_model(
-        name=f"chromadb-{rnd}",
+        name=f"cohere-chromadb-{rnd}",
         model=[
             ChromaDb(
                 index_name="test-index",
@@ -204,3 +203,54 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         },
     )
     assert run_resp.name == f"ci-cohere-chromadb-{rnd}"
+
+
+def test_run_test_openai_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
+    seed_data = [
+        SeedData(
+            input_="which IAM groups have access to s3?",
+            result="3cee94071d1bbbac096c0996987d8bb2",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"ci-chromadb-retrieval-{rnd}",
+        number_examples=1,
+        seed_data=seed_data,
+        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+    
+    mut = okareo.register_model(
+        name=f"openai-chromadb-{rnd}",
+        model=[
+            ChromaDb(
+                index_name="test-index",
+                project_id="kwnp6kx",
+                top_k=3,
+                collection_name="test-collection-openai",
+            ),
+            OpenAIModel(
+                model_id="text-embedding-ada-002",
+                temperature=0,
+                model_type="embed",
+            ),
+        ],
+    )
+
+    run_resp = mut.run_test_v2(
+        name=f"ci-openai-chromadb-{rnd}",
+        scenario=scenario,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "chromadb": "",
+            "openai": os.getenv("OPENAI_API_KEY"),
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    assert run_resp.name == f"ci-openai-chromadb-{rnd}"
+    

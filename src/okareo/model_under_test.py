@@ -52,11 +52,13 @@ class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
     temperature: float
+    model_type: str = "classify"
 
     def params(self) -> dict:
         return {
             "model_id": self.model_id,
             "temperature": self.temperature,
+            "model_type": self.model_type,
         }
 
 
