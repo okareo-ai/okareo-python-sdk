@@ -5,16 +5,16 @@ Dual purpose test:
 
 """
 
-from datetime import datetime
+import os
 from typing import Any
 from urllib.parse import urlparse
 
 import pytest
-from okareo_tests.common import API_KEY, OkareoAPIhost, integration
-from pytest_httpx import HTTPXMock
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.common import BASE_URL
+from okareo.model_under_test import OpenAIModel
 from okareo_api_client.models import ScenarioSetResponse, TestRunType
 
 
@@ -23,17 +23,20 @@ def non_mocked_hosts() -> list:
     return [urlparse(BASE_URL).hostname]
 
 
-@integration
-def test_load_classification(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
-    if okareo_api.is_mock:
-        return  # purely a live test
+@pytest.fixture
+def rnd() -> str:
+    return random_string(5)
 
-    today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+@pytest.fixture
+def okareo() -> Okareo:
+    return Okareo(api_key=API_KEY)
+
+
+def test_load_classification(okareo: Okareo, rnd: str) -> None:
     seed: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path="./okareo_tests/webbizz_class_seed.jsonl",
-        scenario_name=f"Support - Seed Upload {today_with_time}",
+        file_path=os.path.join(os.path.dirname(__file__), "webbizz_class_seed.jsonl"),
+        scenario_name=f"Support - Seed Upload {rnd}",
     )
 
     assert seed.scenario_id
@@ -41,8 +44,10 @@ def test_load_classification(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     assert seed.time_created
 
     rephrase: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path="./okareo_tests/webbizz_class_rephrase.jsonl",
-        scenario_name=f"Support - Generated Rephrase {today_with_time}",
+        file_path=os.path.join(
+            os.path.dirname(__file__), "webbizz_class_rephrase.jsonl"
+        ),
+        scenario_name=f"Support - Generated Rephrase {rnd}",
     )
 
     assert rephrase.scenario_id
@@ -50,8 +55,10 @@ def test_load_classification(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     assert rephrase.time_created
 
     conditional: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path="./okareo_tests/webbizz_class_conditional.jsonl",
-        scenario_name=f"Support - Generated Conditional {today_with_time}",
+        file_path=os.path.join(
+            os.path.dirname(__file__), "webbizz_class_conditional.jsonl"
+        ),
+        scenario_name=f"Support - Generated Conditional {rnd}",
     )
 
     assert conditional.scenario_id
@@ -75,7 +82,7 @@ def test_load_classification(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
 
     model_under_test = okareo.register_model(name="support_intent_classifier")
 
-    test_run_name = f"Support - Rephrase Test Run {today_with_time}"
+    test_run_name = f"Support - Rephrase Test Run {rnd}"
 
     rephrase_test_run = model_under_test.run_test(
         scenario_id=rephrase.scenario_id,
@@ -87,7 +94,7 @@ def test_load_classification(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     assert rephrase_test_run.id
     assert rephrase_test_run.model_metrics
 
-    test_run_name = f"Support - Conditional Test Run {today_with_time}"
+    test_run_name = f"Support - Conditional Test Run {rnd}"
 
     conditional_test_run = model_under_test.run_test(
         scenario_id=conditional.scenario_id,
@@ -100,17 +107,15 @@ def test_load_classification(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     assert conditional_test_run.model_metrics
 
 
-@integration
-def test_load_retrieval(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
-    if okareo_api.is_mock:
-        return  # purely a live test
-
-    today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
-
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+def test_load_retrieval(okareo: Okareo, rnd: str) -> None:
+    file_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "examples",
+        "webbizz_10_articles.jsonl",
+    )
     articles: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path="./examples/webbizz_10_articles.jsonl",
-        scenario_name=f"Support - Articles Seed {today_with_time}",
+        file_path=file_path,
+        scenario_name=f"Support - Articles Seed {rnd}",
     )
 
     assert articles.scenario_id
@@ -118,8 +123,10 @@ def test_load_retrieval(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
     assert articles.time_created
 
     questions: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path="./okareo_tests/webbizz_retrieval_questions.jsonl",
-        scenario_name=f"Support - Generated Questions {today_with_time}",
+        file_path=os.path.join(
+            os.path.dirname(__file__), "webbizz_retrieval_questions.jsonl"
+        ),
+        scenario_name=f"Support - Generated Questions {rnd}",
     )
 
     assert questions.scenario_id
@@ -162,7 +169,7 @@ def test_load_retrieval(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
 
     model_under_test = okareo.register_model(name="vectordb_retrieval")
 
-    test_run_name = f"Support - Retrieval Test Run {today_with_time}"
+    test_run_name = f"Support - Retrieval Test Run {rnd}"
 
     retrieval_test_run = model_under_test.run_test(
         scenario_id=questions.scenario_id,
@@ -173,3 +180,43 @@ def test_load_retrieval(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
 
     assert retrieval_test_run.id
     assert retrieval_test_run.model_metrics
+
+
+TEST_SUMMARIZE_TEMPLATE = """
+Provide a brief summary of the following paragraph of text:
+
+{input}
+
+Summary:
+
+"""
+
+
+def test_load_generation(okareo: Okareo, rnd: str) -> None:
+    file_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "examples",
+        "webbizz_10_articles.jsonl",
+    )
+    scenario = okareo.upload_scenario_set(
+        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
+    )
+
+    mut = okareo.register_model(
+        name=f"openai-ci-run-{rnd}",
+        model=OpenAIModel(
+            model_id="gpt-3.5-turbo",
+            temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
+        ),
+    )
+
+    run_resp = mut.run_test_v2(
+        name=f"openai-chat-run-{rnd}",
+        scenario=scenario,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+    )
+    assert run_resp.name == f"openai-chat-run-{rnd}"

@@ -8,7 +8,9 @@ from okareo.model_under_test import ChromaDb, CohereModel, OpenAIModel, Pinecone
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
+from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
+from okareo_api_client.types import Unset
 
 
 @pytest.fixture
@@ -21,9 +23,18 @@ def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
+TEST_SUMMARIZE_TEMPLATE = """
+Provide a brief summary of the following paragraph of text:
+
+{input}
+
+Summary:
+
+"""
+
+
 def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
-    rnd = random_string(5)
-    file_path = os.path.join(os.path.dirname(__file__), "webbizz_1_test_article.jsonl")
+    file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
     scenario = okareo.upload_scenario_set(
         file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
     )
@@ -33,6 +44,8 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
         model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
         ),
     )
 
@@ -44,6 +57,56 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
+    assert_metrics(run_resp)
+
+
+def test_run_test_v2_openai_2prompts(rnd: str, okareo: Okareo) -> None:
+    file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
+    scenario = okareo.upload_scenario_set(
+        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
+    )
+
+    mut2 = okareo.register_model(
+        name=f"openai-ci-run-{rnd}",
+        model=OpenAIModel(
+            model_id="gpt-3.5-turbo",
+            temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+        ),
+    )
+
+    run_resp = mut2.run_test_v2(
+        name=f"openai-chat-run-{rnd}",
+        scenario=scenario,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+    )
+    assert run_resp.name == f"openai-chat-run-{rnd}"
+    assert_metrics(run_resp)
+
+
+def assert_metrics(run_resp: TestRunItem) -> None:
+    assert run_resp.model_metrics is not None and not isinstance(
+        run_resp.model_metrics, Unset
+    )
+    metrics_dict = run_resp.model_metrics.to_dict()
+
+    assert metrics_dict["mean_scores"] is not None
+    assert_scores(metrics_dict["mean_scores"])
+    assert metrics_dict["scores_by_row"] is not None
+    assert len(metrics_dict["scores_by_row"]) == 3
+    for row in metrics_dict["scores_by_row"]:
+        assert_scores(row)
+
+
+def assert_scores(scores: dict) -> None:
+    dimension_keys = ["consistency", "coherence", "fluency", "relevance", "overall"]
+    for dimension in dimension_keys:
+        assert dimension in scores
+        assert isinstance(scores[dimension], float)
+        assert 1 <= scores[dimension] <= 5
 
 
 def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:

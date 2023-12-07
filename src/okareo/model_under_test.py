@@ -37,6 +37,8 @@ from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
 )
 from okareo_api_client.types import UNSET, Unset
 
+from .async_utils import AsyncProcessorMixin
+
 
 class BaseModel:
     type: str
@@ -51,14 +53,18 @@ class BaseModel:
 class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
-    temperature: float = 0.0
-    model_type: str = "classify"
+    temperature: float
+    system_prompt_template: str
+    user_prompt_template: Optional[str] = None
+    model_type: Optional[str] = "classify"
 
     def params(self) -> dict:
         return {
             "model_id": self.model_id,
             "temperature": self.temperature,
             "model_type": self.model_type,
+            "system_prompt_template": self.system_prompt_template,
+            "user_prompt_template": self.user_prompt_template,
         }
 
 
@@ -112,7 +118,7 @@ class CustomModel(BaseModel):
     url: str
 
 
-class ModelUnderTest:
+class ModelUnderTest(AsyncProcessorMixin):
     def __init__(
         self,
         client: Client,
@@ -128,6 +134,13 @@ class ModelUnderTest:
         self.name = mut.name
         self.tags = mut.tags
         self.models = models
+        super().__init__(name="OkareoDatapointsProcessor")
+
+    def get_client(self) -> Client:
+        return self.client
+
+    def get_api_key(self) -> str:
+        return self.api_key
 
     def add_data_point(
         self,
@@ -171,6 +184,43 @@ class ModelUnderTest:
         assert response is not None
 
         return response
+
+    def add_data_point_async(
+        self,
+        input_obj: Union[dict, str, None] = None,
+        result_obj: Union[dict, str, None] = None,
+        feedback: Union[int, None] = None,
+        context_token: Union[str, None] = None,
+        error_message: Union[str, None] = None,
+        error_code: Union[str, None] = None,
+        input_datetime: Union[str, Unset] = UNSET,
+        result_datetime: Union[str, Unset] = UNSET,
+        project_id: Union[str, None] = None,
+        tags: Union[List[str], None] = None,
+        test_run_id: Union[None, str] = None,
+    ) -> bool:
+        body = {
+            "tags": tags or [],
+            "input": json.dumps(input_obj, default=str),
+            "result": json.dumps(result_obj, default=str),
+            "context_token": context_token,
+            "feedback": feedback,
+            "error_message": error_message,
+            "error_code": error_code,
+            "input_datetime": datetime.now().isoformat()
+            if input_datetime == UNSET and input_obj is not None
+            else input_datetime,
+            "result_datetime": datetime.now().isoformat()
+            if result_datetime == UNSET and result_obj is not None
+            else result_datetime,
+            "project_id": self.project_id,
+            "mut_id": self.mut_id,
+            "test_run_id": test_run_id,
+        }
+
+        return self.async_call(
+            add_datapoint_v0_datapoints_post.sync, DatapointSchema.from_dict(body)
+        )
 
     # TODO this is moving to the server
     def run_test(

@@ -18,7 +18,7 @@ def okareo_client() -> Okareo:
 
 @pytest.fixture(scope="module")
 def uploaded_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
-    file_path = os.path.join(os.path.dirname(__file__), "webbizz_1_test_article.jsonl")
+    file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
     articles: ScenarioSetResponse = okareo_client.upload_scenario_set(
         file_path=file_path, scenario_name=f"test_upload_scenario_set {today_with_time}"
     )
