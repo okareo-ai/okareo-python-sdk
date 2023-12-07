@@ -1,33 +1,10 @@
 import os
-import uuid
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb, ChromaDb
-from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_api_client.models.scenario_type import ScenarioType
-from okareo_api_client.models.seed_data import SeedData
-from okareo_api_client.models.test_run_type import TestRunType
-
-
-@pytest.fixture
-def rnd() -> str:
-    return random_string(5)
-
-
-@pytest.fixture
-def okareo() -> Okareo:
-    return Okareo(api_key=API_KEY)
-
-import os
-
-import pytest
-from okareo_tests.common import API_KEY, random_string
-
-from okareo import Okareo
-from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb
+from okareo.model_under_test import ChromaDb, CohereModel, OpenAIModel, PineconeDb
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
@@ -154,7 +131,7 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
         },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
-    
+
 
 def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
     seed_data = [
@@ -171,7 +148,7 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
-    
+
     mut = okareo.register_model(
         name=f"cohere-chromadb-{rnd}",
         model=[
@@ -215,7 +192,7 @@ def test_run_test_openai_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
-    
+
     mut = okareo.register_model(
         name=f"openai-chromadb-{rnd}",
         model=[
@@ -242,4 +219,3 @@ def test_run_test_openai_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         },
     )
     assert run_resp.name == f"ci-openai-chromadb-{rnd}"
-    

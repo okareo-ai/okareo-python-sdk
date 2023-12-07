@@ -106,6 +106,7 @@ class ChromaDb(BaseModel):
             "collection_name": self.collection_name,
         }
 
+
 @_attrs_define
 class CustomModel(BaseModel):
     url: str
