@@ -53,8 +53,8 @@ class BaseModel:
 class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
-    temperature: float
     system_prompt_template: str
+    temperature: float = 0.0
     user_prompt_template: Optional[str] = None
     model_type: Optional[str] = "classify"
 
@@ -62,9 +62,9 @@ class OpenAIModel(BaseModel):
         return {
             "model_id": self.model_id,
             "temperature": self.temperature,
-            "model_type": self.model_type,
             "system_prompt_template": self.system_prompt_template,
             "user_prompt_template": self.user_prompt_template,
+            "model_type": self.model_type,
         }
 
 
