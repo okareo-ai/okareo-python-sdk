@@ -176,8 +176,6 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         name=f"cohere-chromadb-{rnd}",
         model=[
             ChromaDb(
-                index_name="test-index",
-                project_id="kwnp6kx",
                 top_k=3,
                 collection_name="test-collection-cohere",
             ),
@@ -197,10 +195,6 @@ def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         api_keys={
             "chromadb": "",
             "cohere": os.getenv("COHERE_API_KEY"),
-        },
-        metrics_kwargs={
-            "mrr_at_k": [2, 4, 8],
-            "map_at_k": [1, 2],
         },
     )
     assert run_resp.name == f"ci-cohere-chromadb-{rnd}"
@@ -226,8 +220,6 @@ def test_run_test_openai_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         name=f"openai-chromadb-{rnd}",
         model=[
             ChromaDb(
-                index_name="test-index",
-                project_id="kwnp6kx",
                 top_k=3,
                 collection_name="test-collection-openai",
             ),
@@ -247,10 +239,6 @@ def test_run_test_openai_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
         api_keys={
             "chromadb": "",
             "openai": os.getenv("OPENAI_API_KEY"),
-        },
-        metrics_kwargs={
-            "mrr_at_k": [2, 4, 8],
-            "map_at_k": [1, 2],
         },
     )
     assert run_resp.name == f"ci-openai-chromadb-{rnd}"

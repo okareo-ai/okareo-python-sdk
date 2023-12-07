@@ -51,7 +51,7 @@ class BaseModel:
 class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
-    temperature: float
+    temperature: float = 0.0
     model_type: str = "classify"
 
     def params(self) -> dict:
@@ -97,23 +97,14 @@ class PineconeDb(BaseModel):
 @_attrs_define
 class ChromaDb(BaseModel):
     type = "chromadb"
-    index_name: str
-    project_id: str    
     collection_name: str = "default"
-    documents: list[str] = []
-    ids: list[str] = []
     top_k: int = 5
 
     def params(self) -> dict:
         return {
-            "index_name": self.index_name,
-            "project_id": self.project_id,
             "top_k": self.top_k,
-            "documents": self.documents,
-            "ids": self.ids,
             "collection_name": self.collection_name,
         }
-
 
 @_attrs_define
 class CustomModel(BaseModel):
