@@ -4,7 +4,7 @@ import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb
+from okareo.model_under_test import ChromaDb, CohereModel, OpenAIModel, PineconeDb
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
@@ -194,3 +194,91 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
         },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
+
+
+def test_run_test_cohere_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
+    seed_data = [
+        SeedData(
+            input_="What range of products does WebBizz offer, and how do they ensure diversity and quality in their offerings?",
+            result="3cee94071d1bbbac096c0996987d8bb2",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"ci-cohere-chromadb-retrieval-{rnd}",
+        number_examples=1,
+        seed_data=seed_data,
+        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    mut = okareo.register_model(
+        name=f"cohere-chromadb-{rnd}",
+        model=[
+            ChromaDb(
+                top_k=3,
+                collection_name="test-collection-cohere",
+            ),
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+        ],
+    )
+
+    run_resp = mut.run_test_v2(
+        name=f"ci-cohere-chromadb-{rnd}",
+        scenario=scenario,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "chromadb": "",
+            "cohere": os.getenv("COHERE_API_KEY"),
+        },
+    )
+    assert run_resp.name == f"ci-cohere-chromadb-{rnd}"
+
+
+def test_run_test_openai_chromadb_retrieval(rnd: str, okareo: Okareo) -> None:
+    seed_data = [
+        SeedData(
+            input_="How does WebBizz enhance the online shopping experience through its user interface and customer support services?",
+            result="3cee94071d1bbbac096c0996987d8bb2",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"ci-chromadb-retrieval-{rnd}",
+        number_examples=1,
+        seed_data=seed_data,
+        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    mut = okareo.register_model(
+        name=f"openai-chromadb-{rnd}",
+        model=[
+            ChromaDb(
+                top_k=3,
+                collection_name="test-collection-openai",
+            ),
+            OpenAIModel(
+                model_id="text-embedding-ada-002",
+                temperature=0,
+                model_type="embed",
+            ),
+        ],
+    )
+
+    run_resp = mut.run_test_v2(
+        name=f"ci-openai-chromadb-{rnd}",
+        scenario=scenario,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "chromadb": "",
+            "openai": os.getenv("OPENAI_API_KEY"),
+        },
+    )
+    assert run_resp.name == f"ci-openai-chromadb-{rnd}"

@@ -53,9 +53,10 @@ class BaseModel:
 class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
-    temperature: float
     system_prompt_template: str
+    temperature: float = 0.0
     user_prompt_template: Optional[str] = None
+    model_type: Optional[str] = "classify"
 
     def params(self) -> dict:
         return {
@@ -63,6 +64,7 @@ class OpenAIModel(BaseModel):
             "temperature": self.temperature,
             "system_prompt_template": self.system_prompt_template,
             "user_prompt_template": self.user_prompt_template,
+            "model_type": self.model_type,
         }
 
 
@@ -95,6 +97,19 @@ class PineconeDb(BaseModel):
             "region": self.region,
             "project_id": self.project_id,
             "top_k": self.top_k,
+        }
+
+
+@_attrs_define
+class ChromaDb(BaseModel):
+    type = "chromadb"
+    collection_name: str = "default"
+    top_k: int = 5
+
+    def params(self) -> dict:
+        return {
+            "top_k": self.top_k,
+            "collection_name": self.collection_name,
         }
 
 
@@ -305,7 +320,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             raise MissingApiKeyError("Number of models and API keys does not match")
 
         if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
-            if "pinecone" not in model_names:
+            if "chromadb" not in model_names and "pinecone" not in model_names:
                 raise MissingVectorDbError("No vector database specified")
 
         try:
