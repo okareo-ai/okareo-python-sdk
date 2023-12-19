@@ -70,7 +70,7 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
         # call your model being tested here using <input> from the scenario set
 
         # mock code returnign a random label
-        labels = ["returns", "complains", "pricing", "product", "shipping", "support"]
+        labels = ["returns", "complaints", "pricing", "product", "shipping", "support"]
         import random
 
         actual = random.choice(labels)
