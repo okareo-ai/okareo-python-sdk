@@ -21,11 +21,11 @@ class DatapointListItem:
     Attributes:
         id (str):
         tags (Union[Unset, List[str]]):
-        input_ (Union['DatapointListItemInputType0', Unset, str]):
+        input_ (Union['DatapointListItemInputType0', List[Any], Unset, str]):
         input_datetime (Union[Unset, datetime.datetime]):
-        result (Union['DatapointListItemResultType0', Unset, str]):
+        result (Union['DatapointListItemResultType0', List[Any], Unset, str]):
         result_datetime (Union[Unset, datetime.datetime]):
-        feedback (Union[Unset, int]):
+        feedback (Union[Unset, float]):
         error_message (Union[Unset, str]):
         error_code (Union[Unset, str]):
         time_created (Union[Unset, datetime.datetime]):
@@ -37,11 +37,11 @@ class DatapointListItem:
 
     id: str
     tags: Union[Unset, List[str]] = UNSET
-    input_: Union["DatapointListItemInputType0", Unset, str] = UNSET
+    input_: Union["DatapointListItemInputType0", List[Any], Unset, str] = UNSET
     input_datetime: Union[Unset, datetime.datetime] = UNSET
-    result: Union["DatapointListItemResultType0", Unset, str] = UNSET
+    result: Union["DatapointListItemResultType0", List[Any], Unset, str] = UNSET
     result_datetime: Union[Unset, datetime.datetime] = UNSET
-    feedback: Union[Unset, int] = UNSET
+    feedback: Union[Unset, float] = UNSET
     error_message: Union[Unset, str] = UNSET
     error_code: Union[Unset, str] = UNSET
     time_created: Union[Unset, datetime.datetime] = UNSET
@@ -60,7 +60,7 @@ class DatapointListItem:
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        input_: Union[Dict[str, Any], Unset, str]
+        input_: Union[Dict[str, Any], List[Any], Unset, str]
         if isinstance(self.input_, Unset):
             input_ = UNSET
 
@@ -69,6 +69,11 @@ class DatapointListItem:
             if not isinstance(self.input_, Unset):
                 input_ = self.input_.to_dict()
 
+        elif isinstance(self.input_, list):
+            input_ = UNSET
+            if not isinstance(self.input_, Unset):
+                input_ = self.input_
+
         else:
             input_ = self.input_
 
@@ -76,7 +81,7 @@ class DatapointListItem:
         if not isinstance(self.input_datetime, Unset):
             input_datetime = self.input_datetime.isoformat()
 
-        result: Union[Dict[str, Any], Unset, str]
+        result: Union[Dict[str, Any], List[Any], Unset, str]
         if isinstance(self.result, Unset):
             result = UNSET
 
@@ -84,6 +89,11 @@ class DatapointListItem:
             result = UNSET
             if not isinstance(self.result, Unset):
                 result = self.result.to_dict()
+
+        elif isinstance(self.result, list):
+            result = UNSET
+            if not isinstance(self.result, Unset):
+                result = self.result
 
         else:
             result = self.result
@@ -150,7 +160,7 @@ class DatapointListItem:
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
-        def _parse_input_(data: object) -> Union["DatapointListItemInputType0", Unset, str]:
+        def _parse_input_(data: object) -> Union["DatapointListItemInputType0", List[Any], Unset, str]:
             if isinstance(data, Unset):
                 return data
             try:
@@ -166,7 +176,15 @@ class DatapointListItem:
                 return input_type_0
             except:  # noqa: E722
                 pass
-            return cast(Union["DatapointListItemInputType0", Unset, str], data)
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                input_type_1 = cast(List[Any], data)
+
+                return input_type_1
+            except:  # noqa: E722
+                pass
+            return cast(Union["DatapointListItemInputType0", List[Any], Unset, str], data)
 
         input_ = _parse_input_(d.pop("input", UNSET))
 
@@ -177,7 +195,7 @@ class DatapointListItem:
         else:
             input_datetime = isoparse(_input_datetime)
 
-        def _parse_result(data: object) -> Union["DatapointListItemResultType0", Unset, str]:
+        def _parse_result(data: object) -> Union["DatapointListItemResultType0", List[Any], Unset, str]:
             if isinstance(data, Unset):
                 return data
             try:
@@ -193,7 +211,15 @@ class DatapointListItem:
                 return result_type_0
             except:  # noqa: E722
                 pass
-            return cast(Union["DatapointListItemResultType0", Unset, str], data)
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                result_type_1 = cast(List[Any], data)
+
+                return result_type_1
+            except:  # noqa: E722
+                pass
+            return cast(Union["DatapointListItemResultType0", List[Any], Unset, str], data)
 
         result = _parse_result(d.pop("result", UNSET))
 

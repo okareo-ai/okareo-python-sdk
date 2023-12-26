@@ -47,7 +47,7 @@ def test_non_blocking_call(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None
     ) as endpoint:
         endpoint.sync = Mock(side_effect=long_add_data_point)
         mut.add_data_point_async(
-            feedback=0,
+            feedback=0.1,
             context_token="SOME_CONTEXT_TOKEN",
         )
         # check if call was (almost) instant
@@ -69,7 +69,7 @@ def test_flush_leftovers(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     ) as endpoint:
         endpoint.sync = Mock(side_effect=long_add_data_point)
         mut.add_data_point_async(
-            feedback=0,
+            feedback=0.5,
             context_token="SOME_CONTEXT_TOKEN",
         )
         # should wait for long_add_data_point to comlpete
@@ -90,7 +90,7 @@ def test_retry_on_error(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     ) as endpoint:
         endpoint.sync = Mock(side_effect=Exception("Test"))
         mut.add_data_point_async(
-            feedback=0,
+            feedback=1,
             context_token="SOME_CONTEXT_TOKEN",
         )
         time.sleep(3)

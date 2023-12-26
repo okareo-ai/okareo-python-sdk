@@ -99,6 +99,21 @@ class PineconeDb(BaseModel):
 
 
 @_attrs_define
+class QdrantDB(BaseModel):
+    type = "qdrant"
+    collection_name: str
+    url: str
+    top_k: int = 5
+
+    def params(self) -> dict:
+        return {
+            "collection_name": self.collection_name,
+            "url": self.url,
+            "top_k": self.top_k,
+        }
+
+
+@_attrs_define
 class CustomModel(BaseModel):
     url: str
 
@@ -131,7 +146,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self,
         input_obj: Union[dict, str, None] = None,
         result_obj: Union[dict, str, None] = None,
-        feedback: Union[int, None] = None,
+        feedback: Union[float, None] = None,
         context_token: Union[str, None] = None,
         error_message: Union[str, None] = None,
         error_code: Union[str, None] = None,
@@ -174,7 +189,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self,
         input_obj: Union[dict, str, None] = None,
         result_obj: Union[dict, str, None] = None,
-        feedback: Union[int, None] = None,
+        feedback: Union[float, None] = None,
         context_token: Union[str, None] = None,
         error_message: Union[str, None] = None,
         error_code: Union[str, None] = None,
@@ -238,6 +253,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 for scenario_data_point in scenario_data_points:
                     input_datetime = str(datetime.now())
 
+                    assert isinstance(scenario_data_point.input_, str)
                     actual, model_response = model_invoker(scenario_data_point.input_)
 
                     self.add_data_point(

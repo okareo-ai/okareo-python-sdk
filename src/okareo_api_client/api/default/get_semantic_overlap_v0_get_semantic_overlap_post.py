@@ -1,46 +1,39 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.model_under_test_response import ModelUnderTestResponse
-from ...types import UNSET, Response, Unset
+from ...models.semantic_payload import SemanticPayload
+from ...models.semantic_result import SemanticResult
+from ...types import Response
 
 
 def _get_kwargs(
     *,
-    project_id: Union[Unset, None, str] = UNSET,
+    json_body: SemanticPayload,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["project_id"] = project_id
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+    json_json_body = json_body.to_dict()
 
     return {
-        "method": "get",
-        "url": "/v0/models_under_test",
-        "params": params,
+        "method": "post",
+        "url": "/v0/get_semantic_overlap",
+        "json": json_json_body,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
+) -> Optional[Union[ErrorResponse, SemanticResult]]:
     if response.status_code == HTTPStatus.CREATED:
-        response_201 = []
-        _response_201 = response.json()
-        for response_201_item_data in _response_201:
-            response_201_item = ModelUnderTestResponse.from_dict(response_201_item_data)
-
-            response_201.append(response_201_item)
+        response_201 = SemanticResult.from_dict(response.json())
 
         return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
@@ -63,7 +56,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
+) -> Response[Union[ErrorResponse, SemanticResult]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -75,30 +68,25 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    json_body: SemanticPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
-    """Get All Models Under Test
-
-     Get a list of models under test for this organization
-
-    Returns:
-        a list of requested models under test
+) -> Response[Union[ErrorResponse, SemanticResult]]:
+    """Get Semantic Overlap
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
+        json_body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ModelUnderTestResponse']]]
+        Response[Union[ErrorResponse, SemanticResult]]
     """
 
     kwargs = _get_kwargs(
-        project_id=project_id,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -112,31 +100,26 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    json_body: SemanticPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
-    """Get All Models Under Test
-
-     Get a list of models under test for this organization
-
-    Returns:
-        a list of requested models under test
+) -> Optional[Union[ErrorResponse, SemanticResult]]:
+    """Get Semantic Overlap
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
+        json_body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ModelUnderTestResponse']]
+        Union[ErrorResponse, SemanticResult]
     """
 
     return sync_detailed(
         client=client,
-        project_id=project_id,
+        json_body=json_body,
         api_key=api_key,
     ).parsed
 
@@ -144,30 +127,25 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    json_body: SemanticPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
-    """Get All Models Under Test
-
-     Get a list of models under test for this organization
-
-    Returns:
-        a list of requested models under test
+) -> Response[Union[ErrorResponse, SemanticResult]]:
+    """Get Semantic Overlap
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
+        json_body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ModelUnderTestResponse']]]
+        Response[Union[ErrorResponse, SemanticResult]]
     """
 
     kwargs = _get_kwargs(
-        project_id=project_id,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -179,32 +157,27 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    json_body: SemanticPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
-    """Get All Models Under Test
-
-     Get a list of models under test for this organization
-
-    Returns:
-        a list of requested models under test
+) -> Optional[Union[ErrorResponse, SemanticResult]]:
+    """Get Semantic Overlap
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
+        json_body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ModelUnderTestResponse']]
+        Union[ErrorResponse, SemanticResult]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            project_id=project_id,
+            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

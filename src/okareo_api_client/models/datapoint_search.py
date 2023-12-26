@@ -17,7 +17,8 @@ class DatapointSearch:
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
         from_date (Union[Unset, datetime.datetime]): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
         to_date (Union[Unset, datetime.datetime]): Latest date
-        feedback (Union[Unset, int]): Feedback is an integer value that measures user feedback from the datapoint result
+        feedback (Union[Unset, float]): Feedback is a 0 to 1 float value that captures user feedback range for related
+            datapoint results
         error_code (Union[Unset, str]):
         context_token (Union[Unset, str]): Context token is a unique token to link various datapoints which originate
             from the same context
@@ -29,7 +30,7 @@ class DatapointSearch:
     tags: Union[Unset, List[str]] = UNSET
     from_date: Union[Unset, datetime.datetime] = isoparse("2022-12-31T23:59:59.999999")
     to_date: Union[Unset, datetime.datetime] = UNSET
-    feedback: Union[Unset, int] = UNSET
+    feedback: Union[Unset, float] = UNSET
     error_code: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET

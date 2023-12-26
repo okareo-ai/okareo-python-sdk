@@ -20,7 +20,8 @@ class DatapointSchema:
         result (Union[Unset, str]): Outputted value from the model based on the input
         result_datetime (Union[Unset, datetime.datetime]): Datetime for the result
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
-        feedback (Union[Unset, int]): Feedback is an integer value that measures user feedback from the datapoint result
+        feedback (Union[Unset, float]): Feedback is a 0 to 1 float value that captures user feedback range for related
+            datapoint results
         error_message (Union[Unset, str]):
         error_code (Union[Unset, str]):
         context_token (Union[Unset, str]): Context token is a unique token to link various datapoints which originate
@@ -34,7 +35,7 @@ class DatapointSchema:
     result: Union[Unset, str] = UNSET
     result_datetime: Union[Unset, datetime.datetime] = UNSET
     tags: Union[Unset, List[str]] = UNSET
-    feedback: Union[Unset, int] = UNSET
+    feedback: Union[Unset, float] = UNSET
     error_message: Union[Unset, str] = UNSET
     error_code: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET

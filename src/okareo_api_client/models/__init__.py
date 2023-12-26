@@ -20,6 +20,7 @@ from .model_under_test_schema_models_additional_property import ModelUnderTestSc
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
 from .scenario_data_poin_response import ScenarioDataPoinResponse
+from .scenario_data_poin_response_input_type_0 import ScenarioDataPoinResponseInputType0
 from .scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
 from .scenario_set_create import ScenarioSetCreate
 from .scenario_set_generate import ScenarioSetGenerate
@@ -27,6 +28,8 @@ from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
 from .seed_data import SeedData
+from .semantic_payload import SemanticPayload
+from .semantic_result import SemanticResult
 from .test_data_point_item import TestDataPointItem
 from .test_data_point_item_metric_value import TestDataPointItemMetricValue
 from .test_data_point_payload import TestDataPointPayload
@@ -60,6 +63,7 @@ __all__ = (
     "ProjectResponse",
     "ProjectSchema",
     "ScenarioDataPoinResponse",
+    "ScenarioDataPoinResponseInputType0",
     "ScenarioDataPoinResponseResultType0",
     "ScenarioSetCreate",
     "ScenarioSetGenerate",
@@ -67,6 +71,8 @@ __all__ = (
     "ScenarioSetUpdate",
     "ScenarioType",
     "SeedData",
+    "SemanticPayload",
+    "SemanticResult",
     "TestDataPointItem",
     "TestDataPointItemMetricValue",
     "TestDataPointPayload",
