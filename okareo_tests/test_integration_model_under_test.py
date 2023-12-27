@@ -4,7 +4,8 @@ import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb
+from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb, QdrantDB
+from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
@@ -13,12 +14,12 @@ from okareo_api_client.models.test_run_type import TestRunType
 from okareo_api_client.types import Unset
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def rnd() -> str:
     return random_string(5)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
@@ -33,12 +34,19 @@ Summary:
 """
 
 
-def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
+@pytest.fixture(scope="module")
+def article_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
-    scenario = okareo.upload_scenario_set(
+    articles: ScenarioSetResponse = okareo.upload_scenario_set(
         file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
     )
 
+    return articles
+
+
+def test_run_test_v2_openai(
+    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
+) -> None:
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
         model=OpenAIModel(
@@ -51,7 +59,7 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
 
     run_resp = mut.run_test_v2(
         name=f"openai-chat-run-{rnd}",
-        scenario=scenario,
+        scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
@@ -60,12 +68,9 @@ def test_run_test_v2_openai(rnd: str, okareo: Okareo) -> None:
     assert_metrics(run_resp)
 
 
-def test_run_test_v2_openai_2prompts(rnd: str, okareo: Okareo) -> None:
-    file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
-    scenario = okareo.upload_scenario_set(
-        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
-    )
-
+def test_run_test_v2_openai_2prompts(
+    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
+) -> None:
     mut2 = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
         model=OpenAIModel(
@@ -78,7 +83,7 @@ def test_run_test_v2_openai_2prompts(rnd: str, okareo: Okareo) -> None:
 
     run_resp = mut2.run_test_v2(
         name=f"openai-chat-run-{rnd}",
-        scenario=scenario,
+        scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
@@ -111,7 +116,7 @@ def assert_scores(scores: dict) -> None:
 
 def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     seed_data = [
-        SeedData(input_="are you able to set up in aws?", result="capabilities"),
+        SeedData(input_="what are you able to set up in aws?", result="capabilities"),
         SeedData(
             input_="what's the procedure to request for more information?",
             result="general",
@@ -146,24 +151,23 @@ def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
     assert run_resp.name == f"cohere-classification-run-{rnd}"
 
 
-def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
-    seed_data = [
-        SeedData(
-            input_="which IAM groups have access to s3?",
-            result="3cee94071d1bbbac096c0996987d8bb2",
-        ),
-    ]
-
-    scenario_set_create = ScenarioSetCreate(
-        name=f"ci-pinecone-cohere-{rnd}",
-        number_examples=1,
-        seed_data=seed_data,
-        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
+@pytest.fixture(scope="module")
+def question_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
+    file_path = os.path.join(
+        os.path.dirname(__file__), "webbizz_retrieval_questions.jsonl"
     )
-    scenario = okareo.create_scenario_set(scenario_set_create)
+    articles: ScenarioSetResponse = okareo.upload_scenario_set(
+        file_path=file_path, scenario_name=f"ci-pinecone-cohere-{rnd}"
+    )
 
+    return articles
+
+
+def test_run_test_v2_cohere_pinecone_ir(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
     mut = okareo.register_model(
-        name=f"embed-english-light-v3.0-{rnd}",
+        name=f"ci-pinecone-cohere-english-light-v3.0-{rnd}",
         model=[
             CohereModel(
                 model_id="embed-english-light-v3.0",
@@ -181,7 +185,7 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
 
     run_resp = mut.run_test_v2(
         name=f"ci-pinecone-cohere-embed-{rnd}",
-        scenario=scenario,
+        scenario=question_scenario_set,
         calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         api_keys={
@@ -194,3 +198,39 @@ def test_run_test_v2_cohere_info_retrieval(rnd: str, okareo: Okareo) -> None:
         },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
+
+
+def test_run_test_v2_cohere_qdrant_ir(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"ci-qdrant-cohere-english-light-v3.0-{rnd}",
+        model=[
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+            QdrantDB(
+                collection_name="ci_test_collection",
+                url="https://366662aa-e06e-4d40-a1d0-dc6aedbef44e.us-east4-0.gcp.cloud.qdrant.io:6333",
+                top_k=10,
+            ),
+        ],
+    )
+
+    run_resp = mut.run_test_v2(
+        name=f"ci-qdrant-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "qdrant": os.environ["QDRANT_API_KEY"],
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8, 16],
+            "map_at_k": [1, 3, 5, 10, 20],
+        },
+    )
+    assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
