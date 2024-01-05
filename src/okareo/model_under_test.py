@@ -8,12 +8,9 @@ from attrs import define as _attrs_define
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
-    add_test_data_point_v0_test_data_point_post,
-    add_test_run_v0_test_runs_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
     run_test_v0_test_run_post,
-    update_test_run_v0_test_runs_test_run_id_put,
 )
 from okareo_api_client.client import Client
 from okareo_api_client.errors import UnexpectedStatus
@@ -21,9 +18,7 @@ from okareo_api_client.models import (
     DatapointResponse,
     DatapointSchema,
     ModelUnderTestResponse,
-    TestDataPointPayload,
     TestRunItem,
-    TestRunPayload,
     TestRunType,
 )
 from okareo_api_client.models.error_response import ErrorResponse
@@ -34,6 +29,9 @@ from okareo_api_client.models.test_run_payload_v2_api_keys import (
 )
 from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
     TestRunPayloadV2MetricsKwargs,
+)
+from okareo_api_client.models.test_run_payload_v2_model_results import (
+    TestRunPayloadV2ModelResults,
 )
 from okareo_api_client.types import UNSET, Unset
 
@@ -104,12 +102,14 @@ class QdrantDB(BaseModel):
     collection_name: str
     url: str
     top_k: int = 5
+    sparse: bool = False
 
     def params(self) -> dict:
         return {
             "collection_name": self.collection_name,
             "url": self.url,
             "top_k": self.top_k,
+            "sparse": self.sparse,
         }
 
 
@@ -222,87 +222,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             add_datapoint_v0_datapoints_post.sync, DatapointSchema.from_dict(body)
         )
 
-    # TODO this is moving to the server
     def run_test(
-        self,
-        scenario_id: str,
-        model_invoker: Callable[[str], Tuple[Any, Any]],
-        test_run_name: str = "",
-        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
-    ) -> TestRunItem:
-        try:
-            scenario_data_points = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
-                client=self.client, api_key=self.api_key, scenario_id=scenario_id
-            )
-
-            test_run_payload = TestRunPayload(
-                mut_id=self.mut_id,
-                scenario_set_id=scenario_id,
-                name=test_run_name,
-                type=test_run_type,
-                start_time=datetime.now(),
-                end_time=datetime.now(),  # TODO getting around server error, it's updated later
-            )
-
-            test_run_item = add_test_run_v0_test_runs_post.sync(
-                client=self.client, api_key=self.api_key, json_body=test_run_payload
-            )
-            test_run_item = self.validate_return_type(test_run_item)
-
-            if isinstance(scenario_data_points, list):
-                for scenario_data_point in scenario_data_points:
-                    input_datetime = str(datetime.now())
-
-                    assert isinstance(scenario_data_point.input_, str)
-                    actual, model_response = model_invoker(scenario_data_point.input_)
-
-                    self.add_data_point(
-                        input_obj=scenario_data_point.input_,  # todo get full request from inovker
-                        input_datetime=input_datetime,  # start of model invocation
-                        result_obj=model_response,  # json.dumps() the result objects from the model
-                        # end of model invocation
-                        result_datetime=str(datetime.now()),
-                        test_run_id=test_run_item.id,
-                    )  # todo need to store test_run_id in datapoint
-
-                    test_data_point_payload = TestDataPointPayload(
-                        test_run_id=test_run_item.id,
-                        scenario_data_point_id=scenario_data_point.id,
-                        metric_type=test_run_type.value,  # same as test_run_item.type for now
-                        metric_value=self.get_metric_value_by_run_type(
-                            test_run_type, scenario_data_point.result, actual
-                        ),
-                    )
-
-                    add_test_data_point_v0_test_data_point_post.sync(
-                        client=self.client,
-                        api_key=self.api_key,
-                        json_body=test_data_point_payload,
-                    )
-
-            # update completed test run with end time and test data point count
-
-            test_run_payload.end_time = datetime.now()
-            test_run_payload.calculate_model_metrics = (
-                True  # trigger server side calculation
-            )
-            # test_run_payload.test_data_point_count = len(response) #todo
-            test_run_item = update_test_run_v0_test_runs_test_run_id_put.sync(
-                client=self.client,
-                api_key=self.api_key,
-                test_run_id=test_run_item.id,
-                json_body=test_run_payload,
-            )
-            return self.validate_return_type(test_run_item)
-
-        except UnexpectedStatus as e:
-            print(e.content)
-            raise
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            raise
-
-    def run_test_v2(
         self,
         scenario: ScenarioSetResponse,
         name: str,
@@ -311,36 +231,78 @@ class ModelUnderTest(AsyncProcessorMixin):
         metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
+        model_invoker: Optional[Callable[[str], Tuple[Any, Any]]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
-        assert isinstance(self.models, dict)
-        model_names = list(self.models.keys())
-        run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
-
-        if len(model_names) != len(run_api_keys):
-            raise MissingApiKeyError("Number of models and API keys does not match")
-
-        if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
-            if {"pinecone", "qdrant"}.isdisjoint(model_names):
-                raise MissingVectorDbError("No vector database specified")
-
         try:
-            response = run_test_v0_test_run_post.sync(
-                client=self.client,
-                api_key=self.api_key,
-                json_body=TestRunPayloadV2(
-                    mut_id=self.mut_id,
-                    api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys),
+            if model_invoker:
+                scenario_data_points = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
+                    client=self.client,
+                    api_key=self.api_key,
                     scenario_id=scenario.scenario_id,
-                    name=name,
-                    type=test_run_type,
-                    project_id=self.project_id,
-                    calculate_metrics=calculate_metrics,
-                    metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
-                        metrics_kwargs or {}
+                )
+                scenario_data_points = (
+                    scenario_data_points
+                    if isinstance(scenario_data_points, List)
+                    else []
+                )
+                model_data: dict = {"model_data": []}
+                for scenario_data_point in scenario_data_points:
+                    assert isinstance(scenario_data_point.input_, str)
+                    actual, model_response = model_invoker(scenario_data_point.input_)
+                    model_data["model_data"].append(
+                        {"actual": actual, "model_response": model_response}
+                    )
+                response = run_test_v0_test_run_post.sync(
+                    client=self.client,
+                    api_key=self.api_key,
+                    json_body=TestRunPayloadV2(
+                        mut_id=self.mut_id,
+                        scenario_id=scenario.scenario_id,
+                        name=name,
+                        type=test_run_type,
+                        api_keys=TestRunPayloadV2ApiKeys.from_dict(api_keys)
+                        if api_keys
+                        else UNSET,
+                        project_id=self.project_id,
+                        calculate_metrics=calculate_metrics,
+                        metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
+                            metrics_kwargs or {}
+                        ),
+                        model_results=TestRunPayloadV2ModelResults.from_dict(model_data)
+                        if model_invoker is not None
+                        else UNSET,
                     ),
-                ),
-            )
+                )
+            else:
+                assert isinstance(self.models, dict)
+                model_names = list(self.models.keys())
+                run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
+
+                if len(model_names) != len(run_api_keys):
+                    raise MissingApiKeyError(
+                        "Number of models and API keys does not match"
+                    )
+
+                if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
+                    if {"pinecone", "qdrant"}.isdisjoint(model_names):
+                        raise MissingVectorDbError("No vector database specified")
+                response = run_test_v0_test_run_post.sync(
+                    client=self.client,
+                    api_key=self.api_key,
+                    json_body=TestRunPayloadV2(
+                        mut_id=self.mut_id,
+                        api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys),
+                        scenario_id=scenario.scenario_id,
+                        name=name,
+                        type=test_run_type,
+                        project_id=self.project_id,
+                        calculate_metrics=calculate_metrics,
+                        metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
+                            metrics_kwargs or {}
+                        ),
+                    ),
+                )
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
             raise

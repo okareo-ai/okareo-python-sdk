@@ -87,9 +87,9 @@ def test_run_test_retrieval(
     test_run_name = f"test_run_test_retrieval {today_with_time}"
 
     retrieval_test_run = model_under_test.run_test(
-        scenario_id=generate_scenarios.scenario_id,
+        scenario=generate_scenarios,
         model_invoker=call_model,
-        test_run_name=test_run_name,
+        name=test_run_name,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
     )
 

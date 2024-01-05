@@ -40,6 +40,7 @@ from .test_run_payload import TestRunPayload
 from .test_run_payload_v2 import TestRunPayloadV2
 from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
 from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
+from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 from .test_run_type import TestRunType
 
 __all__ = (
@@ -83,5 +84,6 @@ __all__ = (
     "TestRunPayloadV2",
     "TestRunPayloadV2ApiKeys",
     "TestRunPayloadV2MetricsKwargs",
+    "TestRunPayloadV2ModelResults",
     "TestRunType",
 )

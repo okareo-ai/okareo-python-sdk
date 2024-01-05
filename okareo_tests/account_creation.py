@@ -85,9 +85,9 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
     test_run_name = f"Support - Rephrase Test Run {rnd}"
 
     rephrase_test_run = model_under_test.run_test(
-        scenario_id=rephrase.scenario_id,
+        scenario=rephrase,
         model_invoker=call_model,
-        test_run_name=test_run_name,
+        name=test_run_name,
         test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
     )
 
@@ -97,9 +97,9 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
     test_run_name = f"Support - Conditional Test Run {rnd}"
 
     conditional_test_run = model_under_test.run_test(
-        scenario_id=conditional.scenario_id,
+        scenario=conditional,
         model_invoker=call_model,
-        test_run_name=test_run_name,
+        name=test_run_name,
         test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
     )
 
@@ -172,9 +172,9 @@ def test_load_retrieval(okareo: Okareo, rnd: str) -> None:
     test_run_name = f"Support - Retrieval Test Run {rnd}"
 
     retrieval_test_run = model_under_test.run_test(
-        scenario_id=questions.scenario_id,
+        scenario=questions,
         model_invoker=call_model,
-        test_run_name=test_run_name,
+        name=test_run_name,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
     )
 
@@ -212,7 +212,7 @@ def test_load_generation(okareo: Okareo, rnd: str) -> None:
         ),
     )
 
-    run_resp = mut.run_test_v2(
+    run_resp = mut.run_test(
         name=f"openai-chat-run-{rnd}",
         scenario=scenario,
         api_key=os.environ["OPENAI_API_KEY"],

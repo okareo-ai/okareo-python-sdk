@@ -109,7 +109,7 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         ],
     )
     response = okareo.create_scenario_set(scenario_set_create)
-    scenario_id = response.scenario_id
+    response.scenario_id
 
     def call_model(input_: str) -> Tuple[str, dict]:
         actual = random.choice(["returns", "complains", "pricing"])
@@ -121,7 +121,7 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
 
     # use the scenario id from one of the scenario set notebook examples
     test_run_item = mut.run_test(
-        scenario_id=scenario_id, model_invoker=call_model, test_run_name="CI run test"
+        scenario=response, model_invoker=call_model, name="CI run test"
     )
     assert test_run_item.name == "CI run test"
 
@@ -202,7 +202,7 @@ def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
     )
 
     with pytest.raises(MissingApiKeyError):
-        mut.run_test_v2(
+        mut.run_test(
             name="quick test",
             scenario=Mock(),
             calculate_metrics=True,
@@ -222,7 +222,7 @@ def test_missing_vector_db_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
     )
 
     with pytest.raises(MissingVectorDbError):
-        mut.run_test_v2(
+        mut.run_test(
             name="quick test",
             scenario=Mock(),
             calculate_metrics=True,

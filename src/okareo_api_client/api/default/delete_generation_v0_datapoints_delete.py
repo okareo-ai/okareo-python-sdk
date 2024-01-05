@@ -6,22 +6,32 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    scenario_id: str,
     *,
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
+    params: Dict[str, Any] = {}
+    params["mut_id"] = mut_id
+
+    params["test_run_id"] = test_run_id
+
+    params["scenario_set_id"] = scenario_set_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     return {
-        "method": "get",
-        "url": "/v0/scenario_sets_download/{scenario_id}".format(
-            scenario_id=scenario_id,
-        ),
+        "method": "delete",
+        "url": "/v0/datapoints",
+        "params": params,
         "headers": headers,
     }
 
@@ -29,9 +39,9 @@ def _get_kwargs(
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = cast(Any, response.json())
-        return response_200
+    if response.status_code == HTTPStatus.CREATED:
+        response_201 = cast(Any, response.json())
+        return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -62,20 +72,21 @@ def _build_response(
 
 
 def sync_detailed(
-    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Get Scenario Sets Download
+    """Delete Generation
 
-     Get the scenario set for a particular scenario ID
-
-    Returns:
-        a list of scenarios
+     Deletes the datapoint object from db
 
     Args:
-        scenario_id (str): The ID of the scenario set
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
 
     Raises:
@@ -87,7 +98,9 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        scenario_id=scenario_id,
+        mut_id=mut_id,
+        test_run_id=test_run_id,
+        scenario_set_id=scenario_set_id,
         api_key=api_key,
     )
 
@@ -99,20 +112,21 @@ def sync_detailed(
 
 
 def sync(
-    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Get Scenario Sets Download
+    """Delete Generation
 
-     Get the scenario set for a particular scenario ID
-
-    Returns:
-        a list of scenarios
+     Deletes the datapoint object from db
 
     Args:
-        scenario_id (str): The ID of the scenario set
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
 
     Raises:
@@ -124,27 +138,30 @@ def sync(
     """
 
     return sync_detailed(
-        scenario_id=scenario_id,
         client=client,
+        mut_id=mut_id,
+        test_run_id=test_run_id,
+        scenario_set_id=scenario_set_id,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Get Scenario Sets Download
+    """Delete Generation
 
-     Get the scenario set for a particular scenario ID
-
-    Returns:
-        a list of scenarios
+     Deletes the datapoint object from db
 
     Args:
-        scenario_id (str): The ID of the scenario set
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
 
     Raises:
@@ -156,7 +173,9 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        scenario_id=scenario_id,
+        mut_id=mut_id,
+        test_run_id=test_run_id,
+        scenario_set_id=scenario_set_id,
         api_key=api_key,
     )
 
@@ -166,20 +185,21 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Get Scenario Sets Download
+    """Delete Generation
 
-     Get the scenario set for a particular scenario ID
-
-    Returns:
-        a list of scenarios
+     Deletes the datapoint object from db
 
     Args:
-        scenario_id (str): The ID of the scenario set
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
 
     Raises:
@@ -192,8 +212,10 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            scenario_id=scenario_id,
             client=client,
+            mut_id=mut_id,
+            test_run_id=test_run_id,
+            scenario_set_id=scenario_set_id,
             api_key=api_key,
         )
     ).parsed
