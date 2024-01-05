@@ -5,8 +5,8 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
-    BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+from ...models.body_scenario_sets_upload_deprecated_v0_scenario_sets_upload_post import (
+    BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost,
 )
 from ...models.error_response import ErrorResponse
 from ...models.scenario_set_response import ScenarioSetResponse
@@ -15,7 +15,7 @@ from ...types import Response
 
 def _get_kwargs(
     *,
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    multipart_data: BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -25,7 +25,7 @@ def _get_kwargs(
 
     return {
         "method": "post",
-        "url": "/v0/scenario_sets_upload",
+        "url": "/v0/scenario_sets_upload/",
         "files": multipart_multipart_data,
         "headers": headers,
     }
@@ -70,19 +70,14 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    multipart_data: BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+    """Scenario Sets Upload Deprecated
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        multipart_data (BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -107,19 +102,14 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    multipart_data: BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+    """Scenario Sets Upload Deprecated
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        multipart_data (BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -139,19 +129,14 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    multipart_data: BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+    """Scenario Sets Upload Deprecated
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        multipart_data (BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -174,19 +159,14 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    multipart_data: BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+    """Scenario Sets Upload Deprecated
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        multipart_data (BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
