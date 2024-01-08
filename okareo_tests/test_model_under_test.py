@@ -9,7 +9,7 @@ from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
 from okareo.error import MissingApiKeyError, MissingVectorDbError
-from okareo.model_under_test import CohereModel, PineconeDb
+from okareo.model_under_test import CohereModel, CustomModel, PineconeDb
 from okareo_api_client.models import SeedData, TestRunItem
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
@@ -109,7 +109,7 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         ],
     )
     response = okareo.create_scenario_set(scenario_set_create)
-    scenario_id = response.scenario_id
+    response.scenario_id
 
     def call_model(input_: str) -> Tuple[str, dict]:
         actual = random.choice(["returns", "complains", "pricing"])
@@ -117,12 +117,14 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         return actual, {"labels": actual, "confidence": 0.8}
 
     # this will return a model if it already exists or create a new one if it doesn't
-    mut = okareo.register_model(name=mut_fixture["name"], tags=mut_fixture["tags"])
+    mut = okareo.register_model(
+        name=mut_fixture["name"],
+        tags=mut_fixture["tags"],
+        model=CustomModel(name="classification", model_invoker=call_model),
+    )
 
     # use the scenario id from one of the scenario set notebook examples
-    test_run_item = mut.run_test(
-        scenario_id=scenario_id, model_invoker=call_model, test_run_name="CI run test"
-    )
+    test_run_item = mut.run_test(scenario=response, name="CI run test")
     assert test_run_item.name == "CI run test"
 
 
@@ -202,7 +204,7 @@ def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
     )
 
     with pytest.raises(MissingApiKeyError):
-        mut.run_test_v2(
+        mut.run_test(
             name="quick test",
             scenario=Mock(),
             calculate_metrics=True,
@@ -222,7 +224,7 @@ def test_missing_vector_db_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
     )
 
     with pytest.raises(MissingVectorDbError):
-        mut.run_test_v2(
+        mut.run_test(
             name="quick test",
             scenario=Mock(),
             calculate_metrics=True,

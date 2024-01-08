@@ -44,7 +44,7 @@ def article_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     return articles
 
 
-def test_run_test_v2_openai(
+def test_run_test_openai(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
     mut = okareo.register_model(
@@ -57,7 +57,7 @@ def test_run_test_v2_openai(
         ),
     )
 
-    run_resp = mut.run_test_v2(
+    run_resp = mut.run_test(
         name=f"openai-chat-run-{rnd}",
         scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
@@ -68,7 +68,7 @@ def test_run_test_v2_openai(
     assert_metrics(run_resp)
 
 
-def test_run_test_v2_openai_2prompts(
+def test_run_test_openai_2prompts(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
     mut2 = okareo.register_model(
@@ -81,7 +81,7 @@ def test_run_test_v2_openai_2prompts(
         ),
     )
 
-    run_resp = mut2.run_test_v2(
+    run_resp = mut2.run_test(
         name=f"openai-chat-run-{rnd}",
         scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
@@ -114,7 +114,7 @@ def assert_scores(scores: dict) -> None:
         assert 1 <= scores[dimension] <= 5
 
 
-def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
+def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
     seed_data = [
         SeedData(input_="what are you able to set up in aws?", result="capabilities"),
         SeedData(
@@ -142,7 +142,7 @@ def test_run_test_v2_cohere(rnd: str, okareo: Okareo) -> None:
         ),
     )
 
-    run_resp = mut.run_test_v2(
+    run_resp = mut.run_test(
         name=f"cohere-classification-run-{rnd}",
         scenario=scenario,
         api_key=os.environ["COHERE_API_KEY"],
@@ -163,7 +163,7 @@ def question_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     return articles
 
 
-def test_run_test_v2_cohere_pinecone_ir(
+def test_run_test_cohere_pinecone_ir(
     rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
 ) -> None:
     mut = okareo.register_model(
@@ -183,7 +183,7 @@ def test_run_test_v2_cohere_pinecone_ir(
         ],
     )
 
-    run_resp = mut.run_test_v2(
+    run_resp = mut.run_test(
         name=f"ci-pinecone-cohere-embed-{rnd}",
         scenario=question_scenario_set,
         calculate_metrics=True,
@@ -200,7 +200,7 @@ def test_run_test_v2_cohere_pinecone_ir(
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
 
 
-def test_run_test_v2_cohere_qdrant_ir(
+def test_run_test_cohere_qdrant_ir(
     rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
 ) -> None:
     mut = okareo.register_model(
@@ -219,7 +219,7 @@ def test_run_test_v2_cohere_qdrant_ir(
         ],
     )
 
-    run_resp = mut.run_test_v2(
+    run_resp = mut.run_test(
         name=f"ci-qdrant-cohere-embed-{rnd}",
         scenario=question_scenario_set,
         calculate_metrics=True,

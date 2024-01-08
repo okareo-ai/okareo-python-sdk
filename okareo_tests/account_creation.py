@@ -14,7 +14,7 @@ from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.common import BASE_URL
-from okareo.model_under_test import OpenAIModel
+from okareo.model_under_test import CustomModel, OpenAIModel
 from okareo_api_client.models import ScenarioSetResponse, TestRunType
 
 
@@ -80,14 +80,16 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
             "confidence": round(random.uniform(0.30, 0.99), 2),
         }
 
-    model_under_test = okareo.register_model(name="support_intent_classifier")
+    model_under_test = okareo.register_model(
+        name="support_intent_classifier",
+        model=CustomModel(model_invoker=call_model, name="custom classification"),
+    )
 
     test_run_name = f"Support - Rephrase Test Run {rnd}"
 
     rephrase_test_run = model_under_test.run_test(
-        scenario_id=rephrase.scenario_id,
-        model_invoker=call_model,
-        test_run_name=test_run_name,
+        scenario=rephrase,
+        name=test_run_name,
         test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
     )
 
@@ -97,9 +99,8 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
     test_run_name = f"Support - Conditional Test Run {rnd}"
 
     conditional_test_run = model_under_test.run_test(
-        scenario_id=conditional.scenario_id,
-        model_invoker=call_model,
-        test_run_name=test_run_name,
+        scenario=conditional,
+        name=test_run_name,
         test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
     )
 
@@ -167,14 +168,16 @@ def test_load_retrieval(okareo: Okareo, rnd: str) -> None:
         # return a tuple of (parsed_ids_with_scores, overall model response context)
         return parsed_ids_with_scores, model_response
 
-    model_under_test = okareo.register_model(name="vectordb_retrieval")
+    model_under_test = okareo.register_model(
+        name="vectordb_retrieval",
+        model=CustomModel(model_invoker=call_model, name="custom retrieval"),
+    )
 
     test_run_name = f"Support - Retrieval Test Run {rnd}"
 
     retrieval_test_run = model_under_test.run_test(
-        scenario_id=questions.scenario_id,
-        model_invoker=call_model,
-        test_run_name=test_run_name,
+        scenario=questions,
+        name=test_run_name,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
     )
 
@@ -212,7 +215,7 @@ def test_load_generation(okareo: Okareo, rnd: str) -> None:
         ),
     )
 
-    run_resp = mut.run_test_v2(
+    run_resp = mut.run_test(
         name=f"openai-chat-run-{rnd}",
         scenario=scenario,
         api_key=os.environ["OPENAI_API_KEY"],

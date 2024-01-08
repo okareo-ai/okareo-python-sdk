@@ -6,6 +6,7 @@ import pytest
 from okareo_tests.common import API_KEY
 
 from okareo import Okareo
+from okareo.model_under_test import CustomModel
 from okareo_api_client.models import ScenarioSetResponse, ScenarioType, TestRunType
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
@@ -82,14 +83,16 @@ def test_run_test_retrieval(
         # return a tuple of (parsed_ids_with_scores, overall model response context)
         return parsed_ids_with_scores, model_response
 
-    model_under_test = okareo_client.register_model(name="vectordb_retrieval")
+    model_under_test = okareo_client.register_model(
+        name="vectordb_retrieval test",
+        model=CustomModel(model_invoker=call_model, name="custom retrieval"),
+    )
 
     test_run_name = f"test_run_test_retrieval {today_with_time}"
 
     retrieval_test_run = model_under_test.run_test(
-        scenario_id=generate_scenarios.scenario_id,
-        model_invoker=call_model,
-        test_run_name=test_run_name,
+        scenario=generate_scenarios,
+        name=test_run_name,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
     )
 

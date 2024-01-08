@@ -28,7 +28,7 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/scenario_sets/",
+        "url": "/v0/scenario_sets",
         "params": params,
         "headers": headers,
     }
