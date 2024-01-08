@@ -48,7 +48,7 @@ class BaseModel:
 
 
 @_attrs_define
-class OpenAIModel(BaseModel): 
+class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
     temperature: float
