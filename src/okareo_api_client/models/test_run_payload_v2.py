@@ -9,6 +9,7 @@ from ..types import UNSET, Unset
 if TYPE_CHECKING:
     from ..models.test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
     from ..models.test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
+    from ..models.test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 
 
 T = TypeVar("T", bound="TestRunPayloadV2")
@@ -19,8 +20,8 @@ class TestRunPayloadV2:
     """
     Attributes:
         mut_id (str): ID of the model
-        api_keys (TestRunPayloadV2ApiKeys): Dictionary that maps model type to the respective API keys
         scenario_id (str): ID of the scenario set
+        api_keys (Union[Unset, TestRunPayloadV2ApiKeys]): Dictionary that maps model type to the respective API keys
         metrics_kwargs (Union[Unset, TestRunPayloadV2MetricsKwargs]): Dictionary of metrics to be measured
         name (Union[Unset, str]): Name of the test run
         type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
@@ -28,24 +29,28 @@ class TestRunPayloadV2:
             run
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
         project_id (Union[Unset, str]): ID of the project
+        model_results (Union[Unset, TestRunPayloadV2ModelResults]):
     """
 
     mut_id: str
-    api_keys: "TestRunPayloadV2ApiKeys"
     scenario_id: str
+    api_keys: Union[Unset, "TestRunPayloadV2ApiKeys"] = UNSET
     metrics_kwargs: Union[Unset, "TestRunPayloadV2MetricsKwargs"] = UNSET
     name: Union[Unset, str] = UNSET
     type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
     calculate_metrics: Union[Unset, bool] = False
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
+    model_results: Union[Unset, "TestRunPayloadV2ModelResults"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         mut_id = self.mut_id
-        api_keys = self.api_keys.to_dict()
-
         scenario_id = self.scenario_id
+        api_keys: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.api_keys, Unset):
+            api_keys = self.api_keys.to_dict()
+
         metrics_kwargs: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.metrics_kwargs, Unset):
             metrics_kwargs = self.metrics_kwargs.to_dict()
@@ -61,16 +66,20 @@ class TestRunPayloadV2:
             tags = self.tags
 
         project_id = self.project_id
+        model_results: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.model_results, Unset):
+            model_results = self.model_results.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "mut_id": mut_id,
-                "api_keys": api_keys,
                 "scenario_id": scenario_id,
             }
         )
+        if api_keys is not UNSET:
+            field_dict["api_keys"] = api_keys
         if metrics_kwargs is not UNSET:
             field_dict["metrics_kwargs"] = metrics_kwargs
         if name is not UNSET:
@@ -83,6 +92,8 @@ class TestRunPayloadV2:
             field_dict["tags"] = tags
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if model_results is not UNSET:
+            field_dict["model_results"] = model_results
 
         return field_dict
 
@@ -90,13 +101,19 @@ class TestRunPayloadV2:
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
         from ..models.test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
+        from ..models.test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 
         d = src_dict.copy()
         mut_id = d.pop("mut_id")
 
-        api_keys = TestRunPayloadV2ApiKeys.from_dict(d.pop("api_keys"))
-
         scenario_id = d.pop("scenario_id")
+
+        _api_keys = d.pop("api_keys", UNSET)
+        api_keys: Union[Unset, TestRunPayloadV2ApiKeys]
+        if isinstance(_api_keys, Unset):
+            api_keys = UNSET
+        else:
+            api_keys = TestRunPayloadV2ApiKeys.from_dict(_api_keys)
 
         _metrics_kwargs = d.pop("metrics_kwargs", UNSET)
         metrics_kwargs: Union[Unset, TestRunPayloadV2MetricsKwargs]
@@ -120,16 +137,24 @@ class TestRunPayloadV2:
 
         project_id = d.pop("project_id", UNSET)
 
+        _model_results = d.pop("model_results", UNSET)
+        model_results: Union[Unset, TestRunPayloadV2ModelResults]
+        if isinstance(_model_results, Unset):
+            model_results = UNSET
+        else:
+            model_results = TestRunPayloadV2ModelResults.from_dict(_model_results)
+
         test_run_payload_v2 = cls(
             mut_id=mut_id,
-            api_keys=api_keys,
             scenario_id=scenario_id,
+            api_keys=api_keys,
             metrics_kwargs=metrics_kwargs,
             name=name,
             type=type,
             calculate_metrics=calculate_metrics,
             tags=tags,
             project_id=project_id,
+            model_results=model_results,
         )
 
         test_run_payload_v2.additional_properties = d

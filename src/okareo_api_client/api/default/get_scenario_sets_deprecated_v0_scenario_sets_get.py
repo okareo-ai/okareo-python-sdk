@@ -1,41 +1,49 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
-    BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
-)
 from ...models.error_response import ErrorResponse
 from ...models.scenario_set_response import ScenarioSetResponse
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    scenario_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    multipart_multipart_data = multipart_data.to_multipart()
+    params: Dict[str, Any] = {}
+    params["scenario_id"] = scenario_id
+
+    params["project_id"] = project_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
-        "method": "post",
-        "url": "/v0/scenario_sets_upload",
-        "files": multipart_multipart_data,
+        "method": "get",
+        "url": "/v0/scenario_sets/",
+        "params": params,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
+) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = ScenarioSetResponse.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = ScenarioSetResponse.from_dict(response_200_item_data)
+
+            response_200.append(response_200_item)
 
         return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
@@ -58,7 +66,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
+) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -70,30 +78,28 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    scenario_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+    """Get Scenario Sets Deprecated
 
     Args:
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ScenarioSetResponse]]
+        Response[Union[ErrorResponse, List['ScenarioSetResponse']]]
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        scenario_id=scenario_id,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -107,31 +113,29 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    scenario_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+    """Get Scenario Sets Deprecated
 
     Args:
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ScenarioSetResponse]
+        Union[ErrorResponse, List['ScenarioSetResponse']]
     """
 
     return sync_detailed(
         client=client,
-        multipart_data=multipart_data,
+        scenario_id=scenario_id,
+        project_id=project_id,
         api_key=api_key,
     ).parsed
 
@@ -139,30 +143,28 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    scenario_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+    """Get Scenario Sets Deprecated
 
     Args:
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ScenarioSetResponse]]
+        Response[Union[ErrorResponse, List['ScenarioSetResponse']]]
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        scenario_id=scenario_id,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -174,32 +176,30 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    scenario_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
-
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+    """Get Scenario Sets Deprecated
 
     Args:
+        scenario_id (Union[Unset, None, str]): The ID of the scenario set
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ScenarioSetResponse]
+        Union[ErrorResponse, List['ScenarioSetResponse']]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            multipart_data=multipart_data,
+            scenario_id=scenario_id,
+            project_id=project_id,
             api_key=api_key,
         )
     ).parsed

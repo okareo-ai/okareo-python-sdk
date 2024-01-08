@@ -1,43 +1,47 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
-    BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
-)
 from ...models.error_response import ErrorResponse
-from ...models.scenario_set_response import ScenarioSetResponse
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    multipart_multipart_data = multipart_data.to_multipart()
+    params: Dict[str, Any] = {}
+    params["mut_id"] = mut_id
+
+    params["test_run_id"] = test_run_id
+
+    params["scenario_set_id"] = scenario_set_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
-        "method": "post",
-        "url": "/v0/scenario_sets_upload",
-        "files": multipart_multipart_data,
+        "method": "delete",
+        "url": "/v0/datapoints",
+        "params": params,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = ScenarioSetResponse.from_dict(response.json())
-
-        return response_200
+) -> Optional[Union[Any, ErrorResponse]]:
+    if response.status_code == HTTPStatus.CREATED:
+        response_201 = cast(Any, response.json())
+        return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -58,7 +62,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
+) -> Response[Union[Any, ErrorResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -70,30 +74,33 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
+) -> Response[Union[Any, ErrorResponse]]:
+    """Delete Generation
 
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+     Deletes the datapoint object from db
 
     Args:
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ScenarioSetResponse]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        mut_id=mut_id,
+        test_run_id=test_run_id,
+        scenario_set_id=scenario_set_id,
         api_key=api_key,
     )
 
@@ -107,31 +114,34 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
+) -> Optional[Union[Any, ErrorResponse]]:
+    """Delete Generation
 
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+     Deletes the datapoint object from db
 
     Args:
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ScenarioSetResponse]
+        Union[Any, ErrorResponse]
     """
 
     return sync_detailed(
         client=client,
-        multipart_data=multipart_data,
+        mut_id=mut_id,
+        test_run_id=test_run_id,
+        scenario_set_id=scenario_set_id,
         api_key=api_key,
     ).parsed
 
@@ -139,30 +149,33 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
+) -> Response[Union[Any, ErrorResponse]]:
+    """Delete Generation
 
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+     Deletes the datapoint object from db
 
     Args:
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ScenarioSetResponse]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        mut_id=mut_id,
+        test_run_id=test_run_id,
+        scenario_set_id=scenario_set_id,
         api_key=api_key,
     )
 
@@ -174,32 +187,35 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    mut_id: Union[Unset, None, str] = UNSET,
+    test_run_id: Union[Unset, None, str] = UNSET,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    """Scenario Sets Upload
+) -> Optional[Union[Any, ErrorResponse]]:
+    """Delete Generation
 
-     Upload new scenarios
-
-    Returns:
-        the Scenario Set with the uploaded scenarios
+     Deletes the datapoint object from db
 
     Args:
+        mut_id (Union[Unset, None, str]): The ID of the model
+        test_run_id (Union[Unset, None, str]): The ID of the test run
+        scenario_set_id (Union[Unset, None, str]): The ID of the scenario set
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ScenarioSetResponse]
+        Union[Any, ErrorResponse]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            multipart_data=multipart_data,
+            mut_id=mut_id,
+            test_run_id=test_run_id,
+            scenario_set_id=scenario_set_id,
             api_key=api_key,
         )
     ).parsed
