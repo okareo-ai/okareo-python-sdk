@@ -9,7 +9,7 @@ from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
 from okareo.error import MissingApiKeyError, MissingVectorDbError
-from okareo.model_under_test import CohereModel, PineconeDb
+from okareo.model_under_test import CohereModel, CustomModel, PineconeDb
 from okareo_api_client.models import SeedData, TestRunItem
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
@@ -117,12 +117,14 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         return actual, {"labels": actual, "confidence": 0.8}
 
     # this will return a model if it already exists or create a new one if it doesn't
-    mut = okareo.register_model(name=mut_fixture["name"], tags=mut_fixture["tags"])
+    mut = okareo.register_model(
+        name=mut_fixture["name"],
+        tags=mut_fixture["tags"],
+        model=CustomModel(name="classification", model_invoker=call_model),
+    )
 
     # use the scenario id from one of the scenario set notebook examples
-    test_run_item = mut.run_test(
-        scenario=response, model_invoker=call_model, name="CI run test"
-    )
+    test_run_item = mut.run_test(scenario=response, name="CI run test")
     assert test_run_item.name == "CI run test"
 
 

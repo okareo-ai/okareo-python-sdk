@@ -63,6 +63,7 @@ class Okareo:
             tags = []
         data: Dict[str, Any] = {"name": name, "tags": tags}
         # will rename name to model in the future api-breaking release
+        model_invoker = None
         if isinstance(model, BaseModel) or (
             isinstance(model, list) and all(isinstance(x, BaseModel) for x in model)
         ):
@@ -70,6 +71,9 @@ class Okareo:
             data["models"] = {}
             for model in models:
                 data["models"][model.type] = model.params()
+            if "custom" in data["models"].keys():
+                model_invoker = data["models"]["custom"]["model_invoker"]
+                del data["models"]["custom"]["model_invoker"]
         if project_id is not None:
             data["project_id"] = project_id
         json_body = ModelUnderTestSchema.from_dict(data)
@@ -79,12 +83,14 @@ class Okareo:
 
         self.validate_response(response)
         assert isinstance(response, ModelUnderTestResponse)
-
+        model_data = data.get("models")
+        if model_invoker and isinstance(model_data, dict):
+            model_data["custom"]["model_invoker"] = model_invoker
         return ModelUnderTest(
             client=self.client,
             api_key=self.api_key,
             mut=response,
-            models=data.get("models"),
+            models=model_data,
         )
 
     def create_scenario_set(

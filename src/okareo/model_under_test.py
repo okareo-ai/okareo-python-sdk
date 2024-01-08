@@ -115,7 +115,16 @@ class QdrantDB(BaseModel):
 
 @_attrs_define
 class CustomModel(BaseModel):
-    url: str
+    type = "custom"
+    model_invoker: Callable[[str], Tuple[Any, Any]]
+    name: str
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "model_invoker": self.model_invoker,
+        }
 
 
 class ModelUnderTest(AsyncProcessorMixin):
@@ -231,11 +240,21 @@ class ModelUnderTest(AsyncProcessorMixin):
         metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
-        model_invoker: Optional[Callable[[str], Tuple[Any, Any]]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
-            if model_invoker:
+            assert isinstance(self.models, dict)
+            model_names = list(self.models.keys())
+            run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
+
+            if "custom" not in model_names and len(model_names) != len(run_api_keys):
+                raise MissingApiKeyError("Number of models and API keys does not match")
+
+            if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
+                if {"pinecone", "qdrant", "custom"}.isdisjoint(model_names):
+                    raise MissingVectorDbError("No vector database specified")
+            model_data: dict = {"model_data": []}
+            if "custom" in model_names:
                 scenario_data_points = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
                     client=self.client,
                     api_key=self.api_key,
@@ -246,63 +265,35 @@ class ModelUnderTest(AsyncProcessorMixin):
                     if isinstance(scenario_data_points, List)
                     else []
                 )
-                model_data: dict = {"model_data": []}
                 for scenario_data_point in scenario_data_points:
                     assert isinstance(scenario_data_point.input_, str)
-                    actual, model_response = model_invoker(scenario_data_point.input_)
+                    actual, model_response = self.models["custom"]["model_invoker"](
+                        scenario_data_point.input_
+                    )
                     model_data["model_data"].append(
                         {"actual": actual, "model_response": model_response}
                     )
-                response = run_test_v0_test_run_post.sync(
-                    client=self.client,
-                    api_key=self.api_key,
-                    json_body=TestRunPayloadV2(
-                        mut_id=self.mut_id,
-                        scenario_id=scenario.scenario_id,
-                        name=name,
-                        type=test_run_type,
-                        api_keys=TestRunPayloadV2ApiKeys.from_dict(api_keys)
-                        if api_keys
-                        else UNSET,
-                        project_id=self.project_id,
-                        calculate_metrics=calculate_metrics,
-                        metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
-                            metrics_kwargs or {}
-                        ),
-                        model_results=TestRunPayloadV2ModelResults.from_dict(model_data)
-                        if model_invoker is not None
-                        else UNSET,
+            response = run_test_v0_test_run_post.sync(
+                client=self.client,
+                api_key=self.api_key,
+                json_body=TestRunPayloadV2(
+                    mut_id=self.mut_id,
+                    api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys)
+                    if api_keys or api_key
+                    else UNSET,
+                    scenario_id=scenario.scenario_id,
+                    name=name,
+                    type=test_run_type,
+                    project_id=self.project_id,
+                    calculate_metrics=calculate_metrics,
+                    metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
+                        metrics_kwargs or {}
                     ),
-                )
-            else:
-                assert isinstance(self.models, dict)
-                model_names = list(self.models.keys())
-                run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
-
-                if len(model_names) != len(run_api_keys):
-                    raise MissingApiKeyError(
-                        "Number of models and API keys does not match"
-                    )
-
-                if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
-                    if {"pinecone", "qdrant"}.isdisjoint(model_names):
-                        raise MissingVectorDbError("No vector database specified")
-                response = run_test_v0_test_run_post.sync(
-                    client=self.client,
-                    api_key=self.api_key,
-                    json_body=TestRunPayloadV2(
-                        mut_id=self.mut_id,
-                        api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys),
-                        scenario_id=scenario.scenario_id,
-                        name=name,
-                        type=test_run_type,
-                        project_id=self.project_id,
-                        calculate_metrics=calculate_metrics,
-                        metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
-                            metrics_kwargs or {}
-                        ),
-                    ),
-                )
+                    model_results=TestRunPayloadV2ModelResults.from_dict(model_data)
+                    if "custom" in model_names
+                    else UNSET,
+                ),
+            )
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
             raise
