@@ -25,7 +25,7 @@ def _get_kwargs(
 
     return {
         "method": "post",
-        "url": "/v0/scenario_sets_upload",
+        "url": "/v0/scenario_sets_upload/",
         "files": multipart_multipart_data,
         "headers": headers,
     }

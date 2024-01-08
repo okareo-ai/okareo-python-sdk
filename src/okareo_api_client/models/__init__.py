@@ -1,8 +1,5 @@
 """ Contains all the data models used in inputs/outputs """
 
-from .body_scenario_sets_upload_deprecated_v0_scenario_sets_upload_post import (
-    BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost,
-)
 from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
 from .datapoint_list_item import DatapointListItem
 from .datapoint_list_item_input_type_0 import DatapointListItemInputType0
@@ -43,11 +40,9 @@ from .test_run_payload import TestRunPayload
 from .test_run_payload_v2 import TestRunPayloadV2
 from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
 from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
-from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 from .test_run_type import TestRunType
 
 __all__ = (
-    "BodyScenarioSetsUploadDeprecatedV0ScenarioSetsUploadPost",
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
     "DatapointListItem",
     "DatapointListItemInputType0",
@@ -88,6 +83,5 @@ __all__ = (
     "TestRunPayloadV2",
     "TestRunPayloadV2ApiKeys",
     "TestRunPayloadV2MetricsKwargs",
-    "TestRunPayloadV2ModelResults",
     "TestRunType",
 )
