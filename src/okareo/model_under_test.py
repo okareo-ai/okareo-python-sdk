@@ -1,7 +1,7 @@
 import json
 from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 from attrs import define as _attrs_define
 
@@ -116,14 +116,17 @@ class QdrantDB(BaseModel):
 @_attrs_define
 class CustomModel(BaseModel):
     type = "custom"
-    model_invoker: Callable[[str], Tuple[Any, Any]]
     name: str
+
+    @abstractmethod
+    def invoke(self, input_value: str) -> Any:
+        pass
 
     def params(self) -> dict:
         return {
             "name": self.name,
             "type": self.type,
-            "model_invoker": self.model_invoker,
+            "model_invoker": self.invoke,
         }
 
 
@@ -307,40 +310,14 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert response is not None
         return response
 
-    def get_metric_value_by_run_type(
-        self, test_run_type: TestRunType, result: Any, actual: str
-    ) -> str:
-        if test_run_type == TestRunType.MULTI_CLASS_CLASSIFICATION:
-            if not isinstance(result, str):
-                raise TypeError(
-                    f"Expected result to be a string, but got {type(result)}"
-                )
-            metric_value = json.dumps({"expected": result, "actual": actual})
-        elif test_run_type == TestRunType.INFORMATION_RETRIEVAL:
-            metric_value = json.dumps({"retrieved_ids_with_scores": actual})
-        else:
-            raise ValueError(f"Unsupported test run type: {test_run_type}")
-
-        return metric_value
-
     def get_test_run(self, test_run_id: str) -> TestRunItem:
         try:
             response = get_test_run_v0_test_runs_test_run_id_get.sync(
                 client=self.client, api_key=self.api_key, test_run_id=test_run_id
             )
-
-            return self.validate_return_type(response)
+            if not isinstance(response, TestRunItem):
+                raise
+            return response
         except UnexpectedStatus as e:
             print(e.content)
             raise
-
-    def validate_return_type(
-        self, response: Union[ErrorResponse, TestRunItem, None]
-    ) -> TestRunItem:
-        if isinstance(response, ErrorResponse):
-            error_message = f"error: {response}, {response.detail}"
-            print(error_message)
-            raise TypeError(error_message)
-        if not response:
-            raise TypeError("Empty response from Okareo API")
-        return response

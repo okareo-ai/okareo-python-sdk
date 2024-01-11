@@ -83,9 +83,13 @@ def test_run_test_retrieval(
         # return a tuple of (parsed_ids_with_scores, overall model response context)
         return parsed_ids_with_scores, model_response
 
+    class RetrievalModel(CustomModel):
+        def invoke(self, input_value: str) -> Any:
+            return call_model(input_value)
+
     model_under_test = okareo_client.register_model(
         name="vectordb_retrieval test",
-        model=CustomModel(model_invoker=call_model, name="custom retrieval"),
+        model=RetrievalModel(name="custom retrieval"),
     )
 
     test_run_name = f"test_run_test_retrieval {today_with_time}"

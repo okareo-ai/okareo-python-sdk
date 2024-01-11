@@ -80,9 +80,13 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
             "confidence": round(random.uniform(0.30, 0.99), 2),
         }
 
+    class RetrievalModel(CustomModel):
+        def invoke(self, input_value: str) -> Any:
+            return call_model(input_value)
+
     model_under_test = okareo.register_model(
         name="support_intent_classifier",
-        model=CustomModel(model_invoker=call_model, name="custom classification"),
+        model=RetrievalModel(name="custom classification"),
     )
 
     test_run_name = f"Support - Rephrase Test Run {rnd}"
@@ -168,9 +172,13 @@ def test_load_retrieval(okareo: Okareo, rnd: str) -> None:
         # return a tuple of (parsed_ids_with_scores, overall model response context)
         return parsed_ids_with_scores, model_response
 
+    class RetrievalModel(CustomModel):
+        def invoke(self, input_value: str) -> Any:
+            return call_model(input_value)
+
     model_under_test = okareo.register_model(
         name="vectordb_retrieval",
-        model=CustomModel(model_invoker=call_model, name="custom retrieval"),
+        model=RetrievalModel(name="custom retrieval"),
     )
 
     test_run_name = f"Support - Retrieval Test Run {rnd}"

@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 from unittest.mock import Mock
 
 import pytest
@@ -10,7 +10,7 @@ from pytest_httpx import HTTPXMock
 from okareo import ModelUnderTest, Okareo
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo.model_under_test import CohereModel, CustomModel, PineconeDb
-from okareo_api_client.models import SeedData, TestRunItem
+from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
 
@@ -117,10 +117,14 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         return actual, {"labels": actual, "confidence": 0.8}
 
     # this will return a model if it already exists or create a new one if it doesn't
+    class ClassificationModel(CustomModel):
+        def invoke(self, input_value: str) -> Any:
+            return call_model(input_value)
+
     mut = okareo.register_model(
         name=mut_fixture["name"],
         tags=mut_fixture["tags"],
-        model=CustomModel(name="classification", model_invoker=call_model),
+        model=ClassificationModel(name="classification"),
     )
 
     # use the scenario id from one of the scenario set notebook examples
@@ -171,25 +175,6 @@ def test_get_test_run(httpx_mock: HTTPXMock) -> None:
 
     result = registered_model.get_test_run("test_run_id")
     assert result
-
-
-def test_validate_return_type(httpx_mock: HTTPXMock) -> None:
-    registered_model = helper_register_model(httpx_mock)
-
-    with pytest.raises(TypeError, match="Empty response from Okareo API"):
-        registered_model.validate_return_type(None)
-
-    with pytest.raises(TypeError):
-        registered_model.validate_return_type(None)
-
-    valid_response = TestRunItem(
-        id="test_id",
-        project_id="project_id",
-        mut_id="mut_id",
-        scenario_set_id="scenario_set_id",
-    )  # Create a valid TestRunItem instance
-    result = registered_model.validate_return_type(valid_response)
-    assert result.id == "test_id"
 
 
 def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
