@@ -133,15 +133,20 @@ class Okareo:
 
     def generate_scenarios(
         self,
-        source_scenario_id: str,
+        source_scenario_id: Union[str, ScenarioSetResponse],
         name: str,
         number_examples: int,
         project_id: Union[Unset, str] = UNSET,
         generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT,
     ) -> ScenarioSetResponse:
+        scenario_id = (
+            source_scenario_id.scenario_id
+            if isinstance(source_scenario_id, ScenarioSetResponse)
+            else source_scenario_id
+        )
         return self.generate_scenario_set(
             ScenarioSetGenerate(
-                source_scenario_id=source_scenario_id,
+                source_scenario_id=scenario_id,
                 name=name,
                 number_examples=number_examples,
                 project_id=project_id,
