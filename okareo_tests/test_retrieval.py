@@ -32,7 +32,7 @@ def generate_scenarios(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> ScenarioSetResponse:
     questions: ScenarioSetResponse = okareo_client.generate_scenarios(
-        source_scenario_id=uploaded_scenario_set.scenario_id,
+        source_scenario=uploaded_scenario_set.scenario_id,
         name=f"test_generate_scenarios {today_with_time}",
         number_examples=2,
         generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
