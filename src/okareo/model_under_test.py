@@ -236,7 +236,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def run_test(
         self,
-        scenario: ScenarioSetResponse,
+        scenario: Union[ScenarioSetResponse, str],
         name: str,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
@@ -246,6 +246,11 @@ class ModelUnderTest(AsyncProcessorMixin):
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
+            scenario_id = (
+                scenario.scenario_id
+                if isinstance(scenario, ScenarioSetResponse)
+                else scenario
+            )
             assert isinstance(self.models, dict)
             model_names = list(self.models.keys())
             run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
@@ -261,7 +266,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 scenario_data_points = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
                     client=self.client,
                     api_key=self.api_key,
-                    scenario_id=scenario.scenario_id,
+                    scenario_id=scenario_id,
                 )
                 scenario_data_points = (
                     scenario_data_points
@@ -284,7 +289,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys)
                     if api_keys or api_key
                     else UNSET,
-                    scenario_id=scenario.scenario_id,
+                    scenario_id=scenario_id,
                     name=name,
                     type=test_run_type,
                     project_id=self.project_id,

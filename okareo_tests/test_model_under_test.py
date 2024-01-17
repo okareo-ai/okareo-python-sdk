@@ -132,6 +132,73 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     assert test_run_item.name == "CI run test"
 
 
+@integration
+def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
+    mut_fixture = get_mut_fixture()
+    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+
+    if okareo_api.is_mock:
+        httpx_mock.add_response(
+            status_code=201,
+            json={
+                "scenario_id": "scenario-id",
+                "project_id": "project-id",
+                "time_created": str(datetime.now()),
+                "type": "REPHRASE_INVARIANT",
+            },
+        )
+        httpx_mock.add_response(status_code=201, json=mut_fixture)
+        httpx_mock.add_response(
+            status_code=200,
+            json=[
+                {
+                    "id": "test-run-item-id",
+                    "name": "CI run test",
+                    "input": "",
+                    "result": "",
+                }
+            ],
+        )
+        # add test run
+        httpx_mock.add_response(
+            status_code=201,
+            json={
+                "id": "test-run-id",
+                "project_id": "",
+                "mut_id": "",
+                "scenario_set_id": "",
+                "name": "CI run test",
+            },
+        )
+
+    # generate scenario and return results in one call
+    scenario_set_create = ScenarioSetCreate(
+        name="my test scenario set",
+        number_examples=1,
+        seed_data=[
+            SeedData(input_="example question or statement", result="example result")
+        ],
+    )
+    response = okareo.create_scenario_set(scenario_set_create)
+
+    # this will return a model if it already exists or create a new one if it doesn't
+    class ClassificationModel(CustomModel):
+        def invoke(self, input_value: str) -> Any:
+            actual = random.choice(["returns", "complains", "pricing"])
+            # return a tuple of (actual, overall model response context)
+            return actual, {"labels": actual, "confidence": 0.8}
+
+    mut = okareo.register_model(
+        name=mut_fixture["name"],
+        tags=mut_fixture["tags"],
+        model=ClassificationModel(name="classification"),
+    )
+
+    # use the scenario id from one of the scenario set notebook examples
+    test_run_item = mut.run_test(scenario=response.scenario_id, name="CI run test")
+    assert test_run_item.name == "CI run test"
+
+
 def test_add_datapoint(httpx_mock: HTTPXMock) -> None:
     registered_model = helper_register_model(httpx_mock)
     fixture = {"id": "1", "project_id": "1", "mut_id": "1"}
