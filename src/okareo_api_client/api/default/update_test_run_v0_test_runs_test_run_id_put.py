@@ -78,7 +78,6 @@ def sync_detailed(
     """Update Test Run
 
      Update a Test Run
-
     Returns:
         the updated Test Run
 
@@ -118,7 +117,6 @@ def sync(
     """Update Test Run
 
      Update a Test Run
-
     Returns:
         the updated Test Run
 
@@ -153,7 +151,6 @@ async def asyncio_detailed(
     """Update Test Run
 
      Update a Test Run
-
     Returns:
         the updated Test Run
 
@@ -191,7 +188,6 @@ async def asyncio(
     """Update Test Run
 
      Update a Test Run
-
     Returns:
         the updated Test Run
 
