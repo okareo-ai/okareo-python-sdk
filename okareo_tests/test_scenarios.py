@@ -55,7 +55,7 @@ def generate_scenarios(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> ScenarioSetResponse:
     scenario_set_generate = ScenarioSetGenerate(
-        source_scenario=create_scenario_set.scenario_id,
+        source_scenario_id=create_scenario_set.scenario_id,
         name="generated scenario set",
         number_examples=2,
     )
