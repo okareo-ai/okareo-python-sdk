@@ -21,14 +21,14 @@ class ScenarioSetCreate:
         seed_data (List['SeedData']): Seed data is a list of dictionaries, each with an input and result
         number_examples (int): Number of examples
         project_id (Union[Unset, str]): ID for the project
-        generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
+        generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.SEED.
     """
 
     name: str
     seed_data: List["SeedData"]
     number_examples: int
     project_id: Union[Unset, str] = UNSET
-    generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT
+    generation_type: Union[Unset, ScenarioType] = ScenarioType.SEED
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

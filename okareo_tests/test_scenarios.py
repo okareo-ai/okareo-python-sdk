@@ -9,6 +9,7 @@ from okareo_api_client.models import (
     ScenarioSetCreate,
     ScenarioSetGenerate,
     ScenarioSetResponse,
+    ScenarioType,
     SeedData,
 )
 from okareo_api_client.models.scenario_data_poin_response import (
@@ -73,7 +74,7 @@ def get_scenario_data_points(
 def test_create_scenario_set(
     create_scenario_set: ScenarioSetResponse, seed_data: List[SeedData]
 ) -> None:
-    assert create_scenario_set.type == "REPHRASE_INVARIANT"
+    assert create_scenario_set.type == "SEED"  # default test
     assert create_scenario_set.scenario_id
     assert create_scenario_set.project_id
     assert create_scenario_set.time_created
@@ -81,6 +82,30 @@ def test_create_scenario_set(
         for i in range(3):
             assert seed_data[i].input_ == create_scenario_set.seed_data[i].input_
             assert seed_data[i].result == create_scenario_set.seed_data[i].result
+
+
+def test_create_scenario_set_rephrase(
+    okareo_client: Okareo, seed_data: List[SeedData]
+) -> None:
+    scenario_set_create = ScenarioSetCreate(
+        name="my test scenario set",
+        generation_type=ScenarioType.REPHRASE_INVARIANT,
+        number_examples=2,
+        seed_data=seed_data,
+    )
+    create_scenario_set: ScenarioSetResponse = okareo_client.create_scenario_set(
+        scenario_set_create
+    )
+
+    assert create_scenario_set.type == "REPHRASE_INVARIANT"
+    assert create_scenario_set.scenario_id
+    assert create_scenario_set.project_id
+    assert create_scenario_set.time_created
+    assert isinstance(create_scenario_set.scenario_input, List)
+    assert isinstance(create_scenario_set.seed_data, List)
+    assert len(create_scenario_set.scenario_input) == 6
+    for i in range(3):
+        assert seed_data[i].input_ != create_scenario_set.scenario_input[i]
 
 
 def test_generate_scenarios(
