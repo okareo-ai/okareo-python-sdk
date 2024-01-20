@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -11,16 +11,22 @@ class SeedData:
     """
     Attributes:
         input_ (str):
-        result (str):
+        result (Union[List[str], str]):
     """
 
     input_: str
-    result: str
+    result: Union[List[str], str]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         input_ = self.input_
-        result = self.result
+        result: Union[List[str], str]
+
+        if isinstance(self.result, list):
+            result = self.result
+
+        else:
+            result = self.result
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -38,7 +44,18 @@ class SeedData:
         d = src_dict.copy()
         input_ = d.pop("input")
 
-        result = d.pop("result")
+        def _parse_result(data: object) -> Union[List[str], str]:
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                result_type_1 = cast(List[str], data)
+
+                return result_type_1
+            except:  # noqa: E722
+                pass
+            return cast(Union[List[str], str], data)
+
+        result = _parse_result(d.pop("result"))
 
         seed_data = cls(
             input_=input_,
