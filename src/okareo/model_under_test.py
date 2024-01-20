@@ -261,7 +261,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
                 if {"pinecone", "qdrant", "custom"}.isdisjoint(model_names):
                     raise MissingVectorDbError("No vector database specified")
-            model_data: dict = {"model_data": []}
+            model_data: dict = {"model_data": {}}
             if "custom" in model_names:
                 scenario_data_points = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
                     client=self.client,
@@ -278,9 +278,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                     actual, model_response = self.models["custom"]["model_invoker"](
                         scenario_data_point.input_
                     )
-                    model_data["model_data"].append(
-                        {"actual": actual, "model_response": model_response}
-                    )
+                    model_data["model_data"][scenario_data_point.input_] = {
+                        "actual": actual,
+                        "model_response": model_response,
+                    }
+
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
                 api_key=self.api_key,
