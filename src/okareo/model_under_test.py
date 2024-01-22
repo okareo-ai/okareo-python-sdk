@@ -1,3 +1,4 @@
+import inspect
 import json
 from abc import abstractmethod
 from datetime import datetime
@@ -18,6 +19,7 @@ from okareo_api_client.models import (
     DatapointResponse,
     DatapointSchema,
     ModelUnderTestResponse,
+    ScenarioDataPoinResponse,
     TestRunItem,
     TestRunType,
 )
@@ -234,6 +236,74 @@ class ModelUnderTest(AsyncProcessorMixin):
             add_datapoint_v0_datapoints_post.sync, DatapointSchema.from_dict(body)
         )
 
+    def _validate_run_test_params(
+        self,
+        api_key: Optional[str],
+        api_keys: Optional[dict],
+        test_run_type: TestRunType,
+    ) -> dict:
+        assert isinstance(self.models, dict)
+        model_names = list(self.models.keys())
+        run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
+
+        if "custom" not in model_names and len(model_names) != len(run_api_keys):
+            raise MissingApiKeyError("Number of models and API keys does not match")
+
+        if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
+            if {"pinecone", "qdrant", "custom"}.isdisjoint(model_names):
+                raise MissingVectorDbError("No vector database specified")
+
+        return run_api_keys
+
+    def _has_custom_model(self) -> bool:
+        assert isinstance(self.models, dict)
+        return "custom" in list(self.models.keys())
+
+    def _get_scenario_data_points(
+        self, scenario_id: str
+    ) -> List[ScenarioDataPoinResponse]:
+        scenario_data_points = (
+            get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
+                client=self.client,
+                api_key=self.api_key,
+                scenario_id=scenario_id,
+            )
+        )
+        scenario_data_points = (
+            scenario_data_points if isinstance(scenario_data_points, List) else []
+        )
+        return scenario_data_points
+
+    def _get_test_run_payload(
+        self,
+        scenario_id: str,
+        name: str,
+        api_key: Optional[str],
+        api_keys: Optional[dict],
+        run_api_keys: dict,
+        metrics_kwargs: Optional[dict],
+        test_run_type: TestRunType,
+        calculate_metrics: bool,
+        model_data: dict,
+    ) -> TestRunPayloadV2:
+        return TestRunPayloadV2(
+            mut_id=self.mut_id,
+            api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys)
+            if api_keys or api_key
+            else UNSET,
+            scenario_id=scenario_id,
+            name=name,
+            type=test_run_type,
+            project_id=self.project_id,
+            calculate_metrics=calculate_metrics,
+            metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
+                metrics_kwargs or {}
+            ),
+            model_results=TestRunPayloadV2ModelResults.from_dict(model_data)
+            if self._has_custom_model()
+            else UNSET,
+        )
+
     def run_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
@@ -246,36 +316,24 @@ class ModelUnderTest(AsyncProcessorMixin):
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
+            assert isinstance(self.models, dict)
             scenario_id = (
                 scenario.scenario_id
                 if isinstance(scenario, ScenarioSetResponse)
                 else scenario
             )
-            assert isinstance(self.models, dict)
-            model_names = list(self.models.keys())
-            run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
+            run_api_keys = self._validate_run_test_params(
+                api_key, api_keys, test_run_type
+            )
 
-            if "custom" not in model_names and len(model_names) != len(run_api_keys):
-                raise MissingApiKeyError("Number of models and API keys does not match")
-
-            if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
-                if {"pinecone", "qdrant", "custom"}.isdisjoint(model_names):
-                    raise MissingVectorDbError("No vector database specified")
             model_data: dict = {"model_data": {}}
-            if "custom" in model_names:
-                scenario_data_points = get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
-                    client=self.client,
-                    api_key=self.api_key,
-                    scenario_id=scenario_id,
-                )
-                scenario_data_points = (
-                    scenario_data_points
-                    if isinstance(scenario_data_points, List)
-                    else []
-                )
+            if self._has_custom_model():
+                scenario_data_points = self._get_scenario_data_points(scenario_id)
+
+                custom_model_invoker = self.models["custom"]["model_invoker"]
                 for scenario_data_point in scenario_data_points:
                     assert isinstance(scenario_data_point.input_, str)
-                    actual, model_response = self.models["custom"]["model_invoker"](
+                    actual, model_response = custom_model_invoker(
                         scenario_data_point.input_
                     )
                     model_data["model_data"][scenario_data_point.input_] = {
@@ -286,22 +344,89 @@ class ModelUnderTest(AsyncProcessorMixin):
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
                 api_key=self.api_key,
-                json_body=TestRunPayloadV2(
-                    mut_id=self.mut_id,
-                    api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys)
-                    if api_keys or api_key
-                    else UNSET,
-                    scenario_id=scenario_id,
-                    name=name,
-                    type=test_run_type,
-                    project_id=self.project_id,
-                    calculate_metrics=calculate_metrics,
-                    metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
-                        metrics_kwargs or {}
-                    ),
-                    model_results=TestRunPayloadV2ModelResults.from_dict(model_data)
-                    if "custom" in model_names
-                    else UNSET,
+                json_body=self._get_test_run_payload(
+                    scenario_id,
+                    name,
+                    api_key,
+                    api_keys,
+                    run_api_keys,
+                    metrics_kwargs,
+                    test_run_type,
+                    calculate_metrics,
+                    model_data,
+                ),
+            )
+        except UnexpectedStatus as e:
+            print(f"Unexpected status {e=}, {e.content=}")
+            raise
+
+        if isinstance(response, ErrorResponse):
+            error_message = f"error: {response}, {response.detail}"
+            print(error_message)
+            raise
+        if not response:
+            print("Empty response from API")
+        assert response is not None
+        return response
+
+    async def run_test_async(
+        self,
+        scenario: Union[ScenarioSetResponse, str],
+        name: str,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
+        calculate_metrics: bool = False,
+    ) -> TestRunItem:
+        """Server-based version of test-run execution"""
+        try:
+            assert isinstance(self.models, dict)
+            scenario_id = (
+                scenario.scenario_id
+                if isinstance(scenario, ScenarioSetResponse)
+                else scenario
+            )
+            run_api_keys = self._validate_run_test_params(
+                api_key, api_keys, test_run_type
+            )
+
+            model_data: dict = {"model_data": {}}
+            if self._has_custom_model():
+                scenario_data_points = self._get_scenario_data_points(scenario_id)
+
+                custom_model_invoker = self.models["custom"]["model_invoker"]
+                async_custom_model = inspect.iscoroutinefunction(custom_model_invoker)
+                for scenario_data_point in scenario_data_points:
+                    assert isinstance(scenario_data_point.input_, str)
+                    if async_custom_model:
+                        # If the method is async, await it
+                        actual, model_response = await custom_model_invoker(
+                            scenario_data_point.input_
+                        )
+                    else:
+                        # If the method is not async, call it directly
+                        actual, model_response = custom_model_invoker(
+                            scenario_data_point.input_
+                        )
+                    model_data["model_data"][scenario_data_point.input_] = {
+                        "actual": actual,
+                        "model_response": model_response,
+                    }
+
+            response = run_test_v0_test_run_post.sync(
+                client=self.client,
+                api_key=self.api_key,
+                json_body=self._get_test_run_payload(
+                    scenario_id,
+                    name,
+                    api_key,
+                    api_keys,
+                    run_api_keys,
+                    metrics_kwargs,
+                    test_run_type,
+                    calculate_metrics,
+                    model_data,
                 ),
             )
         except UnexpectedStatus as e:
