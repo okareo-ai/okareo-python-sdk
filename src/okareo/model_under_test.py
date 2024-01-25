@@ -148,7 +148,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.name = mut.name
         self.tags = mut.tags
         self.models = models
-        self.link = mut.link
+        self.app_link = mut.app_link
         super().__init__(name="OkareoDatapointsProcessor")
 
     def get_client(self) -> Client:
