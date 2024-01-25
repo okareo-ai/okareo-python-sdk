@@ -65,24 +65,28 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
     assert conditional.project_id
     assert conditional.time_created
 
-    # Callable to be applied to each scenario in the scenario set
-    def call_model(query: str) -> tuple[Any, Any]:
-        # call your model being tested here using <input> from the scenario set
-
-        # mock code returnign a random label
-        labels = ["returns", "complaints", "pricing", "product", "shipping", "support"]
-        import random
-
-        actual = random.choice(labels)
-
-        return actual, {
-            "labels": actual,
-            "confidence": round(random.uniform(0.30, 0.99), 2),
-        }
-
     class RetrievalModel(CustomModel):
+        # Callable to be applied to each scenario in the scenario set
         def invoke(self, input_value: str) -> Any:
-            return call_model(input_value)
+            # call your model being tested here using <input> from the scenario set
+
+            # mock code returnign a random label
+            labels = [
+                "returns",
+                "complaints",
+                "pricing",
+                "product",
+                "shipping",
+                "support",
+            ]
+            import random
+
+            actual = random.choice(labels)
+
+            return actual, {
+                "labels": actual,
+                "confidence": round(random.uniform(0.30, 0.99), 2),
+            }
 
     model_under_test = okareo.register_model(
         name="support_intent_classifier",
@@ -138,43 +142,39 @@ def test_load_retrieval(okareo: Okareo, rnd: str) -> None:
     assert questions.project_id
     assert questions.time_created
 
-    # Callable to be applied to each scenario in the scenario set
-    def call_model(query: str) -> tuple[Any, Any]:
-        # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
-        # we are using a random response here for demonstration purposes
-        article_ids = [
-            "75eaa363-dfcc-499f-b2af-1407b43cb133",
-            "ac0d464c-f673-44b8-8195-60c965e47525",
-            "35a4fd5b-453e-4ca6-9536-f20db7303344",
-            "a8a97b0e-8d9a-4a1c-b93e-83d2bc9e5266",
-            "0b85c12f-6ea6-4d4a-85de-6c6e9a9f8c78",
-            "cda67f1d-19f2-4b45-9f3e-3b8d67f8c6c5",
-            "6e4f1c97-3f7a-4fcd-a4a3-69c9817c8fd1",
-            "f658c264-4a8a-4c93-a6d7-9a3d75f5a6f3",
-            "aacf7a34-9d3a-4e2a-9a5c-91f2a0e8a12d",
-            "f1a37b5e-58c4-4f5a-bc42-1b70253b8bf3",
-        ]
-        import random
-
-        selected_ids = random.sample(article_ids, 5)
-        rounded_random_scores = sorted(
-            [round(random.random(), 2) for _ in range(5)], reverse=True
-        )
-
-        # higher score value means more relevant
-        parsed_ids_with_scores = [
-            (selected_id, score)
-            for selected_id, score in zip(selected_ids, rounded_random_scores)
-        ]
-
-        model_response = {"matches": "additional context from the model"}
-
-        # return a tuple of (parsed_ids_with_scores, overall model response context)
-        return parsed_ids_with_scores, model_response
-
     class RetrievalModel(CustomModel):
         def invoke(self, input_value: str) -> Any:
-            return call_model(input_value)
+            # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
+            # we are using a random response here for demonstration purposes
+            article_ids = [
+                "75eaa363-dfcc-499f-b2af-1407b43cb133",
+                "ac0d464c-f673-44b8-8195-60c965e47525",
+                "35a4fd5b-453e-4ca6-9536-f20db7303344",
+                "a8a97b0e-8d9a-4a1c-b93e-83d2bc9e5266",
+                "0b85c12f-6ea6-4d4a-85de-6c6e9a9f8c78",
+                "cda67f1d-19f2-4b45-9f3e-3b8d67f8c6c5",
+                "6e4f1c97-3f7a-4fcd-a4a3-69c9817c8fd1",
+                "f658c264-4a8a-4c93-a6d7-9a3d75f5a6f3",
+                "aacf7a34-9d3a-4e2a-9a5c-91f2a0e8a12d",
+                "f1a37b5e-58c4-4f5a-bc42-1b70253b8bf3",
+            ]
+            import random
+
+            selected_ids = random.sample(article_ids, 5)
+            rounded_random_scores = sorted(
+                [round(random.random(), 2) for _ in range(5)], reverse=True
+            )
+
+            # higher score value means more relevant
+            parsed_ids_with_scores = [
+                (selected_id, score)
+                for selected_id, score in zip(selected_ids, rounded_random_scores)
+            ]
+
+            model_response = {"matches": "additional context from the model"}
+
+            # return a tuple of (parsed_ids_with_scores, overall model response context)
+            return parsed_ids_with_scores, model_response
 
     model_under_test = okareo.register_model(
         name="vectordb_retrieval",

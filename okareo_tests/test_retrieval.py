@@ -57,35 +57,32 @@ def test_generate_scenarios(generate_scenarios: ScenarioSetResponse) -> None:
 def test_run_test_retrieval(
     okareo_client: Okareo, generate_scenarios: ScenarioSetResponse
 ) -> None:
-    # Callable to be applied to each scenario in the scenario set
-    def call_model(query: str) -> tuple[Any, Any]:
-        # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
-        # we are using a random response here for demonstration purposes
-        article_ids = [
-            "75eaa363-dfcc-499f-b2af-1407b43cb133",
-            "ac0d464c-f673-44b8-8195-60c965e47525",
-        ]
-        import random
-
-        selected_ids = random.sample(article_ids, 1)
-        rounded_random_scores = sorted(
-            [round(random.random(), 2) for _ in range(5)], reverse=True
-        )
-
-        # higher score value means more relevant
-        parsed_ids_with_scores = [
-            (selected_id, score)
-            for selected_id, score in zip(selected_ids, rounded_random_scores)
-        ]
-
-        model_response = {"matches": "additional context from the model"}
-
-        # return a tuple of (parsed_ids_with_scores, overall model response context)
-        return parsed_ids_with_scores, model_response
-
     class RetrievalModel(CustomModel):
+        # Callable to be applied to each scenario in the scenario set
         def invoke(self, input_value: str) -> Any:
-            return call_model(input_value)
+            # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
+            # we are using a random response here for demonstration purposes
+            article_ids = [
+                "75eaa363-dfcc-499f-b2af-1407b43cb133",
+                "ac0d464c-f673-44b8-8195-60c965e47525",
+            ]
+            import random
+
+            selected_ids = random.sample(article_ids, 1)
+            rounded_random_scores = sorted(
+                [round(random.random(), 2) for _ in range(5)], reverse=True
+            )
+
+            # higher score value means more relevant
+            parsed_ids_with_scores = [
+                (selected_id, score)
+                for selected_id, score in zip(selected_ids, rounded_random_scores)
+            ]
+
+            model_response = {"matches": "additional context from the model"}
+
+            # return a tuple of (parsed_ids_with_scores, overall model response context)
+            return parsed_ids_with_scores, model_response
 
     model_under_test = okareo_client.register_model(
         name="vectordb_retrieval test",

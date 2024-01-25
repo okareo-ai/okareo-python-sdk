@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 from unittest.mock import Mock
 
 import pytest
@@ -111,15 +111,12 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     response = okareo.create_scenario_set(scenario_set_create)
     response.scenario_id
 
-    def call_model(input_: str) -> Tuple[str, dict]:
-        actual = random.choice(["returns", "complains", "pricing"])
-        # return a tuple of (actual, overall model response context)
-        return actual, {"labels": actual, "confidence": 0.8}
-
     # this will return a model if it already exists or create a new one if it doesn't
     class ClassificationModel(CustomModel):
         def invoke(self, input_value: str) -> Any:
-            return call_model(input_value)
+            actual = random.choice(["returns", "complains", "pricing"])
+            # return a tuple of (actual, overall model response context)
+            return actual, {"labels": actual, "confidence": 0.8}
 
     mut = okareo.register_model(
         name=mut_fixture["name"],
