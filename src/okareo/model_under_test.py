@@ -148,6 +148,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.name = mut.name
         self.tags = mut.tags
         self.models = models
+        self.app_link = mut.app_link
         super().__init__(name="OkareoDatapointsProcessor")
 
     def get_client(self) -> Client:
@@ -336,7 +337,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     actual, model_response = custom_model_invoker(
                         scenario_data_point.input_
                     )
-                    model_data["model_data"][scenario_data_point.input_] = {
+                    model_data["model_data"][scenario_data_point.id] = {
                         "actual": actual,
                         "model_response": model_response,
                     }

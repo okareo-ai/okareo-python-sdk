@@ -27,6 +27,7 @@ class ScenarioSetResponse:
         seed_data (Union[Unset, List['SeedData']]):
         scenario_count (Union[Unset, int]):
         scenario_input (Union[Unset, List[str]]):
+        app_link (Union[Unset, str]): This URL links to the Okareo webpage for this scenario set Default: ''.
     """
 
     scenario_id: str
@@ -38,6 +39,7 @@ class ScenarioSetResponse:
     seed_data: Union[Unset, List["SeedData"]] = UNSET
     scenario_count: Union[Unset, int] = 0
     scenario_input: Union[Unset, List[str]] = UNSET
+    app_link: Union[Unset, str] = ""
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -64,6 +66,8 @@ class ScenarioSetResponse:
         if not isinstance(self.scenario_input, Unset):
             scenario_input = self.scenario_input
 
+        app_link = self.app_link
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -84,6 +88,8 @@ class ScenarioSetResponse:
             field_dict["scenario_count"] = scenario_count
         if scenario_input is not UNSET:
             field_dict["scenario_input"] = scenario_input
+        if app_link is not UNSET:
+            field_dict["app_link"] = app_link
 
         return field_dict
 
@@ -115,6 +121,8 @@ class ScenarioSetResponse:
 
         scenario_input = cast(List[str], d.pop("scenario_input", UNSET))
 
+        app_link = d.pop("app_link", UNSET)
+
         scenario_set_response = cls(
             scenario_id=scenario_id,
             project_id=project_id,
@@ -125,6 +133,7 @@ class ScenarioSetResponse:
             seed_data=seed_data,
             scenario_count=scenario_count,
             scenario_input=scenario_input,
+            app_link=app_link,
         )
 
         scenario_set_response.additional_properties = d

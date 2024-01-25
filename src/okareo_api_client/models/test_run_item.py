@@ -30,6 +30,7 @@ class TestRunItem:
         test_data_point_count (Union[Unset, int]):
         model_metrics (Union[Unset, TestRunItemModelMetrics]):
         error_matrix (Union[Unset, List[Any]]):
+        app_link (Union[Unset, str]): This URL links to the Okareo webpage for this test run Default: ''.
     """
 
     id: str
@@ -44,6 +45,7 @@ class TestRunItem:
     test_data_point_count: Union[Unset, int] = UNSET
     model_metrics: Union[Unset, "TestRunItemModelMetrics"] = UNSET
     error_matrix: Union[Unset, List[Any]] = UNSET
+    app_link: Union[Unset, str] = ""
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -74,6 +76,8 @@ class TestRunItem:
         if not isinstance(self.error_matrix, Unset):
             error_matrix = self.error_matrix
 
+        app_link = self.app_link
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -100,6 +104,8 @@ class TestRunItem:
             field_dict["model_metrics"] = model_metrics
         if error_matrix is not UNSET:
             field_dict["error_matrix"] = error_matrix
+        if app_link is not UNSET:
+            field_dict["app_link"] = app_link
 
         return field_dict
 
@@ -147,6 +153,8 @@ class TestRunItem:
 
         error_matrix = cast(List[Any], d.pop("error_matrix", UNSET))
 
+        app_link = d.pop("app_link", UNSET)
+
         test_run_item = cls(
             id=id,
             project_id=project_id,
@@ -160,6 +168,7 @@ class TestRunItem:
             test_data_point_count=test_data_point_count,
             model_metrics=model_metrics,
             error_matrix=error_matrix,
+            app_link=app_link,
         )
 
         test_run_item.additional_properties = d
