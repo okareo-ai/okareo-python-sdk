@@ -410,7 +410,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                         actual, model_response = custom_model_invoker(
                             scenario_data_point.input_
                         )
-                    model_data["model_data"][scenario_data_point.input_] = {
+                    model_data["model_data"][scenario_data_point.id] = {
                         "actual": actual,
                         "model_response": model_response,
                     }
