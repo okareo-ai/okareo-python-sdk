@@ -135,7 +135,7 @@ class Okareo:
 
     def download_scenario_set(
         self,
-        scenario: ScenarioSetResponse | str,
+        scenario: Union[ScenarioSetResponse, str],
         file_path: str = "",
         project_id: Union[Unset, str] = UNSET,
     ) -> Any:
