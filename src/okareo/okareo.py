@@ -1,12 +1,13 @@
 import os
 from typing import Any, Dict, List, Union
 
+import httpx
+
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_datapoints_v0_find_datapoints_post,
-    get_generations_v0_generations_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
@@ -18,7 +19,6 @@ from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.error_response import ErrorResponse
-from okareo_api_client.models.generation_list import GenerationList
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.scenario_data_poin_response import (
@@ -44,13 +44,6 @@ class Okareo:
         self.client = Client(
             base_url=base_path, raise_on_unexpected_status=True
         )  # otherwise everything except 201 and 422 is swallowed
-
-    def get_generations(self) -> Union[List[GenerationList], ErrorResponse, None]:
-        """Get a list of generations"""
-        data = get_generations_v0_generations_get.sync(
-            client=self.client, api_key=self.api_key
-        )
-        return data
 
     def register_model(
         self,
@@ -129,6 +122,35 @@ class Okareo:
             return response
         except UnexpectedStatus as e:
             print(e.content)
+            raise
+
+    def download_scenario_set(
+        self,
+        scenario: Union[ScenarioSetResponse, str],
+        file_path: str = "",
+    ) -> Any:
+        try:
+            scenario_id = (
+                scenario if isinstance(scenario, str) else scenario.scenario_id
+            )
+            url = f"{BASE_URL}/v0/scenario_sets_download/{scenario_id}"
+            headers = {
+                "accept": "application/json",
+                "api-key": self.api_key,
+            }
+            response = httpx.get(
+                url,
+                headers=headers,
+            )
+            filename = response.headers["content-disposition"].split('"')[1]
+            if file_path != "":
+                filename = file_path
+            binary_file = open(filename, "wb")
+            binary_file.write(response.content)
+            binary_file.close()
+            return binary_file
+        except Exception as e:
+            print(e)
             raise
 
     def generate_scenarios(

@@ -6,32 +6,39 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...types import Response
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    generation_id: str,
+    scenario_id: str,
     *,
+    name: str,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
+    params: Dict[str, Any] = {}
+    params["name"] = name
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     return {
-        "method": "get",
-        "url": "/v0/generations/{generation_id}/schema".format(
-            generation_id=generation_id,
+        "method": "delete",
+        "url": "/v0/scenario_sets/{scenario_id}".format(
+            scenario_id=scenario_id,
         ),
+        "params": params,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, str]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = cast(str, response.json())
-        return response_200
+) -> Optional[Union[Any, ErrorResponse]]:
+    if response.status_code == HTTPStatus.NO_CONTENT:
+        response_204 = cast(Any, None)
+        return response_204
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -52,7 +59,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, str]]:
+) -> Response[Union[Any, ErrorResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -62,20 +69,27 @@ def _build_response(
 
 
 def sync_detailed(
-    generation_id: str,
+    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    name: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, str]]:
-    """Get Generation Schema
+) -> Response[Union[Any, ErrorResponse]]:
+    """Delete Scenario Set
 
-     gets a specific generation by id/hash for the given user.
+     Deletes the scenario set and cascades deletes to all related entities.
+    Namely, Evaluations, Evaluation Datapoints, and  Model Datapoints
 
-    Returns:
-        list: An array of generation' objects.
+    !! Use With Caution !!
+
+    Raises:
+        HTTPException: 404 if scenario_id is not found
+
+    Returns: 204 status code on successful deletion
 
     Args:
-        generation_id (str): The ID of the generation
+        scenario_id (str): The ID of the Scenario Set to delete
+        name (str): Name of the Scenario Set to delete
         api_key (str):
 
     Raises:
@@ -83,11 +97,12 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, str]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
-        generation_id=generation_id,
+        scenario_id=scenario_id,
+        name=name,
         api_key=api_key,
     )
 
@@ -99,20 +114,27 @@ def sync_detailed(
 
 
 def sync(
-    generation_id: str,
+    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    name: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, str]]:
-    """Get Generation Schema
+) -> Optional[Union[Any, ErrorResponse]]:
+    """Delete Scenario Set
 
-     gets a specific generation by id/hash for the given user.
+     Deletes the scenario set and cascades deletes to all related entities.
+    Namely, Evaluations, Evaluation Datapoints, and  Model Datapoints
 
-    Returns:
-        list: An array of generation' objects.
+    !! Use With Caution !!
+
+    Raises:
+        HTTPException: 404 if scenario_id is not found
+
+    Returns: 204 status code on successful deletion
 
     Args:
-        generation_id (str): The ID of the generation
+        scenario_id (str): The ID of the Scenario Set to delete
+        name (str): Name of the Scenario Set to delete
         api_key (str):
 
     Raises:
@@ -120,31 +142,39 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, str]
+        Union[Any, ErrorResponse]
     """
 
     return sync_detailed(
-        generation_id=generation_id,
+        scenario_id=scenario_id,
         client=client,
+        name=name,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    generation_id: str,
+    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    name: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, str]]:
-    """Get Generation Schema
+) -> Response[Union[Any, ErrorResponse]]:
+    """Delete Scenario Set
 
-     gets a specific generation by id/hash for the given user.
+     Deletes the scenario set and cascades deletes to all related entities.
+    Namely, Evaluations, Evaluation Datapoints, and  Model Datapoints
 
-    Returns:
-        list: An array of generation' objects.
+    !! Use With Caution !!
+
+    Raises:
+        HTTPException: 404 if scenario_id is not found
+
+    Returns: 204 status code on successful deletion
 
     Args:
-        generation_id (str): The ID of the generation
+        scenario_id (str): The ID of the Scenario Set to delete
+        name (str): Name of the Scenario Set to delete
         api_key (str):
 
     Raises:
@@ -152,11 +182,12 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, str]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
-        generation_id=generation_id,
+        scenario_id=scenario_id,
+        name=name,
         api_key=api_key,
     )
 
@@ -166,20 +197,27 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    generation_id: str,
+    scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    name: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, str]]:
-    """Get Generation Schema
+) -> Optional[Union[Any, ErrorResponse]]:
+    """Delete Scenario Set
 
-     gets a specific generation by id/hash for the given user.
+     Deletes the scenario set and cascades deletes to all related entities.
+    Namely, Evaluations, Evaluation Datapoints, and  Model Datapoints
 
-    Returns:
-        list: An array of generation' objects.
+    !! Use With Caution !!
+
+    Raises:
+        HTTPException: 404 if scenario_id is not found
+
+    Returns: 204 status code on successful deletion
 
     Args:
-        generation_id (str): The ID of the generation
+        scenario_id (str): The ID of the Scenario Set to delete
+        name (str): Name of the Scenario Set to delete
         api_key (str):
 
     Raises:
@@ -187,13 +225,14 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, str]
+        Union[Any, ErrorResponse]
     """
 
     return (
         await asyncio_detailed(
-            generation_id=generation_id,
+            scenario_id=scenario_id,
             client=client,
+            name=name,
             api_key=api_key,
         )
     ).parsed

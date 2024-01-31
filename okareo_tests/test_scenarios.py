@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import List
 
@@ -82,6 +83,32 @@ def test_create_scenario_set(
         for i in range(3):
             assert seed_data[i].input_ == create_scenario_set.seed_data[i].input_
             assert seed_data[i].result == create_scenario_set.seed_data[i].result
+
+
+def test_download_scenario_set(
+    okareo_client: Okareo,
+    create_scenario_set: ScenarioSetResponse,
+    seed_data: List[SeedData],
+) -> None:
+    response_file = okareo_client.download_scenario_set(create_scenario_set)
+    with open(response_file.name) as scenario_file:
+        for line in scenario_file:
+            assert json.loads(line)["input"] != ""
+            assert json.loads(line)["result"] != ""
+
+
+def test_download_scenario_set_with_file(
+    okareo_client: Okareo,
+    create_scenario_set: ScenarioSetResponse,
+    seed_data: List[SeedData],
+) -> None:
+    response_file = okareo_client.download_scenario_set(
+        create_scenario_set, "./scenario.jsonl"
+    )
+    with open(response_file.name) as scenario_file:
+        for line in scenario_file:
+            assert json.loads(line)["input"] != ""
+            assert json.loads(line)["result"] != ""
 
 
 def test_create_scenario_set_rephrase(

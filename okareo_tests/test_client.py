@@ -7,7 +7,6 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_type import ScenarioType
@@ -56,44 +55,12 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     assert scenario_response.name == "test_scenario"
 
 
-@integration
-def test_error_handling(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
-    # Mocking an error response
-    if okareo_api.is_mock:
-        httpx_mock.add_response(json={"detail": "Some error"}, status_code=400)
-
-    okareo = Okareo("wrong-api-key", base_path=okareo_api.path)
-
-    # Expecting the method to raise an exception
-    if okareo_api.is_mock:
-        response = okareo.get_generations()
-        if isinstance(response, ErrorResponse):
-            assert response.detail
-
-
 def test_register_model_raises_on_validation_error(
     okareo_client: Okareo, httpx_mock: HTTPXMock
 ) -> None:
     httpx_mock.add_response(json={"wrong": "response format"}, status_code=200)
     with pytest.raises(Exception, match="Unexpected status code"):
         okareo_client.register_model("this should fail", project_id="42")
-
-
-def test_get_generations(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
-    httpx_mock.add_response(
-        json=[{"hash": "aas3e", "time_created": datetime.now().isoformat()}],
-        status_code=200,
-    )
-    generations = okareo_client.get_generations()
-    assert generations
-
-
-def test_get_generations_raises_on_validation_error(
-    okareo_client: Okareo, httpx_mock: HTTPXMock
-) -> None:
-    httpx_mock.add_response(text="wrong response format", status_code=422)
-    with pytest.raises(Exception, match="Expecting value"):
-        okareo_client.get_generations()
 
 
 def test_register_model_raises_on_empty_response(
