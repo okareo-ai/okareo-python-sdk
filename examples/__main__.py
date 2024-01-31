@@ -7,7 +7,6 @@ API_KEY = os.environ["API_KEY"]
 
 def main() -> None:
     okareo = Okareo(API_KEY)
-    print("Generations: ", okareo.get_generations())
 
     registered_model = okareo.register_model(
         name="Example Model", tags=["testing", "example"]
