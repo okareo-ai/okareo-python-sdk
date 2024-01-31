@@ -1,6 +1,8 @@
 import os
 from typing import Any, Dict, List, Union
 
+import requests
+
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
@@ -127,6 +129,37 @@ class Okareo:
             assert isinstance(response, ScenarioSetResponse)
 
             return response
+        except UnexpectedStatus as e:
+            print(e.content)
+            raise
+
+    def download_scenario_set(
+        self,
+        scenario: ScenarioSetResponse | str,
+        file_path: str = "",
+        project_id: Union[Unset, str] = UNSET,
+    ) -> Any:
+        try:
+            scenario_id = (
+                scenario if isinstance(scenario, str) else scenario.scenario_id
+            )
+            url = f"{BASE_URL}/v0/scenario_sets_download/{scenario_id}"
+            # print(url)
+            headers = {
+                "accept": "application/json",
+                "api-key": self.api_key,
+            }
+            response = requests.get(
+                url,
+                headers=headers,
+            )
+            filename = response.headers["content-disposition"].split('"')[1]
+            if file_path != "":
+                filename = file_path
+            binary_file = open(filename, "wb")
+            binary_file.write(response.content)
+            binary_file.close()
+            return binary_file
         except UnexpectedStatus as e:
             print(e.content)
             raise
