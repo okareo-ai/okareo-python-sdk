@@ -1,7 +1,7 @@
 import os
 from typing import Any, Dict, List, Union
 
-import requests
+import httpx
 
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
@@ -144,12 +144,11 @@ class Okareo:
                 scenario if isinstance(scenario, str) else scenario.scenario_id
             )
             url = f"{BASE_URL}/v0/scenario_sets_download/{scenario_id}"
-            # print(url)
             headers = {
                 "accept": "application/json",
                 "api-key": self.api_key,
             }
-            response = requests.get(
+            response = httpx.get(
                 url,
                 headers=headers,
             )
