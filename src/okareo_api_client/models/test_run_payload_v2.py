@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.dimension import Dimension
 from ..models.test_run_type import TestRunType
 from ..types import UNSET, Unset
 
@@ -30,6 +31,7 @@ class TestRunPayloadV2:
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
         project_id (Union[Unset, str]): ID of the project
         model_results (Union[Unset, TestRunPayloadV2ModelResults]):
+        dimensions (Union[Unset, List[Dimension]]): ID of the project
     """
 
     mut_id: str
@@ -42,6 +44,7 @@ class TestRunPayloadV2:
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
     model_results: Union[Unset, "TestRunPayloadV2ModelResults"] = UNSET
+    dimensions: Union[Unset, List[Dimension]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -70,6 +73,14 @@ class TestRunPayloadV2:
         if not isinstance(self.model_results, Unset):
             model_results = self.model_results.to_dict()
 
+        dimensions: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.dimensions, Unset):
+            dimensions = []
+            for dimensions_item_data in self.dimensions:
+                dimensions_item = dimensions_item_data.value
+
+                dimensions.append(dimensions_item)
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -94,6 +105,8 @@ class TestRunPayloadV2:
             field_dict["project_id"] = project_id
         if model_results is not UNSET:
             field_dict["model_results"] = model_results
+        if dimensions is not UNSET:
+            field_dict["dimensions"] = dimensions
 
         return field_dict
 
@@ -144,6 +157,13 @@ class TestRunPayloadV2:
         else:
             model_results = TestRunPayloadV2ModelResults.from_dict(_model_results)
 
+        dimensions = []
+        _dimensions = d.pop("dimensions", UNSET)
+        for dimensions_item_data in _dimensions or []:
+            dimensions_item = Dimension(dimensions_item_data)
+
+            dimensions.append(dimensions_item)
+
         test_run_payload_v2 = cls(
             mut_id=mut_id,
             scenario_id=scenario_id,
@@ -155,6 +175,7 @@ class TestRunPayloadV2:
             tags=tags,
             project_id=project_id,
             model_results=model_results,
+            dimensions=dimensions,
         )
 
         test_run_payload_v2.additional_properties = d
