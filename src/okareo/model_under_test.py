@@ -286,7 +286,6 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType,
         calculate_metrics: bool,
         model_data: dict,
-        dimensions: Union[List[Any], None] = [],
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
@@ -304,7 +303,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_results=TestRunPayloadV2ModelResults.from_dict(model_data)
             if self._has_custom_model()
             else UNSET,
-            dimensions=dimensions,
         )
 
     def run_test(
@@ -316,7 +314,6 @@ class ModelUnderTest(AsyncProcessorMixin):
         metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
-        dimensions: List[str] = [],
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
@@ -358,7 +355,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                     test_run_type,
                     calculate_metrics,
                     model_data,
-                    dimensions,
                 ),
             )
         except UnexpectedStatus as e:

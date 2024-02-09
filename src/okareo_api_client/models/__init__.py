@@ -7,7 +7,6 @@ from .datapoint_list_item_result_type_0 import DatapointListItemResultType0
 from .datapoint_response import DatapointResponse
 from .datapoint_schema import DatapointSchema
 from .datapoint_search import DatapointSearch
-from .dimension import Dimension
 from .error_response import ErrorResponse
 from .find_test_data_point_payload import FindTestDataPointPayload
 from .general_find_payload import GeneralFindPayload
@@ -49,7 +48,6 @@ __all__ = (
     "DatapointResponse",
     "DatapointSchema",
     "DatapointSearch",
-    "Dimension",
     "ErrorResponse",
     "FindTestDataPointPayload",
     "GeneralFindPayload",
