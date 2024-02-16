@@ -1,11 +1,20 @@
+import datetime
 import os
+from typing import List
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb, QdrantDB
+from okareo.model_under_test import (
+    CohereModel,
+    CustomModel,
+    OpenAIModel,
+    PineconeDb,
+    QdrantDB,
+)
 from okareo_api_client.models import ScenarioSetResponse
+from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
@@ -234,3 +243,145 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
+
+
+def test_shared_context_tokens_mut(
+    rnd: str,
+    okareo: Okareo,
+) -> None:
+    context_token = f"<YOUR_CONTEXT_TOKEN> {rnd}"
+    mut = okareo.register_model(
+        name=f"mut-datapoints-context-{rnd}",
+    )
+    mut.add_data_point(
+        input_obj={"input": "value 1"},  # json structure of model input
+        input_datetime=str(
+            datetime.datetime.now()
+        ),  # start of model invocation time stamp
+        context_token=context_token,
+    )
+    mut.add_data_point(
+        input_obj={"input": "value 2"},
+        context_token=context_token,
+        feedback=0.3,
+        tags=["intent_classification_v3", "env:test"],
+    )
+
+    mut.add_data_point(
+        input_obj={"input": "value 3"},
+        input_datetime=str(datetime.datetime.now()),
+        result_datetime=str(datetime.datetime.now()),
+        context_token=context_token,
+    )
+    dps: List[DatapointListItem] = okareo.find_datapoints(context_token=context_token)
+    for dp in dps:
+        if dp and dp.input_ and dp.input_.additional_properties["input"] == "value 1":
+            assert dp.feedback == 0.3
+
+
+def test_run_test_generation_custom_uniqueness(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
+    class someModel(CustomModel):
+        def invoke(self, input_str):
+            return "this is some text", "model response"
+
+    mut = okareo.register_model(
+        name="mut name",
+        model=someModel(name="custom model"),
+    )
+    run_resp = mut.run_test(
+        name=f"ci-qdrant-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.NL_GENERATION,
+        metrics_kwargs={"dimensions": ["uniqueness"]},
+    )
+    model_metrics = run_resp.model_metrics.additional_properties
+    assert (
+        model_metrics["mean_scores"]["uniqueness"] <= 5
+        and model_metrics["mean_scores"]["uniqueness"] >= 1
+    )
+    assert model_metrics["mean_scores"]["uniqueness"] == 1.0
+    index = 1
+    for row in model_metrics["scores_by_row"]:
+        assert row["uniqueness"] <= 5 and row["uniqueness"] >= 1
+        assert row["scenario_index"] == index
+        assert len(row["test_id"]) > 0
+        index += 1
+
+
+def test_run_test_generation_custom_full_uniqueness(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
+    class someModel(CustomModel):
+        def invoke(self, input_str):
+            return f"this is some {random_string(20)}", "model response"
+
+    mut = okareo.register_model(
+        name="mut name",
+        model=someModel(name="custom model"),
+    )
+    run_resp = mut.run_test(
+        name=f"ci-qdrant-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.NL_GENERATION,
+        metrics_kwargs={"dimensions": ["uniqueness"]},
+    )
+    model_metrics = run_resp.model_metrics.additional_properties
+    assert (
+        model_metrics["mean_scores"]["uniqueness"] <= 5
+        and model_metrics["mean_scores"]["uniqueness"] >= 1
+    )
+    assert model_metrics["mean_scores"]["uniqueness"] == 5.0
+    index = 1
+    for row in model_metrics["scores_by_row"]:
+        assert row["uniqueness"] <= 5 and row["uniqueness"] >= 1
+        assert row["scenario_index"] == index
+        assert len(row["test_id"]) > 0
+        index += 1
+
+
+def test_run_test_generation_custom_multiple(rnd: str, okareo: Okareo) -> None:
+    seed_data = [
+        SeedData(input_="what are you able to set up in aws?", result="capabilities"),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"multiple-dimension-{rnd}",
+        number_examples=1,
+        seed_data=seed_data,
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    class someModel(CustomModel):
+        def invoke(self, input_str):
+            return f"this is some {random_string(20)}", "model response"
+
+    mut = okareo.register_model(
+        name="mut name",
+        model=someModel(name="custom model"),
+    )
+    dimensions = ["conciseness", "fluency", "coherence", "uniqueness"]
+    run_resp = mut.run_test(
+        name=f"multiple-dimensions-{rnd}",
+        scenario=scenario,
+        calculate_metrics=True,
+        test_run_type=TestRunType.NL_GENERATION,
+        metrics_kwargs={"dimensions": dimensions},
+    )
+
+    model_metrics = run_resp.model_metrics.additional_properties
+    for dimension in dimensions:
+        assert (
+            model_metrics["mean_scores"][dimension] <= 5
+            and model_metrics["mean_scores"][dimension] >= 1
+        )
+    index = 1
+    for row in model_metrics["scores_by_row"]:
+        for dimension in dimensions:
+            assert row[dimension] <= 5 and row[dimension] >= 1
+        assert row["scenario_index"] == index
+        assert len(row["test_id"]) > 0
+        index += 1
