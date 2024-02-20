@@ -275,7 +275,10 @@ def test_shared_context_tokens_mut(
     dps = okareo.find_datapoints(context_token=context_token)
     assert isinstance(dps, List)
     for dp in dps:
-        assert dp.feedback == 0.3
+        if dp.input_["input"] == "value 1":
+            assert dp.feedback == 0.3
+        if dp.input_["input"] == "value 3":
+            assert dp.feedback == None
 
 
 def test_run_test_generation_custom_uniqueness(
