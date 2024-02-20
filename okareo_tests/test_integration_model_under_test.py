@@ -14,7 +14,6 @@ from okareo.model_under_test import (
     QdrantDB,
 )
 from okareo_api_client.models import ScenarioSetResponse
-from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
