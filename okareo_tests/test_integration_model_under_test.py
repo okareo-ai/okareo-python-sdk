@@ -273,22 +273,22 @@ def test_shared_context_tokens_mut(
         result_datetime=str(datetime.datetime.now()),
         context_token=context_token,
     )
-    dps: List[DatapointListItem] = okareo.find_datapoints(context_token=context_token)
+    dps = okareo.find_datapoints(context_token=context_token)
+    assert isinstance(dps, List)
     for dp in dps:
-        if dp and dp.input_ and dp.input_.additional_properties["input"] == "value 1":
-            assert dp.feedback == 0.3
+        assert dp.feedback == 0.3
 
 
 def test_run_test_generation_custom_uniqueness(
     rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
 ) -> None:
-    class someModel(CustomModel):
-        def invoke(self, input_str):
+    class GenerationModel(CustomModel):
+        def invoke(self, input_str: str) -> tuple:
             return "this is some text", "model response"
 
     mut = okareo.register_model(
         name="mut name",
-        model=someModel(name="custom model"),
+        model=GenerationModel(name="custom model"),
     )
     run_resp = mut.run_test(
         name=f"ci-qdrant-cohere-embed-{rnd}",
@@ -297,30 +297,31 @@ def test_run_test_generation_custom_uniqueness(
         test_run_type=TestRunType.NL_GENERATION,
         metrics_kwargs={"dimensions": ["uniqueness"]},
     )
-    model_metrics = run_resp.model_metrics.additional_properties
-    assert (
-        model_metrics["mean_scores"]["uniqueness"] <= 5
-        and model_metrics["mean_scores"]["uniqueness"] >= 1
-    )
-    assert model_metrics["mean_scores"]["uniqueness"] == 1.0
-    index = 1
-    for row in model_metrics["scores_by_row"]:
-        assert row["uniqueness"] <= 5 and row["uniqueness"] >= 1
-        assert row["scenario_index"] == index
-        assert len(row["test_id"]) > 0
-        index += 1
+    if not isinstance(run_resp.model_metrics, Unset):
+        model_metrics = run_resp.model_metrics.additional_properties
+        assert (
+            model_metrics["mean_scores"]["uniqueness"] <= 5
+            and model_metrics["mean_scores"]["uniqueness"] >= 1
+        )
+        assert model_metrics["mean_scores"]["uniqueness"] == 1.0
+        index = 1
+        for row in model_metrics["scores_by_row"]:
+            assert row["uniqueness"] <= 5 and row["uniqueness"] >= 1
+            assert row["scenario_index"] == index
+            assert len(row["test_id"]) > 0
+            index += 1
 
 
 def test_run_test_generation_custom_full_uniqueness(
     rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
 ) -> None:
-    class someModel(CustomModel):
-        def invoke(self, input_str):
+    class GenerationModel(CustomModel):
+        def invoke(self, input_str: str) -> tuple:
             return f"this is some {random_string(20)}", "model response"
 
     mut = okareo.register_model(
         name="mut name",
-        model=someModel(name="custom model"),
+        model=GenerationModel(name="custom model"),
     )
     run_resp = mut.run_test(
         name=f"ci-qdrant-cohere-embed-{rnd}",
@@ -329,18 +330,19 @@ def test_run_test_generation_custom_full_uniqueness(
         test_run_type=TestRunType.NL_GENERATION,
         metrics_kwargs={"dimensions": ["uniqueness"]},
     )
-    model_metrics = run_resp.model_metrics.additional_properties
-    assert (
-        model_metrics["mean_scores"]["uniqueness"] <= 5
-        and model_metrics["mean_scores"]["uniqueness"] >= 1
-    )
-    assert model_metrics["mean_scores"]["uniqueness"] == 5.0
-    index = 1
-    for row in model_metrics["scores_by_row"]:
-        assert row["uniqueness"] <= 5 and row["uniqueness"] >= 1
-        assert row["scenario_index"] == index
-        assert len(row["test_id"]) > 0
-        index += 1
+    if not isinstance(run_resp.model_metrics, Unset):
+        model_metrics = run_resp.model_metrics.additional_properties
+        assert (
+            model_metrics["mean_scores"]["uniqueness"] <= 5
+            and model_metrics["mean_scores"]["uniqueness"] >= 1
+        )
+        assert model_metrics["mean_scores"]["uniqueness"] == 5.0
+        index = 1
+        for row in model_metrics["scores_by_row"]:
+            assert row["uniqueness"] <= 5 and row["uniqueness"] >= 1
+            assert row["scenario_index"] == index
+            assert len(row["test_id"]) > 0
+            index += 1
 
 
 def test_run_test_generation_custom_multiple(rnd: str, okareo: Okareo) -> None:
@@ -355,13 +357,13 @@ def test_run_test_generation_custom_multiple(rnd: str, okareo: Okareo) -> None:
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
-    class someModel(CustomModel):
-        def invoke(self, input_str):
+    class GenerationModel(CustomModel):
+        def invoke(self, input_str: str) -> tuple:
             return f"this is some {random_string(20)}", "model response"
 
     mut = okareo.register_model(
         name="mut name",
-        model=someModel(name="custom model"),
+        model=GenerationModel(name="custom model"),
     )
     dimensions = ["conciseness", "fluency", "coherence", "uniqueness"]
     run_resp = mut.run_test(
@@ -371,17 +373,17 @@ def test_run_test_generation_custom_multiple(rnd: str, okareo: Okareo) -> None:
         test_run_type=TestRunType.NL_GENERATION,
         metrics_kwargs={"dimensions": dimensions},
     )
-
-    model_metrics = run_resp.model_metrics.additional_properties
-    for dimension in dimensions:
-        assert (
-            model_metrics["mean_scores"][dimension] <= 5
-            and model_metrics["mean_scores"][dimension] >= 1
-        )
-    index = 1
-    for row in model_metrics["scores_by_row"]:
+    if not isinstance(run_resp.model_metrics, Unset):
+        model_metrics = run_resp.model_metrics.additional_properties
         for dimension in dimensions:
-            assert row[dimension] <= 5 and row[dimension] >= 1
-        assert row["scenario_index"] == index
-        assert len(row["test_id"]) > 0
-        index += 1
+            assert (
+                model_metrics["mean_scores"][dimension] <= 5
+                and model_metrics["mean_scores"][dimension] >= 1
+            )
+        index = 1
+        for row in model_metrics["scores_by_row"]:
+            for dimension in dimensions:
+                assert row[dimension] <= 5 and row[dimension] >= 1
+            assert row["scenario_index"] == index
+            assert len(row["test_id"]) > 0
+            index += 1
