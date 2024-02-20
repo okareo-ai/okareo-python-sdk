@@ -1,0 +1,15 @@
+{"input": "Apples", "result": "<LLM-output>"}
+{"input": "Oranges", "result": "<LLM-output>"}
+{"input": "Tomatoes", "result": "<LLM-output>"}
+{"input": "Potatoes", "result": "<LLM-output>"}
+{"input": "Strawberries", "result": "<LLM-output>"}
+{"input": "Carrots", "result": "<LLM-output>"}
+{"input": "Bananas", "result": "<LLM-output>"}
+{"input": "Blueberries", "result": "<LLM-output>"}
+{"input": "Watermelons", "result": "<LLM-output>"}
+{"input": "Lemons", "result": "<LLM-output>"}
+{"input": "Limes", "result": "<LLM-output>"}
+{"input": "Fuji apples", "result": "<LLM-output>"}
+{"input": "Granny Smith apples", "result": "<LLM-output>"}
+{"input": "Avocados", "result": "<LLM-output>"}
+{"input": "Raspberries", "result": "<LLM-output>"}
