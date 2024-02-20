@@ -14,6 +14,9 @@ from okareo.model_under_test import (
     QdrantDB,
 )
 from okareo_api_client.models import ScenarioSetResponse
+from okareo_api_client.models.datapoint_list_item_input_type_0 import (
+    DatapointListItemInputType0,
+)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
@@ -275,10 +278,11 @@ def test_shared_context_tokens_mut(
     dps = okareo.find_datapoints(context_token=context_token)
     assert isinstance(dps, List)
     for dp in dps:
-        if dp.input_["input"] == "value 1":
-            assert dp.feedback == 0.3
-        if dp.input_["input"] == "value 3":
-            assert dp.feedback == None
+        if isinstance(dp.input_, DatapointListItemInputType0):
+            if dp.input_["input"] == "value 1":
+                assert dp.feedback == 0.3
+            if dp.input_["input"] == "value 3":
+                assert dp.feedback is None
 
 
 def test_run_test_generation_custom_uniqueness(
