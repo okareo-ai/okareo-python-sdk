@@ -26,7 +26,7 @@ class TestRunPayloadV2:
         name (Union[Unset, str]): Name of the test run
         type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
         calculate_metrics (Union[Unset, bool]): Boolean value indicating if metrics should be calculated for the test
-            run
+            run Default: False.
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
         project_id (Union[Unset, str]): ID of the project
         model_results (Union[Unset, TestRunPayloadV2ModelResults]):
@@ -46,7 +46,9 @@ class TestRunPayloadV2:
 
     def to_dict(self) -> Dict[str, Any]:
         mut_id = self.mut_id
+
         scenario_id = self.scenario_id
+
         api_keys: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.api_keys, Unset):
             api_keys = self.api_keys.to_dict()
@@ -56,16 +58,19 @@ class TestRunPayloadV2:
             metrics_kwargs = self.metrics_kwargs.to_dict()
 
         name = self.name
+
         type: Union[Unset, str] = UNSET
         if not isinstance(self.type, Unset):
             type = self.type.value
 
         calculate_metrics = self.calculate_metrics
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         project_id = self.project_id
+
         model_results: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.model_results, Unset):
             model_results = self.model_results.to_dict()

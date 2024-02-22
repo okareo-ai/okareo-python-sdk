@@ -33,14 +33,16 @@ class ScenarioSetCreate:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         seed_data = []
         for seed_data_item_data in self.seed_data:
             seed_data_item = seed_data_item_data.to_dict()
-
             seed_data.append(seed_data_item)
 
         number_examples = self.number_examples
+
         project_id = self.project_id
+
         generation_type: Union[Unset, str] = UNSET
         if not isinstance(self.generation_type, Unset):
             generation_type = self.generation_type.value

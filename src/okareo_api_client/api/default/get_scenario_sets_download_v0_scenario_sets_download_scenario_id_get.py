@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
@@ -14,23 +14,23 @@ def _get_kwargs(
     *,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
-        "url": "/v0/scenario_sets_download/{scenario_id}".format(
-            scenario_id=scenario_id,
-        ),
-        "headers": headers,
+        "url": f"/v0/scenario_sets_download/{scenario_id}",
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[Any, ErrorResponse]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = cast(Any, response.json())
+        response_200 = response.json()
         return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())

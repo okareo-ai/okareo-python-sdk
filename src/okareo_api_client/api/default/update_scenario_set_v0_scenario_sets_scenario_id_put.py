@@ -14,22 +14,24 @@ from ...types import Response
 def _get_kwargs(
     scenario_id: str,
     *,
-    json_body: ScenarioSetUpdate,
+    body: ScenarioSetUpdate,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "put",
-        "url": "/v0/scenario_sets/{scenario_id}".format(
-            scenario_id=scenario_id,
-        ),
-        "json": json_json_body,
-        "headers": headers,
+        "url": f"/v0/scenario_sets/{scenario_id}",
     }
+
+    _body = body.to_dict()
+
+    _kwargs["json"] = _body
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
@@ -72,7 +74,7 @@ def sync_detailed(
     scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ScenarioSetUpdate,
+    body: ScenarioSetUpdate,
     api_key: str,
 ) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
@@ -85,7 +87,7 @@ def sync_detailed(
     Args:
         scenario_id (str): The ID of the scenario set to modify
         api_key (str):
-        json_body (ScenarioSetUpdate):
+        body (ScenarioSetUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -97,7 +99,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         scenario_id=scenario_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -112,7 +114,7 @@ def sync(
     scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ScenarioSetUpdate,
+    body: ScenarioSetUpdate,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
@@ -125,7 +127,7 @@ def sync(
     Args:
         scenario_id (str): The ID of the scenario set to modify
         api_key (str):
-        json_body (ScenarioSetUpdate):
+        body (ScenarioSetUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -138,7 +140,7 @@ def sync(
     return sync_detailed(
         scenario_id=scenario_id,
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
@@ -147,7 +149,7 @@ async def asyncio_detailed(
     scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ScenarioSetUpdate,
+    body: ScenarioSetUpdate,
     api_key: str,
 ) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
@@ -160,7 +162,7 @@ async def asyncio_detailed(
     Args:
         scenario_id (str): The ID of the scenario set to modify
         api_key (str):
-        json_body (ScenarioSetUpdate):
+        body (ScenarioSetUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -172,7 +174,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         scenario_id=scenario_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -185,7 +187,7 @@ async def asyncio(
     scenario_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: ScenarioSetUpdate,
+    body: ScenarioSetUpdate,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     """Update Scenario Set
@@ -198,7 +200,7 @@ async def asyncio(
     Args:
         scenario_id (str): The ID of the scenario set to modify
         api_key (str):
-        json_body (ScenarioSetUpdate):
+        body (ScenarioSetUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -212,7 +214,7 @@ async def asyncio(
         await asyncio_detailed(
             scenario_id=scenario_id,
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

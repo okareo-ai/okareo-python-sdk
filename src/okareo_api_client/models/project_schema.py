@@ -22,6 +22,7 @@ class ProjectSchema:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags

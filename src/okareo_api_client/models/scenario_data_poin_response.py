@@ -34,11 +34,10 @@ class ScenarioDataPoinResponse:
         from ..models.scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
 
         id = self.id
-        input_: Union[Dict[str, Any], List[Any], str]
 
+        input_: Union[Dict[str, Any], List[Any], str]
         if isinstance(self.input_, ScenarioDataPoinResponseInputType0):
             input_ = self.input_.to_dict()
-
         elif isinstance(self.input_, list):
             input_ = self.input_
 
@@ -46,10 +45,8 @@ class ScenarioDataPoinResponse:
             input_ = self.input_
 
         result: Union[Dict[str, Any], List[Any], str]
-
         if isinstance(self.result, ScenarioDataPoinResponseResultType0):
             result = self.result.to_dict()
-
         elif isinstance(self.result, list):
             result = self.result
 

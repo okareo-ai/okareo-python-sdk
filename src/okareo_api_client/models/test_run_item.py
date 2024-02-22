@@ -50,15 +50,21 @@ class TestRunItem:
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
+
         project_id = self.project_id
+
         mut_id = self.mut_id
+
         scenario_set_id = self.scenario_set_id
+
         name = self.name
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         type = self.type
+
         start_time: Union[Unset, str] = UNSET
         if not isinstance(self.start_time, Unset):
             start_time = self.start_time.isoformat()
@@ -68,6 +74,7 @@ class TestRunItem:
             end_time = self.end_time.isoformat()
 
         test_data_point_count = self.test_data_point_count
+
         model_metrics: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.model_metrics, Unset):
             model_metrics = self.model_metrics.to_dict()

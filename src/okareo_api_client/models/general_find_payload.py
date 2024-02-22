@@ -28,9 +28,13 @@ class GeneralFindPayload:
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
+
         project_id = self.project_id
+
         mut_id = self.mut_id
+
         scenario_set_id = self.scenario_set_id
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags

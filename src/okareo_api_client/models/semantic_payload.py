@@ -20,6 +20,7 @@ class SemanticPayload:
 
     def to_dict(self) -> Dict[str, Any]:
         source_text = self.source_text
+
         output_text = self.output_text
 
         field_dict: Dict[str, Any] = {}

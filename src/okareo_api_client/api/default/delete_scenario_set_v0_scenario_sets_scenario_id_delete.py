@@ -15,22 +15,23 @@ def _get_kwargs(
     name: str,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
     params: Dict[str, Any] = {}
+
     params["name"] = name
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "delete",
-        "url": "/v0/scenario_sets/{scenario_id}".format(
-            scenario_id=scenario_id,
-        ),
+        "url": f"/v0/scenario_sets/{scenario_id}",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(

@@ -12,26 +12,29 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
     params: Dict[str, Any] = {}
+
     params["scenario_id"] = scenario_id
 
     params["project_id"] = project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
         "url": "/v0/scenario_sets",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
@@ -78,8 +81,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
@@ -90,8 +93,8 @@ def sync_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, str]): The ID of the scenario set
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -118,8 +121,8 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
@@ -130,8 +133,8 @@ def sync(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, str]): The ID of the scenario set
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -153,8 +156,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
@@ -165,8 +168,8 @@ async def asyncio_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, str]): The ID of the scenario set
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -191,8 +194,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
     """Get Scenario Sets
@@ -203,8 +206,8 @@ async def asyncio(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, str]): The ID of the scenario set
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:

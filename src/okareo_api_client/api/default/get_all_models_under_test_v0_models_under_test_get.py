@@ -12,23 +12,26 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    project_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
     params: Dict[str, Any] = {}
+
     params["project_id"] = project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
         "url": "/v0/models_under_test",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
@@ -75,7 +78,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -86,7 +89,7 @@ def sync_detailed(
         a list of requested models under test
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -112,7 +115,7 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -123,7 +126,7 @@ def sync(
         a list of requested models under test
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -144,7 +147,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -155,7 +158,7 @@ async def asyncio_detailed(
         a list of requested models under test
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -179,7 +182,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    project_id: Union[Unset, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -190,7 +193,7 @@ async def asyncio(
         a list of requested models under test
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (Union[Unset, str]): The ID of the project
         api_key (str):
 
     Raises:

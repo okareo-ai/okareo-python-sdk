@@ -25,7 +25,7 @@ class ScenarioSetResponse:
         tags (Union[Unset, List[str]]):
         name (Union[Unset, str]):
         seed_data (Union[Unset, List['SeedData']]):
-        scenario_count (Union[Unset, int]):
+        scenario_count (Union[Unset, int]):  Default: 0.
         scenario_input (Union[Unset, List[str]]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this scenario set Default: ''.
     """
@@ -44,24 +44,28 @@ class ScenarioSetResponse:
 
     def to_dict(self) -> Dict[str, Any]:
         scenario_id = self.scenario_id
+
         project_id = self.project_id
+
         time_created = self.time_created.isoformat()
 
         type = self.type
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         name = self.name
+
         seed_data: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.seed_data, Unset):
             seed_data = []
             for seed_data_item_data in self.seed_data:
                 seed_data_item = seed_data_item_data.to_dict()
-
                 seed_data.append(seed_data_item)
 
         scenario_count = self.scenario_count
+
         scenario_input: Union[Unset, List[str]] = UNSET
         if not isinstance(self.scenario_input, Unset):
             scenario_input = self.scenario_input

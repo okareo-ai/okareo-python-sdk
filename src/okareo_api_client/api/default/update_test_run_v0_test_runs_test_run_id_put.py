@@ -14,22 +14,24 @@ from ...types import Response
 def _get_kwargs(
     test_run_id: str,
     *,
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "put",
-        "url": "/v0/test_runs/{test_run_id}".format(
-            test_run_id=test_run_id,
-        ),
-        "json": json_json_body,
-        "headers": headers,
+        "url": f"/v0/test_runs/{test_run_id}",
     }
+
+    _body = body.to_dict()
+
+    _kwargs["json"] = _body
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
@@ -72,7 +74,7 @@ def sync_detailed(
     test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -84,7 +86,7 @@ def sync_detailed(
     Args:
         test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -96,7 +98,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         test_run_id=test_run_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -111,7 +113,7 @@ def sync(
     test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -123,7 +125,7 @@ def sync(
     Args:
         test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -136,7 +138,7 @@ def sync(
     return sync_detailed(
         test_run_id=test_run_id,
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
@@ -145,7 +147,7 @@ async def asyncio_detailed(
     test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -157,7 +159,7 @@ async def asyncio_detailed(
     Args:
         test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -169,7 +171,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         test_run_id=test_run_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -182,7 +184,7 @@ async def asyncio(
     test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -194,7 +196,7 @@ async def asyncio(
     Args:
         test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -208,7 +210,7 @@ async def asyncio(
         await asyncio_detailed(
             test_run_id=test_run_id,
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

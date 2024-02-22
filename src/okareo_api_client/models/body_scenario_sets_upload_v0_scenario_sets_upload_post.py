@@ -25,7 +25,9 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         project_id = self.project_id
+
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
@@ -46,11 +48,13 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
 
     def to_multipart(self) -> Dict[str, Any]:
         name = self.name if isinstance(self.name, Unset) else (None, str(self.name).encode(), "text/plain")
+
         project_id = (
             self.project_id
             if isinstance(self.project_id, Unset)
             else (None, str(self.project_id).encode(), "text/plain")
         )
+
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()

@@ -24,7 +24,9 @@ class DatapointResponse:
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
+
         project_id = self.project_id
+
         mut_id = self.mut_id
 
         field_dict: Dict[str, Any] = {}

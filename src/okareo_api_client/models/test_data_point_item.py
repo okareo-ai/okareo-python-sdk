@@ -30,9 +30,13 @@ class TestDataPointItem:
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
+
         scenario_data_point_id = self.scenario_data_point_id
+
         test_run_id = self.test_run_id
+
         metric_type = self.metric_type
+
         metric_value = self.metric_value.to_dict()
 
         field_dict: Dict[str, Any] = {}

@@ -20,8 +20,8 @@ class SeedData:
 
     def to_dict(self) -> Dict[str, Any]:
         input_ = self.input_
-        result: Union[List[str], str]
 
+        result: Union[List[str], str]
         if isinstance(self.result, list):
             result = self.result
 

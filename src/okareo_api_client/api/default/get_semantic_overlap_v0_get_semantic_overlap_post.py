@@ -13,20 +13,24 @@ from ...types import Response
 
 def _get_kwargs(
     *,
-    json_body: SemanticPayload,
+    body: SemanticPayload,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "post",
         "url": "/v0/get_semantic_overlap",
-        "json": json_json_body,
-        "headers": headers,
     }
+
+    _body = body.to_dict()
+
+    _kwargs["json"] = _body
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
@@ -68,14 +72,14 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SemanticPayload,
+    body: SemanticPayload,
     api_key: str,
 ) -> Response[Union[ErrorResponse, SemanticResult]]:
     """Get Semantic Overlap
 
     Args:
         api_key (str):
-        json_body (SemanticPayload):
+        body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -86,7 +90,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -100,14 +104,14 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SemanticPayload,
+    body: SemanticPayload,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, SemanticResult]]:
     """Get Semantic Overlap
 
     Args:
         api_key (str):
-        json_body (SemanticPayload):
+        body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -119,7 +123,7 @@ def sync(
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
@@ -127,14 +131,14 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SemanticPayload,
+    body: SemanticPayload,
     api_key: str,
 ) -> Response[Union[ErrorResponse, SemanticResult]]:
     """Get Semantic Overlap
 
     Args:
         api_key (str):
-        json_body (SemanticPayload):
+        body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -145,7 +149,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -157,14 +161,14 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SemanticPayload,
+    body: SemanticPayload,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, SemanticResult]]:
     """Get Semantic Overlap
 
     Args:
         api_key (str):
-        json_body (SemanticPayload):
+        body (SemanticPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -177,7 +181,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

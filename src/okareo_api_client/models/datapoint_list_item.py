@@ -56,6 +56,7 @@ class DatapointListItem:
         from ..models.datapoint_list_item_result_type_0 import DatapointListItemResultType0
 
         id = self.id
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
@@ -63,16 +64,10 @@ class DatapointListItem:
         input_: Union[Dict[str, Any], List[Any], Unset, str]
         if isinstance(self.input_, Unset):
             input_ = UNSET
-
         elif isinstance(self.input_, DatapointListItemInputType0):
-            input_ = UNSET
-            if not isinstance(self.input_, Unset):
-                input_ = self.input_.to_dict()
-
+            input_ = self.input_.to_dict()
         elif isinstance(self.input_, list):
-            input_ = UNSET
-            if not isinstance(self.input_, Unset):
-                input_ = self.input_
+            input_ = self.input_
 
         else:
             input_ = self.input_
@@ -84,16 +79,10 @@ class DatapointListItem:
         result: Union[Dict[str, Any], List[Any], Unset, str]
         if isinstance(self.result, Unset):
             result = UNSET
-
         elif isinstance(self.result, DatapointListItemResultType0):
-            result = UNSET
-            if not isinstance(self.result, Unset):
-                result = self.result.to_dict()
-
+            result = self.result.to_dict()
         elif isinstance(self.result, list):
-            result = UNSET
-            if not isinstance(self.result, Unset):
-                result = self.result
+            result = self.result
 
         else:
             result = self.result
@@ -103,15 +92,21 @@ class DatapointListItem:
             result_datetime = self.result_datetime.isoformat()
 
         feedback = self.feedback
+
         error_message = self.error_message
+
         error_code = self.error_code
+
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
 
         context_token = self.context_token
+
         mut_id = self.mut_id
+
         project_id = self.project_id
+
         test_run_id = self.test_run_id
 
         field_dict: Dict[str, Any] = {}
@@ -166,12 +161,7 @@ class DatapointListItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _input_type_0 = data
-                input_type_0: Union[Unset, DatapointListItemInputType0]
-                if isinstance(_input_type_0, Unset):
-                    input_type_0 = UNSET
-                else:
-                    input_type_0 = DatapointListItemInputType0.from_dict(_input_type_0)
+                input_type_0 = DatapointListItemInputType0.from_dict(data)
 
                 return input_type_0
             except:  # noqa: E722
@@ -201,12 +191,7 @@ class DatapointListItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _result_type_0 = data
-                result_type_0: Union[Unset, DatapointListItemResultType0]
-                if isinstance(_result_type_0, Unset):
-                    result_type_0 = UNSET
-                else:
-                    result_type_0 = DatapointListItemResultType0.from_dict(_result_type_0)
+                result_type_0 = DatapointListItemResultType0.from_dict(data)
 
                 return result_type_0
             except:  # noqa: E722

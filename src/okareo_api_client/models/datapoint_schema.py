@@ -44,12 +44,15 @@ class DatapointSchema:
 
     def to_dict(self) -> Dict[str, Any]:
         mut_id = self.mut_id
+
         input_ = self.input_
+
         input_datetime: Union[Unset, str] = UNSET
         if not isinstance(self.input_datetime, Unset):
             input_datetime = self.input_datetime.isoformat()
 
         result = self.result
+
         result_datetime: Union[Unset, str] = UNSET
         if not isinstance(self.result_datetime, Unset):
             result_datetime = self.result_datetime.isoformat()
@@ -59,9 +62,13 @@ class DatapointSchema:
             tags = self.tags
 
         feedback = self.feedback
+
         error_message = self.error_message
+
         error_code = self.error_code
+
         context_token = self.context_token
+
         test_run_id = self.test_run_id
 
         field_dict: Dict[str, Any] = {}

@@ -29,9 +29,13 @@ class ScenarioSetGenerate:
 
     def to_dict(self) -> Dict[str, Any]:
         source_scenario_id = self.source_scenario_id
+
         name = self.name
+
         number_examples = self.number_examples
+
         project_id = self.project_id
+
         generation_type: Union[Unset, str] = UNSET
         if not isinstance(self.generation_type, Unset):
             generation_type = self.generation_type.value

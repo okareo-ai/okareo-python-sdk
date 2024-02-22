@@ -15,16 +15,16 @@ def _get_kwargs(
     *,
     api_key: str,
 ) -> Dict[str, Any]:
-    headers = {}
+    headers: Dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: Dict[str, Any] = {
         "method": "get",
-        "url": "/v0/test_data_points/{test_data_point_id}".format(
-            test_data_point_id=test_data_point_id,
-        ),
-        "headers": headers,
+        "url": f"/v0/test_data_points/{test_data_point_id}",
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(

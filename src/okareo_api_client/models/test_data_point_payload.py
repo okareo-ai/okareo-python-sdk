@@ -26,8 +26,11 @@ class TestDataPointPayload:
 
     def to_dict(self) -> Dict[str, Any]:
         test_run_id = self.test_run_id
+
         scenario_data_point_id = self.scenario_data_point_id
+
         metric_type = self.metric_type
+
         metric_value = self.metric_value
 
         field_dict: Dict[str, Any] = {}

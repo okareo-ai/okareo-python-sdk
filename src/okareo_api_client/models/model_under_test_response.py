@@ -32,12 +32,17 @@ class ModelUnderTestResponse:
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
+
         project_id = self.project_id
+
         name = self.name
+
         tags = self.tags
 
         time_created = self.time_created
+
         datapoint_count = self.datapoint_count
+
         app_link = self.app_link
 
         field_dict: Dict[str, Any] = {}

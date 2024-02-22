@@ -23,6 +23,7 @@ class TestRunPayload:
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
         calculate_model_metrics (Union[Unset, bool]): Boolean value indicating if model metrics should be calculated
+            Default: False.
     """
 
     mut_id: Union[Unset, str] = UNSET
@@ -37,8 +38,11 @@ class TestRunPayload:
 
     def to_dict(self) -> Dict[str, Any]:
         mut_id = self.mut_id
+
         scenario_set_id = self.scenario_set_id
+
         name = self.name
+
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags

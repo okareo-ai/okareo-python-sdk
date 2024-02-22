@@ -30,6 +30,7 @@ class ModelUnderTestSchema:
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+
         models: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.models, Unset):
             models = self.models.to_dict()

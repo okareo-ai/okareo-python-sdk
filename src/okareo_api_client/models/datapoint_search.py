@@ -52,10 +52,15 @@ class DatapointSearch:
             to_date = self.to_date.isoformat()
 
         feedback = self.feedback
+
         error_code = self.error_code
+
         context_token = self.context_token
+
         project_id = self.project_id
+
         mut_id = self.mut_id
+
         test_run_id = self.test_run_id
 
         field_dict: Dict[str, Any] = {}
