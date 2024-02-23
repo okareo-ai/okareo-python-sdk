@@ -26,7 +26,7 @@ class TestRunPayloadV2:
         name (Union[Unset, str]): Name of the test run
         type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
         calculate_metrics (Union[Unset, bool]): Boolean value indicating if metrics should be calculated for the test
-            run
+            run Default: True.
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
         project_id (Union[Unset, str]): ID of the project
         model_results (Union[Unset, TestRunPayloadV2ModelResults]):
@@ -38,7 +38,7 @@ class TestRunPayloadV2:
     metrics_kwargs: Union[Unset, "TestRunPayloadV2MetricsKwargs"] = UNSET
     name: Union[Unset, str] = UNSET
     type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
-    calculate_metrics: Union[Unset, bool] = False
+    calculate_metrics: Union[Unset, bool] = True
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
     model_results: Union[Unset, "TestRunPayloadV2ModelResults"] = UNSET
