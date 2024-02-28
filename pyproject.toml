@@ -8,8 +8,8 @@ authors = [
 license = "Apache-2.0"
 readme = "README.md"
 
-documentation = "https://okareo-ai.github.io/okareo-python-sdk"
-homepage = "https://okareo-ai.github.io/okareo-python-sdk"
+documentation = "https://docs.okareo.com/docs/getting-started/overview"
+homepage = "https://okareo.com"
 repository = "https://github.com/okareo-ai/okareo-python-sdk"
 
 classifiers = [
