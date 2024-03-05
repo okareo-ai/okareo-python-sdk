@@ -5,6 +5,7 @@ repos:
     hooks:
       - id: check-ast
       - id: check-added-large-files
+        exclude: "okareo_tests\/datasets\/.*"
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-docstring-first
