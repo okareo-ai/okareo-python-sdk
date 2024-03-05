@@ -64,6 +64,7 @@ pytest-cov = "*"
 python-kacl = "*"
 pyupgrade = "*"
 tryceratops = "*"
+pytest-timeout = {version = "^2.2.0"}
 langchain = {version = "^0.0.321"}
 openai = {version = "^0.28.1"}
 ipykernel = "^6.25.2"
