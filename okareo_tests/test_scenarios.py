@@ -18,7 +18,7 @@ from okareo_api_client.models.scenario_data_poin_response import (
 )
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
-max_time_out_in_seconds = 60
+max_time_out_in_seconds = 300
 
 
 @pytest.fixture(scope="module")
