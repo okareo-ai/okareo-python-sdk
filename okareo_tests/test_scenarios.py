@@ -160,8 +160,6 @@ def test_create_scenario_set_contraction_small_load(
 ) -> None:
     large_seed_data = []
     number_examples = 5
-    # should remove (count, max_read) once we optimize the COMMON_CONTRACTIONS
-    count, max_read = 0, 1000
     with open("./okareo_tests/datasets/random_sentence_small.txt") as file:
         lines = file.readlines()
         for line in lines:
@@ -170,9 +168,6 @@ def test_create_scenario_set_contraction_small_load(
             large_seed_data.append(
                 SeedData(input_=parts[0], result=parts[1]),
             )
-            count += 1
-            if count > max_read:
-                break
 
     scenario_set_create = ScenarioSetCreate(
         name="my contraction test scenario set small load",
