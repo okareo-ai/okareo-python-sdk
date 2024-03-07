@@ -42,7 +42,7 @@ def test_llm_generates_datapoints(
     response = completion(model=model, messages=messages, mock_response=response)
 
     # needs to wait for callback to finish
-    time.sleep(2)
+    time.sleep(5)
 
     if okareo_api.is_mock:
         requests = httpx_mock.get_requests()
