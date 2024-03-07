@@ -26,9 +26,47 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
         self, kwargs: Any, response_obj: Any, start_time: Any, end_time: Any
     ) -> None:
         self.registered_model.add_data_point_async(
-            input_obj={"input": kwargs["messages"]},
+            input_obj={"input": str(self.parse_input_obj(kwargs))},
             input_datetime=str(start_time),
-            result_obj={"result": response_obj},
+            result_obj={"result": str(self.parse_response_obj(response_obj))},
             result_datetime=str(end_time),
             context_token=self.context_token,
         )
+
+    async def async_log_success_event(
+        self, kwargs: Any, response_obj: Any, start_time: Any, end_time: Any
+    ) -> None:
+        self.registered_model.add_data_point_async(
+            input_obj={"input": str(self.parse_input_obj(kwargs))},
+            input_datetime=str(start_time),
+            result_obj={"result": str(self.parse_response_obj(response_obj))},
+            result_datetime=str(end_time),
+            context_token=self.context_token,
+        )
+
+    def parse_input_obj(self, kwargs: Any) -> Any:
+        return kwargs["messages"]
+
+    def parse_response_obj(self, response_obj: Any) -> Any:
+        return response_obj
+
+
+class LiteLLMLoggerMessage(LiteLLMLogger):
+    def __init__(
+        self,
+        api_key: str,
+        mut_name: str,
+        context_token: str,
+        tags: Optional[List[str]] = None,
+        host_address: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            api_key=api_key,
+            mut_name=mut_name,
+            context_token=context_token,
+            tags=tags,
+            host_address=host_address,
+        )
+
+    def parse_response_obj(self, response_obj: Any) -> Any:
+        return response_obj.choices[0].message
