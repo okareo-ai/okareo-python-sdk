@@ -35,10 +35,11 @@ httpx = ">=0.23"
 types-python-dateutil = "^2.8.19.14"
 attrs = "^23.1.0"
 langchain = {version = "^0.0.321", optional = true}
-openai = {version = "^0.28.1", optional = true}
+openai = {version = "^1.0.0", optional = true}
+litellm = {version = "^1.29.5", optional = true}
 
 [tool.poetry.extras]
-langchain = ["langchain", "openai"]
+langchain = ["langchain", "openai", "litellm"]
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"
@@ -66,7 +67,8 @@ pyupgrade = "*"
 tryceratops = "*"
 pytest-timeout = {version = "^2.2.0"}
 langchain = {version = "^0.0.321"}
-openai = {version = "^0.28.1"}
+openai = {version = "^1.0.0"}
+litellm = {version = "^1.29.5"}
 ipykernel = "^6.25.2"
 
 [build-system]
