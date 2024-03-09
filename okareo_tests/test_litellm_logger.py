@@ -8,7 +8,7 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_stri
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo.litellm_logger import LiteLLMLogger, LiteLLMLoggerMessage
+from okareo.litellm_logger import LiteLLMLogger, LiteLLMLoggerOpenAI
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
 
@@ -23,16 +23,16 @@ def get_mut_response() -> dict:
 
 
 @integration
-def test_baselogger_generates_datapoints(
-    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
-) -> None:
+def test_litellm_baselogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     context_token = random_string(10)
     if okareo_api.is_mock:
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
         handler = LiteLLMLogger(
-            api_key=API_KEY, mut_name="litellm_test", context_token=context_token
+            api_key=API_KEY,
+            mut_name="test_litellm_baselogger-" + context_token,
+            context_token=context_token,
         )
 
     litellm.callbacks = [handler]
@@ -58,16 +58,16 @@ def test_baselogger_generates_datapoints(
 
 
 @integration
-def test_logger_message_generates_datapoints(
-    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
-) -> None:
+def test_litellm_openailogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     context_token = random_string(10)
     if okareo_api.is_mock:
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
-        handler = LiteLLMLoggerMessage(
-            api_key=API_KEY, mut_name="litellm_test", context_token=context_token
+        handler = LiteLLMLoggerOpenAI(
+            api_key=API_KEY,
+            mut_name="test_litellm_openailogger-" + context_token,
+            context_token=context_token,
         )
 
     litellm.callbacks = [handler]

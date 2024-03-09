@@ -26,9 +26,9 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
         self, kwargs: Any, response_obj: Any, start_time: Any, end_time: Any
     ) -> None:
         self.registered_model.add_data_point_async(
-            input_obj={"input": str(self.parse_input_obj(kwargs))},
+            input_obj=self.parse_input_obj(kwargs),
             input_datetime=str(start_time),
-            result_obj={"result": str(self.parse_response_obj(response_obj))},
+            result_obj=self.parse_response_obj(kwargs, response_obj),
             result_datetime=str(end_time),
             context_token=self.context_token,
         )
@@ -37,21 +37,24 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
         self, kwargs: Any, response_obj: Any, start_time: Any, end_time: Any
     ) -> None:
         self.registered_model.add_data_point_async(
-            input_obj={"input": str(self.parse_input_obj(kwargs))},
+            input_obj=self.parse_input_obj(kwargs),
             input_datetime=str(start_time),
-            result_obj={"result": str(self.parse_response_obj(response_obj))},
+            result_obj=self.parse_response_obj(kwargs, response_obj),
             result_datetime=str(end_time),
             context_token=self.context_token,
         )
 
-    def parse_input_obj(self, kwargs: Any) -> Any:
-        return kwargs["messages"]
+    def parse_input_obj(self, kwargs: Any) -> dict:
+        input_data = {}
+        for idx, value in enumerate(kwargs["messages"]):
+            input_data[str(idx)] = value
+        return {"input": input_data}
 
-    def parse_response_obj(self, response_obj: Any) -> Any:
-        return response_obj
+    def parse_response_obj(self, kwargs: Any, response_obj: Any) -> Any:
+        return kwargs["original_response"]
 
 
-class LiteLLMLoggerMessage(LiteLLMLogger):
+class LiteLLMLoggerOpenAI(LiteLLMLogger):
     def __init__(
         self,
         api_key: str,
@@ -67,6 +70,3 @@ class LiteLLMLoggerMessage(LiteLLMLogger):
             tags=tags,
             host_address=host_address,
         )
-
-    def parse_response_obj(self, response_obj: Any) -> Any:
-        return response_obj.choices[0].message
