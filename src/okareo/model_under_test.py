@@ -179,12 +179,16 @@ class ModelUnderTest(AsyncProcessorMixin):
             "feedback": feedback,
             "error_message": error_message,
             "error_code": error_code,
-            "input_datetime": datetime.now().isoformat()
-            if input_datetime == UNSET and input_obj is not None
-            else input_datetime,
-            "result_datetime": datetime.now().isoformat()
-            if result_datetime == UNSET and result_obj is not None
-            else result_datetime,
+            "input_datetime": (
+                datetime.now().isoformat()
+                if input_datetime == UNSET and input_obj is not None
+                else input_datetime
+            ),
+            "result_datetime": (
+                datetime.now().isoformat()
+                if result_datetime == UNSET and result_obj is not None
+                else result_datetime
+            ),
             "project_id": self.project_id,
             "mut_id": self.mut_id,
             "test_run_id": test_run_id,
@@ -222,12 +226,16 @@ class ModelUnderTest(AsyncProcessorMixin):
             "feedback": feedback,
             "error_message": error_message,
             "error_code": error_code,
-            "input_datetime": datetime.now().isoformat()
-            if input_datetime == UNSET and input_obj is not None
-            else input_datetime,
-            "result_datetime": datetime.now().isoformat()
-            if result_datetime == UNSET and result_obj is not None
-            else result_datetime,
+            "input_datetime": (
+                datetime.now().isoformat()
+                if input_datetime == UNSET and input_obj is not None
+                else input_datetime
+            ),
+            "result_datetime": (
+                datetime.now().isoformat()
+                if result_datetime == UNSET and result_obj is not None
+                else result_datetime
+            ),
             "project_id": self.project_id,
             "mut_id": self.mut_id,
             "test_run_id": test_run_id,
@@ -289,9 +297,11 @@ class ModelUnderTest(AsyncProcessorMixin):
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
-            api_keys=TestRunPayloadV2ApiKeys.from_dict(run_api_keys)
-            if api_keys or api_key
-            else UNSET,
+            api_keys=(
+                TestRunPayloadV2ApiKeys.from_dict(run_api_keys)
+                if api_keys or api_key
+                else UNSET
+            ),
             scenario_id=scenario_id,
             name=name,
             type=test_run_type,
@@ -300,9 +310,11 @@ class ModelUnderTest(AsyncProcessorMixin):
             metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
                 metrics_kwargs or {}
             ),
-            model_results=TestRunPayloadV2ModelResults.from_dict(model_data)
-            if self._has_custom_model()
-            else UNSET,
+            model_results=(
+                TestRunPayloadV2ModelResults.from_dict(model_data)
+                if self._has_custom_model()
+                else UNSET
+            ),
         )
 
     def run_test(

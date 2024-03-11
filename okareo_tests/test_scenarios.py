@@ -18,6 +18,7 @@ from okareo_api_client.models.scenario_data_poin_response import (
 )
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
+max_time_out_in_seconds = 300
 
 
 @pytest.fixture(scope="module")
@@ -151,3 +152,57 @@ def test_get_scenario_data_points(
 ) -> None:
     assert get_scenario_data_points is not None
     assert len(get_scenario_data_points) == 3
+
+
+@pytest.mark.timeout(max_time_out_in_seconds)
+def test_create_scenario_set_contraction_small_load(
+    okareo_client: Okareo, seed_data: List[SeedData]
+) -> None:
+    large_seed_data = []
+    number_examples = 5
+    with open("./okareo_tests/datasets/random_sentence_small.txt") as file:
+        lines = file.readlines()
+        for line in lines:
+            parts = line.split("\t")
+            assert len(parts) == 2
+            large_seed_data.append(
+                SeedData(input_=parts[0], result=parts[1]),
+            )
+
+    scenario_set_create = ScenarioSetCreate(
+        name="my contraction test scenario set small load",
+        generation_type=ScenarioType.COMMON_CONTRACTIONS,
+        number_examples=number_examples,
+        seed_data=large_seed_data,
+    )
+    create_scenario_set: ScenarioSetResponse = okareo_client.create_scenario_set(
+        scenario_set_create
+    )
+    assert create_scenario_set.type == "COMMON_CONTRACTIONS"
+
+
+@pytest.mark.timeout(max_time_out_in_seconds)
+def test_create_scenario_set_misspelling_small_load(
+    okareo_client: Okareo, seed_data: List[SeedData]
+) -> None:
+    large_seed_data = []
+    number_examples = 5
+    with open("./okareo_tests/datasets/random_sentence_small.txt") as file:
+        lines = file.readlines()
+        for line in lines:
+            parts = line.split("\t")
+            assert len(parts) == 2
+            large_seed_data.append(
+                SeedData(input_=parts[0], result=parts[1]),
+            )
+
+    scenario_set_create = ScenarioSetCreate(
+        name="my misspelling test scenario set small load",
+        generation_type=ScenarioType.COMMON_MISSPELLINGS,
+        number_examples=number_examples,
+        seed_data=large_seed_data,
+    )
+    create_scenario_set: ScenarioSetResponse = okareo_client.create_scenario_set(
+        scenario_set_create
+    )
+    assert create_scenario_set.type == "COMMON_MISSPELLINGS"
