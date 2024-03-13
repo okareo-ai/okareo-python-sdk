@@ -1,8 +1,12 @@
+import os
 from typing import Any, List, Optional
 
+import dotenv
 from litellm.integrations.custom_logger import CustomLogger  # type: ignore
 
 from okareo import Okareo
+
+dotenv.load_dotenv()
 
 
 class LiteLLMLogger(CustomLogger):  # type: ignore
@@ -54,15 +58,26 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
         return kwargs["original_response"]
 
 
-class LiteLLMLoggerOpenAI(LiteLLMLogger):
+class LiteLLMProxyLogger(LiteLLMLogger):
     def __init__(
         self,
-        api_key: str,
-        mut_name: str,
-        context_token: str,
+        api_key: Optional[str] = None,
+        mut_name: Optional[str] = None,
+        context_token: Optional[str] = None,
         tags: Optional[List[str]] = None,
         host_address: Optional[str] = None,
     ) -> None:
+        if not api_key:
+            api_key = os.getenv("OKAREO_API_KEY", "")
+        if not mut_name:
+            mut_name = os.getenv("OKAREO_MUT_NAME", "")
+        if not tags:
+            tags_str = os.getenv("OKAREO_MUT_TAGS", "")
+            if tags_str and len(tags_str) > 0:
+                tags = tags_str.split(",")
+        if not context_token:
+            context_token = os.getenv("OKAREO_CONTEXT_TOKEN", "")
+
         super().__init__(
             api_key=api_key,
             mut_name=mut_name,
@@ -70,3 +85,6 @@ class LiteLLMLoggerOpenAI(LiteLLMLogger):
             tags=tags,
             host_address=host_address,
         )
+
+
+litellm_proxy_handler = LiteLLMProxyLogger()

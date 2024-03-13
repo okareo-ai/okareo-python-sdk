@@ -8,7 +8,7 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_stri
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo.litellm_logger import LiteLLMLogger, LiteLLMLoggerOpenAI
+from okareo.litellm_logger import LiteLLMLogger, LiteLLMProxyLogger
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
 
@@ -64,7 +64,7 @@ def test_litellm_openailogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
-        handler = LiteLLMLoggerOpenAI(
+        handler = LiteLLMProxyLogger(
             api_key=API_KEY,
             mut_name="test_litellm_openailogger-" + context_token,
             context_token=context_token,
