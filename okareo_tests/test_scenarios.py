@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from typing import List
 
@@ -160,7 +161,10 @@ def test_create_scenario_set_contraction_small_load(
 ) -> None:
     large_seed_data = []
     number_examples = 5
-    with open("./okareo_tests/datasets/random_sentence_small.txt") as file:
+    file_path = os.path.join(
+        os.path.dirname(__file__), "datasets/random_sentence_small.txt"
+    )
+    with open(file_path) as file:
         lines = file.readlines()
         for line in lines:
             parts = line.split("\t")
@@ -187,7 +191,10 @@ def test_create_scenario_set_misspelling_small_load(
 ) -> None:
     large_seed_data = []
     number_examples = 5
-    with open("./okareo_tests/datasets/random_sentence_small.txt") as file:
+    file_path = os.path.join(
+        os.path.dirname(__file__), "datasets/random_sentence_small.txt"
+    )
+    with open(file_path) as file:
         lines = file.readlines()
         for line in lines:
             parts = line.split("\t")
