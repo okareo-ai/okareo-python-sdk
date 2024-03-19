@@ -1,6 +1,6 @@
+import json
 import os
 from typing import Any, List, Optional
-import ast
 
 import dotenv
 from litellm.integrations.custom_logger import CustomLogger  # type: ignore
@@ -57,14 +57,10 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
 
     def parse_response_obj(self, kwargs: Any, response_obj: Any) -> Any:
         try:
-            import json
             formatted_response = json.loads(response_obj.model_dump_json())
         except Exception as e:
-            formatted_response = {
-                'exception': str(e),
-                'raw_response': response_obj
-            }
-        
+            formatted_response = {"exception": str(e), "raw_response": response_obj}
+
         return formatted_response
 
 
