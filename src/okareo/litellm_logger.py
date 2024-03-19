@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 
 import dotenv
 from litellm.integrations.custom_logger import CustomLogger  # type: ignore
+from openai._models import BaseModel as OpenAIObject
 
 from okareo import Okareo
 
@@ -57,7 +58,10 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
 
     def parse_response_obj(self, kwargs: Any, response_obj: Any) -> Any:
         try:
-            formatted_response = json.loads(response_obj.model_dump_json())
+            if isinstance(response_obj, OpenAIObject):
+                formatted_response = json.loads(response_obj.model_dump_json())
+            else:
+                formatted_response = {"raw_response": response_obj}
         except Exception as e:
             formatted_response = {"exception": str(e), "raw_response": response_obj}
 
