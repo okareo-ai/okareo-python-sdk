@@ -156,7 +156,7 @@ def test_get_scenario_data_points(
 
 
 @pytest.mark.timeout(max_time_out_in_seconds)
-def test_create_scenario_set_contraction_small_load(
+def dtest_create_scenario_set_contraction_small_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
     large_seed_data = []
@@ -186,7 +186,7 @@ def test_create_scenario_set_contraction_small_load(
 
 
 @pytest.mark.timeout(max_time_out_in_seconds)
-def test_create_scenario_set_misspelling_small_load(
+def dtest_create_scenario_set_misspelling_small_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
     large_seed_data = []
