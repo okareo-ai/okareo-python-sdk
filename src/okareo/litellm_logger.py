@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 
 import dotenv
 from litellm.integrations.custom_logger import CustomLogger  # type: ignore
+from openai._models import BaseModel as OpenAIObject
 
 from okareo import Okareo
 
@@ -55,7 +56,15 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
         return {"input": input_data}
 
     def parse_response_obj(self, kwargs: Any, response_obj: Any) -> Any:
-        return kwargs["original_response"]
+        try:
+            if isinstance(response_obj, OpenAIObject):
+                formatted_response = dict(response_obj.model_dump())
+            else:
+                formatted_response = {"raw_response": response_obj}
+        except Exception as e:
+            formatted_response = {"exception": str(e), "raw_response": response_obj}
+
+        return formatted_response
 
 
 class LiteLLMProxyLogger(LiteLLMLogger):
