@@ -1,4 +1,3 @@
-import json
 import os
 from typing import Any, List, Optional
 
@@ -59,7 +58,7 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
     def parse_response_obj(self, kwargs: Any, response_obj: Any) -> Any:
         try:
             if isinstance(response_obj, OpenAIObject):
-                formatted_response = json.loads(response_obj.model_dump_json())
+                formatted_response = dict(response_obj.model_dump())
             else:
                 formatted_response = {"raw_response": response_obj}
         except Exception as e:
