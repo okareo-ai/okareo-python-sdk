@@ -1,9 +1,11 @@
 import json
 import os
+import time
 from datetime import datetime
 from typing import List
 
 import pytest
+import requests
 from okareo_tests.common import API_KEY
 
 from okareo import Okareo
@@ -19,7 +21,6 @@ from okareo_api_client.models.scenario_data_poin_response import (
 )
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
-max_time_out_in_seconds = 300
 
 
 @pytest.fixture(scope="module")
@@ -155,61 +156,87 @@ def test_get_scenario_data_points(
     assert len(get_scenario_data_points) == 3
 
 
-@pytest.mark.timeout(max_time_out_in_seconds)
-def dtest_create_scenario_set_contraction_small_load(
+def delete_scenario_data_points(
+    api_key: str, scenario_id: str, scenario_name: str
+) -> None:
+    url = f"https://api.okareo.com/v0/scenario_sets/{scenario_id}?name={scenario_name}"
+    headers = {
+        "Content-Type": "application/json",
+        "accept": "application/json",
+        "api-key": api_key,
+    }
+    requests.delete(url, headers=headers)
+
+
+def test_create_delete_scenario_set_contraction_tiny_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
-    large_seed_data = []
-    number_examples = 5
+    seed_data = []
+    number_examples = 2
     file_path = os.path.join(
-        os.path.dirname(__file__), "datasets/random_sentence_small.txt"
+        os.path.dirname(__file__), "datasets/random_sentence_tiny.txt"
     )
     with open(file_path) as file:
         lines = file.readlines()
         for line in lines:
             parts = line.split("\t")
             assert len(parts) == 2
-            large_seed_data.append(
+            seed_data.append(
                 SeedData(input_=parts[0], result=parts[1]),
             )
 
     scenario_set_create = ScenarioSetCreate(
-        name="my contraction test scenario set small load",
+        name="my contraction test scenario set tiny load",
         generation_type=ScenarioType.COMMON_CONTRACTIONS,
         number_examples=number_examples,
-        seed_data=large_seed_data,
+        seed_data=seed_data,
     )
-    create_scenario_set: ScenarioSetResponse = okareo_client.create_scenario_set(
+    scenario: ScenarioSetResponse = okareo_client.create_scenario_set(
         scenario_set_create
     )
-    assert create_scenario_set.type == "COMMON_CONTRACTIONS"
+
+    time.sleep(2)
+
+    if isinstance(scenario.tags, list) and isinstance(scenario.name, str):
+        scenario_seed_id = scenario.tags[0].split(":")[1]
+        delete_scenario_data_points(API_KEY, scenario_seed_id, scenario.name)
+        delete_scenario_data_points(API_KEY, scenario.scenario_id, scenario.name)
+
+    assert scenario.type == "COMMON_CONTRACTIONS"
 
 
-@pytest.mark.timeout(max_time_out_in_seconds)
-def dtest_create_scenario_set_misspelling_small_load(
+def test_create_delete_scenario_set_misspelling_tiny_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
-    large_seed_data = []
-    number_examples = 5
+    seed_data = []
+    number_examples = 2
     file_path = os.path.join(
-        os.path.dirname(__file__), "datasets/random_sentence_small.txt"
+        os.path.dirname(__file__), "datasets/random_sentence_tiny.txt"
     )
     with open(file_path) as file:
         lines = file.readlines()
         for line in lines:
             parts = line.split("\t")
             assert len(parts) == 2
-            large_seed_data.append(
+            seed_data.append(
                 SeedData(input_=parts[0], result=parts[1]),
             )
 
     scenario_set_create = ScenarioSetCreate(
-        name="my misspelling test scenario set small load",
+        name="my misspelling test scenario set tiny load",
         generation_type=ScenarioType.COMMON_MISSPELLINGS,
         number_examples=number_examples,
-        seed_data=large_seed_data,
+        seed_data=seed_data,
     )
-    create_scenario_set: ScenarioSetResponse = okareo_client.create_scenario_set(
+    scenario: ScenarioSetResponse = okareo_client.create_scenario_set(
         scenario_set_create
     )
-    assert create_scenario_set.type == "COMMON_MISSPELLINGS"
+
+    time.sleep(2)
+
+    if isinstance(scenario.tags, list) and isinstance(scenario.name, str):
+        scenario_seed_id = scenario.tags[0].split(":")[1]
+        delete_scenario_data_points(API_KEY, scenario_seed_id, scenario.name)
+        delete_scenario_data_points(API_KEY, scenario.scenario_id, scenario.name)
+
+    assert scenario.type == "COMMON_MISSPELLINGS"

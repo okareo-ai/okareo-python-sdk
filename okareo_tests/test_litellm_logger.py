@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from unittest import mock
 
@@ -41,9 +40,6 @@ def test_litellm_baselogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) ->
     messages = [{"content": "who is obama?", "role": "user"}]
     response = completion(model=model, messages=messages, mock_response=response)
 
-    # needs to wait for callback to finish
-    time.sleep(2)
-
     if okareo_api.is_mock:
         requests = httpx_mock.get_requests()
         assert requests[0].method == "POST"
@@ -75,9 +71,6 @@ def test_litellm_openailogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
     response = "ModelResponse(id='chatcmpl-90E2ohwLpPXSIuPRzm0fc905yVjZh', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Barack Obama is an American politician who served as the 44th President of the United States from 2009 to 2017. He is a member of the Democratic Party and was the first African American to be elected to the presidency. Before becoming president, he served as a U.S. Senator from Illinois and worked as a community organizer and civil rights attorney. He is widely regarded as one of the most influential and charismatic leaders in modern American history.', role='assistant'))], created=1709841014, model='gpt-3.5-turbo-0125', object='chat.completion', system_fingerprint='fp_2b778c6b35', usage=Usage(completion_tokens=92, prompt_tokens=12, total_tokens=104))"
     messages = [{"content": "who is obama?", "role": "user"}]
     response = completion(model=model, messages=messages, mock_response=response)
-
-    # needs to wait for callback to finish
-    time.sleep(2)
 
     if okareo_api.is_mock:
         requests = httpx_mock.get_requests()
