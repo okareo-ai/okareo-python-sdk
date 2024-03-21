@@ -57,7 +57,9 @@ def dtest_litellm_baselogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
 
 
 @integration
-def dtest_litellm_openailogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
+def dtest_litellm_openailogger(
+    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
+) -> None:
     context_token = random_string(10)
     if okareo_api.is_mock:
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
