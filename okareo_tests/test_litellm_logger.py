@@ -48,9 +48,8 @@ def test_litellm_baselogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) ->
         requests = httpx_mock.get_requests()
         assert requests[0].method == "POST"
         assert "/v0/register_model" in requests[0].url.path
-        if len(requests) > 1:
-            assert requests[1].method == "POST"
-            assert "/v0/datapoints" in requests[1].url.path
+        assert requests[1].method == "POST"
+        assert "/v0/datapoints" in requests[1].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
         dp = okareo.find_datapoints(context_token=context_token)
@@ -83,9 +82,8 @@ def test_litellm_openailogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
         requests = httpx_mock.get_requests()
         assert requests[0].method == "POST"
         assert "/v0/register_model" in requests[0].url.path
-        if len(requests) > 1:
-            assert requests[1].method == "POST"
-            assert "/v0/datapoints" in requests[1].url.path
+        assert requests[1].method == "POST"
+        assert "/v0/datapoints" in requests[1].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
         dp = okareo.find_datapoints(context_token=context_token)
