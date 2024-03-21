@@ -195,7 +195,7 @@ def test_create_delete_scenario_set_contraction_tiny_load(
         scenario_set_create
     )
 
-    time.sleep(2)
+    time.sleep(10)
 
     if isinstance(scenario.tags, list) and isinstance(scenario.name, str):
         scenario_seed_id = scenario.tags[0].split(":")[1]
@@ -232,7 +232,7 @@ def test_create_delete_scenario_set_misspelling_tiny_load(
         scenario_set_create
     )
 
-    time.sleep(2)
+    time.sleep(10)
 
     if isinstance(scenario.tags, list) and isinstance(scenario.name, str):
         scenario_seed_id = scenario.tags[0].split(":")[1]
