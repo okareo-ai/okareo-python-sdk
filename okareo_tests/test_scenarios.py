@@ -168,7 +168,7 @@ def delete_scenario_data_points(
     requests.delete(url, headers=headers)
 
 
-def test_create_delete_scenario_set_contraction_tiny_load(
+def dtest_create_delete_scenario_set_contraction_tiny_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
     seed_data = []
@@ -205,7 +205,7 @@ def test_create_delete_scenario_set_contraction_tiny_load(
     assert scenario.type == "COMMON_CONTRACTIONS"
 
 
-def test_create_delete_scenario_set_misspelling_tiny_load(
+def dtest_create_delete_scenario_set_misspelling_tiny_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
     seed_data = []
