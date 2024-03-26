@@ -33,6 +33,7 @@ class DatapointListItem:
         mut_id (Union[Unset, str]):
         project_id (Union[Unset, str]):
         test_run_id (Union[Unset, str]):
+        total_search_count (Union[Unset, int]):
     """
 
     id: str
@@ -49,6 +50,7 @@ class DatapointListItem:
     mut_id: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     test_run_id: Union[Unset, str] = UNSET
+    total_search_count: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -113,6 +115,7 @@ class DatapointListItem:
         mut_id = self.mut_id
         project_id = self.project_id
         test_run_id = self.test_run_id
+        total_search_count = self.total_search_count
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -147,6 +150,8 @@ class DatapointListItem:
             field_dict["project_id"] = project_id
         if test_run_id is not UNSET:
             field_dict["test_run_id"] = test_run_id
+        if total_search_count is not UNSET:
+            field_dict["total_search_count"] = total_search_count
 
         return field_dict
 
@@ -251,6 +256,8 @@ class DatapointListItem:
 
         test_run_id = d.pop("test_run_id", UNSET)
 
+        total_search_count = d.pop("total_search_count", UNSET)
+
         datapoint_list_item = cls(
             id=id,
             tags=tags,
@@ -266,6 +273,7 @@ class DatapointListItem:
             mut_id=mut_id,
             project_id=project_id,
             test_run_id=test_run_id,
+            total_search_count=total_search_count,
         )
 
         datapoint_list_item.additional_properties = d
