@@ -1,9 +1,9 @@
 import os
 from typing import Any, List, Optional
 
-import dotenv  # type: ignore
+import dotenv
 from litellm.integrations.custom_logger import CustomLogger  # type: ignore
-from openai._models import BaseModel as OpenAIObject  # type: ignore
+from openai._models import BaseModel as OpenAIObject
 
 from okareo import Okareo
 
