@@ -11,14 +11,22 @@ from okareo_api_client.api.default import (
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
+    generate_evaluator_v0_generate_evaluator_post,
+    evaluator_upload_v0_evaluator_upload_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
 from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
     BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
 )
+from okareo_api_client.models.body_evaluator_upload_v0_evaluator_upload_post import (
+    BodyEvaluatorUploadV0EvaluatorUploadPost
+)
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.error_response import ErrorResponse
+from okareo_api_client.models.evaluator_generate_request import EvaluatorGenerateRequest
+from okareo_api_client.models.evaluator_generate_response import EvaluatorGenerateResponse
+from okareo_api_client.models.evaluator_response import EvaluatorResponse
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.scenario_data_poin_response import (
@@ -222,3 +230,41 @@ class Okareo:
         if not data:
             return []
         return data
+
+    def upload_evaluator(
+        self, name: str, file_path: str, requires_scenario_input: bool, requires_scenario_result: bool, project_id: Union[Unset, str] = UNSET
+    ) -> EvaluatorResponse:
+        try:
+            file_name = os.path.basename(file_path)
+
+            with open(file_path, "rb") as binary_io:
+                multipart_body = BodyEvaluatorUploadV0EvaluatorUploadPost(
+                    name=name,
+                    file=File(file_name=file_name, payload=binary_io),
+                )
+                response = evaluator_upload_v0_evaluator_upload_post.sync(
+                    client=self.client,
+                    multipart_data=multipart_body,
+                    requires_scenario_input=requires_scenario_input,
+                    requires_scenario_result=requires_scenario_result,
+                    api_key=self.api_key,
+                )
+
+            self.validate_response(response)
+            assert isinstance(response, EvaluatorResponse)
+
+            return response
+        except UnexpectedStatus as e:
+            print(e.content)
+            raise
+
+    def generate_evaluator(
+        self, create_evaluator: EvaluatorGenerateRequest
+    ) -> EvaluatorGenerateResponse:
+        response = generate_evaluator_v0_generate_evaluator_post.sync(
+            client=self.client, api_key=self.api_key, json_body=create_evaluator
+        )
+        self.validate_response(response)
+        assert isinstance(response, EvaluatorGenerateResponse)
+
+        return response
