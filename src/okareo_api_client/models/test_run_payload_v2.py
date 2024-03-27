@@ -30,7 +30,6 @@ class TestRunPayloadV2:
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
         project_id (Union[Unset, str]): ID of the project
         model_results (Union[Unset, TestRunPayloadV2ModelResults]):
-        evaluator_ids (Union[Unset, List[str]]): String IDs for evaluators to run on your model
     """
 
     mut_id: str
@@ -43,7 +42,6 @@ class TestRunPayloadV2:
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
     model_results: Union[Unset, "TestRunPayloadV2ModelResults"] = UNSET
-    evaluator_ids: Union[Unset, List[str]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -72,10 +70,6 @@ class TestRunPayloadV2:
         if not isinstance(self.model_results, Unset):
             model_results = self.model_results.to_dict()
 
-        evaluator_ids: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.evaluator_ids, Unset):
-            evaluator_ids = self.evaluator_ids
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -100,8 +94,6 @@ class TestRunPayloadV2:
             field_dict["project_id"] = project_id
         if model_results is not UNSET:
             field_dict["model_results"] = model_results
-        if evaluator_ids is not UNSET:
-            field_dict["evaluator_ids"] = evaluator_ids
 
         return field_dict
 
@@ -152,8 +144,6 @@ class TestRunPayloadV2:
         else:
             model_results = TestRunPayloadV2ModelResults.from_dict(_model_results)
 
-        evaluator_ids = cast(List[str], d.pop("evaluator_ids", UNSET))
-
         test_run_payload_v2 = cls(
             mut_id=mut_id,
             scenario_id=scenario_id,
@@ -165,7 +155,6 @@ class TestRunPayloadV2:
             tags=tags,
             project_id=project_id,
             model_results=model_results,
-            evaluator_ids=evaluator_ids,
         )
 
         test_run_payload_v2.additional_properties = d
