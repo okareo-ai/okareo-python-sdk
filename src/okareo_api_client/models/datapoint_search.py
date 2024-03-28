@@ -25,6 +25,10 @@ class DatapointSearch:
         project_id (Union[Unset, str]): Project ID
         mut_id (Union[Unset, str]): Model ID
         test_run_id (Union[Unset, str]): Test run ID
+        search_value (Union[Unset, str]): Search substring that is matched against input, result, context_token, tags,
+            or time_created fields
+        offset (Union[Unset, int]): Offset for pagination
+        limit (Union[Unset, int]): Limit for pagination
     """
 
     tags: Union[Unset, List[str]] = UNSET
@@ -36,6 +40,9 @@ class DatapointSearch:
     project_id: Union[Unset, str] = UNSET
     mut_id: Union[Unset, str] = UNSET
     test_run_id: Union[Unset, str] = UNSET
+    search_value: Union[Unset, str] = UNSET
+    offset: Union[Unset, int] = UNSET
+    limit: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -57,6 +64,9 @@ class DatapointSearch:
         project_id = self.project_id
         mut_id = self.mut_id
         test_run_id = self.test_run_id
+        search_value = self.search_value
+        offset = self.offset
+        limit = self.limit
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -79,6 +89,12 @@ class DatapointSearch:
             field_dict["mut_id"] = mut_id
         if test_run_id is not UNSET:
             field_dict["test_run_id"] = test_run_id
+        if search_value is not UNSET:
+            field_dict["search_value"] = search_value
+        if offset is not UNSET:
+            field_dict["offset"] = offset
+        if limit is not UNSET:
+            field_dict["limit"] = limit
 
         return field_dict
 
@@ -113,6 +129,12 @@ class DatapointSearch:
 
         test_run_id = d.pop("test_run_id", UNSET)
 
+        search_value = d.pop("search_value", UNSET)
+
+        offset = d.pop("offset", UNSET)
+
+        limit = d.pop("limit", UNSET)
+
         datapoint_search = cls(
             tags=tags,
             from_date=from_date,
@@ -123,6 +145,9 @@ class DatapointSearch:
             project_id=project_id,
             mut_id=mut_id,
             test_run_id=test_run_id,
+            search_value=search_value,
+            offset=offset,
+            limit=limit,
         )
 
         datapoint_search.additional_properties = d
