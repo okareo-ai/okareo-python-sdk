@@ -6,8 +6,8 @@ import httpx
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
-    evaluator_upload_v0_evaluator_upload_post,
     evaluator_generate_v0_evaluator_generate_post,
+    evaluator_upload_v0_evaluator_upload_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_datapoints_v0_find_datapoints_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
