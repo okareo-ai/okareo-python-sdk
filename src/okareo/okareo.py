@@ -9,6 +9,7 @@ from okareo_api_client.api.default import (
     evaluator_generate_v0_evaluator_generate_post,
     evaluator_upload_v0_evaluator_upload_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
+    get_all_projects_v0_projects_get,
     get_datapoints_v0_find_datapoints_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
@@ -31,6 +32,7 @@ from okareo_api_client.models.evaluator_generate_response import (
 from okareo_api_client.models.evaluator_response import EvaluatorResponse
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
+from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
@@ -54,6 +56,16 @@ class Okareo:
         self.client = Client(
             base_url=base_path, raise_on_unexpected_status=True
         )  # otherwise everything except 201 and 422 is swallowed
+
+    def get_projects(self) -> List[ProjectResponse]:
+        response = get_all_projects_v0_projects_get.sync(
+            client=self.client,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, List)
+
+        return response
 
     def register_model(
         self,
