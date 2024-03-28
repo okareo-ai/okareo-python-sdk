@@ -7,7 +7,7 @@ from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
     evaluator_upload_v0_evaluator_upload_post,
-    generate_evaluator_v0_generate_evaluator_post,
+    evaluator_generate_v0_evaluator_generate_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_datapoints_v0_find_datapoints_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
@@ -268,7 +268,7 @@ class Okareo:
     def generate_evaluator(
         self, create_evaluator: EvaluatorGenerateRequest
     ) -> EvaluatorGenerateResponse:
-        response = generate_evaluator_v0_generate_evaluator_post.sync(
+        response = evaluator_generate_v0_evaluator_generate_post.sync(
             client=self.client, api_key=self.api_key, json_body=create_evaluator
         )
         self.validate_response(response)

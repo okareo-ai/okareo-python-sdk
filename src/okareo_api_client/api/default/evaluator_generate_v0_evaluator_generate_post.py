@@ -23,7 +23,7 @@ def _get_kwargs(
 
     return {
         "method": "post",
-        "url": "/v0/generate_evaluator",
+        "url": "/v0/evaluator_generate",
         "json": json_json_body,
         "headers": headers,
     }
@@ -71,11 +71,11 @@ def sync_detailed(
     json_body: EvaluatorGenerateRequest,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Generate Evaluator
+    """Evaluator Generate
 
      Generate code for an evaluator for testing.
     Returns:
-        the evaluator object
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
@@ -107,11 +107,11 @@ def sync(
     json_body: EvaluatorGenerateRequest,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Generate Evaluator
+    """Evaluator Generate
 
      Generate code for an evaluator for testing.
     Returns:
-        the evaluator object
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
@@ -138,11 +138,11 @@ async def asyncio_detailed(
     json_body: EvaluatorGenerateRequest,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Generate Evaluator
+    """Evaluator Generate
 
      Generate code for an evaluator for testing.
     Returns:
-        the evaluator object
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
@@ -172,11 +172,11 @@ async def asyncio(
     json_body: EvaluatorGenerateRequest,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Generate Evaluator
+    """Evaluator Generate
 
      Generate code for an evaluator for testing.
     Returns:
-        the evaluator object
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
