@@ -5,49 +5,62 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="EvaluatorGenerateRequest")
+T = TypeVar("T", bound="EvaluatorSpecRequest")
 
 
 @_attrs_define
-class EvaluatorGenerateRequest:
+class EvaluatorSpecRequest:
     """
     Attributes:
-        requirements (Union[Unset, str]): Requirements used to generate the evaluator
+        name (Union[Unset, str]): Name of the evaluator
+        description (Union[Unset, str]): Description for the evaluator.
+                        When this request is sent to generate an evaluator, this field will be used to generate it.
         requires_scenario_input (Union[Unset, bool]): Whether the evaluator requires scenario input
         requires_scenario_result (Union[Unset, bool]): Whether the evaluator requires scenario expected result
-        output_data_type (Union[Unset, str]): Evaluator output data type (i.e., boolean, integer, float)
+        output_data_type (Union[Unset, str]): Evaluator output data type (i.e., bool, int, float)
+        project_id (Union[Unset, str]): ID for the project
     """
 
-    requirements: Union[Unset, str] = UNSET
+    name: Union[Unset, str] = UNSET
+    description: Union[Unset, str] = UNSET
     requires_scenario_input: Union[Unset, bool] = False
     requires_scenario_result: Union[Unset, bool] = False
     output_data_type: Union[Unset, str] = UNSET
+    project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        requirements = self.requirements
+        name = self.name
+        description = self.description
         requires_scenario_input = self.requires_scenario_input
         requires_scenario_result = self.requires_scenario_result
         output_data_type = self.output_data_type
+        project_id = self.project_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
-        if requirements is not UNSET:
-            field_dict["requirements"] = requirements
+        if name is not UNSET:
+            field_dict["name"] = name
+        if description is not UNSET:
+            field_dict["description"] = description
         if requires_scenario_input is not UNSET:
             field_dict["requires_scenario_input"] = requires_scenario_input
         if requires_scenario_result is not UNSET:
             field_dict["requires_scenario_result"] = requires_scenario_result
         if output_data_type is not UNSET:
             field_dict["output_data_type"] = output_data_type
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        requirements = d.pop("requirements", UNSET)
+        name = d.pop("name", UNSET)
+
+        description = d.pop("description", UNSET)
 
         requires_scenario_input = d.pop("requires_scenario_input", UNSET)
 
@@ -55,15 +68,19 @@ class EvaluatorGenerateRequest:
 
         output_data_type = d.pop("output_data_type", UNSET)
 
-        evaluator_generate_request = cls(
-            requirements=requirements,
+        project_id = d.pop("project_id", UNSET)
+
+        evaluator_spec_request = cls(
+            name=name,
+            description=description,
             requires_scenario_input=requires_scenario_input,
             requires_scenario_result=requires_scenario_result,
             output_data_type=output_data_type,
+            project_id=project_id,
         )
 
-        evaluator_generate_request.additional_properties = d
-        return evaluator_generate_request
+        evaluator_spec_request.additional_properties = d
+        return evaluator_spec_request
 
     @property
     def additional_keys(self) -> List[str]:

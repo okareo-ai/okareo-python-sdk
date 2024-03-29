@@ -5,26 +5,24 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.body_evaluator_upload_v0_evaluator_upload_post import BodyEvaluatorUploadV0EvaluatorUploadPost
 from ...models.error_response import ErrorResponse
 from ...models.evaluator_detailed_response import EvaluatorDetailedResponse
 from ...types import Response
 
 
 def _get_kwargs(
+    evaluator_id: str,
     *,
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    multipart_multipart_data = multipart_data.to_multipart()
-
     return {
-        "method": "post",
-        "url": "/v0/evaluator_upload",
-        "files": multipart_multipart_data,
+        "method": "get",
+        "url": "/v0/evaluator/{evaluator_id}".format(
+            evaluator_id=evaluator_id,
+        ),
         "headers": headers,
     }
 
@@ -32,10 +30,10 @@ def _get_kwargs(
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = EvaluatorDetailedResponse.from_dict(response.json())
+    if response.status_code == HTTPStatus.CREATED:
+        response_201 = EvaluatorDetailedResponse.from_dict(response.json())
 
-        return response_200
+        return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -66,21 +64,23 @@ def _build_response(
 
 
 def sync_detailed(
+    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+    """Get Evaluator
 
-     Upload a new evaluator
+     Get an evaluator
 
-    Returns:
-        the evaluator object with its ID
+    Raises:
+        HTTPException: 404 if evaluator_id is not found
+
+    Returns: the evaluator
 
     Args:
+        evaluator_id (str):
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -91,7 +91,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        evaluator_id=evaluator_id,
         api_key=api_key,
     )
 
@@ -103,21 +103,23 @@ def sync_detailed(
 
 
 def sync(
+    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+    """Get Evaluator
 
-     Upload a new evaluator
+     Get an evaluator
 
-    Returns:
-        the evaluator object with its ID
+    Raises:
+        HTTPException: 404 if evaluator_id is not found
+
+    Returns: the evaluator
 
     Args:
+        evaluator_id (str):
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -128,28 +130,30 @@ def sync(
     """
 
     return sync_detailed(
+        evaluator_id=evaluator_id,
         client=client,
-        multipart_data=multipart_data,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
+    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+    """Get Evaluator
 
-     Upload a new evaluator
+     Get an evaluator
 
-    Returns:
-        the evaluator object with its ID
+    Raises:
+        HTTPException: 404 if evaluator_id is not found
+
+    Returns: the evaluator
 
     Args:
+        evaluator_id (str):
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -160,7 +164,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        evaluator_id=evaluator_id,
         api_key=api_key,
     )
 
@@ -170,21 +174,23 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+    """Get Evaluator
 
-     Upload a new evaluator
+     Get an evaluator
 
-    Returns:
-        the evaluator object with its ID
+    Raises:
+        HTTPException: 404 if evaluator_id is not found
+
+    Returns: the evaluator
 
     Args:
+        evaluator_id (str):
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -196,8 +202,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
+            evaluator_id=evaluator_id,
             client=client,
-            multipart_data=multipart_data,
             api_key=api_key,
         )
     ).parsed

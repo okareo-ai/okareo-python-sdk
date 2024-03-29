@@ -6,14 +6,14 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.evaluator_generate_request import EvaluatorGenerateRequest
 from ...models.evaluator_generate_response import EvaluatorGenerateResponse
+from ...models.evaluator_spec_request import EvaluatorSpecRequest
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    json_body: EvaluatorGenerateRequest,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -68,7 +68,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: EvaluatorGenerateRequest,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
     """Evaluator Generate
@@ -79,7 +79,7 @@ def sync_detailed(
 
     Args:
         api_key (str):
-        json_body (EvaluatorGenerateRequest):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -104,7 +104,7 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: EvaluatorGenerateRequest,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
     """Evaluator Generate
@@ -115,7 +115,7 @@ def sync(
 
     Args:
         api_key (str):
-        json_body (EvaluatorGenerateRequest):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -135,7 +135,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: EvaluatorGenerateRequest,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
     """Evaluator Generate
@@ -146,7 +146,7 @@ async def asyncio_detailed(
 
     Args:
         api_key (str):
-        json_body (EvaluatorGenerateRequest):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -169,7 +169,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: EvaluatorGenerateRequest,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
     """Evaluator Generate
@@ -180,7 +180,7 @@ async def asyncio(
 
     Args:
         api_key (str):
-        json_body (EvaluatorGenerateRequest):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
