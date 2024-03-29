@@ -5,30 +5,28 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.body_evaluator_delete_v0_evaluator_evaluator_id_delete import (
+    BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+)
 from ...models.error_response import ErrorResponse
-from ...types import UNSET, Response
+from ...types import Response
 
 
 def _get_kwargs(
     evaluator_id: str,
     *,
-    name: str,
+    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
-
-    params: Dict[str, Any] = {}
-    params["name"] = name
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
         "method": "delete",
         "url": "/v0/evaluator/{evaluator_id}".format(
             evaluator_id=evaluator_id,
         ),
-        "params": params,
+        "data": form_data.to_dict(),
         "headers": headers,
     }
 
@@ -72,7 +70,7 @@ def sync_detailed(
     evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
+    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Evaluator Delete
@@ -86,7 +84,6 @@ def sync_detailed(
 
     Args:
         evaluator_id (str):
-        name (str): Name of the Evaluator to delete
         api_key (str):
 
     Raises:
@@ -99,7 +96,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         evaluator_id=evaluator_id,
-        name=name,
+        form_data=form_data,
         api_key=api_key,
     )
 
@@ -114,7 +111,7 @@ def sync(
     evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
+    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Evaluator Delete
@@ -128,7 +125,6 @@ def sync(
 
     Args:
         evaluator_id (str):
-        name (str): Name of the Evaluator to delete
         api_key (str):
 
     Raises:
@@ -142,7 +138,7 @@ def sync(
     return sync_detailed(
         evaluator_id=evaluator_id,
         client=client,
-        name=name,
+        form_data=form_data,
         api_key=api_key,
     ).parsed
 
@@ -151,7 +147,7 @@ async def asyncio_detailed(
     evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
+    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Evaluator Delete
@@ -165,7 +161,6 @@ async def asyncio_detailed(
 
     Args:
         evaluator_id (str):
-        name (str): Name of the Evaluator to delete
         api_key (str):
 
     Raises:
@@ -178,7 +173,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         evaluator_id=evaluator_id,
-        name=name,
+        form_data=form_data,
         api_key=api_key,
     )
 
@@ -191,7 +186,7 @@ async def asyncio(
     evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
+    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Evaluator Delete
@@ -205,7 +200,6 @@ async def asyncio(
 
     Args:
         evaluator_id (str):
-        name (str): Name of the Evaluator to delete
         api_key (str):
 
     Raises:
@@ -220,7 +214,7 @@ async def asyncio(
         await asyncio_detailed(
             evaluator_id=evaluator_id,
             client=client,
-            name=name,
+            form_data=form_data,
             api_key=api_key,
         )
     ).parsed

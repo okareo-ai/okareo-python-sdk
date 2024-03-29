@@ -1,5 +1,6 @@
 """ Contains all the data models used in inputs/outputs """
 
+from .body_evaluator_delete_v0_evaluator_evaluator_id_delete import BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete
 from .body_evaluator_upload_v0_evaluator_upload_post import BodyEvaluatorUploadV0EvaluatorUploadPost
 from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
 from .datapoint_list_item import DatapointListItem
@@ -10,9 +11,10 @@ from .datapoint_schema import DatapointSchema
 from .datapoint_search import DatapointSearch
 from .datapoint_summary_item import DatapointSummaryItem
 from .error_response import ErrorResponse
-from .evaluator_generate_request import EvaluatorGenerateRequest
+from .evaluator_brief_response import EvaluatorBriefResponse
+from .evaluator_detailed_response import EvaluatorDetailedResponse
 from .evaluator_generate_response import EvaluatorGenerateResponse
-from .evaluator_response import EvaluatorResponse
+from .evaluator_spec_request import EvaluatorSpecRequest
 from .feedback_range_summary import FeedbackRangeSummary
 from .find_test_data_point_payload import FindTestDataPointPayload
 from .general_find_payload import GeneralFindPayload
@@ -49,6 +51,7 @@ from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 from .test_run_type import TestRunType
 
 __all__ = (
+    "BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete",
     "BodyEvaluatorUploadV0EvaluatorUploadPost",
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
     "DatapointListItem",
@@ -59,9 +62,10 @@ __all__ = (
     "DatapointSearch",
     "DatapointSummaryItem",
     "ErrorResponse",
-    "EvaluatorGenerateRequest",
+    "EvaluatorBriefResponse",
+    "EvaluatorDetailedResponse",
     "EvaluatorGenerateResponse",
-    "EvaluatorResponse",
+    "EvaluatorSpecRequest",
     "FeedbackRangeSummary",
     "FindTestDataPointPayload",
     "GeneralFindPayload",

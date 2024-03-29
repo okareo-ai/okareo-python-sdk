@@ -14,15 +14,30 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
     """
     Attributes:
         name (str): Name of the Evaluator
+        requires_scenario_input (bool): Whether the evaluator requires scenario input
+        requires_scenario_result (bool): Whether the evaluator requires scenario expected result
+        description (Union[Unset, str]): Description of the Evaluator Default: ''.
+        output_data_type (Union[Unset, str]): Evaluator output data type (i.e., bool, int, float)
+        project_id (Union[Unset, str]): ID for the project
         file (Union[Unset, File]):
     """
 
     name: str
+    requires_scenario_input: bool
+    requires_scenario_result: bool
+    description: Union[Unset, str] = ""
+    output_data_type: Union[Unset, str] = UNSET
+    project_id: Union[Unset, str] = UNSET
     file: Union[Unset, File] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
+        requires_scenario_input = self.requires_scenario_input
+        requires_scenario_result = self.requires_scenario_result
+        description = self.description
+        output_data_type = self.output_data_type
+        project_id = self.project_id
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
@@ -32,8 +47,16 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
         field_dict.update(
             {
                 "name": name,
+                "requires_scenario_input": requires_scenario_input,
+                "requires_scenario_result": requires_scenario_result,
             }
         )
+        if description is not UNSET:
+            field_dict["description"] = description
+        if output_data_type is not UNSET:
+            field_dict["output_data_type"] = output_data_type
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
         if file is not UNSET:
             field_dict["file"] = file
 
@@ -41,6 +64,31 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
 
     def to_multipart(self) -> Dict[str, Any]:
         name = self.name if isinstance(self.name, Unset) else (None, str(self.name).encode(), "text/plain")
+        requires_scenario_input = (
+            self.requires_scenario_input
+            if isinstance(self.requires_scenario_input, Unset)
+            else (None, str(self.requires_scenario_input).encode(), "text/plain")
+        )
+        requires_scenario_result = (
+            self.requires_scenario_result
+            if isinstance(self.requires_scenario_result, Unset)
+            else (None, str(self.requires_scenario_result).encode(), "text/plain")
+        )
+        description = (
+            self.description
+            if isinstance(self.description, Unset)
+            else (None, str(self.description).encode(), "text/plain")
+        )
+        output_data_type = (
+            self.output_data_type
+            if isinstance(self.output_data_type, Unset)
+            else (None, str(self.output_data_type).encode(), "text/plain")
+        )
+        project_id = (
+            self.project_id
+            if isinstance(self.project_id, Unset)
+            else (None, str(self.project_id).encode(), "text/plain")
+        )
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
@@ -52,8 +100,16 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
         field_dict.update(
             {
                 "name": name,
+                "requires_scenario_input": requires_scenario_input,
+                "requires_scenario_result": requires_scenario_result,
             }
         )
+        if description is not UNSET:
+            field_dict["description"] = description
+        if output_data_type is not UNSET:
+            field_dict["output_data_type"] = output_data_type
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
         if file is not UNSET:
             field_dict["file"] = file
 
@@ -64,6 +120,16 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
         d = src_dict.copy()
         name = d.pop("name")
 
+        requires_scenario_input = d.pop("requires_scenario_input")
+
+        requires_scenario_result = d.pop("requires_scenario_result")
+
+        description = d.pop("description", UNSET)
+
+        output_data_type = d.pop("output_data_type", UNSET)
+
+        project_id = d.pop("project_id", UNSET)
+
         _file = d.pop("file", UNSET)
         file: Union[Unset, File]
         if isinstance(_file, Unset):
@@ -73,6 +139,11 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
 
         body_evaluator_upload_v0_evaluator_upload_post = cls(
             name=name,
+            requires_scenario_input=requires_scenario_input,
+            requires_scenario_result=requires_scenario_result,
+            description=description,
+            output_data_type=output_data_type,
+            project_id=project_id,
             file=file,
         )
 
