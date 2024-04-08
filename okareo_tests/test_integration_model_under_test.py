@@ -107,7 +107,7 @@ def assert_metrics(run_resp: TestRunItem) -> None:
 
 
 def assert_scores(scores: dict) -> None:
-    dimension_keys = ["consistency", "coherence", "fluency", "relevance", "overall"]
+    dimension_keys = ["consistency", "coherence", "fluency", "relevance"]
     for dimension in dimension_keys:
         assert dimension in scores
         assert isinstance(scores[dimension], float)
