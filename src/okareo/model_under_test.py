@@ -294,6 +294,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType,
         calculate_metrics: bool,
         model_data: dict,
+        checks: Optional[List[str]],
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
@@ -315,6 +316,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 if self._has_custom_model()
                 else UNSET
             ),
+            checks=checks if checks else UNSET,
         )
 
     def run_test(
@@ -326,6 +328,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
+        checks: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
@@ -367,6 +370,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     test_run_type,
                     calculate_metrics,
                     model_data,
+                    checks,
                 ),
             )
         except UnexpectedStatus as e:
@@ -391,6 +395,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = False,
+        checks: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
@@ -440,6 +445,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     test_run_type,
                     calculate_metrics,
                     model_data,
+                    checks,
                 ),
             )
         except UnexpectedStatus as e:
