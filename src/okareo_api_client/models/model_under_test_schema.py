@@ -20,12 +20,14 @@ class ModelUnderTestSchema:
         models (Union[Unset, ModelUnderTestSchemaModels]): Models to be added for testing
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter models in the Okareo app
         project_id (Union[Unset, str]): ID of the project
+        update (Union[Unset, bool]): If set to true, the model will be updated instead of returning the existing model
     """
 
     name: Union[Unset, str] = UNSET
     models: Union[Unset, "ModelUnderTestSchemaModels"] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
+    update: Union[Unset, bool] = False
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -39,6 +41,7 @@ class ModelUnderTestSchema:
             tags = self.tags
 
         project_id = self.project_id
+        update = self.update
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -51,6 +54,8 @@ class ModelUnderTestSchema:
             field_dict["tags"] = tags
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if update is not UNSET:
+            field_dict["update"] = update
 
         return field_dict
 
@@ -72,11 +77,14 @@ class ModelUnderTestSchema:
 
         project_id = d.pop("project_id", UNSET)
 
+        update = d.pop("update", UNSET)
+
         model_under_test_schema = cls(
             name=name,
             models=models,
             tags=tags,
             project_id=project_id,
+            update=update,
         )
 
         model_under_test_schema.additional_properties = d
