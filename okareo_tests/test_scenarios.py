@@ -6,13 +6,14 @@ from typing import List
 
 import pytest
 import requests  # type: ignore
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY
 
 from okareo import Okareo
 from okareo_api_client.models import (
     ScenarioSetCreate,
     ScenarioSetGenerate,
     ScenarioSetResponse,
+    ScenarioType,
     SeedData,
 )
 from okareo_api_client.models.scenario_data_poin_response import (
@@ -42,9 +43,9 @@ def seed_data() -> List[SeedData]:
 def create_scenario_set(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
-        name=f"my test scenario set {random_string(5)}",
+        name="my test scenario set",
+        number_examples=1,
         seed_data=seed_data,
     )
     articles: ScenarioSetResponse = okareo_client.create_scenario_set(
@@ -60,7 +61,7 @@ def generate_scenarios(
 ) -> ScenarioSetResponse:
     scenario_set_generate = ScenarioSetGenerate(
         source_scenario_id=create_scenario_set.scenario_id,
-        name=f"generated scenario set {random_string(5)}",
+        name="generated scenario set",
         number_examples=2,
     )
     response = okareo_client.generate_scenario_set(scenario_set_generate)
@@ -82,7 +83,7 @@ def test_create_scenario_set(
     assert create_scenario_set.project_id
     assert create_scenario_set.time_created
     if isinstance(create_scenario_set.seed_data, List):
-        for i in range(1):
+        for i in range(3):
             assert seed_data[i].input_ == create_scenario_set.seed_data[i].input_
             assert seed_data[i].result == create_scenario_set.seed_data[i].result
 
@@ -99,27 +100,6 @@ def test_download_scenario_set(
             assert json.loads(line)["result"] != ""
 
 
-def test_duplicate_scenario_name(
-    okareo_client: Okareo,
-    seed_data: List[SeedData],
-) -> None:
-    name = f"my test scenario set {random_string(5)}"
-    scenario = okareo_client.create_scenario_set(
-        ScenarioSetCreate(
-            name=name,
-            seed_data=seed_data,
-        )
-    )
-    assert scenario.warning is None
-    scenario = okareo_client.create_scenario_set(
-        ScenarioSetCreate(
-            name=name,
-            seed_data=seed_data,
-        )
-    )
-    assert scenario.warning
-
-
 def test_download_scenario_set_with_file(
     okareo_client: Okareo,
     create_scenario_set: ScenarioSetResponse,
@@ -134,25 +114,28 @@ def test_download_scenario_set_with_file(
             assert json.loads(line)["result"] != ""
 
 
-def test_create_scenario_set_all_fields(
+def test_create_scenario_set_rephrase(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
     scenario_set_create = ScenarioSetCreate(
-        name=f"my test scenario set {random_string(5)}",
+        name="my test scenario set",
+        generation_type=ScenarioType.REPHRASE_INVARIANT,
+        number_examples=2,
         seed_data=seed_data,
     )
     create_scenario_set: ScenarioSetResponse = okareo_client.create_scenario_set(
         scenario_set_create
     )
 
-    assert create_scenario_set.type == "SEED"
+    assert create_scenario_set.type == "REPHRASE_INVARIANT"
     assert create_scenario_set.scenario_id
     assert create_scenario_set.project_id
     assert create_scenario_set.time_created
     assert isinstance(create_scenario_set.scenario_input, List)
     assert isinstance(create_scenario_set.seed_data, List)
+    assert len(create_scenario_set.scenario_input) == 6
     for i in range(3):
-        assert seed_data[i].input_ == create_scenario_set.seed_data[i].input_
+        assert seed_data[i].input_ != create_scenario_set.scenario_input[i]
 
 
 def test_generate_scenarios(
@@ -189,6 +172,7 @@ def dtest_create_delete_scenario_set_contraction_tiny_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
     seed_data = []
+    number_examples = 2
     file_path = os.path.join(
         os.path.dirname(__file__), "datasets/random_sentence_tiny.txt"
     )
@@ -203,6 +187,8 @@ def dtest_create_delete_scenario_set_contraction_tiny_load(
 
     scenario_set_create = ScenarioSetCreate(
         name="my contraction test scenario set tiny load",
+        generation_type=ScenarioType.COMMON_CONTRACTIONS,
+        number_examples=number_examples,
         seed_data=seed_data,
     )
     scenario: ScenarioSetResponse = okareo_client.create_scenario_set(
@@ -223,6 +209,7 @@ def dtest_create_delete_scenario_set_misspelling_tiny_load(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> None:
     seed_data = []
+    number_examples = 2
     file_path = os.path.join(
         os.path.dirname(__file__), "datasets/random_sentence_tiny.txt"
     )
@@ -236,7 +223,9 @@ def dtest_create_delete_scenario_set_misspelling_tiny_load(
             )
 
     scenario_set_create = ScenarioSetCreate(
-        name=f"my misspelling test scenario set tiny load {random_string(5)}",
+        name="my misspelling test scenario set tiny load",
+        generation_type=ScenarioType.COMMON_MISSPELLINGS,
+        number_examples=number_examples,
         seed_data=seed_data,
     )
     scenario: ScenarioSetResponse = okareo_client.create_scenario_set(

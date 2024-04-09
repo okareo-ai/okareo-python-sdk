@@ -28,7 +28,6 @@ class ScenarioSetResponse:
         scenario_count (Union[Unset, int]):
         scenario_input (Union[Unset, List[str]]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this scenario set Default: ''.
-        warning (Union[Unset, str]):
     """
 
     scenario_id: str
@@ -41,7 +40,6 @@ class ScenarioSetResponse:
     scenario_count: Union[Unset, int] = 0
     scenario_input: Union[Unset, List[str]] = UNSET
     app_link: Union[Unset, str] = ""
-    warning: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -69,7 +67,6 @@ class ScenarioSetResponse:
             scenario_input = self.scenario_input
 
         app_link = self.app_link
-        warning = self.warning
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -93,8 +90,6 @@ class ScenarioSetResponse:
             field_dict["scenario_input"] = scenario_input
         if app_link is not UNSET:
             field_dict["app_link"] = app_link
-        if warning is not UNSET:
-            field_dict["warning"] = warning
 
         return field_dict
 
@@ -128,8 +123,6 @@ class ScenarioSetResponse:
 
         app_link = d.pop("app_link", UNSET)
 
-        warning = d.pop("warning", UNSET)
-
         scenario_set_response = cls(
             scenario_id=scenario_id,
             project_id=project_id,
@@ -141,7 +134,6 @@ class ScenarioSetResponse:
             scenario_count=scenario_count,
             scenario_input=scenario_input,
             app_link=app_link,
-            warning=warning,
         )
 
         scenario_set_response.additional_properties = d

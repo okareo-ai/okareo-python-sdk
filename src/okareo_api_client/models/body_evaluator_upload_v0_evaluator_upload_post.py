@@ -20,7 +20,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
         output_data_type (Union[Unset, str]): Evaluator output data type (i.e., bool, int, float)
         project_id (Union[Unset, str]): ID for the project
         file (Union[Unset, File]):
-        update (Union[Unset, bool]): Update the evaluator
     """
 
     name: str
@@ -30,7 +29,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
     output_data_type: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     file: Union[Unset, File] = UNSET
-    update: Union[Unset, bool] = False
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -43,8 +41,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
-
-        update = self.update
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -63,8 +59,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
             field_dict["project_id"] = project_id
         if file is not UNSET:
             field_dict["file"] = file
-        if update is not UNSET:
-            field_dict["update"] = update
 
         return field_dict
 
@@ -99,8 +93,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
 
-        update = self.update if isinstance(self.update, Unset) else (None, str(self.update).encode(), "text/plain")
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(
             {key: (None, str(value).encode(), "text/plain") for key, value in self.additional_properties.items()}
@@ -120,8 +112,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
             field_dict["project_id"] = project_id
         if file is not UNSET:
             field_dict["file"] = file
-        if update is not UNSET:
-            field_dict["update"] = update
 
         return field_dict
 
@@ -147,8 +137,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
         else:
             file = File(payload=BytesIO(_file))
 
-        update = d.pop("update", UNSET)
-
         body_evaluator_upload_v0_evaluator_upload_post = cls(
             name=name,
             requires_scenario_input=requires_scenario_input,
@@ -157,7 +145,6 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
             output_data_type=output_data_type,
             project_id=project_id,
             file=file,
-            update=update,
         )
 
         body_evaluator_upload_v0_evaluator_upload_post.additional_properties = d

@@ -7,6 +7,7 @@ from okareo import Okareo
 from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb, QdrantDB
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
+from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
@@ -127,7 +128,9 @@ def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
 
     scenario_set_create = ScenarioSetCreate(
         name=f"cohere-test-ci-{rnd}",
+        number_examples=1,
         seed_data=seed_data,
+        generation_type=ScenarioType.REPHRASE_INVARIANT,
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 

@@ -9,6 +9,7 @@ from pytest_httpx import HTTPXMock
 from okareo import Okareo
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
+from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.types import UNSET
 
@@ -41,6 +42,7 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     scenario_request = ScenarioSetCreate(
         name="test_scenario",
         seed_data=[],
+        number_examples=10,
         project_id="project_id" if okareo_api.is_mock else UNSET,
     )
     scenario_response = okareo.create_scenario_set(scenario_request)
@@ -79,7 +81,9 @@ def test_create_scenario_set_raises_on_validation_error(
     ]
     scenario_set_create = ScenarioSetCreate(
         name="my test scenario set x",
+        number_examples=1,
         seed_data=seed_data,
+        generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
     )
     with pytest.raises(Exception, match="Unexpected"):
         okareo_client.create_scenario_set(create_request=scenario_set_create)

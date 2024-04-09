@@ -96,4 +96,4 @@ class LiteLLMProxyLogger(LiteLLMLogger):
         )
 
 
-litellm_proxy_handler = LiteLLMProxyLogger(mut_name="litellm_proxy_handler")
+litellm_proxy_handler = LiteLLMProxyLogger()

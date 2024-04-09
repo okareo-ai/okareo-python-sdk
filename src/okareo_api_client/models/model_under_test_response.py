@@ -19,7 +19,6 @@ class ModelUnderTestResponse:
         time_created (str):
         datapoint_count (Union[Unset, int]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this model Default: ''.
-        warning (Union[Unset, str]):
     """
 
     id: str
@@ -29,7 +28,6 @@ class ModelUnderTestResponse:
     time_created: str
     datapoint_count: Union[Unset, int] = UNSET
     app_link: Union[Unset, str] = ""
-    warning: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -41,7 +39,6 @@ class ModelUnderTestResponse:
         time_created = self.time_created
         datapoint_count = self.datapoint_count
         app_link = self.app_link
-        warning = self.warning
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -58,8 +55,6 @@ class ModelUnderTestResponse:
             field_dict["datapoint_count"] = datapoint_count
         if app_link is not UNSET:
             field_dict["app_link"] = app_link
-        if warning is not UNSET:
-            field_dict["warning"] = warning
 
         return field_dict
 
@@ -80,8 +75,6 @@ class ModelUnderTestResponse:
 
         app_link = d.pop("app_link", UNSET)
 
-        warning = d.pop("warning", UNSET)
-
         model_under_test_response = cls(
             id=id,
             project_id=project_id,
@@ -90,7 +83,6 @@ class ModelUnderTestResponse:
             time_created=time_created,
             datapoint_count=datapoint_count,
             app_link=app_link,
-            warning=warning,
         )
 
         model_under_test_response.additional_properties = d

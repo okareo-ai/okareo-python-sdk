@@ -23,7 +23,6 @@ class EvaluatorDetailedResponse:
         output_data_type (Union[Unset, str]):
         code_contents (Union[Unset, str]):
         time_created (Union[Unset, datetime.datetime]):
-        warning (Union[Unset, str]):
     """
 
     id: Union[Unset, str] = UNSET
@@ -35,7 +34,6 @@ class EvaluatorDetailedResponse:
     output_data_type: Union[Unset, str] = UNSET
     code_contents: Union[Unset, str] = UNSET
     time_created: Union[Unset, datetime.datetime] = UNSET
-    warning: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -50,8 +48,6 @@ class EvaluatorDetailedResponse:
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
-
-        warning = self.warning
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -74,8 +70,6 @@ class EvaluatorDetailedResponse:
             field_dict["code_contents"] = code_contents
         if time_created is not UNSET:
             field_dict["time_created"] = time_created
-        if warning is not UNSET:
-            field_dict["warning"] = warning
 
         return field_dict
 
@@ -105,8 +99,6 @@ class EvaluatorDetailedResponse:
         else:
             time_created = isoparse(_time_created)
 
-        warning = d.pop("warning", UNSET)
-
         evaluator_detailed_response = cls(
             id=id,
             project_id=project_id,
@@ -117,7 +109,6 @@ class EvaluatorDetailedResponse:
             output_data_type=output_data_type,
             code_contents=code_contents,
             time_created=time_created,
-            warning=warning,
         )
 
         evaluator_detailed_response.additional_properties = d
