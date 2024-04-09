@@ -124,3 +124,8 @@ def test_generate_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> 
 def test_get_scenario_data_points(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(json={}, status_code=200)
     okareo_client.get_scenario_data_points(scenario_id="scenario-id")
+
+
+def test_get_all_evaluators(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(json={}, status_code=201)
+    okareo_client.get_all_evaluators()
