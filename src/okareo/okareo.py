@@ -77,10 +77,11 @@ class Okareo:
         tags: Union[List[str], None] = None,
         project_id: Union[str, None] = None,
         model: Union[None, BaseModel, List[BaseModel]] = None,
+        update: bool = False,
     ) -> ModelUnderTest:
         if tags is None:
             tags = []
-        data: Dict[str, Any] = {"name": name, "tags": tags}
+        data: Dict[str, Any] = {"name": name, "tags": tags, "update": update}
         # will rename name to model in the future api-breaking release
         model_invoker = None
         if isinstance(model, BaseModel) or (
@@ -105,6 +106,8 @@ class Okareo:
         model_data = data.get("models")
         if model_invoker and isinstance(model_data, dict):
             model_data["custom"]["model_invoker"] = model_invoker
+        if response.warning:
+            print(response.warning)
         return ModelUnderTest(
             client=self.client,
             api_key=self.api_key,
@@ -121,7 +124,8 @@ class Okareo:
 
         self.validate_response(response)
         assert isinstance(response, ScenarioSetResponse)
-
+        if response.warning:
+            print(response.warning)
         return response
 
     def upload_scenario_set(
@@ -144,7 +148,8 @@ class Okareo:
 
             self.validate_response(response)
             assert isinstance(response, ScenarioSetResponse)
-
+            if response.warning:
+                print(response.warning)
             return response
         except UnexpectedStatus as e:
             print(e.content)
@@ -258,6 +263,7 @@ class Okareo:
         description: str = "",
         output_data_type: str = "",
         project_id: Union[Unset, str] = UNSET,
+        update: bool = False,
     ) -> EvaluatorDetailedResponse:
         try:
             file_name = os.path.basename(file_path)
@@ -271,6 +277,7 @@ class Okareo:
                     output_data_type=output_data_type,
                     project_id=project_id,
                     file=File(file_name=file_name, payload=binary_io),
+                    update=update,
                 )
                 response = evaluator_upload_v0_evaluator_upload_post.sync(
                     client=self.client,
@@ -280,7 +287,8 @@ class Okareo:
 
             self.validate_response(response)
             assert isinstance(response, EvaluatorDetailedResponse)
-
+            if response.warning:
+                print(response.warning)
             return response
         except UnexpectedStatus as e:
             print(e.content)
