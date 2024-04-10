@@ -231,3 +231,30 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
+
+
+@pytest.mark.skip(reason="Pending server-side implementation of pre-defined checks.")
+def test_run_test_predefined_checks_levenshtein(
+    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"openai-ci-run-levenshtein-{rnd}",
+        model=OpenAIModel(
+            model_id="gpt-3.5-turbo",
+            temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
+        ),
+    )
+
+    checks = ["levenshtein_distance_input"]
+    run_resp = mut.run_test(
+        name=f"openai-chat-run-levenshtein-{rnd}",
+        scenario=article_scenario_set,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=checks,
+        calculate_metrics=True,
+    )
+    assert run_resp.name == f"openai-chat-run-levenshtein-{rnd}"
+    assert_metrics(run_resp)
