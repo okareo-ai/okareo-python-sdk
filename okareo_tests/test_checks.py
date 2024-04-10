@@ -1,0 +1,43 @@
+from datetime import datetime
+
+import pytest
+from okareo_tests.common import API_KEY
+
+from okareo import Okareo
+from okareo_api_client.models import EvaluatorSpecRequest
+
+today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
+PREDEFINED_CHECKS = [
+    "levenshtein_distance",
+    "levenshtein_distance_input",
+    "does_code_compile",
+    "contains_all_imports",
+]
+
+
+@pytest.fixture(scope="module")
+def okareo_client() -> Okareo:
+    return Okareo(api_key=API_KEY)
+
+
+def test_get_all_checks(okareo_client: Okareo) -> None:
+    checks = okareo_client.get_all_evaluators()
+    assert len(checks) >= len(PREDEFINED_CHECKS)
+    for check in checks:
+        assert check.id
+        assert check.name
+        assert check.description
+        assert check.time_created
+
+
+def test_generate_check(okareo_client: Okareo) -> None:
+    generate_request = EvaluatorSpecRequest(
+        description="""
+        Return True if the model_output is at least 20 characters long, otherwise return False.""",
+        requires_scenario_input=False,
+        requires_scenario_result=False,
+        output_data_type="bool",
+    )
+
+    check = okareo_client.generate_evaluator(generate_request)
+    assert check.generated_code
