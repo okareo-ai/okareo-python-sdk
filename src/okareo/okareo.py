@@ -13,6 +13,7 @@ from okareo_api_client.api.default import (
     get_all_evaluators_v0_evaluators_get,
     get_all_projects_v0_projects_get,
     get_datapoints_v0_find_datapoints_post,
+    get_evaluator_v0_evaluator_evaluator_id_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
@@ -52,6 +53,11 @@ from okareo_api_client.types import UNSET, File, Unset
 
 from .common import BASE_URL, HTTPX_TIME_OUT
 from .model_under_test import BaseModel, ModelUnderTest
+
+CHECK_DEPRECATION_WARNING = (
+    "The `evaluator` naming convention is deprecated and will not be supported in a future release. "
+    "Please use `check` in place of `evaluator` when invoking this method."
+)
 
 
 class Okareo:
@@ -269,6 +275,29 @@ class Okareo:
         project_id: Union[Unset, str] = UNSET,
         update: bool = False,
     ) -> EvaluatorDetailedResponse:
+        print(CHECK_DEPRECATION_WARNING)
+        return self.upload_check(
+            name,
+            file_path,
+            requires_scenario_input,
+            requires_scenario_result,
+            description,
+            output_data_type,
+            project_id,
+            update,
+        )
+
+    def upload_check(
+        self,
+        name: str,
+        file_path: str,
+        requires_scenario_input: bool,
+        requires_scenario_result: bool,
+        description: str = "",
+        output_data_type: str = "",
+        project_id: Union[Unset, str] = UNSET,
+        update: bool = False,
+    ) -> EvaluatorDetailedResponse:
         try:
             file_name = os.path.basename(file_path)
 
@@ -301,8 +330,14 @@ class Okareo:
     def generate_evaluator(
         self, create_evaluator: EvaluatorSpecRequest
     ) -> EvaluatorGenerateResponse:
+        print(CHECK_DEPRECATION_WARNING)
+        return self.generate_check(create_evaluator)
+
+    def generate_check(
+        self, create_check: EvaluatorSpecRequest
+    ) -> EvaluatorGenerateResponse:
         response = evaluator_generate_v0_evaluator_generate_post.sync(
-            client=self.client, api_key=self.api_key, json_body=create_evaluator
+            client=self.client, api_key=self.api_key, json_body=create_check
         )
         self.validate_response(response)
         assert isinstance(response, EvaluatorGenerateResponse)
@@ -310,6 +345,10 @@ class Okareo:
         return response
 
     def get_all_evaluators(self) -> List[EvaluatorBriefResponse]:
+        print(CHECK_DEPRECATION_WARNING)
+        return self.get_all_checks()
+
+    def get_all_checks(self) -> List[EvaluatorBriefResponse]:
         response = get_all_evaluators_v0_evaluators_get.sync(
             client=self.client,
             api_key=self.api_key,
@@ -319,7 +358,24 @@ class Okareo:
 
         return response
 
+    def get_evaluator(self, evaluator_id: str) -> EvaluatorDetailedResponse:
+        print(CHECK_DEPRECATION_WARNING)
+        return self.get_check(evaluator_id)
+
+    def get_check(self, evaluator_id: str) -> EvaluatorDetailedResponse:
+        response = get_evaluator_v0_evaluator_evaluator_id_get.sync(
+            client=self.client, api_key=self.api_key, evaluator_id=evaluator_id
+        )
+        self.validate_response(response)
+        assert isinstance(response, EvaluatorDetailedResponse)
+
+        return response
+
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
+        print(CHECK_DEPRECATION_WARNING)
+        return self.delete_check(evaluator_id, evaluator_name)
+
+    def delete_check(self, evaluator_id: str, evaluator_name: str) -> str:
         evaluator_delete_v0_evaluator_evaluator_id_delete.sync(
             client=self.client,
             api_key=self.api_key,
