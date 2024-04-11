@@ -1,4 +1,7 @@
 import os
+import random
+import string
+import tempfile
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -6,6 +9,7 @@ from okareo_tests.common import API_KEY, random_string
 from okareo import Okareo
 from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb, QdrantDB
 from okareo_api_client.models import ScenarioSetResponse
+from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_item import TestRunItem
@@ -231,6 +235,103 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
+
+
+def test_run_test_checks(
+    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
+) -> None:
+    generate_request = EvaluatorSpecRequest(
+        description="""
+        Return True if the model_output is at least 20 characters long, otherwise return False.""",
+        requires_scenario_input=False,
+        requires_scenario_result=False,
+        output_data_type="bool",
+    )
+    check = okareo.generate_evaluator(generate_request)
+
+    assert check.generated_code
+
+    random_string = "".join(random.choices(string.ascii_letters, k=5))
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, "sample_evaluator.py")
+    with open(file_path, "w+") as file:
+        file.write(check.generated_code)
+    uploaded_evaluator = okareo.upload_evaluator(
+        name=f"test_upload_check_{random_string}",
+        file_path=file_path,
+        requires_scenario_input=False,
+        requires_scenario_result=False,
+        output_data_type="bool",
+    )
+    os.remove(file_path)
+    assert uploaded_evaluator.id
+    assert uploaded_evaluator.name
+    # TODO: Remove this once old evaluators are deprecated
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, "sample_evaluator.py")
+    with open(file_path, "w+") as file:
+        file.write(
+            """
+# This is to bypass validation
+class BaseCheck:
+    def b():
+        return True
+class Check(BaseCheck):
+    def a():
+        return True
+def evaluate(model_output: str) -> bool:
+    return True if len(model_output) >= 20 else False
+"""
+        )
+    manual_old_evaluator = okareo.upload_evaluator(
+        name=f"test_upload_check_manual_{random_string}",
+        file_path=file_path,
+        requires_scenario_input=False,
+        requires_scenario_result=False,
+        output_data_type="bool",
+    )
+    os.remove(file_path)
+
+    assert manual_old_evaluator.id
+    assert manual_old_evaluator.name
+
+    mut = okareo.register_model(
+        name=f"openai-ci-run-{rnd}",
+        model=OpenAIModel(
+            model_id="gpt-3.5-turbo",
+            temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
+        ),
+    )
+
+    run_resp = mut.run_test(
+        name=f"openai-chat-run-{rnd}",
+        scenario=article_scenario_set,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=[uploaded_evaluator.id, manual_old_evaluator.id],
+    )
+
+    assert run_resp.name == f"openai-chat-run-{rnd}"
+    assert run_resp.model_metrics is not None and not isinstance(
+        run_resp.model_metrics, Unset
+    )
+    metrics_dict = run_resp.model_metrics.to_dict()
+
+    assert metrics_dict["mean_scores"] is not None
+    assert metrics_dict["scores_by_row"] is not None
+    for row in metrics_dict["scores_by_row"]:
+        dimension_keys = [
+            f"test_upload_check_{random_string}",
+            f"test_upload_check_manual_{random_string}",
+        ]
+        for dimension in dimension_keys:
+            assert dimension in row
+        assert row[dimension_keys[0]] == row[dimension_keys[1]]
+    okareo.delete_evaluator(manual_old_evaluator.id, manual_old_evaluator.name)
+    okareo.delete_evaluator(uploaded_evaluator.id, uploaded_evaluator.name)
 
 
 @pytest.mark.skip(reason="Pending server-side implementation of pre-defined checks.")

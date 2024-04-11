@@ -6,6 +6,7 @@ import httpx
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
+    evaluator_delete_v0_evaluator_evaluator_id_delete,
     evaluator_generate_v0_evaluator_generate_post,
     evaluator_upload_v0_evaluator_upload_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
@@ -17,6 +18,9 @@ from okareo_api_client.api.default import (
     scenario_sets_upload_v0_scenario_sets_upload_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
+from okareo_api_client.models.body_evaluator_delete_v0_evaluator_evaluator_id_delete import (
+    BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+)
 from okareo_api_client.models.body_evaluator_upload_v0_evaluator_upload_post import (
     BodyEvaluatorUploadV0EvaluatorUploadPost,
 )
@@ -314,3 +318,14 @@ class Okareo:
         assert isinstance(response, List)
 
         return response
+
+    def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
+        evaluator_delete_v0_evaluator_evaluator_id_delete.sync(
+            client=self.client,
+            api_key=self.api_key,
+            evaluator_id=evaluator_id,
+            form_data=BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete.from_dict(
+                {"name": evaluator_name}
+            ),
+        )
+        return "Check deletion was successful"

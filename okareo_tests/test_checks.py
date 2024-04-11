@@ -1,3 +1,7 @@
+import os
+import random
+import string
+import tempfile
 from datetime import datetime
 
 import pytest
@@ -32,7 +36,7 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
         assert check.time_created
 
 
-def test_generate_check(okareo_client: Okareo) -> None:
+def test_generate_and_upload_check(okareo_client: Okareo) -> None:
     generate_request = EvaluatorSpecRequest(
         description="""
         Return True if the model_output is at least 20 characters long, otherwise return False.""",
@@ -40,6 +44,21 @@ def test_generate_check(okareo_client: Okareo) -> None:
         requires_scenario_result=False,
         output_data_type="bool",
     )
-
     check = okareo_client.generate_evaluator(generate_request)
     assert check.generated_code
+    random_string = "".join(random.choices(string.ascii_letters, k=5))
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, "sample_evaluator.py")
+    with open(file_path, "w+") as file:
+        file.write(check.generated_code)
+    uploaded_evaluator = okareo_client.upload_evaluator(
+        name=f"test_upload_check {random_string}",
+        file_path=file_path,
+        requires_scenario_input=False,
+        requires_scenario_result=False,
+        output_data_type="bool",
+    )
+    os.remove(file_path)
+    assert uploaded_evaluator.id
+    assert uploaded_evaluator.name
+    okareo_client.delete_evaluator(uploaded_evaluator.id, uploaded_evaluator.name)
