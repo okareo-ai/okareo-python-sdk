@@ -31,7 +31,7 @@ PREDEFINED_CHECKS = [
 
 @pytest.fixture(scope="module")
 def okareo_client() -> Okareo:
-    return Okareo(api_key=API_KEY, base_path="http://localhost:8000")
+    return Okareo(api_key=API_KEY)
 
 
 def test_get_all_checks(okareo_client: Okareo) -> None:
