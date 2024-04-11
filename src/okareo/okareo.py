@@ -6,9 +6,11 @@ import httpx
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
+    evaluator_delete_v0_evaluator_evaluator_id_delete,
     evaluator_generate_v0_evaluator_generate_post,
     evaluator_upload_v0_evaluator_upload_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
+    get_all_evaluators_v0_evaluators_get,
     get_all_projects_v0_projects_get,
     get_datapoints_v0_find_datapoints_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
@@ -16,6 +18,9 @@ from okareo_api_client.api.default import (
     scenario_sets_upload_v0_scenario_sets_upload_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
+from okareo_api_client.models.body_evaluator_delete_v0_evaluator_evaluator_id_delete import (
+    BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+)
 from okareo_api_client.models.body_evaluator_upload_v0_evaluator_upload_post import (
     BodyEvaluatorUploadV0EvaluatorUploadPost,
 )
@@ -25,6 +30,7 @@ from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.error_response import ErrorResponse
+from okareo_api_client.models.evaluator_brief_response import EvaluatorBriefResponse
 from okareo_api_client.models.evaluator_detailed_response import (
     EvaluatorDetailedResponse,
 )
@@ -302,3 +308,24 @@ class Okareo:
         assert isinstance(response, EvaluatorGenerateResponse)
 
         return response
+
+    def get_all_evaluators(self) -> List[EvaluatorBriefResponse]:
+        response = get_all_evaluators_v0_evaluators_get.sync(
+            client=self.client,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, List)
+
+        return response
+
+    def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
+        evaluator_delete_v0_evaluator_evaluator_id_delete.sync(
+            client=self.client,
+            api_key=self.api_key,
+            evaluator_id=evaluator_id,
+            form_data=BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete.from_dict(
+                {"name": evaluator_name}
+            ),
+        )
+        return "Check deletion was successful"
