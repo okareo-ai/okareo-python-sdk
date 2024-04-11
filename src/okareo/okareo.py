@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import Any, Dict, List, Union
 
 import httpx
@@ -58,6 +59,10 @@ CHECK_DEPRECATION_WARNING = (
     "The `evaluator` naming convention is deprecated and will not be supported in a future release. "
     "Please use `check` in place of `evaluator` when invoking this method."
 )
+
+
+def check_deprecation_warning() -> None:
+    warnings.warn(CHECK_DEPRECATION_WARNING, DeprecationWarning, stacklevel=2)
 
 
 class Okareo:
@@ -275,7 +280,7 @@ class Okareo:
         project_id: Union[Unset, str] = UNSET,
         update: bool = False,
     ) -> EvaluatorDetailedResponse:
-        print(CHECK_DEPRECATION_WARNING)
+        check_deprecation_warning()
         return self.upload_check(
             name,
             file_path,
@@ -330,7 +335,7 @@ class Okareo:
     def generate_evaluator(
         self, create_evaluator: EvaluatorSpecRequest
     ) -> EvaluatorGenerateResponse:
-        print(CHECK_DEPRECATION_WARNING)
+        check_deprecation_warning()
         return self.generate_check(create_evaluator)
 
     def generate_check(
@@ -345,7 +350,7 @@ class Okareo:
         return response
 
     def get_all_evaluators(self) -> List[EvaluatorBriefResponse]:
-        print(CHECK_DEPRECATION_WARNING)
+        check_deprecation_warning()
         return self.get_all_checks()
 
     def get_all_checks(self) -> List[EvaluatorBriefResponse]:
@@ -359,7 +364,7 @@ class Okareo:
         return response
 
     def get_evaluator(self, evaluator_id: str) -> EvaluatorDetailedResponse:
-        print(CHECK_DEPRECATION_WARNING)
+        check_deprecation_warning()
         return self.get_check(evaluator_id)
 
     def get_check(self, evaluator_id: str) -> EvaluatorDetailedResponse:
@@ -372,7 +377,7 @@ class Okareo:
         return response
 
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
-        print(CHECK_DEPRECATION_WARNING)
+        check_deprecation_warning()
         return self.delete_check(evaluator_id, evaluator_name)
 
     def delete_check(self, evaluator_id: str, evaluator_name: str) -> str:
