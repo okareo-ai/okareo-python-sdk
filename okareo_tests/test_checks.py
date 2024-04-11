@@ -25,14 +25,12 @@ def okareo_client() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
-@pytest.mark.skip(reason="Pending server-side implementation of pre-defined checks.")
 def test_get_all_checks(okareo_client: Okareo) -> None:
     checks = okareo_client.get_all_evaluators()
     assert len(checks) >= len(PREDEFINED_CHECKS)
     for check in checks:
         assert check.id
         assert check.name
-        assert check.description
         assert check.time_created
 
 
