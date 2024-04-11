@@ -17,6 +17,15 @@ PREDEFINED_CHECKS = [
     "compression_ratio",
     "does_code_compile",
     "contains_all_imports",
+    "coherence_summary",
+    "consistency_summary",
+    "fluency_summary",
+    "relevance_summary",
+    "consistency",
+    "coherence",
+    "conciseness",
+    "fluency",
+    "uniqueness",
 ]
 
 
@@ -26,12 +35,21 @@ def okareo_client() -> Okareo:
 
 
 def test_get_all_checks(okareo_client: Okareo) -> None:
-    checks = okareo_client.get_all_evaluators()
-    assert len(checks) >= len(PREDEFINED_CHECKS)
+    checks = okareo_client.get_all_checks()
     for check in checks:
+        assert check.name in PREDEFINED_CHECKS
         assert check.id
         assert check.name
+        assert check.description
         assert check.time_created
+        check_detailed = okareo_client.get_check(check.id)
+        assert check_detailed.id
+        assert check_detailed.name
+        assert check_detailed.requires_scenario_input is not None
+        assert check_detailed.requires_scenario_result is not None
+        assert check_detailed.time_created
+        assert check_detailed.description
+        assert check_detailed.output_data_type
 
 
 def test_generate_and_upload_check(okareo_client: Okareo) -> None:
@@ -42,14 +60,14 @@ def test_generate_and_upload_check(okareo_client: Okareo) -> None:
         requires_scenario_result=False,
         output_data_type="bool",
     )
-    check = okareo_client.generate_evaluator(generate_request)
+    check = okareo_client.generate_check(generate_request)
     assert check.generated_code
     random_string = "".join(random.choices(string.ascii_letters, k=5))
     temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, "sample_evaluator.py")
+    file_path = os.path.join(temp_dir, "sample_check.py")
     with open(file_path, "w+") as file:
         file.write(check.generated_code)
-    uploaded_evaluator = okareo_client.upload_evaluator(
+    uploaded_check = okareo_client.upload_check(
         name=f"test_upload_check {random_string}",
         file_path=file_path,
         requires_scenario_input=False,
@@ -57,6 +75,6 @@ def test_generate_and_upload_check(okareo_client: Okareo) -> None:
         output_data_type="bool",
     )
     os.remove(file_path)
-    assert uploaded_evaluator.id
-    assert uploaded_evaluator.name
-    okareo_client.delete_evaluator(uploaded_evaluator.id, uploaded_evaluator.name)
+    assert uploaded_check.id
+    assert uploaded_check.name
+    okareo_client.delete_check(uploaded_check.id, uploaded_check.name)
