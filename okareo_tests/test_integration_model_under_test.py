@@ -2,6 +2,7 @@ import os
 import random
 import string
 import tempfile
+from typing import List, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -95,26 +96,40 @@ def test_run_test_openai_2prompts(
     assert_metrics(run_resp)
 
 
-def assert_metrics(run_resp: TestRunItem) -> None:
+def assert_metrics(
+    run_resp: TestRunItem, custom_dimensions: Union[List[str], None] = None
+) -> None:
     assert run_resp.model_metrics is not None and not isinstance(
         run_resp.model_metrics, Unset
     )
     metrics_dict = run_resp.model_metrics.to_dict()
 
     assert metrics_dict["mean_scores"] is not None
-    assert_scores(metrics_dict["mean_scores"])
+    if custom_dimensions is not None:
+        assert_scores(metrics_dict["mean_scores"], custom_dimensions)
+    else:
+        assert_scores_geval(metrics_dict["mean_scores"])
     assert metrics_dict["scores_by_row"] is not None
     assert len(metrics_dict["scores_by_row"]) == 3
     for row in metrics_dict["scores_by_row"]:
-        assert_scores(row)
+        if custom_dimensions is not None:
+            assert_scores(row, custom_dimensions)
+        else:
+            assert_scores_geval(row)
 
 
-def assert_scores(scores: dict) -> None:
+def assert_scores_geval(scores: dict) -> None:
     dimension_keys = ["consistency", "coherence", "fluency", "relevance"]
     for dimension in dimension_keys:
         assert dimension in scores
         assert isinstance(scores[dimension], float)
         assert 1 <= scores[dimension] <= 5
+
+
+def assert_scores(scores: dict, custom_dimensions: List[str]) -> None:
+    dimension_keys = custom_dimensions
+    for dimension in dimension_keys:
+        assert dimension in scores
 
 
 def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
@@ -334,7 +349,6 @@ def evaluate(model_output: str) -> bool:
     okareo.delete_evaluator(uploaded_evaluator.id, uploaded_evaluator.name)
 
 
-@pytest.mark.skip(reason="Pending server-side implementation of pre-defined checks.")
 def test_run_test_predefined_checks_levenshtein(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
@@ -348,7 +362,13 @@ def test_run_test_predefined_checks_levenshtein(
         ),
     )
 
-    checks = ["levenshtein_distance_input"]
+    checks = [
+        "levenshtein_distance",
+        "levenshtein_distance_input",
+        "compression_ratio",
+        "does_code_compile",
+        "contains_all_imports",
+    ]
     run_resp = mut.run_test(
         name=f"openai-chat-run-levenshtein-{rnd}",
         scenario=article_scenario_set,
@@ -358,4 +378,4 @@ def test_run_test_predefined_checks_levenshtein(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-levenshtein-{rnd}"
-    assert_metrics(run_resp)
+    assert_metrics(run_resp, checks)
