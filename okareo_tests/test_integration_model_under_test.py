@@ -25,7 +25,7 @@ def rnd() -> str:
 
 @pytest.fixture(scope="module")
 def okareo() -> Okareo:
-    return Okareo(api_key=API_KEY)
+    return Okareo(api_key=API_KEY, base_path="http://localhost:8000")
 
 
 TEST_SUMMARIZE_TEMPLATE = """
@@ -128,6 +128,8 @@ def assert_scores_geval(scores: dict) -> None:
 
 def assert_scores(scores: dict, custom_dimensions: List[str]) -> None:
     dimension_keys = custom_dimensions
+    skip_keys = ["scenario_index", "test_id"]
+    assert len(dimension_keys) == len([k for k in scores.keys() if k not in skip_keys])
     for dimension in dimension_keys:
         assert dimension in scores
 
@@ -349,7 +351,7 @@ def evaluate(model_output: str) -> bool:
     okareo.delete_evaluator(uploaded_evaluator.id, uploaded_evaluator.name)
 
 
-def test_run_test_predefined_checks_levenshtein(
+def test_run_test_predefined_checks(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
     mut = okareo.register_model(
@@ -370,12 +372,12 @@ def test_run_test_predefined_checks_levenshtein(
         "contains_all_imports",
     ]
     run_resp = mut.run_test(
-        name=f"openai-chat-run-levenshtein-{rnd}",
+        name=f"openai-chat-run-predefined-{rnd}",
         scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         checks=checks,
         calculate_metrics=True,
     )
-    assert run_resp.name == f"openai-chat-run-levenshtein-{rnd}"
+    assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
     assert_metrics(run_resp, checks)
