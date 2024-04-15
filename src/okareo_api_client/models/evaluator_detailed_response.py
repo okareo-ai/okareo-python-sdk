@@ -17,11 +17,11 @@ class EvaluatorDetailedResponse:
         id (Union[Unset, str]):
         project_id (Union[Unset, str]):
         name (Union[Unset, str]):
-        description (Union[Unset, str]):
+        description (Union[Unset, str]):  Default: ''.
         requires_scenario_input (Union[Unset, bool]):
         requires_scenario_result (Union[Unset, bool]):
-        output_data_type (Union[Unset, str]):
-        code_contents (Union[Unset, str]):
+        output_data_type (Union[Unset, str]):  Default: ''.
+        code_contents (Union[Unset, str]):  Default: ''.
         time_created (Union[Unset, datetime.datetime]):
         warning (Union[Unset, str]):
     """
@@ -29,11 +29,11 @@ class EvaluatorDetailedResponse:
     id: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
-    description: Union[Unset, str] = UNSET
+    description: Union[Unset, str] = ""
     requires_scenario_input: Union[Unset, bool] = UNSET
     requires_scenario_result: Union[Unset, bool] = UNSET
-    output_data_type: Union[Unset, str] = UNSET
-    code_contents: Union[Unset, str] = UNSET
+    output_data_type: Union[Unset, str] = ""
+    code_contents: Union[Unset, str] = ""
     time_created: Union[Unset, datetime.datetime] = UNSET
     warning: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)

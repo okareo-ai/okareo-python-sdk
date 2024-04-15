@@ -44,17 +44,18 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
     for check in checks:
         assert check.id
         assert check.name
-        assert check.description
+        assert type(check.description) is str
+        assert type(check.output_data_type) is str
         assert check.time_created
         # test that we can get the detailed response for the check
         check_detailed = okareo_client.get_check(check.id)
         assert check_detailed.id
         assert check_detailed.name
-        assert check_detailed.description
+        assert type(check_detailed.description) is str
+        assert type(check_detailed.output_data_type) is str
         assert check_detailed.requires_scenario_input is not None
         assert check_detailed.requires_scenario_result is not None
         assert check_detailed.time_created
-        assert check_detailed.output_data_type
         if check_detailed.name not in PREDEFINED_CHECKS:
             assert check_detailed.code_contents
 

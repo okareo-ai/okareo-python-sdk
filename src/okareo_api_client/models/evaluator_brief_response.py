@@ -16,13 +16,15 @@ class EvaluatorBriefResponse:
     Attributes:
         id (Union[Unset, str]):
         name (Union[Unset, str]):
-        description (Union[Unset, str]):
+        description (Union[Unset, str]):  Default: ''.
+        output_data_type (Union[Unset, str]):  Default: ''.
         time_created (Union[Unset, datetime.datetime]):
     """
 
     id: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
-    description: Union[Unset, str] = UNSET
+    description: Union[Unset, str] = ""
+    output_data_type: Union[Unset, str] = ""
     time_created: Union[Unset, datetime.datetime] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -30,6 +32,7 @@ class EvaluatorBriefResponse:
         id = self.id
         name = self.name
         description = self.description
+        output_data_type = self.output_data_type
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
@@ -43,6 +46,8 @@ class EvaluatorBriefResponse:
             field_dict["name"] = name
         if description is not UNSET:
             field_dict["description"] = description
+        if output_data_type is not UNSET:
+            field_dict["output_data_type"] = output_data_type
         if time_created is not UNSET:
             field_dict["time_created"] = time_created
 
@@ -57,6 +62,8 @@ class EvaluatorBriefResponse:
 
         description = d.pop("description", UNSET)
 
+        output_data_type = d.pop("output_data_type", UNSET)
+
         _time_created = d.pop("time_created", UNSET)
         time_created: Union[Unset, datetime.datetime]
         if isinstance(_time_created, Unset):
@@ -68,6 +75,7 @@ class EvaluatorBriefResponse:
             id=id,
             name=name,
             description=description,
+            output_data_type=output_data_type,
             time_created=time_created,
         )
 
