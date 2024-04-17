@@ -25,7 +25,7 @@ def rnd() -> str:
 
 @pytest.fixture(scope="module")
 def okareo() -> Okareo:
-    return Okareo(api_key=API_KEY, base_path="http://localhost:8000")
+    return Okareo(api_key=API_KEY)
 
 
 TEST_SUMMARIZE_TEMPLATE = """
