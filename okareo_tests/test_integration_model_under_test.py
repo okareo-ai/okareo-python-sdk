@@ -25,7 +25,7 @@ def rnd() -> str:
 
 @pytest.fixture(scope="module")
 def okareo() -> Okareo:
-    return Okareo(api_key=API_KEY)
+    return Okareo(api_key=API_KEY, base_path="http://localhost:8000")
 
 
 TEST_SUMMARIZE_TEMPLATE = """
@@ -257,32 +257,60 @@ def test_run_test_cohere_qdrant_ir(
 def test_run_test_checks(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
-    generate_request = EvaluatorSpecRequest(
-        description="""
-        Return True if the model_output is at least 20 characters long, otherwise return False.""",
-        requires_scenario_input=False,
-        requires_scenario_result=False,
-        output_data_type="bool",
-    )
-    check = okareo.generate_evaluator(generate_request)
-
-    assert check.generated_code
-
+    checks_to_generate = [
+        {
+            "description": "Return True if the model_output is at least 20 characters long, otherwise return False.",
+            "requires_scenario_input": False,
+            "requires_scenario_result": False,
+            "name": "model_only",
+        },
+        {
+            "description": "Return True if the scenario_result is at least 20 characters long, otherwise return False.",
+            "requires_scenario_input": False,
+            "requires_scenario_result": True,
+            "name": "model_with_result",
+        },
+        {
+            "description": "Return True if the scenario_input is at least 20 characters long, otherwise return False.",
+            "requires_scenario_input": True,
+            "requires_scenario_result": False,
+            "name": "model_with_input",
+        },
+        {
+            "description": "Return True if the combined length of the scenario_input and scenario_result is at least 20 characters long, otherwise return False.",
+            "requires_scenario_input": True,
+            "requires_scenario_result": True,
+            "name": "model_with_input_and_result",
+        },
+    ]
+    uploaded_checks = []
     random_string = "".join(random.choices(string.ascii_letters, k=5))
-    temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, "sample_evaluator.py")
-    with open(file_path, "w+") as file:
-        file.write(check.generated_code)
-    uploaded_evaluator = okareo.upload_evaluator(
-        name=f"test_upload_check_{random_string}",
-        file_path=file_path,
-        requires_scenario_input=False,
-        requires_scenario_result=False,
-        output_data_type="bool",
-    )
-    os.remove(file_path)
-    assert uploaded_evaluator.id
-    assert uploaded_evaluator.name
+    for check_dict in checks_to_generate:
+        generate_request = EvaluatorSpecRequest(
+            description=str(check_dict["description"]),
+            requires_scenario_input=bool(check_dict["requires_scenario_input"]),
+            requires_scenario_result=bool(check_dict["requires_scenario_result"]),
+            output_data_type="bool",
+        )
+        check = okareo.generate_check(generate_request)
+
+        assert check.generated_code
+
+        temp_dir = tempfile.gettempdir()
+        file_path = os.path.join(temp_dir, "sample_evaluator.py")
+        with open(file_path, "w+") as file:
+            file.write(check.generated_code)
+        uploaded_check = okareo.upload_check(
+            name=f"test_upload_check_{check_dict['name']}_{random_string}",
+            file_path=file_path,
+            requires_scenario_input=bool(check_dict["requires_scenario_input"]),
+            requires_scenario_result=bool(check_dict["requires_scenario_result"]),
+            output_data_type="bool",
+        )
+        os.remove(file_path)
+        assert uploaded_check.id
+        assert uploaded_check.name
+        uploaded_checks.append(uploaded_check)
     # TODO: Remove this once old evaluators are deprecated
     temp_dir = tempfile.gettempdir()
     file_path = os.path.join(temp_dir, "sample_evaluator.py")
@@ -300,7 +328,7 @@ def evaluate(model_output: str) -> bool:
     return True if len(model_output) >= 20 else False
 """
         )
-    manual_old_evaluator = okareo.upload_evaluator(
+    manual_old_check = okareo.upload_check(
         name=f"test_upload_check_manual_{random_string}",
         file_path=file_path,
         requires_scenario_input=False,
@@ -309,8 +337,9 @@ def evaluate(model_output: str) -> bool:
     )
     os.remove(file_path)
 
-    assert manual_old_evaluator.id
-    assert manual_old_evaluator.name
+    assert manual_old_check.id
+    assert manual_old_check.name
+    uploaded_checks.append(manual_old_check)
 
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
@@ -322,13 +351,15 @@ def evaluate(model_output: str) -> bool:
         ),
     )
 
+    check_ids = [str(check.id) for check in uploaded_checks]
+    check_names = [str(check.name) for check in uploaded_checks]
     run_resp = mut.run_test(
         name=f"openai-chat-run-{rnd}",
         scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
-        checks=[uploaded_evaluator.id, manual_old_evaluator.id],
+        checks=check_ids,
     )
 
     assert run_resp.name == f"openai-chat-run-{rnd}"
@@ -340,15 +371,13 @@ def evaluate(model_output: str) -> bool:
     assert metrics_dict["mean_scores"] is not None
     assert metrics_dict["scores_by_row"] is not None
     for row in metrics_dict["scores_by_row"]:
-        dimension_keys = [
-            f"test_upload_check_{random_string}",
-            f"test_upload_check_manual_{random_string}",
-        ]
+        dimension_keys = [c.name for c in uploaded_checks]
         for dimension in dimension_keys:
             assert dimension in row
         assert row[dimension_keys[0]] == row[dimension_keys[1]]
-    okareo.delete_evaluator(manual_old_evaluator.id, manual_old_evaluator.name)
-    okareo.delete_evaluator(uploaded_evaluator.id, uploaded_evaluator.name)
+
+    for c_name, c_id in zip(check_names, check_ids):
+        okareo.delete_check(c_id, str(c_name))
 
 
 def test_run_test_predefined_checks(
