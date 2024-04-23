@@ -466,9 +466,19 @@ class ModelUnderTest(AsyncProcessorMixin):
             response = get_test_run_v0_test_runs_test_run_id_get.sync(
                 client=self.client, api_key=self.api_key, test_run_id=test_run_id
             )
-            if not isinstance(response, TestRunItem):
-                raise
+            self.validate_response(response)
+            assert isinstance(response, TestRunItem)
+
             return response
         except UnexpectedStatus as e:
             print(e.content)
             raise
+
+    def validate_response(self, response: Any) -> None:
+        if isinstance(response, ErrorResponse):
+            error_message = f"error: {response}, {response.detail}"
+            print(error_message)
+            raise TypeError(error_message)
+        if response is None:
+            print("Received no response (None) from the API")
+            raise ValueError("No response received")

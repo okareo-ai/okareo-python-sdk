@@ -6,6 +6,7 @@ import httpx
 
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
+    create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
     evaluator_delete_v0_evaluator_evaluator_id_delete,
     evaluator_generate_v0_evaluator_generate_post,
@@ -43,6 +44,7 @@ from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
+from okareo_api_client.models.project_schema import ProjectSchema
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
@@ -83,6 +85,19 @@ class Okareo:
         )
         self.validate_response(response)
         assert isinstance(response, List)
+
+        return response
+
+    def create_project(
+        self, name: str, tags: Union[Unset, List[str]] = UNSET
+    ) -> ProjectResponse:
+        response = create_project_v0_projects_post.sync(
+            client=self.client,
+            api_key=self.api_key,
+            json_body=ProjectSchema(name=name, tags=tags),
+        )
+        self.validate_response(response)
+        assert isinstance(response, ProjectResponse)
 
         return response
 

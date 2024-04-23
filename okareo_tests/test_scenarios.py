@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 
 import pytest
-import requests  # type: ignore
+import requests
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
