@@ -5,17 +5,15 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.body_evaluator_delete_v0_evaluator_evaluator_id_delete import (
-    BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
-)
+from ...models.body_check_delete_v0_check_check_id_delete import BodyCheckDeleteV0CheckCheckIdDelete
 from ...models.error_response import ErrorResponse
 from ...types import Response
 
 
 def _get_kwargs(
-    evaluator_id: str,
+    check_id: str,
     *,
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -23,8 +21,8 @@ def _get_kwargs(
 
     return {
         "method": "delete",
-        "url": "/v0/evaluator/{evaluator_id}".format(
-            evaluator_id=evaluator_id,
+        "url": "/v0/check/{check_id}".format(
+            check_id=check_id,
         ),
         "data": form_data.to_dict(),
         "headers": headers,
@@ -67,24 +65,23 @@ def _build_response(
 
 
 def sync_detailed(
-    evaluator_id: str,
+    check_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+    """Check Delete
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Deletes a check
 
     Raises:
-        HTTPException: 404 if evaluator_id is not found
+        HTTPException: 404 if check_id is not found
 
     Returns: 204 status code on successful deletion
 
     Args:
-        evaluator_id (str):
+        check_id (str):
         api_key (str):
 
     Raises:
@@ -96,7 +93,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        evaluator_id=evaluator_id,
+        check_id=check_id,
         form_data=form_data,
         api_key=api_key,
     )
@@ -109,24 +106,23 @@ def sync_detailed(
 
 
 def sync(
-    evaluator_id: str,
+    check_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+    """Check Delete
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Deletes a check
 
     Raises:
-        HTTPException: 404 if evaluator_id is not found
+        HTTPException: 404 if check_id is not found
 
     Returns: 204 status code on successful deletion
 
     Args:
-        evaluator_id (str):
+        check_id (str):
         api_key (str):
 
     Raises:
@@ -138,7 +134,7 @@ def sync(
     """
 
     return sync_detailed(
-        evaluator_id=evaluator_id,
+        check_id=check_id,
         client=client,
         form_data=form_data,
         api_key=api_key,
@@ -146,24 +142,23 @@ def sync(
 
 
 async def asyncio_detailed(
-    evaluator_id: str,
+    check_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+    """Check Delete
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Deletes a check
 
     Raises:
-        HTTPException: 404 if evaluator_id is not found
+        HTTPException: 404 if check_id is not found
 
     Returns: 204 status code on successful deletion
 
     Args:
-        evaluator_id (str):
+        check_id (str):
         api_key (str):
 
     Raises:
@@ -175,7 +170,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        evaluator_id=evaluator_id,
+        check_id=check_id,
         form_data=form_data,
         api_key=api_key,
     )
@@ -186,24 +181,23 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    evaluator_id: str,
+    check_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+    """Check Delete
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Deletes a check
 
     Raises:
-        HTTPException: 404 if evaluator_id is not found
+        HTTPException: 404 if check_id is not found
 
     Returns: 204 status code on successful deletion
 
     Args:
-        evaluator_id (str):
+        check_id (str):
         api_key (str):
 
     Raises:
@@ -216,7 +210,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            evaluator_id=evaluator_id,
+            check_id=check_id,
             client=client,
             form_data=form_data,
             api_key=api_key,

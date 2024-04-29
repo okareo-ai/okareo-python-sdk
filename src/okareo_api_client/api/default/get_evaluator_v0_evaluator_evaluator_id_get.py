@@ -6,7 +6,6 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.evaluator_detailed_response import EvaluatorDetailedResponse
 from ...types import Response
 
 
@@ -29,10 +28,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+) -> Optional[Union[Any, ErrorResponse]]:
     if response.status_code == HTTPStatus.CREATED:
-        response_201 = EvaluatorDetailedResponse.from_dict(response.json())
-
+        response_201 = response.json()
         return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
@@ -54,7 +52,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+) -> Response[Union[Any, ErrorResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,10 +66,11 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+) -> Response[Union[Any, ErrorResponse]]:
     """Get Evaluator
 
-     Get an evaluator
+     Get an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
+    convention.
 
     Raises:
         HTTPException: 404 if evaluator_id is not found
@@ -87,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, EvaluatorDetailedResponse]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -107,10 +106,11 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+) -> Optional[Union[Any, ErrorResponse]]:
     """Get Evaluator
 
-     Get an evaluator
+     Get an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
+    convention.
 
     Raises:
         HTTPException: 404 if evaluator_id is not found
@@ -126,7 +126,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, EvaluatorDetailedResponse]
+        Union[Any, ErrorResponse]
     """
 
     return sync_detailed(
@@ -141,10 +141,11 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+) -> Response[Union[Any, ErrorResponse]]:
     """Get Evaluator
 
-     Get an evaluator
+     Get an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
+    convention.
 
     Raises:
         HTTPException: 404 if evaluator_id is not found
@@ -160,7 +161,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, EvaluatorDetailedResponse]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -178,10 +179,11 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+) -> Optional[Union[Any, ErrorResponse]]:
     """Get Evaluator
 
-     Get an evaluator
+     Get an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
+    convention.
 
     Raises:
         HTTPException: 404 if evaluator_id is not found
@@ -197,7 +199,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, EvaluatorDetailedResponse]
+        Union[Any, ErrorResponse]
     """
 
     return (

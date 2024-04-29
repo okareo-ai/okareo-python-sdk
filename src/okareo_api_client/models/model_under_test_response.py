@@ -1,9 +1,13 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.model_under_test_response_models import ModelUnderTestResponseModels
+
 
 T = TypeVar("T", bound="ModelUnderTestResponse")
 
@@ -17,6 +21,7 @@ class ModelUnderTestResponse:
         name (str):
         tags (List[str]):
         time_created (str):
+        models (Union[Unset, ModelUnderTestResponseModels]):
         datapoint_count (Union[Unset, int]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this model Default: ''.
         warning (Union[Unset, str]):
@@ -27,6 +32,7 @@ class ModelUnderTestResponse:
     name: str
     tags: List[str]
     time_created: str
+    models: Union[Unset, "ModelUnderTestResponseModels"] = UNSET
     datapoint_count: Union[Unset, int] = UNSET
     app_link: Union[Unset, str] = ""
     warning: Union[Unset, str] = UNSET
@@ -39,6 +45,10 @@ class ModelUnderTestResponse:
         tags = self.tags
 
         time_created = self.time_created
+        models: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.models, Unset):
+            models = self.models.to_dict()
+
         datapoint_count = self.datapoint_count
         app_link = self.app_link
         warning = self.warning
@@ -54,6 +64,8 @@ class ModelUnderTestResponse:
                 "time_created": time_created,
             }
         )
+        if models is not UNSET:
+            field_dict["models"] = models
         if datapoint_count is not UNSET:
             field_dict["datapoint_count"] = datapoint_count
         if app_link is not UNSET:
@@ -65,6 +77,8 @@ class ModelUnderTestResponse:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.model_under_test_response_models import ModelUnderTestResponseModels
+
         d = src_dict.copy()
         id = d.pop("id")
 
@@ -75,6 +89,13 @@ class ModelUnderTestResponse:
         tags = cast(List[str], d.pop("tags"))
 
         time_created = d.pop("time_created")
+
+        _models = d.pop("models", UNSET)
+        models: Union[Unset, ModelUnderTestResponseModels]
+        if isinstance(_models, Unset):
+            models = UNSET
+        else:
+            models = ModelUnderTestResponseModels.from_dict(_models)
 
         datapoint_count = d.pop("datapoint_count", UNSET)
 
@@ -88,6 +109,7 @@ class ModelUnderTestResponse:
             name=name,
             tags=tags,
             time_created=time_created,
+            models=models,
             datapoint_count=datapoint_count,
             app_link=app_link,
             warning=warning,
