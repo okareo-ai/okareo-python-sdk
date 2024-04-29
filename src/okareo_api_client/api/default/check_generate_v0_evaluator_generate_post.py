@@ -71,7 +71,7 @@ def sync_detailed(
     json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Evaluator Generate
+    """Check Generate
 
      Generate code for an evaluator for testing.
     Returns:
@@ -107,7 +107,7 @@ def sync(
     json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Evaluator Generate
+    """Check Generate
 
      Generate code for an evaluator for testing.
     Returns:
@@ -138,7 +138,7 @@ async def asyncio_detailed(
     json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Evaluator Generate
+    """Check Generate
 
      Generate code for an evaluator for testing.
     Returns:
@@ -172,7 +172,7 @@ async def asyncio(
     json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
-    """Evaluator Generate
+    """Check Generate
 
      Generate code for an evaluator for testing.
     Returns:

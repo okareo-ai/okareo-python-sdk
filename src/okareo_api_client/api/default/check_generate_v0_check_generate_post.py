@@ -5,37 +5,37 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.body_evaluator_upload_v0_evaluator_upload_post import BodyEvaluatorUploadV0EvaluatorUploadPost
 from ...models.error_response import ErrorResponse
-from ...models.evaluator_detailed_response import EvaluatorDetailedResponse
+from ...models.evaluator_generate_response import EvaluatorGenerateResponse
+from ...models.evaluator_spec_request import EvaluatorSpecRequest
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    multipart_multipart_data = multipart_data.to_multipart()
+    json_json_body = json_body.to_dict()
 
     return {
         "method": "post",
-        "url": "/v0/evaluator_upload",
-        "files": multipart_multipart_data,
+        "url": "/v0/check_generate",
+        "json": json_json_body,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = EvaluatorDetailedResponse.from_dict(response.json())
+) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
+    if response.status_code == HTTPStatus.CREATED:
+        response_201 = EvaluatorGenerateResponse.from_dict(response.json())
 
-        return response_200
+        return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -56,7 +56,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,30 +68,29 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
-) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
+    """Check Generate
 
-     Upload a new evaluator
-
+     Generate code for an evaluator for testing.
     Returns:
-        the evaluator object with its ID
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, EvaluatorDetailedResponse]]
+        Response[Union[ErrorResponse, EvaluatorGenerateResponse]]
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -105,31 +104,30 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
-) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
+    """Check Generate
 
-     Upload a new evaluator
-
+     Generate code for an evaluator for testing.
     Returns:
-        the evaluator object with its ID
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, EvaluatorDetailedResponse]
+        Union[ErrorResponse, EvaluatorGenerateResponse]
     """
 
     return sync_detailed(
         client=client,
-        multipart_data=multipart_data,
+        json_body=json_body,
         api_key=api_key,
     ).parsed
 
@@ -137,30 +135,29 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
-) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+) -> Response[Union[ErrorResponse, EvaluatorGenerateResponse]]:
+    """Check Generate
 
-     Upload a new evaluator
-
+     Generate code for an evaluator for testing.
     Returns:
-        the evaluator object with its ID
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, EvaluatorDetailedResponse]]
+        Response[Union[ErrorResponse, EvaluatorGenerateResponse]]
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -172,32 +169,31 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyEvaluatorUploadV0EvaluatorUploadPost,
+    json_body: EvaluatorSpecRequest,
     api_key: str,
-) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
-    """Evaluator Upload
+) -> Optional[Union[ErrorResponse, EvaluatorGenerateResponse]]:
+    """Check Generate
 
-     Upload a new evaluator
-
+     Generate code for an evaluator for testing.
     Returns:
-        the evaluator object with its ID
+        the evaluator object with the generated code
 
     Args:
         api_key (str):
-        multipart_data (BodyEvaluatorUploadV0EvaluatorUploadPost):
+        json_body (EvaluatorSpecRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, EvaluatorDetailedResponse]
+        Union[ErrorResponse, EvaluatorGenerateResponse]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            multipart_data=multipart_data,
+            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

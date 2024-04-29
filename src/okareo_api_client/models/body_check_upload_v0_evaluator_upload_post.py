@@ -6,27 +6,27 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, File, FileJsonType, Unset
 
-T = TypeVar("T", bound="BodyEvaluatorUploadV0EvaluatorUploadPost")
+T = TypeVar("T", bound="BodyCheckUploadV0EvaluatorUploadPost")
 
 
 @_attrs_define
-class BodyEvaluatorUploadV0EvaluatorUploadPost:
+class BodyCheckUploadV0EvaluatorUploadPost:
     """
     Attributes:
-        name (str): Name of the Evaluator
-        requires_scenario_input (bool): Whether the evaluator requires scenario input
-        requires_scenario_result (bool): Whether the evaluator requires scenario expected result
-        description (Union[Unset, str]): Description of the Evaluator Default: ''.
-        output_data_type (Union[Unset, str]): Evaluator output data type (i.e., bool, int, float)
+        name (str): Name of the Check
+        requires_scenario_input (bool): Whether the check requires scenario input
+        requires_scenario_result (bool): Whether the check requires scenario expected result
+        description (Union[Unset, str]): Description of the Check Default: 'No description provided'.
+        output_data_type (Union[Unset, str]): Check output data type (i.e., bool, int, float)
         project_id (Union[Unset, str]): ID for the project
         file (Union[Unset, File]):
-        update (Union[Unset, bool]): Update the evaluator
+        update (Union[Unset, bool]): Update the check
     """
 
     name: str
     requires_scenario_input: bool
     requires_scenario_result: bool
-    description: Union[Unset, str] = ""
+    description: Union[Unset, str] = "No description provided"
     output_data_type: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     file: Union[Unset, File] = UNSET
@@ -149,7 +149,7 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
 
         update = d.pop("update", UNSET)
 
-        body_evaluator_upload_v0_evaluator_upload_post = cls(
+        body_check_upload_v0_evaluator_upload_post = cls(
             name=name,
             requires_scenario_input=requires_scenario_input,
             requires_scenario_result=requires_scenario_result,
@@ -160,8 +160,8 @@ class BodyEvaluatorUploadV0EvaluatorUploadPost:
             update=update,
         )
 
-        body_evaluator_upload_v0_evaluator_upload_post.additional_properties = d
-        return body_evaluator_upload_v0_evaluator_upload_post
+        body_check_upload_v0_evaluator_upload_post.additional_properties = d
+        return body_check_upload_v0_evaluator_upload_post
 
     @property
     def additional_keys(self) -> List[str]:

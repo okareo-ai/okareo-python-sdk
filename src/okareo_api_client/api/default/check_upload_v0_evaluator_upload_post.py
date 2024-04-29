@@ -1,42 +1,41 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.body_evaluator_delete_v0_evaluator_evaluator_id_delete import (
-    BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
-)
+from ...models.body_check_upload_v0_evaluator_upload_post import BodyCheckUploadV0EvaluatorUploadPost
 from ...models.error_response import ErrorResponse
+from ...models.evaluator_detailed_response import EvaluatorDetailedResponse
 from ...types import Response
 
 
 def _get_kwargs(
-    evaluator_id: str,
     *,
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    multipart_data: BodyCheckUploadV0EvaluatorUploadPost,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
+    multipart_multipart_data = multipart_data.to_multipart()
+
     return {
-        "method": "delete",
-        "url": "/v0/evaluator/{evaluator_id}".format(
-            evaluator_id=evaluator_id,
-        ),
-        "data": form_data.to_dict(),
+        "method": "post",
+        "url": "/v0/evaluator_upload",
+        "files": multipart_multipart_data,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.NO_CONTENT:
-        response_204 = cast(Any, None)
-        return response_204
+) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+    if response.status_code == HTTPStatus.OK:
+        response_200 = EvaluatorDetailedResponse.from_dict(response.json())
+
+        return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -57,7 +56,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -67,37 +66,32 @@ def _build_response(
 
 
 def sync_detailed(
-    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    multipart_data: BodyCheckUploadV0EvaluatorUploadPost,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+    """Check Upload
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Upload a new check
 
-    Raises:
-        HTTPException: 404 if evaluator_id is not found
-
-    Returns: 204 status code on successful deletion
+    Returns:
+        the check object with its ID
 
     Args:
-        evaluator_id (str):
         api_key (str):
+        multipart_data (BodyCheckUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, EvaluatorDetailedResponse]]
     """
 
     kwargs = _get_kwargs(
-        evaluator_id=evaluator_id,
-        form_data=form_data,
+        multipart_data=multipart_data,
         api_key=api_key,
     )
 
@@ -109,74 +103,64 @@ def sync_detailed(
 
 
 def sync(
-    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    multipart_data: BodyCheckUploadV0EvaluatorUploadPost,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+    """Check Upload
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Upload a new check
 
-    Raises:
-        HTTPException: 404 if evaluator_id is not found
-
-    Returns: 204 status code on successful deletion
+    Returns:
+        the check object with its ID
 
     Args:
-        evaluator_id (str):
         api_key (str):
+        multipart_data (BodyCheckUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, EvaluatorDetailedResponse]
     """
 
     return sync_detailed(
-        evaluator_id=evaluator_id,
         client=client,
-        form_data=form_data,
+        multipart_data=multipart_data,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    multipart_data: BodyCheckUploadV0EvaluatorUploadPost,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+) -> Response[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+    """Check Upload
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Upload a new check
 
-    Raises:
-        HTTPException: 404 if evaluator_id is not found
-
-    Returns: 204 status code on successful deletion
+    Returns:
+        the check object with its ID
 
     Args:
-        evaluator_id (str):
         api_key (str):
+        multipart_data (BodyCheckUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, EvaluatorDetailedResponse]]
     """
 
     kwargs = _get_kwargs(
-        evaluator_id=evaluator_id,
-        form_data=form_data,
+        multipart_data=multipart_data,
         api_key=api_key,
     )
 
@@ -186,39 +170,34 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    evaluator_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    form_data: BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+    multipart_data: BodyCheckUploadV0EvaluatorUploadPost,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
-    """Evaluator Delete
+) -> Optional[Union[ErrorResponse, EvaluatorDetailedResponse]]:
+    """Check Upload
 
-     Deletes an evaluator. Note: This is a wrapper for /check/{check_id}, which uses the proper naming
-    convention.
+     Upload a new check
 
-    Raises:
-        HTTPException: 404 if evaluator_id is not found
-
-    Returns: 204 status code on successful deletion
+    Returns:
+        the check object with its ID
 
     Args:
-        evaluator_id (str):
         api_key (str):
+        multipart_data (BodyCheckUploadV0EvaluatorUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, EvaluatorDetailedResponse]
     """
 
     return (
         await asyncio_detailed(
-            evaluator_id=evaluator_id,
             client=client,
-            form_data=form_data,
+            multipart_data=multipart_data,
             api_key=api_key,
         )
     ).parsed

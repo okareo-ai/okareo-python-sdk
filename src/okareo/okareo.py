@@ -6,26 +6,26 @@ import httpx
 
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
+    check_delete_v0_check_check_id_delete,
+    check_generate_v0_check_generate_post,
+    check_upload_v0_check_upload_post,
     create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
-    evaluator_delete_v0_evaluator_evaluator_id_delete,
-    evaluator_generate_v0_evaluator_generate_post,
-    evaluator_upload_v0_evaluator_upload_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
-    get_all_evaluators_v0_evaluators_get,
+    get_all_checks_v0_checks_get,
     get_all_projects_v0_projects_get,
+    get_check_v0_check_check_id_get,
     get_datapoints_v0_find_datapoints_post,
-    get_evaluator_v0_evaluator_evaluator_id_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
-from okareo_api_client.models.body_evaluator_delete_v0_evaluator_evaluator_id_delete import (
-    BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete,
+from okareo_api_client.models.body_check_delete_v0_check_check_id_delete import (
+    BodyCheckDeleteV0CheckCheckIdDelete,
 )
-from okareo_api_client.models.body_evaluator_upload_v0_evaluator_upload_post import (
-    BodyEvaluatorUploadV0EvaluatorUploadPost,
+from okareo_api_client.models.body_check_upload_v0_check_upload_post import (
+    BodyCheckUploadV0CheckUploadPost,
 )
 from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
     BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
@@ -322,7 +322,7 @@ class Okareo:
             file_name = os.path.basename(file_path)
 
             with open(file_path, "rb") as binary_io:
-                multipart_body = BodyEvaluatorUploadV0EvaluatorUploadPost(
+                multipart_body = BodyCheckUploadV0CheckUploadPost(
                     name=name,
                     requires_scenario_input=requires_scenario_input,
                     requires_scenario_result=requires_scenario_result,
@@ -332,7 +332,7 @@ class Okareo:
                     file=File(file_name=file_name, payload=binary_io),
                     update=update,
                 )
-                response = evaluator_upload_v0_evaluator_upload_post.sync(
+                response = check_upload_v0_check_upload_post.sync(
                     client=self.client,
                     multipart_data=multipart_body,
                     api_key=self.api_key,
@@ -356,7 +356,7 @@ class Okareo:
     def generate_check(
         self, create_check: EvaluatorSpecRequest
     ) -> EvaluatorGenerateResponse:
-        response = evaluator_generate_v0_evaluator_generate_post.sync(
+        response = check_generate_v0_check_generate_post.sync(
             client=self.client, api_key=self.api_key, json_body=create_check
         )
         self.validate_response(response)
@@ -369,7 +369,7 @@ class Okareo:
         return self.get_all_checks()
 
     def get_all_checks(self) -> List[EvaluatorBriefResponse]:
-        response = get_all_evaluators_v0_evaluators_get.sync(
+        response = get_all_checks_v0_checks_get.sync(
             client=self.client,
             api_key=self.api_key,
         )
@@ -382,9 +382,9 @@ class Okareo:
         check_deprecation_warning()
         return self.get_check(evaluator_id)
 
-    def get_check(self, evaluator_id: str) -> EvaluatorDetailedResponse:
-        response = get_evaluator_v0_evaluator_evaluator_id_get.sync(
-            client=self.client, api_key=self.api_key, evaluator_id=evaluator_id
+    def get_check(self, check_id: str) -> EvaluatorDetailedResponse:
+        response = get_check_v0_check_check_id_get.sync(
+            client=self.client, api_key=self.api_key, check_id=check_id
         )
         self.validate_response(response)
         assert isinstance(response, EvaluatorDetailedResponse)
@@ -395,13 +395,13 @@ class Okareo:
         check_deprecation_warning()
         return self.delete_check(evaluator_id, evaluator_name)
 
-    def delete_check(self, evaluator_id: str, evaluator_name: str) -> str:
-        evaluator_delete_v0_evaluator_evaluator_id_delete.sync(
+    def delete_check(self, check_id: str, check_name: str) -> str:
+        check_delete_v0_check_check_id_delete.sync(
             client=self.client,
             api_key=self.api_key,
-            evaluator_id=evaluator_id,
-            form_data=BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete.from_dict(
-                {"name": evaluator_name}
+            check_id=check_id,
+            form_data=BodyCheckDeleteV0CheckCheckIdDelete.from_dict(
+                {"name": check_name}
             ),
         )
         return "Check deletion was successful"
