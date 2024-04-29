@@ -306,7 +306,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             scenario_id=scenario_id,
             name=name,
             type=test_run_type,
-            project_id=self.project_id,
             calculate_metrics=calculate_metrics,
             metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
                 metrics_kwargs or {}
