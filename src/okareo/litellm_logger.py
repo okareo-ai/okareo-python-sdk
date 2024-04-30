@@ -6,8 +6,14 @@ from litellm.integrations.custom_logger import CustomLogger  # type: ignore
 from openai._models import BaseModel as OpenAIObject
 
 from okareo import Okareo
+from okareo.model_under_test import CustomModel
 
 dotenv.load_dotenv()
+
+
+class LoggerModel(CustomModel):
+    def invoke(self, input_value: str) -> Any:
+        return input_value, {"input": input_value}
 
 
 class LiteLLMLogger(CustomLogger):  # type: ignore
@@ -25,7 +31,12 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
             self.okareo = Okareo(api_key)
 
         self.context_token = context_token
-        self.registered_model = self.okareo.register_model(name=mut_name, tags=tags)
+        self.registered_model = self.okareo.register_model(
+            name=mut_name,
+            tags=tags,
+            model=LoggerModel(name=mut_name),
+            update=True,
+        )
 
     def log_success_event(
         self, kwargs: Any, response_obj: Any, start_time: Any, end_time: Any
