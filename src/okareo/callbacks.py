@@ -11,9 +11,11 @@ from langchain.schema import AgentAction, AgentFinish, LLMResult
 from okareo.model_under_test import CustomModel
 from okareo.okareo import Okareo
 
+
 class CallbackModel(CustomModel):
     def invoke(self, input_value: str) -> Any:
-        return input_value, {'input': input_value}
+        return input_value, {"input": input_value}
+
 
 class CallbackHandler(BaseCallbackHandler):
     """

@@ -6,14 +6,14 @@ from litellm.integrations.custom_logger import CustomLogger  # type: ignore
 from openai._models import BaseModel as OpenAIObject
 
 from okareo import Okareo
-from okareo.model_under_test import OpenAIModel
+from okareo.model_under_test import CustomModel
 
 dotenv.load_dotenv()
 
-USER_PROMPT_TEMPLATE = "{input}"
-SYSTEM_PROMPT_TEMPLATE = """
-    Respond to questions about U.S. Presidents.
-"""
+
+class LoggerModel(CustomModel):
+    def invoke(self, input_value: str) -> Any:
+        return input_value, {"input": input_value}
 
 
 class LiteLLMLogger(CustomLogger):  # type: ignore
@@ -34,12 +34,7 @@ class LiteLLMLogger(CustomLogger):  # type: ignore
         self.registered_model = self.okareo.register_model(
             name=mut_name,
             tags=tags,
-            model=OpenAIModel(
-                model_id="gpt-3.5-turbo-0125",
-                temperature=0,
-                system_prompt_template=SYSTEM_PROMPT_TEMPLATE,
-                user_prompt_template=USER_PROMPT_TEMPLATE,
-            ),
+            model=LoggerModel(name=mut_name),
             update=True,
         )
 
