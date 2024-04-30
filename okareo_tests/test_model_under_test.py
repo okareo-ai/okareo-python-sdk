@@ -14,6 +14,9 @@ from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
 
+class DummyModel(CustomModel):
+    def invoke(self, input_value: str) -> Any:
+        return input_value, {"input": input_value}
 
 def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
     fixture = get_mut_fixture("NotebookModel")
@@ -40,7 +43,7 @@ def test_register_model(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
         httpx_mock.add_response(status_code=201, json=fixture)
 
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-    mut = okareo.register_model(name=fixture["name"], tags=fixture["tags"])
+    mut = okareo.register_model(name=fixture["name"], tags=fixture["tags"], model=DummyModel(name=fixture["name"]))
     assert mut.name == fixture["name"]
 
 
@@ -53,7 +56,7 @@ def test_add_datapoint_optional_integration(
         httpx_mock.add_response(status_code=201, json=fixture)
 
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-    mut = okareo.register_model(name=fixture["name"], tags=fixture["tags"])
+    mut = okareo.register_model(name=fixture["name"], tags=fixture["tags"], model=DummyModel(name=fixture["name"]))
     dp = mut.add_data_point(
         feedback=0,
         context_token="SOME_CONTEXT_TOKEN",
