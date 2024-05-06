@@ -11,6 +11,7 @@ from okareo_api_client.api.default import (
     check_upload_v0_check_upload_post,
     create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
+    generate_scenario_from_inputs_v0_documents_generate_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
     get_all_projects_v0_projects_get,
@@ -41,6 +42,8 @@ from okareo_api_client.models.evaluator_generate_response import (
     EvaluatorGenerateResponse,
 )
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
+from okareo_api_client.models.generate_from_seed_data import GenerateFromSeedData
+from okareo_api_client.models.generation_tone import GenerationTone
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
@@ -221,6 +224,7 @@ class Okareo:
         number_examples: int,
         project_id: Union[Unset, str] = UNSET,
         generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT,
+        generation_tone: Union[Unset, GenerationTone] = GenerationTone.NEUTRAL,
     ) -> ScenarioSetResponse:
         scenario_id = (
             source_scenario.scenario_id
@@ -234,8 +238,22 @@ class Okareo:
                 number_examples=number_examples,
                 project_id=project_id,
                 generation_type=generation_type,
+                generation_tone=generation_tone,
             )
         )
+
+    def generate_scenario_from_seed_data(
+        self,
+        seed_data_generation: GenerateFromSeedData,
+    ) -> ScenarioSetResponse:
+        response = generate_scenario_from_inputs_v0_documents_generate_post.sync(
+            client=self.client, api_key=self.api_key, json_body=seed_data_generation
+        )
+
+        self.validate_response(response)
+        assert isinstance(response, ScenarioSetResponse)
+
+        return response
 
     def generate_scenario_set(
         self, create_request: ScenarioSetGenerate

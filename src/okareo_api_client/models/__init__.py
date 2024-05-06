@@ -20,6 +20,7 @@ from .evaluator_spec_request import EvaluatorSpecRequest
 from .feedback_range_summary import FeedbackRangeSummary
 from .find_test_data_point_payload import FindTestDataPointPayload
 from .general_find_payload import GeneralFindPayload
+from .generate_from_seed_data import GenerateFromSeedData
 from .generation_tone import GenerationTone
 from .model_under_test_response import ModelUnderTestResponse
 from .model_under_test_response_models import ModelUnderTestResponseModels
@@ -75,6 +76,7 @@ __all__ = (
     "FeedbackRangeSummary",
     "FindTestDataPointPayload",
     "GeneralFindPayload",
+    "GenerateFromSeedData",
     "GenerationTone",
     "ModelUnderTestResponse",
     "ModelUnderTestResponseModels",
