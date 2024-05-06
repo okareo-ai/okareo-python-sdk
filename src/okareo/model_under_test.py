@@ -347,7 +347,6 @@ class ModelUnderTest(AsyncProcessorMixin):
 
                 custom_model_invoker = self.models["custom"]["model_invoker"]
                 for scenario_data_point in scenario_data_points:
-                    assert isinstance(scenario_data_point.input_, str)
                     actual, model_response = custom_model_invoker(
                         scenario_data_point.input_
                     )
