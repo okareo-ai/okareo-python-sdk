@@ -46,8 +46,12 @@ def test_create_project(okareo_client: Okareo) -> None:
 
 def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None:
     # use the same project to not overload the menu
-    project = okareo_client.create_project(name="CI - test_full_eval_in_new_project")
-    assert project.id
+    
+    project = next((item for item in okareo_client.get_projects() if item.name == "CI - test_full_eval_in_new_project"), None)
+    
+    if not project:
+        project = okareo_client.create_project(name="CI - test_full_eval_in_new_project")
+        assert project.id
 
     scenario_set_create = ScenarioSetCreate(
         name=f"CI - test_full_eval_in_new_project {rnd}",
