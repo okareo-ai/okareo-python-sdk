@@ -17,6 +17,7 @@ PREDEFINED_CHECKS = [
     "compression_ratio",
     "does_code_compile",
     "contains_all_imports",
+    "corpus_BLEU",
     "coherence_summary",
     "consistency_summary",
     "fluency_summary",
