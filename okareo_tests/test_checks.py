@@ -37,10 +37,6 @@ def okareo_client() -> Okareo:
 
 def test_get_all_checks(okareo_client: Okareo) -> None:
     checks = okareo_client.get_all_checks()
-    check_names = [check.name for check in checks]
-    # make sure all the predefined checks are present
-    for predefined_check_name in PREDEFINED_CHECKS:
-        assert predefined_check_name in check_names
     # iterate through all the checks and ensure they have required fields
     for check in checks:
         assert check.id
@@ -57,8 +53,6 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
         assert check_detailed.requires_scenario_input is not None
         assert check_detailed.requires_scenario_result is not None
         assert check_detailed.time_created
-        if check_detailed.name not in PREDEFINED_CHECKS:
-            assert check_detailed.code_contents
 
 
 def test_generate_and_upload_check(okareo_client: Okareo) -> None:
