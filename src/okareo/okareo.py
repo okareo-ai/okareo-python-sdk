@@ -71,8 +71,8 @@ def check_deprecation_warning() -> None:
 
 
 class SeedDataRow(TypedDict):
-    input: dict | list | str
-    result: dict | list | str
+    input: Union[dict, list, str]
+    result: Union[dict, list, str]
 
 
 class Okareo:
