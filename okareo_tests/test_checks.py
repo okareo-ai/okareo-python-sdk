@@ -1,16 +1,11 @@
 import os
-import random
-import string
 import tempfile
-from datetime import datetime
 
 import pytest
-from okareo_tests.common import API_KEY
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo_api_client.models import EvaluatorSpecRequest
-
-today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 
 
 @pytest.fixture(scope="module")
@@ -48,13 +43,12 @@ def test_generate_and_upload_check(okareo_client: Okareo) -> None:
     )
     check = okareo_client.generate_check(generate_request)
     assert check.generated_code
-    random_string = "".join(random.choices(string.ascii_letters, k=5))
     temp_dir = tempfile.gettempdir()
     file_path = os.path.join(temp_dir, "sample_check.py")
     with open(file_path, "w+") as file:
         file.write(check.generated_code)
     uploaded_check = okareo_client.upload_check(
-        name=f"test_upload_check {random_string}",
+        name=f"test_upload_check {random_string(5)}",
         file_path=file_path,
         requires_scenario_input=False,
         requires_scenario_result=False,

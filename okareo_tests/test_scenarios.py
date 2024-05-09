@@ -1,7 +1,6 @@
 import json
 import os
 import time
-from datetime import datetime
 from typing import List
 
 import pytest
@@ -18,8 +17,6 @@ from okareo_api_client.models import (
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
-
-today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 
 
 @pytest.fixture(scope="module")

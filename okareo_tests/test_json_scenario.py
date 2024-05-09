@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Union
 
 import pytest
-from okareo_tests.common import API_KEY
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CohereModel, CustomModel, OpenAIModel
@@ -13,9 +13,11 @@ from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
-upload_scenario_name = f"ci_json_test_upload_scenario_set {today_with_time}"
-create_scenario_name = f"ci_json_test_create_scenarios {today_with_time}"
-generate_scenario_name = f"ci_json_test_generate_scenarios {today_with_time}"
+rnd_str = random_string(5)
+unique_key = f"{rnd_str} {today_with_time}"
+upload_scenario_name = f"ci_json_test_upload_scenario_set {unique_key}"
+create_scenario_name = f"ci_json_test_create_scenarios {unique_key}"
+generate_scenario_name = f"ci_json_test_generate_scenarios {unique_key}"
 
 
 @pytest.fixture(scope="module")
