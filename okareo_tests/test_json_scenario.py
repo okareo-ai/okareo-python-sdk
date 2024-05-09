@@ -93,13 +93,16 @@ def test_create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
 def test_download_scenario_set(
     uploaded_scenario_set: ScenarioSetResponse, okareo_client: Okareo
 ) -> ScenarioSetResponse:
-    response_file = okareo_client.download_scenario_set(uploaded_scenario_set)
+    response_file = okareo_client.download_scenario_set(
+        uploaded_scenario_set, upload_scenario_name
+    )
     with open(response_file.name) as scenario_file:
         for line in scenario_file:
             assert json.loads(line)["input"]["query"] != ""
             assert json.loads(line)["input"]["user_id"] != ""
             assert json.loads(line)["input"]["meta"] != ""
             assert json.loads(line)["result"] != ""
+    os.remove(upload_scenario_name)
 
     return uploaded_scenario_set
 

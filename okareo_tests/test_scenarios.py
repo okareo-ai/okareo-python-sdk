@@ -38,13 +38,16 @@ def seed_data() -> List[SeedData]:
     ]
 
 
+create_scenario_name = f"my_test_scenario_set_{random_string(5)}"
+
+
 @pytest.fixture(scope="module")
 def create_scenario_set(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> ScenarioSetResponse:
 
     scenario_set_create = ScenarioSetCreate(
-        name=f"my test scenario set {random_string(5)}",
+        name=create_scenario_name,
         seed_data=seed_data,
     )
     articles: ScenarioSetResponse = okareo_client.create_scenario_set(
@@ -98,6 +101,8 @@ def test_download_scenario_set(
             assert json.loads(line)["input"] != ""
             assert json.loads(line)["result"] != ""
 
+    os.remove(create_scenario_name + ".jsonl")
+
 
 def test_duplicate_scenario_name(
     okareo_client: Okareo,
@@ -132,6 +137,8 @@ def test_download_scenario_set_with_file(
         for line in scenario_file:
             assert json.loads(line)["input"] != ""
             assert json.loads(line)["result"] != ""
+
+    os.remove("./scenario.jsonl")
 
 
 def test_create_scenario_set_all_fields(
