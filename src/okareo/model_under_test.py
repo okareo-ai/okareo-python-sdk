@@ -24,6 +24,9 @@ from okareo_api_client.models import (
     TestRunType,
 )
 from okareo_api_client.models.error_response import ErrorResponse
+from okareo_api_client.models.scenario_data_poin_response_input_type_0 import (
+    ScenarioDataPoinResponseInputType0,
+)
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
 from okareo_api_client.models.test_run_payload_v2_api_keys import (
@@ -121,7 +124,7 @@ class CustomModel(BaseModel):
     name: str
 
     @abstractmethod
-    def invoke(self, input_value: str) -> Any:
+    def invoke(self, input_value: dict | list | str) -> Any:
         pass
 
     def params(self) -> dict:
@@ -326,7 +329,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         api_keys: Optional[dict] = None,
         metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
-        calculate_metrics: bool = False,
+        calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
@@ -347,10 +350,16 @@ class ModelUnderTest(AsyncProcessorMixin):
 
                 custom_model_invoker = self.models["custom"]["model_invoker"]
                 for scenario_data_point in scenario_data_points:
-                    assert isinstance(scenario_data_point.input_, str)
-                    actual, model_response = custom_model_invoker(
-                        scenario_data_point.input_
+                    scenario_input: Union[dict, list, str] = (
+                        scenario_data_point.input_.to_dict()
+                        if isinstance(
+                            scenario_data_point.input_,
+                            ScenarioDataPoinResponseInputType0,
+                        )
+                        else scenario_data_point.input_
                     )
+
+                    actual, model_response = custom_model_invoker(scenario_input)
                     model_data["model_data"][scenario_data_point.id] = {
                         "actual": actual,
                         "model_response": model_response,
@@ -393,7 +402,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         api_keys: Optional[dict] = None,
         metrics_kwargs: Optional[dict] = None,
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
-        calculate_metrics: bool = False,
+        calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
@@ -415,17 +424,22 @@ class ModelUnderTest(AsyncProcessorMixin):
                 custom_model_invoker = self.models["custom"]["model_invoker"]
                 async_custom_model = inspect.iscoroutinefunction(custom_model_invoker)
                 for scenario_data_point in scenario_data_points:
-                    assert isinstance(scenario_data_point.input_, str)
+                    scenario_input: Union[dict, list, str] = (
+                        scenario_data_point.input_.to_dict()
+                        if isinstance(
+                            scenario_data_point.input_,
+                            ScenarioDataPoinResponseInputType0,
+                        )
+                        else scenario_data_point.input_
+                    )
                     if async_custom_model:
                         # If the method is async, await it
                         actual, model_response = await custom_model_invoker(
-                            scenario_data_point.input_
+                            scenario_input
                         )
                     else:
                         # If the method is not async, call it directly
-                        actual, model_response = custom_model_invoker(
-                            scenario_data_point.input_
-                        )
+                        actual, model_response = custom_model_invoker(scenario_input)
                     model_data["model_data"][scenario_data_point.id] = {
                         "actual": actual,
                         "model_response": model_response,

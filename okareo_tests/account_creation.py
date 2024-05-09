@@ -67,7 +67,7 @@ def test_load_classification(okareo: Okareo, rnd: str) -> None:
 
     class RetrievalModel(CustomModel):
         # Callable to be applied to each scenario in the scenario set
-        def invoke(self, input_value: str) -> Any:
+        def invoke(self, input_value: dict | list | str) -> Any:
             # call your model being tested here using <input> from the scenario set
 
             # mock code returnign a random label
@@ -143,7 +143,7 @@ def test_load_retrieval(okareo: Okareo, rnd: str) -> None:
     assert questions.time_created
 
     class RetrievalModel(CustomModel):
-        def invoke(self, input_value: str) -> Any:
+        def invoke(self, input_value: dict | list | str) -> Any:
             # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
             # we are using a random response here for demonstration purposes
             article_ids = [

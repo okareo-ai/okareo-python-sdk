@@ -75,7 +75,7 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
     assert response.project_id == project.id
 
     class ClassificationModel(CustomModel):
-        def invoke(self, input_value: str) -> Any:
+        def invoke(self, input_value: dict | list | str) -> Any:
             actual = random.choice(["returns", "complains", "pricing"])
             # return a tuple of (actual, overall model response context)
             return actual, {"labels": actual, "confidence": 0.8}

@@ -1,6 +1,6 @@
 import os
 import warnings
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, TypedDict, Union
 
 import httpx
 
@@ -52,6 +52,9 @@ from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
+from okareo_api_client.models.seed_data import SeedData
+from okareo_api_client.models.seed_data_input_type_0 import SeedDataInputType0
+from okareo_api_client.models.seed_data_result_type_0 import SeedDataResultType0
 from okareo_api_client.types import UNSET, File, Unset
 
 from .common import BASE_URL, HTTPX_TIME_OUT
@@ -67,6 +70,11 @@ def check_deprecation_warning() -> None:
     warnings.warn(CHECK_DEPRECATION_WARNING, DeprecationWarning, stacklevel=2)
 
 
+class SeedDataRow(TypedDict):
+    input: dict | list | str
+    result: dict | list | str
+
+
 class Okareo:
     """A class for interacting with Okareo API"""
 
@@ -77,6 +85,28 @@ class Okareo:
         self.client = Client(
             base_url=base_path, raise_on_unexpected_status=True
         )  # otherwise everything except 201 and 422 is swallowed
+
+    @staticmethod
+    def seed_data_from_list(data_list: List[SeedDataRow]) -> List[SeedData]:
+        """
+        Create a list of SeedData objects from a list of dictionaries with specifically 'input' and 'result' keys.
+        """
+        seed_data_list = []
+        for data in data_list:
+            seed_input: Union[SeedDataInputType0, list, str] = (
+                SeedDataInputType0.from_dict(data["input"])
+                if isinstance(data["input"], dict)
+                else data["input"]
+            )
+            seed_result: Union[SeedDataResultType0, list, str] = (
+                SeedDataResultType0.from_dict(data["result"])
+                if isinstance(data["result"], dict)
+                else data["result"]
+            )
+            seed_data = SeedData(input_=seed_input, result=seed_result)
+            seed_data_list.append(seed_data)
+
+        return seed_data_list
 
     def get_projects(self) -> List[ProjectResponse]:
         response = get_all_projects_v0_projects_get.sync(
