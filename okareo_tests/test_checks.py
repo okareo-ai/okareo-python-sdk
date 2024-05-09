@@ -11,23 +11,6 @@ from okareo import Okareo
 from okareo_api_client.models import EvaluatorSpecRequest
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
-PREDEFINED_CHECKS = [
-    "levenshtein_distance",
-    "levenshtein_distance_input",
-    "compression_ratio",
-    "does_code_compile",
-    "contains_all_imports",
-    "corpus_BLEU",
-    "coherence_summary",
-    "consistency_summary",
-    "fluency_summary",
-    "relevance_summary",
-    "consistency",
-    "coherence",
-    "conciseness",
-    "fluency",
-    "uniqueness",
-]
 
 
 @pytest.fixture(scope="module")

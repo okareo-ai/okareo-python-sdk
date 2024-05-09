@@ -399,6 +399,7 @@ def test_run_test_predefined_checks(
         "compression_ratio",
         "does_code_compile",
         "contains_all_imports",
+        "corpus_BLEU",
     ]
     run_resp = mut.run_test(
         name=f"openai-chat-run-predefined-{rnd}",
