@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY
@@ -59,7 +59,7 @@ def test_run_test_retrieval(
 ) -> None:
     class RetrievalModel(CustomModel):
         # Callable to be applied to each scenario in the scenario set
-        def invoke(self, input_value: dict | list | str) -> Any:
+        def invoke(self, input_value: Union[dict, list, str]) -> Any:
             # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
             # we are using a random response here for demonstration purposes
             article_ids = [

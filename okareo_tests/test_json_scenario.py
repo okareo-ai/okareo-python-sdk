@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY
@@ -206,7 +206,7 @@ def test_custom_retrieval(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> None:
     class RetrievalModel(CustomModel):
-        def invoke(self, input_value: dict | list | str) -> Any:
+        def invoke(self, input_value: Union[dict, list, str]) -> Any:
             assert isinstance(input_value, dict)
             assert input_value["query"]
             assert input_value["meta"]

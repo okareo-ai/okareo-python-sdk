@@ -124,7 +124,7 @@ class CustomModel(BaseModel):
     name: str
 
     @abstractmethod
-    def invoke(self, input_value: dict | list | str) -> Any:
+    def invoke(self, input_value: Union[dict, list, str]) -> Any:
         pass
 
     def params(self) -> dict:
