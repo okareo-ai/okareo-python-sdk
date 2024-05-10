@@ -138,11 +138,11 @@ JSON_CLASSIFICATION = Okareo.seed_data_from_list(
             "result": "red",  # result has to be a single label (not a list)
         },
         {
-            "input": {"query": "user q 2", "user_id": "2", "meta": "meta1"},
+            "input": {"query": "user q 2", "user_id": "2", "meta": "meta2"},
             "result": "blue",
         },
         {
-            "input": {"query": "user q 3", "user_id": "3", "meta": "meta1"},
+            "input": {"query": "user q 3", "user_id": "3", "meta": "meta3"},
             "result": "green",
         },
     ]
@@ -257,8 +257,8 @@ def test_generation_openai(
         model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
-            system_prompt_template="Do stuff with JSON: {input} \n",
-            user_prompt_template=None,
+            system_prompt_template="Do system stuff with JSON: {input.query} and {input.meta} \n",
+            user_prompt_template="Do user stuff with JSON: {input.user_id} \n",
         ),
     )
 
@@ -267,7 +267,7 @@ def test_generation_openai(
         scenario=uploaded_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        calculate_metrics=True,
+        checks=['consistency', 'compression_ratio', 'levenshtein_distance']
     )
     assert run_resp.name == test_run_name
     assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
