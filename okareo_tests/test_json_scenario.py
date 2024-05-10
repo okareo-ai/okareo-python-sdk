@@ -267,7 +267,7 @@ def test_generation_openai(
         scenario=uploaded_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        checks=['consistency', 'compression_ratio', 'levenshtein_distance']
+        checks=["consistency", "compression_ratio", "levenshtein_distance"],
     )
     assert run_resp.name == test_run_name
     assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
