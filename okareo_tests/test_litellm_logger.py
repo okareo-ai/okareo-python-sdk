@@ -9,6 +9,7 @@ from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
 from okareo.litellm_logger import LiteLLMLogger, LiteLLMProxyLogger
+from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
 
@@ -52,7 +53,7 @@ def dtest_litellm_baselogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
         assert "/v0/datapoints" in requests[1].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(context_token=context_token)
+        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
         assert isinstance(dp, list)
 
 
@@ -88,5 +89,5 @@ def dtest_litellm_openailogger(
         assert "/v0/datapoints" in requests[1].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(context_token=context_token)
+        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
         assert isinstance(dp, list)

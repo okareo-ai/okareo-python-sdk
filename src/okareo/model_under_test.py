@@ -53,6 +53,20 @@ class BaseModel:
 
 
 @_attrs_define
+class ModelInvocation:
+    actual: Union[dict, list, str, None] = None
+    model_input: Union[dict, list, str, None] = None
+    model_result: Union[dict, list, str, None] = None
+
+    def params(self) -> dict:
+        return {
+            "actual": self.actual,
+            "model_input": self.model_input,
+            "model_result": self.model_result,
+        }
+
+
+@_attrs_define
 class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str
@@ -126,7 +140,9 @@ class CustomModel(BaseModel):
     name: str
 
     @abstractmethod
-    def invoke(self, input_value: Union[dict, list, str]) -> Any:
+    def invoke(
+        self, input_value: Union[dict, list, str]
+    ) -> Union[ModelInvocation, Any]:
         pass
 
     def params(self) -> dict:
@@ -288,6 +304,26 @@ class ModelUnderTest(AsyncProcessorMixin):
         )
         return scenario_data_points
 
+    def _add_model_invocation_for_scenario(
+        self,
+        custom_model_return_value: Any,
+        model_data: dict,
+        scenario_data_point_id: str,
+    ) -> None:
+        if isinstance(custom_model_return_value, ModelInvocation):
+            actual = custom_model_return_value.actual
+            model_response = custom_model_return_value.model_result
+            model_input = custom_model_return_value.model_input
+        else:  # assume the preexisting behavior of returning a tuple
+            actual, model_response = custom_model_return_value
+            model_input = None
+
+        model_data["model_data"][scenario_data_point_id] = {
+            "actual": actual,
+            "model_response": model_response,
+            "model_input": model_input,
+        }
+
     def _get_test_run_payload(
         self,
         scenario_id: str,
@@ -361,11 +397,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                         else scenario_data_point.input_
                     )
 
-                    actual, model_response = custom_model_invoker(scenario_input)
-                    model_data["model_data"][scenario_data_point.id] = {
-                        "actual": actual,
-                        "model_response": model_response,
-                    }
+                    custom_model_return_value = custom_model_invoker(scenario_input)
+                    self._add_model_invocation_for_scenario(
+                        custom_model_return_value, model_data, scenario_data_point.id
+                    )
 
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
@@ -436,16 +471,16 @@ class ModelUnderTest(AsyncProcessorMixin):
                     )
                     if async_custom_model:
                         # If the method is async, await it
-                        actual, model_response = await custom_model_invoker(
+                        custom_model_return_value = await custom_model_invoker(
                             scenario_input
                         )
                     else:
                         # If the method is not async, call it directly
-                        actual, model_response = custom_model_invoker(scenario_input)
-                    model_data["model_data"][scenario_data_point.id] = {
-                        "actual": actual,
-                        "model_response": model_response,
-                    }
+                        custom_model_return_value = custom_model_invoker(scenario_input)
+
+                    self._add_model_invocation_for_scenario(
+                        custom_model_return_value, model_data, scenario_data_point.id
+                    )
 
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
