@@ -6,7 +6,11 @@ from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CustomModel, ModelInvocation
-from okareo_api_client.models import ScenarioSetResponse, TestRunType
+from okareo_api_client.models import (
+    DatapointListItemInputType0,
+    ScenarioSetResponse,
+    TestRunType,
+)
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 
@@ -88,7 +92,7 @@ def test_custom_return_bc(
     assert isinstance(dp, list)
     assert len(dp) == 3
     for d in dp:
-        assert isinstance(d.input_, dict)
+        assert isinstance(d.input_, DatapointListItemInputType0)
         assert d.input_["user_id"] in SCENARIO_USERID
         assert d.result in SCENARIO_META
 
