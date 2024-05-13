@@ -303,12 +303,12 @@ class Okareo:
             raise ValueError("No response received")
 
     def find_datapoints(
-        self, context_token: str
+        self, datapoint_search: DatapointSearch
     ) -> Union[List[DatapointListItem], ErrorResponse]:
         data = get_datapoints_v0_find_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=DatapointSearch(context_token=context_token),
+            json_body=datapoint_search,
         )
         if not data:
             return []

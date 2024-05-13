@@ -11,6 +11,7 @@ from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
 from okareo.callbacks import CallbackHandler
+from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
 
@@ -49,7 +50,7 @@ def test_llm_generates_datapoints(
         assert "/v0/datapoints" in requests[1].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(context_token=context_token)
+        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
         if isinstance(dp, list):
             assert len(dp) == 1
 
@@ -77,7 +78,7 @@ def test_llm_auto_generate_model(
         assert "/v0/datapoints" in requests[1].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(context_token=context_token)
+        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
         if isinstance(dp, list):
             assert len(dp) == 1
 
@@ -107,6 +108,6 @@ def test_chain_generates_datapoints(
         assert "/v0/datapoints" in requests[1].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(context_token=context_token)
+        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
         if isinstance(dp, list):
             assert len(dp) == 1
