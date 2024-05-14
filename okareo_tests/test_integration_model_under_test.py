@@ -9,6 +9,10 @@ from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb, QdrantDB
+from okareo_api_client.api.default import (
+    find_test_data_points_v0_find_test_data_points_post,
+    update_test_data_point_v0_update_test_data_point_post,
+)
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
@@ -216,6 +220,123 @@ def test_run_test_cohere_pinecone_ir(
         },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
+
+
+def test_run_test_cohere_pinecone_ir_tags(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"ci-pinecone-cohere-english-light-v3.0-{rnd}",
+        model=[
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+            PineconeDb(
+                index_name="my-test-index",
+                region="gcp-starter",
+                project_id="kwnp6kx",
+                top_k=3,
+            ),
+        ],
+    )
+
+    run_resp = mut.run_test(
+        name=f"ci-pinecone-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "pinecone": os.environ["PINECONE_API_KEY"],
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(test_data_points, list)
+    update_test_data_point_v0_update_test_data_point_post.sync(
+        client=okareo.client,
+        json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+            tags=["ci-testing"],
+            id=test_data_points[0].id,
+        ),
+        api_key=API_KEY,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-pinecone-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "pinecone": os.environ["PINECONE_API_KEY"],
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    new_test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(new_test_data_points, list)
+    assert test_data_points[0].id != new_test_data_points[0].id
+    assert new_test_data_points[0].tags == ["ci-testing"]
+    assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
+    mut = okareo.register_model(
+        name=f"ci-pinecone-cohere-english-light-v3.0-{rnd}",
+        model=[
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+            PineconeDb(
+                index_name="my-test-index",
+                region="gcp-starter",
+                project_id="kwnp6kx",
+                top_k=1,
+            ),
+        ],
+        update=True,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-pinecone-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "pinecone": os.environ["PINECONE_API_KEY"],
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    new_test_data_points_no_tag = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(new_test_data_points_no_tag, list)
+    assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
 
 
 def test_run_test_cohere_qdrant_ir(
