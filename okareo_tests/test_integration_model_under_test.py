@@ -232,7 +232,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
 ) -> None:
     mut = okareo.register_model(
-        name=f"ci-pinecone-cohere-english-light-v3.0-{rnd}",
+        name=f"ci-pinecone-cohere-english-light-tags-test-v3.0-{rnd}-{1}",
         model=[
             CohereModel(
                 model_id="embed-english-light-v3.0",
@@ -304,7 +304,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     assert new_test_data_points[0].tags == ["ci-testing"]
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
     mut = okareo.register_model(
-        name=f"ci-pinecone-cohere-english-light-v3.0-{rnd}",
+        name=f"ci-pinecone-cohere-english-light-tags-test-v3.0-{rnd}-{1}",
         model=[
             CohereModel(
                 model_id="embed-english-light-v3.0",
