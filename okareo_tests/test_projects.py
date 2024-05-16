@@ -1,9 +1,9 @@
 import random
 from datetime import datetime
-from typing import Any, List
+from typing import Any, List, Union
 
 import pytest
-from okareo_tests.common import API_KEY
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CustomModel
@@ -16,7 +16,7 @@ from okareo_api_client.models.test_run_type import TestRunType
 
 @pytest.fixture(scope="module")
 def rnd() -> str:
-    return datetime.now().strftime("%Y%m%d%H%M%S")
+    return f'{random_string(5)} {datetime.now().strftime("%Y%m%d%H%M%S")}'
 
 
 @pytest.fixture(scope="module")
@@ -75,7 +75,7 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
     assert response.project_id == project.id
 
     class ClassificationModel(CustomModel):
-        def invoke(self, input_value: str) -> Any:
+        def invoke(self, input_value: Union[dict, list, str]) -> Any:
             actual = random.choice(["returns", "complains", "pricing"])
             # return a tuple of (actual, overall model response context)
             return actual, {"labels": actual, "confidence": 0.8}

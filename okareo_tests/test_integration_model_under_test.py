@@ -2,13 +2,23 @@ import os
 import random
 import string
 import tempfile
-from typing import List, Union
+from typing import Any, List, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb, QdrantDB
+from okareo.model_under_test import (
+    CohereModel,
+    CustomModel,
+    OpenAIModel,
+    PineconeDb,
+    QdrantDB,
+)
+from okareo_api_client.api.default import (
+    find_test_data_points_v0_find_test_data_points_post,
+    update_test_data_point_v0_update_test_data_point_post,
+)
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
@@ -218,6 +228,295 @@ def test_run_test_cohere_pinecone_ir(
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
 
 
+def test_run_test_cohere_pinecone_ir_tags(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"ci-pinecone-cohere-english-light-tags-test-v3.0-{rnd}-{1}",
+        model=[
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+            PineconeDb(
+                index_name="my-test-index",
+                region="gcp-starter",
+                project_id="kwnp6kx",
+                top_k=3,
+            ),
+        ],
+    )
+
+    run_resp = mut.run_test(
+        name=f"ci-pinecone-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "pinecone": os.environ["PINECONE_API_KEY"],
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(test_data_points, list)
+    update_test_data_point_v0_update_test_data_point_post.sync(
+        client=okareo.client,
+        json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+            tags=["ci-testing"],
+            id=test_data_points[0].id,
+        ),
+        api_key=API_KEY,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-pinecone-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "pinecone": os.environ["PINECONE_API_KEY"],
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    new_test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(new_test_data_points, list)
+    assert test_data_points[0].id != new_test_data_points[0].id
+    assert new_test_data_points[0].tags == ["ci-testing"]
+    assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
+    mut = okareo.register_model(
+        name=f"ci-pinecone-cohere-english-light-tags-test-v3.0-{rnd}-{1}",
+        model=[
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+            PineconeDb(
+                index_name="my-test-index",
+                region="gcp-starter",
+                project_id="kwnp6kx",
+                top_k=1,
+            ),
+        ],
+        update=True,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-pinecone-cohere-embed-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "pinecone": os.environ["PINECONE_API_KEY"],
+        },
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    new_test_data_points_no_tag = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(new_test_data_points_no_tag, list)
+    assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
+
+
+def test_run_test_custom_ir_tags(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
+    def query_results_to_score(results: Any) -> Any:
+        parsed_ids_with_scores = []
+        for i in range(0, len(results["distances"][0])):
+            # this turns cosine distance into a cosine similarity score
+            score = (2 - results["distances"][0][i]) / 2
+            parsed_ids_with_scores.append(
+                {
+                    "id": results["ids"][0][i],
+                    "score": score,
+                    "metadata": results["metadatas"][0][i],
+                    "label": f"{results['metadatas'][0][i]['article_type']} WebBizz Article w/ ID: {results['ids'][0][i]}",
+                }
+            )
+        return parsed_ids_with_scores
+
+    class RetrievalModel(CustomModel):
+        def invoke(self, model_input: Any) -> Any:
+            results = {
+                "ids": [
+                    [
+                        "ac0d464c-f673-44b8-8195-60c965e47525",
+                        "75eaa363-dfcc-499f-b2af-1407b43cb133",
+                        "35a4fd5b-453e-4ca6-9536-f20db7303344",
+                        "aacf7a34-9d3a-4e2a-9a5c-91f2a0e8a12d",
+                        "f1a37b5e-58c4-4f5a-bc42-1b70253b8bf3",
+                    ]
+                ],
+                "distances": [
+                    [
+                        0.33011454343795776,
+                        0.3649076819419861,
+                        0.43849390745162964,
+                        0.45827627182006836,
+                        0.466469943523407,
+                    ]
+                ],
+                "metadatas": [
+                    [
+                        {"article_type": "Miscellaneous"},
+                        {"article_type": "Support"},
+                        {"article_type": "Support"},
+                        {"article_type": "Miscellaneous"},
+                        {"article_type": "Miscellaneous"},
+                    ]
+                ],
+                "embeddings": None,
+                "uris": None,
+                "data": None,
+            }
+            query_results = query_results_to_score(results)
+            query_results.sort(key=lambda x: x["id"], reverse=True)
+            return query_results, {"model_data": model_input}
+
+    mut = okareo.register_model(
+        name=f"ci-custom-{rnd}", model=RetrievalModel(name="custom retrieval")
+    )
+
+    run_resp = mut.run_test(
+        name=f"ci-custom-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(test_data_points, list)
+    update_test_data_point_v0_update_test_data_point_post.sync(
+        client=okareo.client,
+        json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+            tags=["ci-testing"],
+            id=test_data_points[0].id,
+        ),
+        api_key=API_KEY,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-custom-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    new_test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(new_test_data_points, list)
+    assert test_data_points[0].id != new_test_data_points[0].id
+    assert new_test_data_points[0].tags == ["ci-testing"]
+
+    class RetrievalModelNew(CustomModel):
+
+        def invoke(self, model_input: Any) -> Any:
+            results = {
+                "ids": [
+                    [
+                        "ac0d464c-f673-44b8-8195-60c965e47525",
+                        "75eaa363-dfcc-499f-b2af-1407b43cb133",
+                        "35a4fd5b-453e-4ca6-9536-f20db7303344",
+                        "aacf7a34-9d3a-4e2a-9a5c-91f2a0e8a12d",
+                        "f1a37b5e-58c4-4f5a-bc42-1b70253b8bf3",
+                    ]
+                ],
+                "distances": [
+                    [
+                        0.33011454343795776,
+                        0.3649076819419861,
+                        0.43849390745162964,
+                        0.45827627182006836,
+                        0.466469943523407,
+                    ]
+                ],
+                "metadatas": [
+                    [
+                        {"article_type": "Miscellaneous"},
+                        {"article_type": "Support"},
+                        {"article_type": "Support"},
+                        {"article_type": "Miscellaneous"},
+                        {"article_type": "Miscellaneous"},
+                    ]
+                ],
+                "embeddings": None,
+                "uris": None,
+                "data": None,
+            }
+            query_results = query_results_to_score(results)
+            query_results.sort(key=lambda x: x["id"], reverse=False)
+            return query_results, {"model_data": model_input}
+
+    mut = okareo.register_model(
+        name=f"ci-custom-{rnd}",
+        model=RetrievalModelNew(name="custom retrieval"),
+        update=True,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-custom-{rnd}",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        metrics_kwargs={
+            "mrr_at_k": [2, 4, 8],
+            "map_at_k": [1, 2],
+        },
+    )
+    new_test_data_points_no_tag = find_test_data_points_v0_find_test_data_points_post.sync(
+        client=okareo.client,
+        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+            test_run_id=run_resp.id
+        ),
+        api_key=API_KEY,
+    )
+    assert isinstance(new_test_data_points_no_tag, list)
+    assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
+
+
 def test_run_test_cohere_qdrant_ir(
     rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
 ) -> None:
@@ -399,6 +698,7 @@ def test_run_test_predefined_checks(
         "compression_ratio",
         "does_code_compile",
         "contains_all_imports",
+        "corpus_BLEU",
     ]
     run_resp = mut.run_test(
         name=f"openai-chat-run-predefined-{rnd}",

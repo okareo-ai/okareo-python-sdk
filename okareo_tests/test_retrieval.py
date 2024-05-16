@@ -1,15 +1,17 @@
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
 
 import pytest
-from okareo_tests.common import API_KEY
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CustomModel
 from okareo_api_client.models import ScenarioSetResponse, ScenarioType, TestRunType
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
+rnd_str = random_string(5)
+unique_key = f"{rnd_str} {today_with_time}"
 
 
 @pytest.fixture(scope="module")
@@ -21,7 +23,7 @@ def okareo_client() -> Okareo:
 def uploaded_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
     articles: ScenarioSetResponse = okareo_client.upload_scenario_set(
-        file_path=file_path, scenario_name=f"test_upload_scenario_set {today_with_time}"
+        file_path=file_path, scenario_name=f"test_upload_scenario_set {unique_key}"
     )
 
     return articles
@@ -33,7 +35,7 @@ def generate_scenarios(
 ) -> ScenarioSetResponse:
     questions: ScenarioSetResponse = okareo_client.generate_scenarios(
         source_scenario=uploaded_scenario_set.scenario_id,
-        name=f"test_generate_scenarios {today_with_time}",
+        name=f"test_generate_scenarios {unique_key}",
         number_examples=2,
         generation_type=ScenarioType.TEXT_REVERSE_QUESTION,
     )
@@ -59,7 +61,7 @@ def test_run_test_retrieval(
 ) -> None:
     class RetrievalModel(CustomModel):
         # Callable to be applied to each scenario in the scenario set
-        def invoke(self, input_value: str) -> Any:
+        def invoke(self, input_value: Union[dict, list, str]) -> Any:
             # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
             # we are using a random response here for demonstration purposes
             article_ids = [

@@ -1,7 +1,9 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+
+from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.test_data_point_item_metric_value import TestDataPointItemMetricValue
@@ -19,6 +21,7 @@ class TestDataPointItem:
         test_run_id (str):
         metric_type (str):
         metric_value (TestDataPointItemMetricValue):
+        tags (Union[Unset, List[str]]):
     """
 
     id: str
@@ -26,6 +29,7 @@ class TestDataPointItem:
     test_run_id: str
     metric_type: str
     metric_value: "TestDataPointItemMetricValue"
+    tags: Union[Unset, List[str]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -34,6 +38,10 @@ class TestDataPointItem:
         test_run_id = self.test_run_id
         metric_type = self.metric_type
         metric_value = self.metric_value.to_dict()
+
+        tags: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.tags, Unset):
+            tags = self.tags
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -46,6 +54,8 @@ class TestDataPointItem:
                 "metric_value": metric_value,
             }
         )
+        if tags is not UNSET:
+            field_dict["tags"] = tags
 
         return field_dict
 
@@ -64,12 +74,15 @@ class TestDataPointItem:
 
         metric_value = TestDataPointItemMetricValue.from_dict(d.pop("metric_value"))
 
+        tags = cast(List[str], d.pop("tags", UNSET))
+
         test_data_point_item = cls(
             id=id,
             scenario_data_point_id=scenario_data_point_id,
             test_run_id=test_run_id,
             metric_type=metric_type,
             metric_value=metric_value,
+            tags=tags,
         )
 
         test_data_point_item.additional_properties = d

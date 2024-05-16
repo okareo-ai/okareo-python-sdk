@@ -38,6 +38,8 @@ from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
 from .seed_data import SeedData
+from .seed_data_input_type_0 import SeedDataInputType0
+from .seed_data_result_type_0 import SeedDataResultType0
 from .semantic_payload import SemanticPayload
 from .semantic_result import SemanticResult
 from .summary_datapoint_search import SummaryDatapointSearch
@@ -53,6 +55,7 @@ from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
 from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
 from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 from .test_run_type import TestRunType
+from .update_test_data_point_payload import UpdateTestDataPointPayload
 
 __all__ = (
     "BodyCheckDeleteV0CheckCheckIdDelete",
@@ -93,6 +96,8 @@ __all__ = (
     "ScenarioSetUpdate",
     "ScenarioType",
     "SeedData",
+    "SeedDataInputType0",
+    "SeedDataResultType0",
     "SemanticPayload",
     "SemanticResult",
     "SummaryDatapointSearch",
@@ -108,4 +113,5 @@ __all__ = (
     "TestRunPayloadV2MetricsKwargs",
     "TestRunPayloadV2ModelResults",
     "TestRunType",
+    "UpdateTestDataPointPayload",
 )
