@@ -17,6 +17,7 @@ from okareo_api_client.models import (
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
+from okareo_api_client.models.scenario_type import ScenarioType
 
 
 @pytest.fixture(scope="module")
@@ -62,6 +63,20 @@ def generate_scenarios(
         source_scenario_id=create_scenario_set.scenario_id,
         name=f"generated scenario set {random_string(5)}",
         number_examples=2,
+    )
+    response = okareo_client.generate_scenario_set(scenario_set_generate)
+    return response
+
+
+@pytest.fixture(scope="module")
+def generate_scenarios_qa(
+    okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
+) -> ScenarioSetResponse:
+    scenario_set_generate = ScenarioSetGenerate(
+        source_scenario_id=create_scenario_set.scenario_id,
+        name=f"generated scenario set {random_string(5)}",
+        number_examples=1,
+        generation_type=ScenarioType.TEXT_REVERSE_QUESTION_ANSWER,
     )
     response = okareo_client.generate_scenario_set(scenario_set_generate)
     return response
@@ -168,6 +183,17 @@ def test_generate_scenarios(
     assert generate_scenarios.scenario_id
     assert generate_scenarios.project_id
     assert generate_scenarios.time_created
+
+
+def test_generate_scenarios_qa(
+    generate_scenarios_qa: ScenarioSetResponse, seed_data: List[SeedData]
+) -> None:
+    assert generate_scenarios_qa.type == "TEXT_REVERSE_QUESTION_ANSWER"
+    assert generate_scenarios_qa.seed_data == []
+    assert generate_scenarios_qa is not None
+    assert generate_scenarios_qa.scenario_id
+    assert generate_scenarios_qa.project_id
+    assert generate_scenarios_qa.time_created
 
 
 def test_get_scenario_data_points(
