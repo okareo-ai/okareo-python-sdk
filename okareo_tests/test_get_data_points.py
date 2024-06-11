@@ -22,9 +22,6 @@ from okareo_api_client.models.scenario_data_poin_response import (
 from okareo_api_client.models.scenario_data_poin_response_input_type_0 import (
     ScenarioDataPoinResponseInputType0,
 )
-from okareo_api_client.models.scenario_data_poin_response_result_type_0 import (
-    ScenarioDataPoinResponseResultType0,
-)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_data_point_item_metric_value import (
@@ -35,6 +32,7 @@ today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 rnd_str = random_string(5)
 unique_key = f"{rnd_str} {today_with_time}"
 create_scenario_name = f"ci_json_test_get_data_points {unique_key}"
+
 
 @pytest.fixture(scope="module")
 def okareo_client() -> Okareo:
@@ -60,6 +58,7 @@ SCENARIO_RESULTS = [scenario["result"] for scenario in JSON_SCENARIO]  # type: i
 
 JSON_SEED = Okareo.seed_data_from_list(JSON_SCENARIO)  # type: ignore
 
+
 @pytest.fixture(scope="module")
 def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
 
@@ -69,6 +68,7 @@ def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
     )
     scenario = okareo_client.create_scenario_set(scenario_set_create)
     return scenario
+
 
 def test_get_data_points(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
@@ -80,7 +80,7 @@ def test_get_data_points(
         def invoke(self, input_value: Union[dict, list, str]) -> Any:
             assert isinstance(input_value, dict)
 
-            return input_value['color'], input_value
+            return input_value["color"], input_value
 
     model_under_test = okareo_client.register_model(
         name=test_run_name,
