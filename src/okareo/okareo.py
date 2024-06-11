@@ -299,10 +299,10 @@ class Okareo:
         return response
 
     def find_test_data_points(
-        self, test_datapoint_payload: FindTestDataPointPayload
+        self, test_data_point_payload: FindTestDataPointPayload
     ) -> Union[List[TestDataPointItem], ErrorResponse]:
         data = find_test_data_points_v0_find_test_data_points_post.sync(
-            client=self.client, api_key=self.api_key, json_body=test_datapoint_payload
+            client=self.client, api_key=self.api_key, json_body=test_data_point_payload
         )
         if not data:
             return []
