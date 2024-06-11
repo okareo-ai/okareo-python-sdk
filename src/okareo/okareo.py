@@ -11,6 +11,7 @@ from okareo_api_client.api.default import (
     check_upload_v0_check_upload_post,
     create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
+    find_test_data_points_v0_find_test_data_points_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
     get_all_projects_v0_projects_get,
@@ -41,6 +42,9 @@ from okareo_api_client.models.evaluator_generate_response import (
     EvaluatorGenerateResponse,
 )
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
+from okareo_api_client.models.find_test_data_point_payload import (
+    FindTestDataPointPayload,
+)
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
@@ -55,6 +59,7 @@ from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.seed_data_input_type_0 import SeedDataInputType0
 from okareo_api_client.models.seed_data_result_type_0 import SeedDataResultType0
+from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.types import UNSET, File, Unset
 
 from .common import BASE_URL, HTTPX_TIME_OUT
@@ -292,6 +297,16 @@ class Okareo:
         assert isinstance(response, List)
 
         return response
+
+    def find_test_data_points(
+        self, test_data_point_payload: FindTestDataPointPayload
+    ) -> Union[List[TestDataPointItem], ErrorResponse]:
+        data = find_test_data_points_v0_find_test_data_points_post.sync(
+            client=self.client, api_key=self.api_key, json_body=test_data_point_payload
+        )
+        if not data:
+            return []
+        return data
 
     def validate_response(self, response: Any) -> None:
         if isinstance(response, ErrorResponse):
