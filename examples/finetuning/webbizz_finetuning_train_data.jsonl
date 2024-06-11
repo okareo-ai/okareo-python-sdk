@@ -1,0 +1,24 @@
+{"input": "Can I send this product back?", "result": "returns"}
+{"input": "this product is having issues", "result": "complaints"}
+{"input": "How much does this product cost?", "result": "pricing"}
+{"input": "What is the warranty period for the product?", "result": "pricing"}
+{"input": "I need to return this product", "result": "returns"}
+{"input": "This product seems to be malfunctioning", "result": "complaints"}
+{"input": "What is the price for this product?", "result": "pricing"}
+{"input": "I want to send this product back for a return", "result": "returns"}
+{"input": "I'm having issues with the product I purchased", "result": "complaints"}
+{"input": "how much is this product", "result": "pricing"}
+{"input": "What is the duration of the product's warranty?", "result": "pricing"}
+{"input": "how much is the warranty on the product", "result": "pricing"}
+{"input": "There are some issues with this product", "result": "complaints"}
+{"input": "Can you tell me the length of the warranty for this product?", "result": "pricing"}
+{"input": "This product isn't working correctly", "result": "complaints"}
+{"input": "The item I received does not seem to be working", "result": "complaints"}
+{"input": "The product I bought isn't functioning properly", "result": "complaints"}
+{"input": "I would like to initiate a return for this product", "result": "returns"}
+{"input": "What is the price of this item?", "result": "pricing"}
+{"input": "I'm experiencing problems with this product", "result": "complaints"}
+{"input": "I want to send this product back", "result": "returns"}
+{"input": "I need to return this item", "result": "returns"}
+{"input": "How do I go about returning this product?", "result": "returns"}
+{"input": "I would like to initiate a return for this item", "result": "returns"}
