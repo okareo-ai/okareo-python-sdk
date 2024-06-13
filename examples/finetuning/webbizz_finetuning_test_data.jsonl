@@ -1,6 +1,0 @@
-{"input": "my product is not working", "result": "complaints"}
-{"input": "There is a problem with the product I got", "result": "complaints"}
-{"input": "Can I send this item back for a refund?", "result": "returns"}
-{"input": "How long does the warranty last for this item?", "result": "pricing"}
-{"input": "How do I go about returning this item?", "result": "returns"}
-{"input": "Can you tell me the cost of this product?", "result": "pricing"}
