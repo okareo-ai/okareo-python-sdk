@@ -16,7 +16,18 @@ def rnd() -> str:
 
 
 @pytest.fixture
-def okareo_client() -> Okareo:
+def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
+    httpx_mock.add_response(
+        json=[
+            {
+                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                "name": "Global",
+                "tags": [],
+                "additional_properties": {},
+            }
+        ],
+        status_code=201,
+    )
     return Okareo("foo", "http://mocked.com")
 
 

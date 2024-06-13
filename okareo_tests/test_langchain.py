@@ -31,6 +31,17 @@ def test_llm_generates_datapoints(
 ) -> None:
     context_token = random_string(10)
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
@@ -44,10 +55,10 @@ def test_llm_generates_datapoints(
     if okareo_api.is_mock:
         requests = httpx_mock.get_requests()
         print("requests", requests)
-        assert requests[0].method == "POST"
-        assert "/v0/register_model" in requests[0].url.path
         assert requests[1].method == "POST"
-        assert "/v0/datapoints" in requests[1].url.path
+        assert "/v0/register_model" in requests[1].url.path
+        assert requests[2].method == "POST"
+        assert "/v0/datapoints" in requests[2].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
         dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
@@ -61,6 +72,17 @@ def test_llm_auto_generate_model(
 ) -> None:
     context_token = "".join(random.choices(string.ascii_letters, k=10))
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
@@ -72,10 +94,10 @@ def test_llm_auto_generate_model(
     if okareo_api.is_mock:
         requests = httpx_mock.get_requests()
         print("requests", requests)
-        assert requests[0].method == "POST"
-        assert "/v0/register_model" in requests[0].url.path
         assert requests[1].method == "POST"
-        assert "/v0/datapoints" in requests[1].url.path
+        assert "/v0/register_model" in requests[1].url.path
+        assert requests[2].method == "POST"
+        assert "/v0/datapoints" in requests[2].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
         dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
@@ -89,6 +111,17 @@ def test_chain_generates_datapoints(
 ) -> None:
     context_token = random_string(10)
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
@@ -102,10 +135,10 @@ def test_chain_generates_datapoints(
     if okareo_api.is_mock:
         requests = httpx_mock.get_requests()
         print("requests", requests)
-        assert requests[0].method == "POST"
-        assert "/v0/register_model" in requests[0].url.path
         assert requests[1].method == "POST"
-        assert "/v0/datapoints" in requests[1].url.path
+        assert "/v0/register_model" in requests[1].url.path
+        assert requests[2].method == "POST"
+        assert "/v0/datapoints" in requests[2].url.path
     else:
         okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
         dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))

@@ -1,44 +1,37 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.general_find_payload import GeneralFindPayload
-from ...models.test_run_item import TestRunItem
+from ...models.scenario_set_response import ScenarioSetResponse
 from ...types import Response
 
 
 def _get_kwargs(
+    test_run_id: str,
     *,
-    json_body: GeneralFindPayload,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
     return {
         "method": "post",
-        "url": "/v0/find_test_runs",
-        "json": json_json_body,
+        "url": "/v0/test_run/create_failure_scenario/{test_run_id}".format(
+            test_run_id=test_run_id,
+        ),
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["TestRunItem"]]]:
+) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     if response.status_code == HTTPStatus.CREATED:
-        response_201 = []
-        _response_201 = response.json()
-        for response_201_item_data in _response_201:
-            response_201_item = TestRunItem.from_dict(response_201_item_data)
-
-            response_201.append(response_201_item)
+        response_201 = ScenarioSetResponse.from_dict(response.json())
 
         return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
@@ -65,7 +58,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["TestRunItem"]]]:
+) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -75,32 +68,32 @@ def _build_response(
 
 
 def sync_detailed(
+    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["TestRunItem"]]]:
-    """Find Test Run
+) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
+    """Create Failure Scenario
 
-     Find Test Runs
+     Create a ScenarioSet using the failed data points from a TestRun.
 
     Returns:
-        a list of Test Runs
+        the new Failure Scenario response
 
     Args:
+        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
-        json_body (GeneralFindPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['TestRunItem']]]
+        Response[Union[ErrorResponse, ScenarioSetResponse]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        test_run_id=test_run_id,
         api_key=api_key,
     )
 
@@ -112,64 +105,64 @@ def sync_detailed(
 
 
 def sync(
+    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["TestRunItem"]]]:
-    """Find Test Run
+) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
+    """Create Failure Scenario
 
-     Find Test Runs
+     Create a ScenarioSet using the failed data points from a TestRun.
 
     Returns:
-        a list of Test Runs
+        the new Failure Scenario response
 
     Args:
+        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
-        json_body (GeneralFindPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['TestRunItem']]
+        Union[ErrorResponse, ScenarioSetResponse]
     """
 
     return sync_detailed(
+        test_run_id=test_run_id,
         client=client,
-        json_body=json_body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
+    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["TestRunItem"]]]:
-    """Find Test Run
+) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
+    """Create Failure Scenario
 
-     Find Test Runs
+     Create a ScenarioSet using the failed data points from a TestRun.
 
     Returns:
-        a list of Test Runs
+        the new Failure Scenario response
 
     Args:
+        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
-        json_body (GeneralFindPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['TestRunItem']]]
+        Response[Union[ErrorResponse, ScenarioSetResponse]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        test_run_id=test_run_id,
         api_key=api_key,
     )
 
@@ -179,34 +172,34 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["TestRunItem"]]]:
-    """Find Test Run
+) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
+    """Create Failure Scenario
 
-     Find Test Runs
+     Create a ScenarioSet using the failed data points from a TestRun.
 
     Returns:
-        a list of Test Runs
+        the new Failure Scenario response
 
     Args:
+        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
-        json_body (GeneralFindPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['TestRunItem']]
+        Union[ErrorResponse, ScenarioSetResponse]
     """
 
     return (
         await asyncio_detailed(
+            test_run_id=test_run_id,
             client=client,
-            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

@@ -16,6 +16,17 @@ from okareo_api_client.models.test_run_type import TestRunType
 
 
 def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
+    httpx_mock.add_response(
+        json=[
+            {
+                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                "name": "Global",
+                "tags": [],
+                "additional_properties": {},
+            }
+        ],
+        status_code=201,
+    )
     fixture = get_mut_fixture("NotebookModel")
     httpx_mock.add_response(status_code=201, json=fixture)
     okareo = Okareo("api-key", "http://mocked.com")
@@ -37,6 +48,17 @@ def get_mut_fixture(name: Optional[str] = None) -> dict:
 def test_register_model(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     fixture = get_mut_fixture()
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(status_code=201, json=fixture)
 
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
@@ -50,6 +72,17 @@ def test_add_datapoint_optional_integration(
 ) -> None:
     fixture = get_mut_fixture()
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(status_code=201, json=fixture)
 
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
@@ -64,9 +97,19 @@ def test_add_datapoint_optional_integration(
 @integration
 def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     mut_fixture = get_mut_fixture()
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
 
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(
             status_code=201,
             json={
@@ -99,6 +142,7 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
                 "name": "CI run test",
             },
         )
+    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
 
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
@@ -131,9 +175,19 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
 @integration
 def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     mut_fixture = get_mut_fixture()
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
 
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(
             status_code=201,
             json={
@@ -166,7 +220,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
                 "name": "CI run test",
             },
         )
-
+    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
         name="my test scenario set",
@@ -197,6 +251,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
 def test_add_datapoint(httpx_mock: HTTPXMock) -> None:
     registered_model = helper_register_model(httpx_mock)
     fixture = {"id": "1", "project_id": "1", "mut_id": "1"}
+
     httpx_mock.add_response(status_code=201, json=fixture)
     dp = registered_model.add_data_point(
         input_obj={"input": "value"},
@@ -240,6 +295,17 @@ def test_get_test_run(httpx_mock: HTTPXMock) -> None:
 
 
 def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        json=[
+            {
+                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                "name": "Global",
+                "tags": [],
+                "additional_properties": {},
+            }
+        ],
+        status_code=201,
+    )
     httpx_mock.add_response(status_code=201, json=get_mut_fixture())
     okareo = Okareo("api-key", "http://mocked.com")
     mut = okareo.register_model(
@@ -261,6 +327,17 @@ def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
 
 
 def test_missing_vector_db_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(
+        json=[
+            {
+                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                "name": "Global",
+                "tags": [],
+                "additional_properties": {},
+            }
+        ],
+        status_code=201,
+    )
     httpx_mock.add_response(status_code=201, json=get_mut_fixture())
     okareo = Okareo("api-key", "http://mocked.com")
     mut = okareo.register_model(

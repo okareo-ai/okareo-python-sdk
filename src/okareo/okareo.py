@@ -90,6 +90,11 @@ class Okareo:
         self.client = Client(
             base_url=base_path, raise_on_unexpected_status=True
         )  # otherwise everything except 201 and 422 is swallowed
+        response = get_all_projects_v0_projects_get.sync(
+            client=self.client,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
 
     @staticmethod
     def seed_data_from_list(data_list: List[SeedDataRow]) -> List[SeedData]:
@@ -310,7 +315,7 @@ class Okareo:
 
     def validate_response(self, response: Any) -> None:
         if isinstance(response, ErrorResponse):
-            error_message = f"error: {response}, {response.detail}"
+            error_message = f"error: {response.detail}"
             print(error_message)
             raise TypeError(error_message)
         if response is None:

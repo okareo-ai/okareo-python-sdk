@@ -14,11 +14,22 @@ from okareo_api_client.types import UNSET
 
 
 def test_can_instantiate() -> None:
-    Okareo("api-key")
+    Okareo(API_KEY)
 
 
 @pytest.fixture
-def okareo_client() -> Okareo:
+def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
+    httpx_mock.add_response(
+        json=[
+            {
+                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                "name": "Global",
+                "tags": [],
+                "additional_properties": {},
+            }
+        ],
+        status_code=201,
+    )
     return Okareo("foo", "http://mocked.com")
 
 
@@ -35,6 +46,17 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     }
 
     if okareo_api.is_mock:
+        httpx_mock.add_response(
+            json=[
+                {
+                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                    "name": "Global",
+                    "tags": [],
+                    "additional_properties": {},
+                }
+            ],
+            status_code=201,
+        )
         httpx_mock.add_response(json=mock_response, status_code=201)
 
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)

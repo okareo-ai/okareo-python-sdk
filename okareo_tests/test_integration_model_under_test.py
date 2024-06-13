@@ -58,6 +58,11 @@ def article_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     return articles
 
 
+def test_okareo_client_integration() -> None:
+    with pytest.raises(Exception, match="Okareo"):
+        Okareo(api_key="")
+
+
 def test_run_test_openai(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
