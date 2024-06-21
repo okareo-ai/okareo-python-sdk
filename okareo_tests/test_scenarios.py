@@ -43,7 +43,6 @@ create_scenario_name = f"my_test_scenario_set_{random_string(5)}"
 def create_scenario_set(
     okareo_client: Okareo, seed_data: List[SeedData]
 ) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=seed_data,
@@ -214,6 +213,15 @@ def delete_scenario_data_points(
     }
     requests.delete(url, headers=headers)
 
+def test_create_scenario_empty_seed_data(
+    okareo_client: Okareo,
+) -> None:
+    scenario_set_create = ScenarioSetCreate(
+        name=f"my test scenario set {random_string(5)}",
+        seed_data=[],
+    )
+    with pytest.raises(ValueError, match="Non-empty seed data is required to create a scenario set"):
+        okareo_client.create_scenario_set(scenario_set_create)
 
 def dtest_create_delete_scenario_set_contraction_tiny_load(
     okareo_client: Okareo, seed_data: List[SeedData]

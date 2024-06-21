@@ -103,7 +103,6 @@ def load_raw_data(data_file_paths):
 def get_model_tokenizer_trainer(
     model_id, finetuned_model_name, dataset, epochs=3, target_modules=None
 ):
-
     # BitsAndBytesConfig int-4 config
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,

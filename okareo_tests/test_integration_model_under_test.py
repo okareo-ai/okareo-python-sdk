@@ -458,7 +458,6 @@ def test_run_test_custom_ir_tags(
     assert new_test_data_points[0].tags == ["ci-testing"]
 
     class RetrievalModelNew(CustomModel):
-
         def invoke(self, model_input: Any) -> Any:
             results = {
                 "ids": [

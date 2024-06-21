@@ -80,3 +80,6 @@ venv.bak/
 
 # Local Development
 local-rebuild.sh
+
+# Models
+examples/webbizz_classification_model
