@@ -82,7 +82,6 @@ JSON_SEED = Okareo.seed_data_from_list(
 
 
 def test_create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=JSON_SEED,
@@ -249,7 +248,6 @@ def test_custom_retrieval(
 def test_generation_openai(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_json_test_generation_openai {today_with_time}"
 
     mut = okareo_client.register_model(

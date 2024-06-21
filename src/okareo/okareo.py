@@ -188,6 +188,9 @@ class Okareo:
     def create_scenario_set(
         self, create_request: ScenarioSetCreate
     ) -> ScenarioSetResponse:
+        if create_request.seed_data == [] or create_request.seed_data is None:
+            raise ValueError("Non-empty seed data is required to create a scenario set")
+
         response = create_scenario_set_v0_scenario_sets_post.sync(
             client=self.client, api_key=self.api_key, json_body=create_request
         )

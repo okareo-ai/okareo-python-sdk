@@ -49,7 +49,6 @@ JSON_SEED = Okareo.seed_data_from_list(JSON_SCENARIO)  # type: ignore
 
 @pytest.fixture(scope="module")
 def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=JSON_SEED,
@@ -61,7 +60,6 @@ def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
 def test_custom_return_bc(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_test_custom_return_bc {unique_key}"
 
     class ClassificationModel(CustomModel):
@@ -100,7 +98,6 @@ def test_custom_return_bc(
 def test_custom_return_invocation(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_test_custom_return_bc {unique_key}"
 
     class ClassificationModel(CustomModel):
