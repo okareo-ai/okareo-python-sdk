@@ -1,0 +1,99 @@
+{"input": "I need to discuss some quality issues with your product. Who should I contact?", "result": "complaints"}
+{"input": "Who is the right person to speak with about the quality problems I've encountered with your product?", "result": "complaints"}
+{"input": "Can you direct me to someone who can address my concerns regarding the quality of your product?", "result": "complaints"}
+{"input": "I purchased a shirt from an online store, but the size is wrong. What is the process for returning it?", "result": "returns"}
+{"input": "I ordered a shirt on the internet, but it doesn't fit me. How do I go about returning it?", "result": "returns"}
+{"input": "I got a shirt online, but the fit is incorrect. Can you tell me how to return it?", "result": "returns"}
+{"input": "I got a defective product. How do I go about returning it?", "result": "returns"}
+{"input": "The item I received is broken. Can you explain the return procedure?", "result": "returns"}
+{"input": "What steps should I follow to return a damaged item I received?", "result": "returns"}
+{"input": "How can I return a gift I got if I don't have the receipt?", "result": "returns"}
+{"input": "What are the steps to return a present without having the receipt?", "result": "returns"}
+{"input": "Is it possible to return a gift I was given if I lost the receipt?", "result": "returns"}
+{"input": "I received a different product than what I ordered. What is the process for returning it?", "result": "returns"}
+{"input": "The item delivered to me is not the one I purchased. How do I go about returning it?", "result": "returns"}
+{"input": "I got the wrong product in my order. Can you tell me how to return it?", "result": "returns"}
+{"input": "I mistakenly purchased two identical items. Is it possible to return one?", "result": "returns"}
+{"input": "I ended up with two of the same product by accident. Can I send one back?", "result": "returns"}
+{"input": "I ordered two of the same thing by mistake. Can I return one of them?", "result": "returns"}
+{"input": "The product quality didn't meet my expectations. Is it possible to return it?", "result": "returns"}
+{"input": "Can I return the product because I'm unhappy with its quality?", "result": "returns"}
+{"input": "Is there a way to return the item since I'm dissatisfied with its quality?", "result": "returns"}
+{"input": "The product I purchased is defective. What is the process for returning it?", "result": "returns"}
+{"input": "I received a faulty item. Can you guide me on how to return it?", "result": "returns"}
+{"input": "How can I return a defective product that I bought?", "result": "returns"}
+{"input": "My order arrived late, and I don't need it anymore. Is it possible to return it?", "result": "returns"}
+{"input": "The delivery was delayed, and I no longer require the item. Can I send it back?", "result": "returns"}
+{"input": "I got my package after the expected date and don't need it now. Can I return this item?", "result": "returns"}
+{"input": "How can I swap the product I purchased for a different size?", "result": "returns"}
+{"input": "Can you tell me the steps to exchange the item I bought for another size?", "result": "returns"}
+{"input": "What do I need to do to replace the product I bought with a different size?", "result": "returns"}
+{"input": "The item I received is not as described. Is it possible to return it?", "result": "returns"}
+{"input": "Can I return the product since it doesn't match the description?", "result": "returns"}
+{"input": "I would like to know if I can return the product because it doesn't match what was described.", "result": "returns"}
+{"input": "The item isn't functioning properly, can I return it?", "result": "returns"}
+{"input": "I'd like to return the product because it isn't performing as it should.", "result": "returns"}
+{"input": "Can I return this product since it doesn't work as expected?", "result": "returns"}
+{"input": "I was dissatisfied with your customer service. Who should I contact to discuss this?", "result": "complaints"}
+{"input": "Your customer service was not up to the mark. Who can I reach out to regarding this issue?", "result": "complaints"}
+{"input": "I had an unsatisfactory experience with your customer service. Who is the right person to address this with?", "result": "complaints"}
+{"input": "The product I bought stopped working after only a week. What can be done to fix this?", "result": "complaints"}
+{"input": "I encountered a problem with my product as it broke within a week. How can I get this resolved?", "result": "complaints"}
+{"input": "After using the product for just a week, it broke. What steps can I take to address this issue?", "result": "complaints"}
+{"input": "I'm dissatisfied with the service I got. Who should I contact to file a complaint?", "result": "complaints"}
+{"input": "The service I received was unsatisfactory. Can you tell me who to reach out to for complaints?", "result": "complaints"}
+{"input": "I have a complaint about the service provided. Who is the appropriate person to speak with?", "result": "complaints"}
+{"input": "The item I purchased isn't functioning as described. Who should I reach out to?", "result": "complaints"}
+{"input": "The product I received doesn't perform as expected. Who can I get in touch with?", "result": "complaints"}
+{"input": "The product I bought isn't operating as advertised. Who do I contact for assistance?", "result": "complaints"}
+{"input": "I need assistance with an overcharge on my purchase. Who should I contact?", "result": "complaints"}
+{"input": "Can someone help me with a billing issue? I was charged too much for my order.", "result": "complaints"}
+{"input": "I believe I was overbilled for my recent purchase. Who can assist me with this?", "result": "complaints"}
+{"input": "I'm experiencing an issue with my order delivery. Who should I contact?", "result": "complaints"}
+{"input": "Who can assist me with a delivery problem for my order?", "result": "complaints"}
+{"input": "Can you tell me who to reach out to regarding a delivery issue with my order?", "result": "complaints"}
+{"input": "I got a defective item. Who should I contact to file a complaint?", "result": "complaints"}
+{"input": "The product I received is broken. Where can I report this issue?", "result": "complaints"}
+{"input": "I need to report a faulty product. Who is the right person to talk to?", "result": "complaints"}
+{"input": "The item I purchased is substandard. Where can I file a complaint?", "result": "complaints"}
+{"input": "I received a low-quality product. To whom should I report this?", "result": "complaints"}
+{"input": "The quality of the product I bought is unsatisfactory. Who do I contact to report this?", "result": "complaints"}
+{"input": "I need to report an issue with a staff member. Who is the appropriate contact?", "result": "complaints"}
+{"input": "Who should I reach out to if I have a complaint about an employee?", "result": "complaints"}
+{"input": "Can you tell me who to contact regarding a problem with a staff member?", "result": "complaints"}
+{"input": "I received my order, but an item was missing. Who should I contact about this?", "result": "complaints"}
+{"input": "There was an item missing from my order. Who can help me with this issue?", "result": "complaints"}
+{"input": "An item was not included in my order. Who do I reach out to for assistance?", "result": "complaints"}
+{"input": "Can you tell me the price of extra filters for my model?", "result": "pricing"}
+{"input": "How much do additional filters for my model cost?", "result": "pricing"}
+{"input": "What is the cost of buying more filters for my model?", "result": "pricing"}
+{"input": "Can you explain the recent price hike for your product?", "result": "pricing"}
+{"input": "What is the reason behind the recent increase in your product's price?", "result": "pricing"}
+{"input": "Could you tell me why your product's price has gone up lately?", "result": "pricing"}
+{"input": "I noticed a lower price for a similar item at another store. Can you match that price?", "result": "pricing"}
+{"input": "I saw the same product at a cheaper rate from a different retailer. Do you have a price match policy?", "result": "pricing"}
+{"input": "Another store has this product for less. Will you match their price?", "result": "pricing"}
+{"input": "Can you explain why the prices of your products differ between online and in-store purchases?", "result": "pricing"}
+{"input": "What causes the price discrepancy between your online and physical store items?", "result": "pricing"}
+{"input": "Why do your products have different prices on your website compared to your physical locations?", "result": "pricing"}
+{"input": "Could you provide details on the cost of your subscription service?", "result": "pricing"}
+{"input": "What are the pricing options for your subscription service?", "result": "pricing"}
+{"input": "Can you break down the fees for your subscription service?", "result": "pricing"}
+{"input": "Are there any discounts or special offers available?", "result": "pricing"}
+{"input": "Can you tell me if there are any current promotions or discounts?", "result": "pricing"}
+{"input": "Do you have any ongoing promotions or discount deals?", "result": "pricing"}
+{"input": "Can you explain why the amount I was charged is higher than the price shown at checkout?", "result": "pricing"}
+{"input": "I noticed a discrepancy between the listed price and what I was charged. Can you clarify this?", "result": "pricing"}
+{"input": "Could you tell me why the final charge was greater than the price displayed at checkout?", "result": "pricing"}
+{"input": "Is there a discount available for buying in bulk?", "result": "pricing"}
+{"input": "Can I get a reduced rate if I purchase a large quantity?", "result": "pricing"}
+{"input": "Do you provide a price reduction for bulk orders?", "result": "pricing"}
+{"input": "What causes the variation in product pricing in my country?", "result": "pricing"}
+{"input": "Can you explain why the product costs differently in my country?", "result": "pricing"}
+{"input": "Why does the product have a different price in my country?", "result": "pricing"}
+{"input": "Can you tell me if you offer a price guarantee policy?", "result": "pricing"}
+{"input": "Is there a price guarantee policy available?", "result": "pricing"}
+{"input": "Do you provide any kind of price guarantee policy?", "result": "pricing"}
+{"input": "What caused the price of the item in my shopping cart to be different?", "result": "pricing"}
+{"input": "Can you explain why the cost of the product in my cart has changed?", "result": "pricing"}
+{"input": "Why has the price of the item in my cart been altered?", "result": "pricing"}
