@@ -62,7 +62,7 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     scenario_request = ScenarioSetCreate(
         name="test_scenario",
-        seed_data=[SeedData(input="foo", result="bar")],
+        seed_data=[SeedData(input_="foo", result="bar")],
         project_id="project_id" if okareo_api.is_mock else UNSET,
     )
     scenario_response = okareo.create_scenario_set(scenario_request)
