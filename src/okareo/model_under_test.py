@@ -55,8 +55,15 @@ class BaseModel:
 @_attrs_define
 class ModelInvocation:
     model_prediction: Union[dict, list, str, None] = None
+    """Prediction from the model to be used when running the evaluation,
+    e.g. predicted class from classification model or generated text completion from
+    a generative model. This would typically be parsed out of the overall model_output_metadata."""
+
     model_input: Union[dict, list, str, None] = None
+    """All the input sent to the model"""
+
     model_output_metadata: Union[dict, list, str, None] = None
+    """Full model response, including any metadata returned with model's output"""
 
     def params(self) -> dict:
         return {
