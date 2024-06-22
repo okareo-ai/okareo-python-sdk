@@ -122,7 +122,7 @@ def test_custom_retrieval(
             assert input_value["metadata"]
 
             return ModelInvocation(
-                actual=[
+                model_prediction=[
                     {
                         "id": "red",
                         "score": 1,
@@ -131,7 +131,7 @@ def test_custom_retrieval(
                     }
                 ],
                 model_input=input_value["question"],
-                model_result=input_value["metadata"],
+                model_output_metadata=input_value["metadata"],
             )
 
     model_under_test = okareo_client.register_model(

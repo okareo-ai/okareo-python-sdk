@@ -11,6 +11,7 @@ from okareo import Okareo
 from okareo.model_under_test import (
     CohereModel,
     CustomModel,
+    ModelInvocation,
     OpenAIModel,
     PineconeDb,
     QdrantDB,
@@ -369,7 +370,7 @@ def test_run_test_custom_ir_tags(
         return parsed_ids_with_scores
 
     class RetrievalModel(CustomModel):
-        def invoke(self, model_input: Any) -> Any:
+        def invoke(self, model_input: Any) -> ModelInvocation:
             results = {
                 "ids": [
                     [
@@ -404,7 +405,10 @@ def test_run_test_custom_ir_tags(
             }
             query_results = query_results_to_score(results)
             query_results.sort(key=lambda x: x["id"], reverse=True)
-            return query_results, {"model_data": model_input}
+            return ModelInvocation(
+                model_prediction=query_results,
+                model_output_metadata={"model_data": model_input},
+            )
 
     mut = okareo.register_model(
         name=f"ci-custom-{rnd}", model=RetrievalModel(name="custom retrieval")
@@ -458,7 +462,7 @@ def test_run_test_custom_ir_tags(
     assert new_test_data_points[0].tags == ["ci-testing"]
 
     class RetrievalModelNew(CustomModel):
-        def invoke(self, model_input: Any) -> Any:
+        def invoke(self, model_input: Any) -> ModelInvocation:
             results = {
                 "ids": [
                     [
@@ -493,7 +497,10 @@ def test_run_test_custom_ir_tags(
             }
             query_results = query_results_to_score(results)
             query_results.sort(key=lambda x: x["id"], reverse=False)
-            return query_results, {"model_data": model_input}
+            return ModelInvocation(
+                model_prediction=query_results,
+                model_output_metadata={"model_data": model_input},
+            )
 
     mut = okareo.register_model(
         name=f"ci-custom-{rnd}",

@@ -105,9 +105,9 @@ def test_custom_return_invocation(
             assert isinstance(input_value, dict)
 
             return ModelInvocation(
-                actual=input_value["user_id"],
+                model_prediction=input_value["user_id"],
                 model_input=input_value["query"],
-                model_result=input_value["meta"],
+                model_output_metadata=input_value["meta"],
             )
 
     model_under_test = okareo_client.register_model(
