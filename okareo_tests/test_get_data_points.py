@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Any, Union
+from typing import Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CustomModel
+from okareo.model_under_test import CustomModel, ModelInvocation
 from okareo_api_client.models import (
     DatapointListItemInputType0,
     DatapointListItemResultType0,
@@ -61,7 +61,6 @@ JSON_SEED = Okareo.seed_data_from_list(JSON_SCENARIO)  # type: ignore
 
 @pytest.fixture(scope="module")
 def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=JSON_SEED,
@@ -73,14 +72,15 @@ def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
 def test_get_data_points(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_test_get_data_points {unique_key}"
 
     class ClassificationModel(CustomModel):
-        def invoke(self, input_value: Union[dict, list, str]) -> Any:
+        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
             assert isinstance(input_value, dict)
 
-            return input_value["color"], input_value
+            return ModelInvocation(
+                model_prediction=input_value["color"], model_output_metadata=input_value
+            )
 
     model_under_test = okareo_client.register_model(
         name=test_run_name,

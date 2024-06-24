@@ -71,7 +71,6 @@ JSON_DAILOG = Okareo.seed_data_from_list(
 
 @pytest.fixture(scope="module")
 def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=JSON_DAILOG,
@@ -89,7 +88,6 @@ def test_create_scenario_set(
 def test_dialog_input(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_test_dialog_scenarios_openai {unique_key}"
 
     mut = okareo_client.register_model(
@@ -132,7 +130,6 @@ DAILOG_TEMPLATE = """
 def test_dialog_template(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_test_dialog_template_openai {unique_key}"
 
     mut = okareo_client.register_model(

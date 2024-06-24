@@ -1,13 +1,18 @@
 import json
 import os
 from datetime import datetime
-from typing import Any, Union
+from typing import Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CohereModel, CustomModel, OpenAIModel
+from okareo.model_under_test import (
+    CohereModel,
+    CustomModel,
+    ModelInvocation,
+    OpenAIModel,
+)
 from okareo_api_client.models import ScenarioSetResponse, ScenarioType, TestRunType
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
@@ -82,7 +87,6 @@ JSON_SEED = Okareo.seed_data_from_list(
 
 
 def test_create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=JSON_SEED,
@@ -211,20 +215,23 @@ def test_custom_retrieval(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> None:
     class RetrievalModel(CustomModel):
-        def invoke(self, input_value: Union[dict, list, str]) -> Any:
+        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
             assert isinstance(input_value, dict)
             assert input_value["query"]
             assert input_value["meta"]
             assert input_value["user_id"]
 
-            return [
-                {
-                    "id": "red",
-                    "score": 1,
-                    "label": "red",
-                    "metadata": input_value["meta"],
-                }
-            ], {"meta": input_value["meta"]}
+            return ModelInvocation(
+                model_prediction=[
+                    {
+                        "id": "red",
+                        "score": 1,
+                        "label": "red",
+                        "metadata": input_value["meta"],
+                    }
+                ],
+                model_output_metadata={"meta": input_value["meta"]},
+            )
 
     model_under_test = okareo_client.register_model(
         name="ci_json_vectordb_retrieval test",
@@ -249,7 +256,6 @@ def test_custom_retrieval(
 def test_generation_openai(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_json_test_generation_openai {today_with_time}"
 
     mut = okareo_client.register_model(

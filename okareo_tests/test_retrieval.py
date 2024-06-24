@@ -1,12 +1,12 @@
 import os
 from datetime import datetime
-from typing import Any, Union
+from typing import Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import CustomModel
+from okareo.model_under_test import CustomModel, ModelInvocation
 from okareo_api_client.models import ScenarioSetResponse, ScenarioType, TestRunType
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
@@ -61,7 +61,7 @@ def test_run_test_retrieval(
 ) -> None:
     class RetrievalModel(CustomModel):
         # Callable to be applied to each scenario in the scenario set
-        def invoke(self, input_value: Union[dict, list, str]) -> Any:
+        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
             # call your embedding model and vector db retrieval being tested here using <input> from the scenario set
             # we are using a random response here for demonstration purposes
             article_ids = [
@@ -84,7 +84,10 @@ def test_run_test_retrieval(
             model_response = {"matches": "additional context from the model"}
 
             # return a tuple of (parsed_ids_with_scores, overall model response context)
-            return parsed_ids_with_scores, model_response
+            return ModelInvocation(
+                model_prediction=parsed_ids_with_scores,
+                model_output_metadata=model_response,
+            )
 
     model_under_test = okareo_client.register_model(
         name="vectordb_retrieval test",

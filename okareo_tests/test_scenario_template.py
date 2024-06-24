@@ -52,7 +52,6 @@ JSON_SEED = Okareo.seed_data_from_list(JSON_SCENARIO)  # type: ignore
 
 @pytest.fixture(scope="module")
 def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
-
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=JSON_SEED,
@@ -65,7 +64,6 @@ def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
 def generate_scenarios(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> ScenarioSetResponse:
-
     questions: ScenarioSetResponse = okareo_client.generate_scenario_set(
         ScenarioSetGenerate(
             name=generate_scenario_name,
@@ -115,7 +113,6 @@ def test_generate_scenarios(
 def test_custom_retrieval(
     okareo_client: Okareo, generate_scenarios: ScenarioSetResponse
 ) -> None:
-
     test_run_name = f"ci_scenario_template_custom {unique_key}"
 
     class RetrievalModel(CustomModel):
@@ -125,7 +122,7 @@ def test_custom_retrieval(
             assert input_value["metadata"]
 
             return ModelInvocation(
-                actual=[
+                model_prediction=[
                     {
                         "id": "red",
                         "score": 1,
@@ -134,7 +131,7 @@ def test_custom_retrieval(
                     }
                 ],
                 model_input=input_value["question"],
-                model_result=input_value["metadata"],
+                model_output_metadata=input_value["metadata"],
             )
 
     model_under_test = okareo_client.register_model(

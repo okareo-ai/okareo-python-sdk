@@ -54,15 +54,22 @@ class BaseModel:
 
 @_attrs_define
 class ModelInvocation:
-    actual: Union[dict, list, str, None] = None
+    model_prediction: Union[dict, list, str, None] = None
+    """Prediction from the model to be used when running the evaluation,
+    e.g. predicted class from classification model or generated text completion from
+    a generative model. This would typically be parsed out of the overall model_output_metadata."""
+
     model_input: Union[dict, list, str, None] = None
-    model_result: Union[dict, list, str, None] = None
+    """All the input sent to the model"""
+
+    model_output_metadata: Union[dict, list, str, None] = None
+    """Full model response, including any metadata returned with model's output"""
 
     def params(self) -> dict:
         return {
-            "actual": self.actual,
+            "actual": self.model_prediction,
             "model_input": self.model_input,
-            "model_result": self.model_result,
+            "model_result": self.model_output_metadata,
         }
 
 
@@ -311,16 +318,16 @@ class ModelUnderTest(AsyncProcessorMixin):
         scenario_data_point_id: str,
     ) -> None:
         if isinstance(custom_model_return_value, ModelInvocation):
-            actual = custom_model_return_value.actual
-            model_response = custom_model_return_value.model_result
+            model_prediction = custom_model_return_value.model_prediction
+            model_output_metadata = custom_model_return_value.model_output_metadata
             model_input = custom_model_return_value.model_input
         else:  # assume the preexisting behavior of returning a tuple
-            actual, model_response = custom_model_return_value
+            model_prediction, model_output_metadata = custom_model_return_value
             model_input = None
 
         model_data["model_data"][scenario_data_point_id] = {
-            "actual": actual,
-            "model_response": model_response,
+            "actual": model_prediction,
+            "model_response": model_output_metadata,
             "model_input": model_input,
         }
 

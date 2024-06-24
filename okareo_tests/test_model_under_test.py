@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Optional, Union
 from unittest.mock import Mock
 
 import pytest
@@ -9,7 +9,12 @@ from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
 from okareo.error import MissingApiKeyError, MissingVectorDbError
-from okareo.model_under_test import CohereModel, CustomModel, PineconeDb
+from okareo.model_under_test import (
+    CohereModel,
+    CustomModel,
+    ModelInvocation,
+    PineconeDb,
+)
 from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
@@ -156,10 +161,13 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
 
     # this will return a model if it already exists or create a new one if it doesn't
     class ClassificationModel(CustomModel):
-        def invoke(self, input_value: Union[dict, list, str]) -> Any:
-            actual = random.choice(["returns", "complains", "pricing"])
+        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
+            prediction = random.choice(["returns", "complains", "pricing"])
             # return a tuple of (actual, overall model response context)
-            return actual, {"labels": actual, "confidence": 0.8}
+            return ModelInvocation(
+                model_prediction=prediction,
+                model_output_metadata={"labels": prediction, "confidence": 0.8},
+            )
 
     mut = okareo.register_model(
         name=mut_fixture["name"],
@@ -232,10 +240,13 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
 
     # this will return a model if it already exists or create a new one if it doesn't
     class ClassificationModel(CustomModel):
-        def invoke(self, input_value: Union[dict, list, str]) -> Any:
-            actual = random.choice(["returns", "complains", "pricing"])
+        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
+            prediction = random.choice(["returns", "complains", "pricing"])
             # return a tuple of (actual, overall model response context)
-            return actual, {"labels": actual, "confidence": 0.8}
+            return ModelInvocation(
+                model_prediction=prediction,
+                model_output_metadata={"labels": prediction, "confidence": 0.8},
+            )
 
     mut = okareo.register_model(
         name=mut_fixture["name"],
