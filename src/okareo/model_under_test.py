@@ -54,6 +54,8 @@ class BaseModel:
 
 @_attrs_define
 class ModelInvocation:
+    """Model invocation response object returned from a CustomModel.invoke method"""
+
     model_prediction: Union[dict, list, str, None] = None
     """Prediction from the model to be used when running the evaluation,
     e.g. predicted class from classification model or generated text completion from
