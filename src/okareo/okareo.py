@@ -4,8 +4,10 @@ from typing import Any, Dict, List, TypedDict, Union
 
 import httpx
 
+from okareo.checks import Check
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
+    check_create_or_update_v0_check_create_or_update_post,
     check_delete_v0_check_check_id_delete,
     check_generate_v0_check_generate_post,
     check_upload_v0_check_upload_post,
@@ -30,6 +32,10 @@ from okareo_api_client.models.body_check_upload_v0_check_upload_post import (
 )
 from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
     BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+)
+from okareo_api_client.models.check_create_update_schema import CheckCreateUpdateSchema
+from okareo_api_client.models.check_create_update_schema_check_config import (
+    CheckCreateUpdateSchemaCheckConfig,
 )
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
@@ -458,3 +464,19 @@ class Okareo:
             ),
         )
         return "Check deletion was successful"
+
+    def create_or_update_check(
+        self, name: str, description: str, check: Check
+    ) -> EvaluatorDetailedResponse:
+        check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(check.params())
+        response = check_create_or_update_v0_check_create_or_update_post.sync(
+            client=self.client,
+            api_key=self.api_key,
+            json_body=CheckCreateUpdateSchema(
+                name=name, description=description, check_config=check_config
+            ),
+        )
+        self.validate_response(response)
+        assert isinstance(response, EvaluatorDetailedResponse)
+
+        return response
