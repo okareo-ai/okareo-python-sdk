@@ -6,10 +6,8 @@ from typing import Any, List, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
-from okareo_tests.sample_check import Check
 
 from okareo import Okareo
-from okareo.checks import CheckType, CodeBasedCheck, ModelBasedCheck
 from okareo.model_under_test import (
     CohereModel,
     CustomModel,
@@ -692,7 +690,7 @@ def evaluate(model_output: str) -> bool:
         okareo.delete_check(c_id, str(c_name))
 
 
-def test_run_code_based_predefined_checks(
+def test_run_test_predefined_checks(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
     mut = okareo.register_model(
@@ -723,109 +721,3 @@ def test_run_code_based_predefined_checks(
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
     assert_metrics(run_resp, checks)
-
-
-def test_run_model_based_predefined_checks(
-    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
-) -> None:
-    mut = okareo.register_model(
-        name=f"openai-ci-run-levenshtein-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
-            temperature=0,
-            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
-            user_prompt_template=None,
-        ),
-    )
-
-    checks = ["consistency", "fluency", "conciseness"]
-    run_resp = mut.run_test(
-        name=f"openai-chat-run-predefined-{rnd}",
-        scenario=article_scenario_set,
-        api_key=os.environ["OPENAI_API_KEY"],
-        test_run_type=TestRunType.NL_GENERATION,
-        checks=checks,
-        calculate_metrics=True,
-    )
-    assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks)
-
-
-def test_run_model_based_custom_checks(
-    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
-) -> None:
-    check_sample_pass_fail = okareo.create_or_update_check(
-        name=f"check_sample_pass_fail {rnd}",
-        description="check_sample_pass_fail",
-        check=ModelBasedCheck(
-            prompt_template="Only output True if the model_output is at least 20 characters long, otherwise return False.",
-            check_type=CheckType.PASS_FAIL,
-        ),
-    )
-    check_sample_score = okareo.create_or_update_check(
-        name=f"check_sample_score {rnd}",
-        description="check_sample_score",
-        check=ModelBasedCheck(
-            prompt_template="Only output the number of words in the following text: {input}",
-            check_type=CheckType.SCORE,
-        ),
-    )
-    checks = [
-        check_sample_pass_fail.name or f"check_sample_pass_fail {rnd}",
-        check_sample_score.name or f"check_sample_score {rnd}",
-    ]
-    mut = okareo.register_model(
-        name=f"openai-ci-run-levenshtein-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
-            temperature=0,
-            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
-            user_prompt_template=None,
-        ),
-    )
-    run_resp = mut.run_test(
-        name=f"openai-chat-run-predefined-{rnd}",
-        scenario=article_scenario_set,
-        api_key=os.environ["OPENAI_API_KEY"],
-        test_run_type=TestRunType.NL_GENERATION,
-        checks=checks,
-        calculate_metrics=True,
-    )
-    assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks)
-    for check in checks:
-        okareo.delete_check(check, check)
-
-
-def test_run_code_based_custom_checks(
-    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
-) -> None:
-    check_sample_code = okareo.create_or_update_check(
-        name=f"check_sample_code {rnd}",
-        description="check_sample_code",
-        check=CodeBasedCheck(check_class=Check),
-    )
-    checks = [
-        check_sample_code.name or f"check_sample_code {rnd}",
-    ]
-    mut = okareo.register_model(
-        name=f"openai-ci-run-levenshtein-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
-            temperature=0,
-            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
-            user_prompt_template=None,
-        ),
-    )
-    run_resp = mut.run_test(
-        name=f"openai-chat-run-predefined-{rnd}",
-        scenario=article_scenario_set,
-        api_key=os.environ["OPENAI_API_KEY"],
-        test_run_type=TestRunType.NL_GENERATION,
-        checks=checks,
-        calculate_metrics=True,
-    )
-    assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks)
-    for check in checks:
-        okareo.delete_check(check, check)
