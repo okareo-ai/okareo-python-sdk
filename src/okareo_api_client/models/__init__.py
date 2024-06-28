@@ -5,6 +5,8 @@ from .body_check_upload_v0_check_upload_post import BodyCheckUploadV0CheckUpload
 from .body_check_upload_v0_evaluator_upload_post import BodyCheckUploadV0EvaluatorUploadPost
 from .body_evaluator_delete_v0_evaluator_evaluator_id_delete import BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete
 from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
+from .check_create_update_schema import CheckCreateUpdateSchema
+from .check_create_update_schema_check_config import CheckCreateUpdateSchemaCheckConfig
 from .datapoint_list_item import DatapointListItem
 from .datapoint_list_item_input_type_0 import DatapointListItemInputType0
 from .datapoint_list_item_result_type_0 import DatapointListItemResultType0
@@ -15,6 +17,7 @@ from .datapoint_summary_item import DatapointSummaryItem
 from .error_response import ErrorResponse
 from .evaluator_brief_response import EvaluatorBriefResponse
 from .evaluator_detailed_response import EvaluatorDetailedResponse
+from .evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
 from .evaluator_generate_response import EvaluatorGenerateResponse
 from .evaluator_spec_request import EvaluatorSpecRequest
 from .feedback_range_summary import FeedbackRangeSummary
@@ -63,6 +66,8 @@ __all__ = (
     "BodyCheckUploadV0EvaluatorUploadPost",
     "BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete",
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
+    "CheckCreateUpdateSchema",
+    "CheckCreateUpdateSchemaCheckConfig",
     "DatapointListItem",
     "DatapointListItemInputType0",
     "DatapointListItemResultType0",
@@ -73,6 +78,7 @@ __all__ = (
     "ErrorResponse",
     "EvaluatorBriefResponse",
     "EvaluatorDetailedResponse",
+    "EvaluatorDetailedResponseCheckConfig",
     "EvaluatorGenerateResponse",
     "EvaluatorSpecRequest",
     "FeedbackRangeSummary",
