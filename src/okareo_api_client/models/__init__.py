@@ -16,6 +16,7 @@ from .datapoint_search import DatapointSearch
 from .datapoint_summary_item import DatapointSummaryItem
 from .error_response import ErrorResponse
 from .evaluator_brief_response import EvaluatorBriefResponse
+from .evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
 from .evaluator_detailed_response import EvaluatorDetailedResponse
 from .evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
 from .evaluator_generate_response import EvaluatorGenerateResponse
@@ -77,6 +78,7 @@ __all__ = (
     "DatapointSummaryItem",
     "ErrorResponse",
     "EvaluatorBriefResponse",
+    "EvaluatorBriefResponseCheckConfig",
     "EvaluatorDetailedResponse",
     "EvaluatorDetailedResponseCheckConfig",
     "EvaluatorGenerateResponse",
