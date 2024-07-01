@@ -2,7 +2,6 @@ import os
 import random
 import string
 import tempfile
-from typing import Any, List, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -11,23 +10,9 @@ from okareo_tests.utils import assert_metrics
 
 from okareo import Okareo
 from okareo.checks import CheckType, CodeBasedCheck, ModelBasedCheck
-from okareo.model_under_test import (
-    CohereModel,
-    CustomModel,
-    ModelInvocation,
-    OpenAIModel,
-    PineconeDb,
-    QdrantDB,
-)
-from okareo_api_client.api.default import (
-    find_test_data_points_v0_find_test_data_points_post,
-    update_test_data_point_v0_update_test_data_point_post,
-)
+from okareo.model_under_test import OpenAIModel
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
-from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_api_client.models.seed_data import SeedData
-from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
 from okareo_api_client.types import Unset
 

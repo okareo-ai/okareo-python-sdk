@@ -1,6 +1,8 @@
 from typing import List, Union
+
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
+
 
 def assert_scores_geval(scores: dict) -> None:
     dimension_keys = ["consistency", "coherence", "fluency", "relevance"]
@@ -16,6 +18,7 @@ def assert_scores(scores: dict, custom_dimensions: List[str]) -> None:
     assert len(dimension_keys) == len([k for k in scores.keys() if k not in skip_keys])
     for dimension in dimension_keys:
         assert dimension in scores
+
 
 def assert_metrics(
     run_resp: TestRunItem, custom_dimensions: Union[List[str], None] = None
