@@ -1,6 +1,7 @@
 import inspect
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Union
 
 
 class BaseCheck(ABC):
@@ -8,11 +9,8 @@ class BaseCheck(ABC):
     @abstractmethod
     def evaluate(
         model_output: str, scenario_input: str, scenario_result: str
-    ) -> bool | int | float:
-        """
-        This evaluate method should take in the model output, the scenario
-        input, and the scenario result, and use them for evaluation
-        """
+    ) -> Union[bool, int, float]:
+        pass
 
 
 class CheckType(Enum):
