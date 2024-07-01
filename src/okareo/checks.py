@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Union
 
 
 class BaseCheck(ABC):
@@ -6,5 +7,5 @@ class BaseCheck(ABC):
     @abstractmethod
     def evaluate(
         model_output: str, scenario_input: str, scenario_result: str
-    ) -> bool | int | float:
+    ) -> Union[bool, int, float]:
         pass
