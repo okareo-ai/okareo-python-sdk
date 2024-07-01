@@ -1,11 +1,15 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+
 
 T = TypeVar("T", bound="EvaluatorBriefResponse")
 
@@ -19,6 +23,7 @@ class EvaluatorBriefResponse:
         description (Union[Unset, str]):  Default: ''.
         output_data_type (Union[Unset, str]):  Default: ''.
         time_created (Union[Unset, datetime.datetime]):
+        check_config (Union[Unset, EvaluatorBriefResponseCheckConfig]):
     """
 
     id: Union[Unset, str] = UNSET
@@ -26,6 +31,7 @@ class EvaluatorBriefResponse:
     description: Union[Unset, str] = ""
     output_data_type: Union[Unset, str] = ""
     time_created: Union[Unset, datetime.datetime] = UNSET
+    check_config: Union[Unset, "EvaluatorBriefResponseCheckConfig"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -36,6 +42,10 @@ class EvaluatorBriefResponse:
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
+
+        check_config: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.check_config, Unset):
+            check_config = self.check_config.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -50,11 +60,15 @@ class EvaluatorBriefResponse:
             field_dict["output_data_type"] = output_data_type
         if time_created is not UNSET:
             field_dict["time_created"] = time_created
+        if check_config is not UNSET:
+            field_dict["check_config"] = check_config
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+
         d = src_dict.copy()
         id = d.pop("id", UNSET)
 
@@ -71,12 +85,20 @@ class EvaluatorBriefResponse:
         else:
             time_created = isoparse(_time_created)
 
+        _check_config = d.pop("check_config", UNSET)
+        check_config: Union[Unset, EvaluatorBriefResponseCheckConfig]
+        if isinstance(_check_config, Unset):
+            check_config = UNSET
+        else:
+            check_config = EvaluatorBriefResponseCheckConfig.from_dict(_check_config)
+
         evaluator_brief_response = cls(
             id=id,
             name=name,
             description=description,
             output_data_type=output_data_type,
             time_created=time_created,
+            check_config=check_config,
         )
 
         evaluator_brief_response.additional_properties = d
