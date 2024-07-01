@@ -1,11 +1,15 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
+
 
 T = TypeVar("T", bound="EvaluatorDetailedResponse")
 
@@ -24,6 +28,7 @@ class EvaluatorDetailedResponse:
         code_contents (Union[Unset, str]):  Default: ''.
         time_created (Union[Unset, datetime.datetime]):
         warning (Union[Unset, str]):
+        check_config (Union[Unset, EvaluatorDetailedResponseCheckConfig]):
     """
 
     id: Union[Unset, str] = UNSET
@@ -36,6 +41,7 @@ class EvaluatorDetailedResponse:
     code_contents: Union[Unset, str] = ""
     time_created: Union[Unset, datetime.datetime] = UNSET
     warning: Union[Unset, str] = UNSET
+    check_config: Union[Unset, "EvaluatorDetailedResponseCheckConfig"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -52,6 +58,9 @@ class EvaluatorDetailedResponse:
             time_created = self.time_created.isoformat()
 
         warning = self.warning
+        check_config: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.check_config, Unset):
+            check_config = self.check_config.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -76,11 +85,15 @@ class EvaluatorDetailedResponse:
             field_dict["time_created"] = time_created
         if warning is not UNSET:
             field_dict["warning"] = warning
+        if check_config is not UNSET:
+            field_dict["check_config"] = check_config
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
+
         d = src_dict.copy()
         id = d.pop("id", UNSET)
 
@@ -107,6 +120,13 @@ class EvaluatorDetailedResponse:
 
         warning = d.pop("warning", UNSET)
 
+        _check_config = d.pop("check_config", UNSET)
+        check_config: Union[Unset, EvaluatorDetailedResponseCheckConfig]
+        if isinstance(_check_config, Unset):
+            check_config = UNSET
+        else:
+            check_config = EvaluatorDetailedResponseCheckConfig.from_dict(_check_config)
+
         evaluator_detailed_response = cls(
             id=id,
             project_id=project_id,
@@ -118,6 +138,7 @@ class EvaluatorDetailedResponse:
             code_contents=code_contents,
             time_created=time_created,
             warning=warning,
+            check_config=check_config,
         )
 
         evaluator_detailed_response.additional_properties = d
