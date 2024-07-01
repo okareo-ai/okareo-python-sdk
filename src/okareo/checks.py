@@ -9,7 +9,10 @@ class BaseCheck(ABC):
     def evaluate(
         model_output: str, scenario_input: str, scenario_result: str
     ) -> bool | int | float:
-        pass
+        """
+        This evaluate method should take in the model output, the scenario
+        input, and the scenario result, and use them for evaluation
+        """
 
 
 class CheckType(Enum):
@@ -20,7 +23,9 @@ class CheckType(Enum):
 class Check:
     @abstractmethod
     def params(self) -> dict:
-        pass
+        """
+        Returns a dictionary of parameters that will be passed to the API.
+        """
 
 
 class ModelBasedCheck(Check):
