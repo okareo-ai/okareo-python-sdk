@@ -1,7 +1,7 @@
-from okareo.checks import BaseCheck
+from okareo.checks import CodeBasedCheck
 
 
-class Check(BaseCheck):
+class Check(CodeBasedCheck):
     @staticmethod
     def evaluate(model_output: str, scenario_input: str, scenario_result: str) -> bool:
         return (

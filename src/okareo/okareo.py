@@ -4,7 +4,7 @@ from typing import Any, Dict, List, TypedDict, Union
 
 import httpx
 
-from okareo.checks import Check
+from okareo.checks import BaseCheck
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     check_create_or_update_v0_check_create_or_update_post,
@@ -466,9 +466,11 @@ class Okareo:
         return "Check deletion was successful"
 
     def create_or_update_check(
-        self, name: str, description: str, check: Check
+        self, name: str, description: str, check: BaseCheck
     ) -> EvaluatorDetailedResponse:
-        check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(check.params())
+        check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(
+            check.check_config()
+        )
         response = check_create_or_update_v0_check_create_or_update_post.sync(
             client=self.client,
             api_key=self.api_key,

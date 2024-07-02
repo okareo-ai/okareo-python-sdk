@@ -9,7 +9,7 @@ from okareo_tests.sample_check import Check
 from okareo_tests.utils import assert_metrics
 
 from okareo import Okareo
-from okareo.checks import CheckType, CodeBasedCheck, ModelBasedCheck
+from okareo.checks import CheckType, ModelBasedCheck
 from okareo.model_under_test import OpenAIModel
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
@@ -238,7 +238,7 @@ def test_run_model_based_custom_checks(
     check_sample_pass_fail = okareo.create_or_update_check(
         name=f"check_sample_pass_fail {rnd}",
         description="check_sample_pass_fail",
-        check=ModelBasedCheck(
+        check=ModelBasedCheck(  # type: ignore
             prompt_template="Only output True if the model_output is at least 20 characters long, otherwise return False.",
             check_type=CheckType.PASS_FAIL,
         ),
@@ -246,7 +246,7 @@ def test_run_model_based_custom_checks(
     check_sample_score = okareo.create_or_update_check(
         name=f"check_sample_score {rnd}",
         description="check_sample_score",
-        check=ModelBasedCheck(
+        check=ModelBasedCheck(  # type: ignore
             prompt_template="Only output the number of words in the following text: {input} {output} {generation}",
             check_type=CheckType.SCORE,
         ),
@@ -284,7 +284,7 @@ def test_run_code_based_custom_checks(
     check_sample_code = okareo.create_or_update_check(
         name=f"check_sample_code {rnd}",
         description="check_sample_code",
-        check=CodeBasedCheck(check_class=Check),
+        check=Check(),  # type: ignore
     )
     checks = [
         check_sample_code.name or f"check_sample_code {rnd}",
