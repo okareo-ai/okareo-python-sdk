@@ -8,6 +8,7 @@ class BaseCheck(ABC):
     """
     Base class for defining checks
     """
+
     @staticmethod
     @abstractmethod
     def evaluate(
@@ -17,7 +18,6 @@ class BaseCheck(ABC):
         Evaluate your model output, scenario input, and scenario result
         to determine if the data should pass or fail the check.
         """
-        pass
 
     def check_config(self) -> dict:
         """
@@ -30,6 +30,7 @@ class CheckType(Enum):
     """
     Enum for the type of output that the check will produce. This is used in ModelBasedCheck.
     """
+
     SCORE = "score"
     PASS_FAIL = "pass_fail"
 
@@ -38,6 +39,7 @@ class ModelBasedCheck(BaseCheck):
     """
     Check that uses a prompt template to evaluate the data
     """
+
     def __init__(self, prompt_template: str, check_type: CheckType):
         """Initialize the check with a prompt template and check type"""
         self.prompt_template = prompt_template
@@ -78,6 +80,7 @@ class CodeBasedCheck(BaseCheck):
             pass
     ```
     """
+
     def check_config(self) -> dict:
         module = inspect.getmodule(self)
         if module is None:
