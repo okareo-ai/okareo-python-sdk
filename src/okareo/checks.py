@@ -37,7 +37,19 @@ class CheckOutputType(Enum):
 
 class ModelBasedCheck(BaseCheck):
     """
-    Check that uses a prompt template to evaluate the data
+    Check that uses a prompt template to evaluate the data.
+
+    The prompt template should be a string that includes at least one of 
+    the following placeholders, which will be replaced with the actual values:
+    - "{generation}" -> corresponds to the model's output
+    - "{input}" -> corresponds to the scenario input
+    - "{result}" -> corresponds to the scenario result
+
+    Example of how a template could be used: "Count the words in the following: {generation}"
+
+    The check output type should be one of the following:
+    - CheckOutputType.SCORE -> this template should ask prompt the model a score (single number)
+    - CheckOutputType.PASS_FAIL -> this template should prompt the model for a boolean value (True/False)
     """
 
     def __init__(self, prompt_template: str, check_type: CheckOutputType):
