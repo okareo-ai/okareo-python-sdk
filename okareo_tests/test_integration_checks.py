@@ -9,7 +9,7 @@ from okareo_tests.sample_check import Check
 from okareo_tests.utils import assert_metrics
 
 from okareo import Okareo
-from okareo.checks import CheckType, ModelBasedCheck
+from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import OpenAIModel
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
@@ -240,7 +240,7 @@ def test_run_model_based_custom_checks(
         description="check_sample_pass_fail",
         check=ModelBasedCheck(  # type: ignore
             prompt_template="Only output True if the model_output is at least 20 characters long, otherwise return False.",
-            check_type=CheckType.PASS_FAIL,
+            check_type=CheckOutputType.PASS_FAIL,
         ),
     )
     check_sample_score = okareo.create_or_update_check(
@@ -248,7 +248,7 @@ def test_run_model_based_custom_checks(
         description="check_sample_score",
         check=ModelBasedCheck(  # type: ignore
             prompt_template="Only output the number of words in the following text: {input} {output} {generation}",
-            check_type=CheckType.SCORE,
+            check_type=CheckOutputType.SCORE,
         ),
     )
     checks = [

@@ -26,7 +26,7 @@ class BaseCheck(ABC):
         return {}
 
 
-class CheckType(Enum):
+class CheckOutputType(Enum):
     """
     Enum for the type of output that the check will produce. This is used in ModelBasedCheck.
     """
@@ -40,7 +40,7 @@ class ModelBasedCheck(BaseCheck):
     Check that uses a prompt template to evaluate the data
     """
 
-    def __init__(self, prompt_template: str, check_type: CheckType):
+    def __init__(self, prompt_template: str, check_type: CheckOutputType):
         """Initialize the check with a prompt template and check type"""
         self.prompt_template = prompt_template
         self.check_type = check_type.value
