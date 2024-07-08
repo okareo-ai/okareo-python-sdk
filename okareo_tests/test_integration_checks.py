@@ -2,6 +2,7 @@ import os
 import random
 import string
 import tempfile
+from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -10,7 +11,7 @@ from okareo_tests.utils import assert_metrics
 
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
-from okareo.model_under_test import OpenAIModel
+from okareo.model_under_test import CustomModel, ModelInvocation, OpenAIModel
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.test_run_type import TestRunType
@@ -203,7 +204,7 @@ def test_run_code_based_predefined_checks(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks)
+    assert_metrics(run_resp, checks, num_rows=3)
 
 
 def test_run_model_based_predefined_checks(
@@ -229,7 +230,7 @@ def test_run_model_based_predefined_checks(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks)
+    assert_metrics(run_resp, checks, num_rows=3)
 
 
 def test_run_model_based_custom_checks(
@@ -273,7 +274,7 @@ def test_run_model_based_custom_checks(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks)
+    assert_metrics(run_resp, checks, num_rows=3)
     for check in checks:
         okareo.delete_check(check, check)
 
@@ -307,6 +308,50 @@ def test_run_code_based_custom_checks(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks)
+    assert_metrics(run_resp, checks, num_rows=3)
     for check in checks:
         okareo.delete_check(check, check)
+
+
+@pytest.fixture(scope="module")
+def large_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
+    """
+    We are using 51 articles because that triggers parallel execution
+    """
+    file_path = os.path.join(
+        os.path.dirname(__file__), "webbizz_51_test_articles.jsonl"
+    )
+    articles: ScenarioSetResponse = okareo.upload_scenario_set(
+        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
+    )
+
+    return articles
+
+
+def test_parallel_predefined_checks(
+    rnd: str, okareo: Okareo, large_scenario_set: ScenarioSetResponse
+) -> None:
+
+    class FirstTenChars(CustomModel):
+        def invoke(self, input_value: Union[dict, list, str]) -> Any:
+            assert isinstance(input_value, str)
+
+            return ModelInvocation(
+                model_prediction=input_value[:10],
+                model_input=input_value,
+            )
+
+    mut = okareo.register_model(
+        name=f"custom-ci-run-10chars-{rnd}",
+        model=FirstTenChars(name=f"custom-ci-run-10chars-{rnd}"),
+    )
+
+    checks = ["consistency", "fluency", "conciseness"]
+    run_resp = mut.run_test(
+        name=f"custom-ci-run-parallel-predefined-{rnd}",
+        scenario=large_scenario_set,
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=checks,
+    )
+    assert run_resp.name == f"custom-ci-run-parallel-predefined-{rnd}"
+    assert_metrics(run_resp, checks, num_rows=51)

@@ -39,7 +39,7 @@ class ModelBasedCheck(BaseCheck):
     """
     Check that uses a prompt template to evaluate the data.
 
-    The prompt template should be a string that includes at least one of 
+    The prompt template should be a string that includes at least one of
     the following placeholders, which will be replaced with the actual values:
     - "{generation}" -> corresponds to the model's output
     - "{input}" -> corresponds to the scenario input

@@ -21,7 +21,9 @@ def assert_scores(scores: dict, custom_dimensions: List[str]) -> None:
 
 
 def assert_metrics(
-    run_resp: TestRunItem, custom_dimensions: Union[List[str], None] = None
+    run_resp: TestRunItem,
+    custom_dimensions: Union[List[str], None] = None,
+    num_rows: int = 3,
 ) -> None:
     assert run_resp.model_metrics is not None and not isinstance(
         run_resp.model_metrics, Unset
@@ -34,7 +36,7 @@ def assert_metrics(
     else:
         assert_scores_geval(metrics_dict["mean_scores"])
     assert metrics_dict["scores_by_row"] is not None
-    assert len(metrics_dict["scores_by_row"]) == 3
+    assert len(metrics_dict["scores_by_row"]) == num_rows
     for row in metrics_dict["scores_by_row"]:
         if custom_dimensions is not None:
             assert_scores(row, custom_dimensions)

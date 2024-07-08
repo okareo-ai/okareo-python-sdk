@@ -80,7 +80,7 @@ def test_run_test_openai(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    assert_metrics(run_resp)
+    assert_metrics(run_resp, num_rows=3)
 
 
 def test_run_test_openai_2prompts(
@@ -104,7 +104,7 @@ def test_run_test_openai_2prompts(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    assert_metrics(run_resp)
+    assert_metrics(run_resp, num_rows=3)
 
 
 def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
