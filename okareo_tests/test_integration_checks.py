@@ -322,7 +322,7 @@ def large_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
         os.path.dirname(__file__), "webbizz_51_test_articles.jsonl"
     )
     articles: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
+        file_path=file_path, scenario_name=f"webbizz-51-scenario-set-{rnd}"
     )
 
     return articles
