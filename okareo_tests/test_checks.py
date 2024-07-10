@@ -1,8 +1,6 @@
-import os
-import tempfile
-
 import pytest
 from okareo_tests.common import API_KEY, random_string
+from okareo_tests.sample_check import Check
 
 from okareo import Okareo
 from okareo_api_client.models import EvaluatorSpecRequest
@@ -43,18 +41,11 @@ def test_generate_and_upload_check(okareo_client: Okareo) -> None:
     )
     check = okareo_client.generate_check(generate_request)
     assert check.generated_code
-    temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, "sample_check.py")
-    with open(file_path, "w+") as file:
-        file.write(check.generated_code)
-    uploaded_check = okareo_client.upload_check(
+    uploaded_check = okareo_client.create_or_update_check(
         name=f"test_upload_check {random_string(5)}",
-        file_path=file_path,
-        requires_scenario_input=False,
-        requires_scenario_result=False,
-        output_data_type="bool",
+        description="Test check",
+        check=Check(),
     )
-    os.remove(file_path)
     assert uploaded_check.id
     assert uploaded_check.name
     okareo_client.delete_check(uploaded_check.id, uploaded_check.name)

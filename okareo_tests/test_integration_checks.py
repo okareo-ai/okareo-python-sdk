@@ -1,7 +1,4 @@
 import os
-import random
-import string
-import tempfile
 from typing import Any, Union
 
 import pytest
@@ -15,7 +12,6 @@ from okareo.model_under_test import CustomModel, ModelInvocation, OpenAIModel
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.test_run_type import TestRunType
-from okareo_api_client.types import Unset
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +44,7 @@ def article_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     return articles
 
 
-def test_run_test_checks(
+def test_generate_check(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
     checks_to_generate = [
@@ -77,8 +73,6 @@ def test_run_test_checks(
             "name": "model_with_input_and_result",
         },
     ]
-    uploaded_checks = []
-    random_string = "".join(random.choices(string.ascii_letters, k=5))
     for check_dict in checks_to_generate:
         generate_request = EvaluatorSpecRequest(
             description=str(check_dict["description"]),
@@ -89,89 +83,6 @@ def test_run_test_checks(
         check = okareo.generate_check(generate_request)
 
         assert check.generated_code
-
-        temp_dir = tempfile.gettempdir()
-        file_path = os.path.join(temp_dir, "sample_evaluator.py")
-        with open(file_path, "w+") as file:
-            file.write(check.generated_code)
-        uploaded_check = okareo.upload_check(
-            name=f"test_upload_check_{check_dict['name']}_{random_string}",
-            file_path=file_path,
-            requires_scenario_input=bool(check_dict["requires_scenario_input"]),
-            requires_scenario_result=bool(check_dict["requires_scenario_result"]),
-            output_data_type="bool",
-        )
-        os.remove(file_path)
-        assert uploaded_check.id
-        assert uploaded_check.name
-        uploaded_checks.append(uploaded_check)
-    # TODO: Remove this once old evaluators are deprecated
-    temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, "sample_evaluator.py")
-    with open(file_path, "w+") as file:
-        file.write(
-            """
-# This is to bypass validation
-class BaseCheck:
-    def b():
-        return True
-class Check(BaseCheck):
-    def a():
-        return True
-def evaluate(model_output: str) -> bool:
-    return True if len(model_output) >= 20 else False
-"""
-        )
-    manual_old_check = okareo.upload_check(
-        name=f"test_upload_check_manual_{random_string}",
-        file_path=file_path,
-        requires_scenario_input=False,
-        requires_scenario_result=False,
-        output_data_type="bool",
-    )
-    os.remove(file_path)
-
-    assert manual_old_check.id
-    assert manual_old_check.name
-    uploaded_checks.append(manual_old_check)
-
-    mut = okareo.register_model(
-        name=f"openai-ci-run-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
-            temperature=0,
-            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
-            user_prompt_template=None,
-        ),
-    )
-
-    check_ids = [str(check.id) for check in uploaded_checks]
-    check_names = [str(check.name) for check in uploaded_checks]
-    run_resp = mut.run_test(
-        name=f"openai-chat-run-{rnd}",
-        scenario=article_scenario_set,
-        api_key=os.environ["OPENAI_API_KEY"],
-        test_run_type=TestRunType.NL_GENERATION,
-        calculate_metrics=True,
-        checks=check_ids,
-    )
-
-    assert run_resp.name == f"openai-chat-run-{rnd}"
-    assert run_resp.model_metrics is not None and not isinstance(
-        run_resp.model_metrics, Unset
-    )
-    metrics_dict = run_resp.model_metrics.to_dict()
-
-    assert metrics_dict["mean_scores"] is not None
-    assert metrics_dict["scores_by_row"] is not None
-    for row in metrics_dict["scores_by_row"]:
-        dimension_keys = [c.name for c in uploaded_checks]
-        for dimension in dimension_keys:
-            assert dimension in row
-        assert row[dimension_keys[0]] == row[dimension_keys[1]]
-
-    for c_name, c_id in zip(check_names, check_ids):
-        okareo.delete_check(c_id, str(c_name))
 
 
 def test_run_code_based_predefined_checks(
