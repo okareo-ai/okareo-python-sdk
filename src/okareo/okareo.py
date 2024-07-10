@@ -10,7 +10,6 @@ from okareo_api_client.api.default import (
     check_create_or_update_v0_check_create_or_update_post,
     check_delete_v0_check_check_id_delete,
     check_generate_v0_check_generate_post,
-    check_upload_v0_check_upload_post,
     create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
     find_test_data_points_v0_find_test_data_points_post,
@@ -26,9 +25,6 @@ from okareo_api_client.api.default import (
 from okareo_api_client.errors import UnexpectedStatus
 from okareo_api_client.models.body_check_delete_v0_check_check_id_delete import (
     BodyCheckDeleteV0CheckCheckIdDelete,
-)
-from okareo_api_client.models.body_check_upload_v0_check_upload_post import (
-    BodyCheckUploadV0CheckUploadPost,
 )
 from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_post import (
     BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
@@ -342,69 +338,6 @@ class Okareo:
         if not data:
             return []
         return data
-
-    def upload_evaluator(
-        self,
-        name: str,
-        file_path: str,
-        requires_scenario_input: bool,
-        requires_scenario_result: bool,
-        description: str = "",
-        output_data_type: str = "",
-        project_id: Union[Unset, str] = UNSET,
-        update: bool = False,
-    ) -> EvaluatorDetailedResponse:
-        check_deprecation_warning()
-        return self.upload_check(
-            name,
-            file_path,
-            requires_scenario_input,
-            requires_scenario_result,
-            description,
-            output_data_type,
-            project_id,
-            update,
-        )
-
-    def upload_check(
-        self,
-        name: str,
-        file_path: str,
-        requires_scenario_input: bool,
-        requires_scenario_result: bool,
-        description: str = "",
-        output_data_type: str = "",
-        project_id: Union[Unset, str] = UNSET,
-        update: bool = False,
-    ) -> EvaluatorDetailedResponse:
-        try:
-            file_name = os.path.basename(file_path)
-
-            with open(file_path, "rb") as binary_io:
-                multipart_body = BodyCheckUploadV0CheckUploadPost(
-                    name=name,
-                    requires_scenario_input=requires_scenario_input,
-                    requires_scenario_result=requires_scenario_result,
-                    description=description,
-                    output_data_type=output_data_type,
-                    project_id=project_id,
-                    file=File(file_name=file_name, payload=binary_io),
-                    update=update,
-                )
-                response = check_upload_v0_check_upload_post.sync(
-                    client=self.client,
-                    multipart_data=multipart_body,
-                    api_key=self.api_key,
-                )
-
-            self.validate_response(response)
-            assert isinstance(response, EvaluatorDetailedResponse)
-            if response.warning:
-                print(response.warning)
-            return response
-        except UnexpectedStatus as e:
-            print(e.content)
-            raise
 
     def generate_evaluator(
         self, create_evaluator: EvaluatorSpecRequest
