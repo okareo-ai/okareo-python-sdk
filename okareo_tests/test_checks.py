@@ -31,7 +31,7 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
         assert check_detailed.time_created
 
 
-def test_generate_and_upload_check(okareo_client: Okareo) -> None:
+def test_generate_and_create_check(okareo_client: Okareo) -> None:
     generate_request = EvaluatorSpecRequest(
         description="""
         Return True if the model_output is at least 20 characters long, otherwise return False.""",
@@ -42,7 +42,7 @@ def test_generate_and_upload_check(okareo_client: Okareo) -> None:
     check = okareo_client.generate_check(generate_request)
     assert check.generated_code
     uploaded_check = okareo_client.create_or_update_check(
-        name=f"test_upload_check {random_string(5)}",
+        name=f"test_create_check {random_string(5)}",
         description="Test check",
         check=Check(),
     )
