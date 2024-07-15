@@ -499,7 +499,7 @@ def test_run_test_custom_ir_tags(
     assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
 
 
-def test_run_batch_model(
+def test_run_batch_model_classification(
     rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
 ) -> None:
 
