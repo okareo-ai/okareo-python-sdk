@@ -21,6 +21,8 @@ from okareo_api_client.api.default import (
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
+from okareo_api_client.models.test_run_item import TestRunItem
+from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 from okareo_api_client.models.test_run_type import TestRunType
 
 
@@ -49,6 +51,18 @@ def article_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
     articles: ScenarioSetResponse = okareo.upload_scenario_set(
         file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
+    )
+
+    return articles
+
+
+@pytest.fixture(scope="module")
+def article_clf_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
+    file_path = os.path.join(
+        os.path.dirname(__file__), "webbizz_3_test_article_classification.jsonl"
+    )
+    articles: ScenarioSetResponse = okareo.upload_scenario_set(
+        file_path=file_path, scenario_name=f"webbizz-clf-scenario-set-{rnd}"
     )
 
     return articles
@@ -483,6 +497,78 @@ def test_run_test_custom_ir_tags(
     )
     assert isinstance(new_test_data_points_no_tag, list)
     assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
+
+
+def test_run_batch_model(
+    rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
+) -> None:
+
+    def classification_rules(model_input: str) -> str:
+        if "customer support" in model_input:
+            return "Support"
+        elif "Safety and security" in model_input:
+            return "Safety"
+        elif "customer's feedback" in model_input:
+            return "Feedback"
+        else:
+            return "Miscellaneous"
+
+    class ClassificationModel(CustomModel):
+        def invoke(self, model_input: Any) -> ModelInvocation:
+            return ModelInvocation(
+                model_prediction=classification_rules(model_input),
+                model_input=model_input,
+                model_output_metadata={"model_data": model_input},
+            )
+
+    mut = okareo.register_model(
+        name=f"ci-custom-{rnd}",
+        model=ClassificationModel(name="test_run_batch_model - ClassificationModel"),
+        update=True,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-custom-batch-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
+    )
+    assert isinstance(run_resp, TestRunItem)
+    assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
+    clf_avg_results = run_resp.model_metrics.additional_properties["weighted_average"]
+
+    class BatchClassificationModel(CustomModel):
+        batch_size = 2
+
+        def invoke(self, model_input: Any) -> list[ModelInvocation]:
+            invocations = []
+            for i in range(min(len(model_input), self.batch_size)):
+                invocation = ModelInvocation(
+                    model_prediction=classification_rules(model_input[i]),
+                    model_input=model_input[i],
+                    model_output_metadata={"model_data": model_input[i]},
+                )
+                invocations.append(invocation)
+            return invocations
+
+    batch_mut = okareo.register_model(
+        name=f"ci-custom-{rnd}",
+        model=BatchClassificationModel(
+            name="test_run_batch_model - BatchClassificationModel"
+        ),
+        update=True,
+    )
+    batch_run_resp = batch_mut.run_test(
+        name=f"ci-custom-batch-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
+    )
+    assert isinstance(batch_run_resp, TestRunItem)
+    assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
+    clf_batch_avg_results = batch_run_resp.model_metrics.additional_properties[
+        "weighted_average"
+    ]
+
+    for key in clf_avg_results.keys():
+        assert clf_avg_results[key] == clf_batch_avg_results[key]
 
 
 def test_run_test_cohere_qdrant_ir(

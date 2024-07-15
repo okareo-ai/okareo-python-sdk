@@ -147,17 +147,21 @@ class QdrantDB(BaseModel):
 class CustomModel(BaseModel):
     type = "custom"
     name: str
+    batch_size = 1
 
     @abstractmethod
     def invoke(
         self, input_value: Union[dict, list, str]
-    ) -> Union[ModelInvocation, Any]:
-        pass
+    ) -> Union[ModelInvocation, List[ModelInvocation], Any]:
+        """method for taking scenario input(s) and returning model output(s)
+        input_value: Union[dict, list, str] - input(s) to the model. Expects a list of inputs if self.batch_size > 1.
+        """
 
     def params(self) -> dict:
         return {
             "name": self.name,
             "type": self.type,
+            "batch_size": self.batch_size,
             "model_invoker": self.invoke,
         }
 
@@ -368,6 +372,19 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks=checks if checks else UNSET,
         )
 
+    def _handle_scenario_data_point(
+        self, scenario_data_point: ScenarioDataPoinResponse
+    ) -> Union[dict, list, str]:
+        scenario_input: Union[dict, list, str] = (
+            scenario_data_point.input_.to_dict()
+            if isinstance(
+                scenario_data_point.input_,
+                ScenarioDataPoinResponseInputType0,
+            )
+            else scenario_data_point.input_
+        )
+        return scenario_input
+
     def run_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
@@ -394,22 +411,43 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_data: dict = {"model_data": {}}
             if self._has_custom_model():
                 scenario_data_points = self._get_scenario_data_points(scenario_id)
+                datapoint_len = len(scenario_data_points)
 
                 custom_model_invoker = self.models["custom"]["model_invoker"]
-                for scenario_data_point in scenario_data_points:
-                    scenario_input: Union[dict, list, str] = (
-                        scenario_data_point.input_.to_dict()
-                        if isinstance(
-                            scenario_data_point.input_,
-                            ScenarioDataPoinResponseInputType0,
+                batch_size = self.models["custom"]["batch_size"]
+                if batch_size == 1:
+                    for scenario_data_point in scenario_data_points:
+                        scenario_input = self._handle_scenario_data_point(
+                            scenario_data_point
                         )
-                        else scenario_data_point.input_
-                    )
 
-                    custom_model_return_value = custom_model_invoker(scenario_input)
-                    self._add_model_invocation_for_scenario(
-                        custom_model_return_value, model_data, scenario_data_point.id
-                    )
+                        custom_model_return_value = custom_model_invoker(scenario_input)
+                        self._add_model_invocation_for_scenario(
+                            custom_model_return_value,
+                            model_data,
+                            scenario_data_point.id,
+                        )
+                else:
+                    # batch inputs to the custom model
+                    for index in range(0, datapoint_len, batch_size):
+                        end_index = min(index + batch_size, datapoint_len)
+                        scenario_data_points_batch = scenario_data_points[
+                            index:end_index
+                        ]
+                        scenario_inputs = [
+                            self._handle_scenario_data_point(sdp)
+                            for sdp in scenario_data_points_batch
+                        ]
+                        custom_model_return_values = custom_model_invoker(
+                            scenario_inputs
+                        )
+
+                        for return_value, sdp in zip(
+                            custom_model_return_values, scenario_data_points_batch
+                        ):
+                            self._add_model_invocation_for_scenario(
+                                return_value, model_data, sdp.id
+                            )
 
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
