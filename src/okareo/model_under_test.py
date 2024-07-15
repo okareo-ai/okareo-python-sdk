@@ -164,6 +164,30 @@ class CustomModel(BaseModel):
             "type": self.type,
             "model_invoker": self.invoke,
         }
+    
+@_attrs_define
+class MultiTurnDriver(BaseModel):
+    type = "driver"
+    driver_type: str
+    driver_model: str
+    driver_tone: str
+    temperature: float
+    target_type: str
+    stopping_criteria: str
+    k: int
+    target_params: Optional[dict] = None
+
+    def params(self) -> dict:
+        return {
+            "driver_type": self.driver_type,
+            "driver_model": self.driver_model,
+            "driver_tone": self.driver_tone,
+            "temperature": self.temperature,
+            "target_type": self.target_type,
+            "stopping_criteria": self.stopping_criteria,
+            "k": self.k,
+            "target_params": self.target_params
+        }
 
 
 @_attrs_define
