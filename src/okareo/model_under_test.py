@@ -372,9 +372,10 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks=checks if checks else UNSET,
         )
 
-    def _handle_scenario_data_point(
+    def _extract_input_from_scenario_data_point(
         self, scenario_data_point: ScenarioDataPoinResponse
     ) -> Union[dict, list, str]:
+        """helper method to handle different scenario data point formats"""
         scenario_input: Union[dict, list, str] = (
             scenario_data_point.input_.to_dict()
             if isinstance(
@@ -417,7 +418,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 batch_size = self.models["custom"]["batch_size"]
                 if batch_size == 1:
                     for scenario_data_point in scenario_data_points:
-                        scenario_input = self._handle_scenario_data_point(
+                        scenario_input = self._extract_input_from_scenario_data_point(
                             scenario_data_point
                         )
 
@@ -435,7 +436,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                             index:end_index
                         ]
                         scenario_inputs = [
-                            self._handle_scenario_data_point(sdp)
+                            self._extract_input_from_scenario_data_point(sdp)
                             for sdp in scenario_data_points_batch
                         ]
                         custom_model_return_values = custom_model_invoker(
