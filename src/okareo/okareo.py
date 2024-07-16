@@ -72,6 +72,8 @@ CHECK_DEPRECATION_WARNING = (
     "Please use `check` in place of `evaluator` when invoking this method."
 )
 
+CUSTOM_MODEL_STRS = ["custom", "custom_batch"]
+
 
 def check_deprecation_warning() -> None:
     warnings.warn(CHECK_DEPRECATION_WARNING, DeprecationWarning, stacklevel=2)
@@ -146,7 +148,7 @@ class Okareo:
     def _get_custom_model_invoker(
         self, data: Dict[str, Any]
     ) -> tuple[dict[str, Any], Any]:
-        for custom_model_str in ["custom", "custom_batch"]:
+        for custom_model_str in CUSTOM_MODEL_STRS:
             if custom_model_str in data["models"].keys():
                 model_invoker = data["models"][custom_model_str]["model_invoker"]
                 del data["models"][custom_model_str]["model_invoker"]
@@ -156,8 +158,7 @@ class Okareo:
     def _set_custom_model_invoker(
         self, data: Dict[str, Any], model_invoker: Any
     ) -> Any:
-        custom_model_strs = ["custom", "custom_batch"]
-        for custom_model_str in custom_model_strs:
+        for custom_model_str in CUSTOM_MODEL_STRS:
             if custom_model_str in data.keys():
                 data[custom_model_str]["model_invoker"] = model_invoker
         return data
