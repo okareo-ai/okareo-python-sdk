@@ -61,6 +61,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.okareo/
 
 # Spyder project settings
 .spyderproject
