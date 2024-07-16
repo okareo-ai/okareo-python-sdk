@@ -56,6 +56,8 @@ class BaseModel:
 class ModelInvocation:
     """Model invocation response object returned from a CustomModel.invoke method"""
 
+    """or as an element of a list returned from a CustomBatchModel.invoke_batch method"""
+
     model_prediction: Union[dict, list, str, None] = None
     """Prediction from the model to be used when running the evaluation,
     e.g. predicted class from classification model or generated text completion from
@@ -152,13 +154,45 @@ class CustomModel(BaseModel):
     def invoke(
         self, input_value: Union[dict, list, str]
     ) -> Union[ModelInvocation, Any]:
-        pass
+        """method for taking a single scenario input and returning a single model output
+        input_value: Union[dict, list, str] - input to the model.
+        """
 
     def params(self) -> dict:
         return {
             "name": self.name,
             "type": self.type,
             "model_invoker": self.invoke,
+        }
+
+
+@_attrs_define
+class CustomBatchModel(BaseModel):
+    type = "custom_batch"
+    name: str
+    batch_size: int = 1
+
+    @abstractmethod
+    def invoke_batch(
+        self, input_batch: list[dict[str, Union[dict, list, str]]]
+    ) -> list[dict[str, Union[ModelInvocation, Any]]]:
+        """method for taking a batch of scenario inputs and returning a corresponding batch of model outputs
+
+        arguments:
+        -> input_batch: list[dict[str, Union[dict, list, str]]] - batch of inputs to the model. Expects a list of
+        dicts of the format { 'id': str, 'input_value': Union[dict, list, str] }.
+
+        returns:
+        -> list of dicts of format { 'id': str, 'model_invocation': Union[ModelInvocation, Any] }. 'id' must match
+        the corresponding input_batch element's 'id'.
+        """
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "batch_size": self.batch_size,
+            "model_invoker": self.invoke_batch,
         }
 
 
@@ -295,8 +329,15 @@ class ModelUnderTest(AsyncProcessorMixin):
         return run_api_keys
 
     def _has_custom_model(self) -> bool:
+        custom_model_strs = ["custom", "custom_batch"]
         assert isinstance(self.models, dict)
-        return "custom" in list(self.models.keys())
+        return any(
+            model_str in list(self.models.keys()) for model_str in custom_model_strs
+        )
+
+    def _has_custom_batch_model(self) -> bool:
+        assert isinstance(self.models, dict)
+        return "custom_batch" in list(self.models.keys())
 
     def _get_scenario_data_points(
         self, scenario_id: str
@@ -368,6 +409,20 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks=checks if checks else UNSET,
         )
 
+    def _extract_input_from_scenario_data_point(
+        self, scenario_data_point: ScenarioDataPoinResponse
+    ) -> Union[dict, list, str]:
+        """helper method to handle different scenario data point formats"""
+        scenario_input: Union[dict, list, str] = (
+            scenario_data_point.input_.to_dict()
+            if isinstance(
+                scenario_data_point.input_,
+                ScenarioDataPoinResponseInputType0,
+            )
+            else scenario_data_point.input_
+        )
+        return scenario_input
+
     def run_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
@@ -394,22 +449,49 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_data: dict = {"model_data": {}}
             if self._has_custom_model():
                 scenario_data_points = self._get_scenario_data_points(scenario_id)
+                datapoint_len = len(scenario_data_points)
 
-                custom_model_invoker = self.models["custom"]["model_invoker"]
-                for scenario_data_point in scenario_data_points:
-                    scenario_input: Union[dict, list, str] = (
-                        scenario_data_point.input_.to_dict()
-                        if isinstance(
-                            scenario_data_point.input_,
-                            ScenarioDataPoinResponseInputType0,
+                if not self._has_custom_batch_model():
+                    custom_model_invoker = self.models["custom"]["model_invoker"]
+                    for scenario_data_point in scenario_data_points:
+                        scenario_input = self._extract_input_from_scenario_data_point(
+                            scenario_data_point
                         )
-                        else scenario_data_point.input_
-                    )
 
-                    custom_model_return_value = custom_model_invoker(scenario_input)
-                    self._add_model_invocation_for_scenario(
-                        custom_model_return_value, model_data, scenario_data_point.id
-                    )
+                        custom_model_return_value = custom_model_invoker(scenario_input)
+                        self._add_model_invocation_for_scenario(
+                            custom_model_return_value,
+                            model_data,
+                            scenario_data_point.id,
+                        )
+                else:
+                    # batch inputs to the custom model
+                    custom_model_invoker = self.models["custom_batch"]["model_invoker"]
+                    batch_size = self.models["custom_batch"]["batch_size"]
+                    for index in range(0, datapoint_len, batch_size):
+                        end_index = min(index + batch_size, datapoint_len)
+                        scenario_data_points_batch = scenario_data_points[
+                            index:end_index
+                        ]
+                        scenario_inputs = [
+                            {
+                                "id": sdp.id,
+                                "input_value": self._extract_input_from_scenario_data_point(
+                                    sdp
+                                ),
+                            }
+                            for sdp in scenario_data_points_batch
+                        ]
+                        custom_model_return_batch = custom_model_invoker(
+                            scenario_inputs
+                        )
+
+                        for return_dict in custom_model_return_batch:
+                            self._add_model_invocation_for_scenario(
+                                return_dict["model_invocation"],
+                                model_data,
+                                return_dict["id"],
+                            )
 
             response = run_test_v0_test_run_post.sync(
                 client=self.client,

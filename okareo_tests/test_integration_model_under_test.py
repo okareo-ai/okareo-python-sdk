@@ -1,5 +1,5 @@
 import os
-from typing import Any
+from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -8,6 +8,7 @@ from okareo_tests.utils import assert_metrics
 from okareo import Okareo
 from okareo.model_under_test import (
     CohereModel,
+    CustomBatchModel,
     CustomModel,
     ModelInvocation,
     OpenAIModel,
@@ -21,6 +22,8 @@ from okareo_api_client.api.default import (
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
+from okareo_api_client.models.test_run_item import TestRunItem
+from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 from okareo_api_client.models.test_run_type import TestRunType
 
 
@@ -49,6 +52,18 @@ def article_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
     articles: ScenarioSetResponse = okareo.upload_scenario_set(
         file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
+    )
+
+    return articles
+
+
+@pytest.fixture(scope="module")
+def article_clf_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
+    file_path = os.path.join(
+        os.path.dirname(__file__), "webbizz_3_test_article_classification.jsonl"
+    )
+    articles: ScenarioSetResponse = okareo.upload_scenario_set(
+        file_path=file_path, scenario_name=f"webbizz-clf-scenario-set-{rnd}"
     )
 
     return articles
@@ -483,6 +498,163 @@ def test_run_test_custom_ir_tags(
     )
     assert isinstance(new_test_data_points_no_tag, list)
     assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
+
+
+def test_run_batch_model_classification(
+    rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
+) -> None:
+
+    def classification_rules(model_input: str) -> str:
+        if "customer support" in model_input:
+            return "Support"
+        elif "Safety and security" in model_input:
+            return "Safety"
+        elif "customer's feedback" in model_input:
+            return "Feedback"
+        else:
+            return "Miscellaneous"
+
+    class ClassificationModel(CustomModel):
+        def invoke(self, input_value: Any) -> ModelInvocation:
+            return ModelInvocation(
+                model_prediction=classification_rules(input_value),
+                model_input=input_value,
+                model_output_metadata={"model_data": input_value},
+            )
+
+    mut = okareo.register_model(
+        name=f"ci-custom-clf-{rnd}",
+        model=ClassificationModel(
+            name="test_run_batch_model_classification - ClassificationModel"
+        ),
+        update=True,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-custom-clf-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
+    )
+    assert isinstance(run_resp, TestRunItem)
+    assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
+    clf_avg_results = run_resp.model_metrics.additional_properties["weighted_average"]
+
+    class BatchClassificationModel(CustomBatchModel):
+        def invoke_batch(
+            self, input_batch: list[dict[str, Any]]
+        ) -> list[dict[str, Union[str, ModelInvocation]]]:
+            invocations = []
+            for i in range(min(len(input_batch), self.batch_size)):
+                input_value = input_batch[i]["input_value"]
+                batch_id = input_batch[i]["id"]
+                invocation = ModelInvocation(
+                    model_prediction=classification_rules(input_value),
+                    model_input=input_value,
+                    model_output_metadata={"model_data": input_value},
+                )
+                invocations.append({"id": batch_id, "model_invocation": invocation})
+            return invocations
+
+    batch_mut = okareo.register_model(
+        name=f"ci-custom-clf-batch-{rnd}",
+        model=BatchClassificationModel(
+            name="test_run_batch_model_classification - BatchClassificationModel",
+            batch_size=2,
+        ),
+        update=True,
+    )
+    batch_run_resp = batch_mut.run_test(
+        name=f"ci-custom-clf-batch-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
+    )
+    assert isinstance(batch_run_resp, TestRunItem)
+    assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
+    clf_batch_avg_results = batch_run_resp.model_metrics.additional_properties[
+        "weighted_average"
+    ]
+
+    for key in clf_avg_results.keys():
+        assert clf_avg_results[key] == clf_batch_avg_results[key]
+
+
+def test_run_batch_model_generation(
+    rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
+) -> None:
+
+    def generation_rules(model_input: str) -> str:
+        # simple generation rules to ensure consistent model outputs
+        out = [s.split(" ")[0] for s in model_input.split(". ")]
+        return " ".join(out)
+
+    class GenerationModel(CustomModel):
+        def invoke(self, input_value: Any) -> ModelInvocation:
+            return ModelInvocation(
+                model_prediction=generation_rules(input_value),
+                model_input=input_value,
+                model_output_metadata={"model_data": input_value},
+            )
+
+    mut = okareo.register_model(
+        name=f"ci-custom-nlg-{rnd}",
+        model=GenerationModel(name="test_run_batch_model_generation - GenerationModel"),
+        update=True,
+    )
+    run_resp = mut.run_test(
+        name=f"ci-custom-nlg-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=["compression_ratio"],
+    )
+    assert isinstance(run_resp, TestRunItem)
+    assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
+    nlg_metrics = run_resp.model_metrics
+
+    class GenerationBatchModel(CustomBatchModel):
+        def invoke_batch(
+            self, input_batch: list[dict[str, Any]]
+        ) -> list[dict[str, Union[str, ModelInvocation]]]:
+            invocations = []
+            for i in range(min(len(input_batch), self.batch_size)):
+                input_value = input_batch[i]["input_value"]
+                batch_id = input_batch[i]["id"]
+                invocation = ModelInvocation(
+                    model_prediction=generation_rules(input_value),
+                    model_input=input_value,
+                    model_output_metadata={"model_data": input_value},
+                )
+                invocations.append({"id": batch_id, "model_invocation": invocation})
+            return invocations
+
+    batch_mut = okareo.register_model(
+        name=f"ci-custom-nlg-batch-{rnd}",
+        model=GenerationBatchModel(
+            name="test_run_batch_model_generation - BatchGenerationModel",
+            batch_size=2,
+        ),
+        update=True,
+    )
+    batch_run_resp = batch_mut.run_test(
+        name=f"ci-custom-nlg-batch-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=["compression_ratio"],
+    )
+    assert isinstance(batch_run_resp, TestRunItem)
+    assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
+    batch_nlg_metrics = batch_run_resp.model_metrics
+
+    # assert avg metrics are equal
+    cr = nlg_metrics.additional_properties["mean_scores"]["compression_ratio"]
+    batch_cr = batch_nlg_metrics.additional_properties["mean_scores"][
+        "compression_ratio"
+    ]
+    assert cr == batch_cr
+
+    # assert row metrics are equal
+    rows = nlg_metrics.additional_properties["scores_by_row"]
+    batch_rows = batch_nlg_metrics.additional_properties["scores_by_row"]
+    for row, batch_row in zip(rows, batch_rows):
+        assert row["compression_ratio"] == batch_row["compression_ratio"]
 
 
 def test_run_test_cohere_qdrant_ir(
