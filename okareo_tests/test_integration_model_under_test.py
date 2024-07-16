@@ -1,5 +1,5 @@
 import os
-from typing import Any
+from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -8,6 +8,7 @@ from okareo_tests.utils import assert_metrics
 from okareo import Okareo
 from okareo.model_under_test import (
     CohereModel,
+    CustomBatchModel,
     CustomModel,
     ModelInvocation,
     OpenAIModel,
@@ -514,11 +515,11 @@ def test_run_batch_model_classification(
             return "Miscellaneous"
 
     class ClassificationModel(CustomModel):
-        def invoke(self, model_input: Any) -> ModelInvocation:
+        def invoke(self, input_value: Any) -> ModelInvocation:
             return ModelInvocation(
-                model_prediction=classification_rules(model_input),
-                model_input=model_input,
-                model_output_metadata={"model_data": model_input},
+                model_prediction=classification_rules(input_value),
+                model_input=input_value,
+                model_output_metadata={"model_data": input_value},
             )
 
     mut = okareo.register_model(
@@ -537,24 +538,27 @@ def test_run_batch_model_classification(
     assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
     clf_avg_results = run_resp.model_metrics.additional_properties["weighted_average"]
 
-    class BatchClassificationModel(CustomModel):
-        batch_size = 2
-
-        def invoke(self, model_input: Any) -> list[ModelInvocation]:
+    class BatchClassificationModel(CustomBatchModel):
+        def invoke_batch(
+            self, input_batch: list[dict[str, Any]]
+        ) -> list[dict[str, Union[str, ModelInvocation]]]:
             invocations = []
-            for i in range(min(len(model_input), self.batch_size)):
+            for i in range(min(len(input_batch), self.batch_size)):
+                input_value = input_batch[i]["input_value"]
+                batch_id = input_batch[i]["id"]
                 invocation = ModelInvocation(
-                    model_prediction=classification_rules(model_input[i]),
-                    model_input=model_input[i],
-                    model_output_metadata={"model_data": model_input[i]},
+                    model_prediction=classification_rules(input_value),
+                    model_input=input_value,
+                    model_output_metadata={"model_data": input_value},
                 )
-                invocations.append(invocation)
+                invocations.append({"id": batch_id, "model_invocation": invocation})
             return invocations
 
     batch_mut = okareo.register_model(
         name=f"ci-custom-clf-batch-{rnd}",
         model=BatchClassificationModel(
-            name="test_run_batch_model_classification - BatchClassificationModel"
+            name="test_run_batch_model_classification - BatchClassificationModel",
+            batch_size=2,
         ),
         update=True,
     )
@@ -583,11 +587,11 @@ def test_run_batch_model_generation(
         return " ".join(out)
 
     class GenerationModel(CustomModel):
-        def invoke(self, model_input: Any) -> ModelInvocation:
+        def invoke(self, input_value: Any) -> ModelInvocation:
             return ModelInvocation(
-                model_prediction=generation_rules(model_input),
-                model_input=model_input,
-                model_output_metadata={"model_data": model_input},
+                model_prediction=generation_rules(input_value),
+                model_input=input_value,
+                model_output_metadata={"model_data": input_value},
             )
 
     mut = okareo.register_model(
@@ -605,10 +609,27 @@ def test_run_batch_model_generation(
     assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
     nlg_metrics = run_resp.model_metrics
 
+    class GenerationBatchModel(CustomBatchModel):
+        def invoke_batch(
+            self, input_batch: list[dict[str, Any]]
+        ) -> list[dict[str, Union[str, ModelInvocation]]]:
+            invocations = []
+            for i in range(min(len(input_batch), self.batch_size)):
+                input_value = input_batch[i]["input_value"]
+                batch_id = input_batch[i]["id"]
+                invocation = ModelInvocation(
+                    model_prediction=generation_rules(input_value),
+                    model_input=input_value,
+                    model_output_metadata={"model_data": input_value},
+                )
+                invocations.append({"id": batch_id, "model_invocation": invocation})
+            return invocations
+
     batch_mut = okareo.register_model(
         name=f"ci-custom-nlg-batch-{rnd}",
-        model=GenerationModel(
-            name="test_run_batch_model_generation - BatchGenerationModel"
+        model=GenerationBatchModel(
+            name="test_run_batch_model_generation - BatchGenerationModel",
+            batch_size=2,
         ),
         update=True,
     )

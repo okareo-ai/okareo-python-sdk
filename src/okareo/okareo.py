@@ -143,6 +143,25 @@ class Okareo:
 
         return response
 
+    def _get_custom_model_invoker(
+        self, data: Dict[str, Any]
+    ) -> tuple[dict[str, Any], Any]:
+        for custom_model_str in ["custom", "custom_batch"]:
+            if custom_model_str in data["models"].keys():
+                model_invoker = data["models"][custom_model_str]["model_invoker"]
+                del data["models"][custom_model_str]["model_invoker"]
+                return data, model_invoker
+        return data, None
+
+    def _set_custom_model_invoker(
+        self, data: Dict[str, Any], model_invoker: Any
+    ) -> Any:
+        custom_model_strs = ["custom", "custom_batch"]
+        for custom_model_str in custom_model_strs:
+            if custom_model_str in data.keys():
+                data[custom_model_str]["model_invoker"] = model_invoker
+        return data
+
     def register_model(
         self,
         name: str,
@@ -163,9 +182,7 @@ class Okareo:
             data["models"] = {}
             for model in models:
                 data["models"][model.type] = model.params()
-            if "custom" in data["models"].keys():
-                model_invoker = data["models"]["custom"]["model_invoker"]
-                del data["models"]["custom"]["model_invoker"]
+            data, model_invoker = self._get_custom_model_invoker(data)
         if project_id is not None:
             data["project_id"] = project_id
         json_body = ModelUnderTestSchema.from_dict(data)
@@ -177,7 +194,7 @@ class Okareo:
         assert isinstance(response, ModelUnderTestResponse)
         model_data = data.get("models")
         if model_invoker and isinstance(model_data, dict):
-            model_data["custom"]["model_invoker"] = model_invoker
+            model_data = self._set_custom_model_invoker(model_data, model_invoker)
         if response.warning:
             print(response.warning)
         return ModelUnderTest(
