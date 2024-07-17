@@ -1,3 +1,4 @@
+import os, shutil
 import random
 from datetime import datetime
 from typing import List, Union
@@ -9,7 +10,6 @@ from okareo import Okareo
 from okareo.reporter import JSONReporter
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
-
 
 @pytest.fixture(scope="module")
 def rnd() -> str:
@@ -77,6 +77,13 @@ def test_new_jsonreporter(okareo_client: Okareo) -> None:
 
     eval_item = TestRunItem.from_dict(json_data)
     reporter = JSONReporter([eval_item])
-    reporter.log()
     assert reporter
-    assert reporter.log() is None
+    reporter.log()
+    report_path = "_temp_reports_"
+    os.environ["OKAREO_REPORT_DIR"] = report_path
+    reporter.log()
+    report_path_exists = os.path.exists(report_path)
+    assert report_path_exists
+    if os.path.isdir(report_path):
+        shutil.rmtree(report_path)
+    os.environ["OKAREO_REPORT_DIR"] = ""
