@@ -21,7 +21,11 @@ class JSONReporter:
             raise ValueError("No evaluation runs to log.")
 
         okareo_report_dir = os.getenv("OKAREO_REPORT_DIR")
-        if okareo_report_dir is not None and len(okareo_report_dir) > 0 and not os.path.exists(okareo_report_dir):
+        if (
+            okareo_report_dir is not None
+            and len(okareo_report_dir) > 0
+            and not os.path.exists(okareo_report_dir)
+        ):
             os.makedirs(okareo_report_dir, exist_ok=True)
 
         try:
