@@ -6,7 +6,7 @@ from okareo_api_client.models import TestRunItem
 
 class JSONReporter:
     """
-    A simmple class to define a json reporter for output of results.
+    A simple class to define a json reporter for output of results.
     This class assumes that it is being used within the context of the CLI.
     """
 
@@ -17,11 +17,11 @@ class JSONReporter:
         """
         Logs the results of the evaluation runs into a file based on OKAREO_REPORT_DIR.
         """
-        okareo_report_dir = os.environ["OKAREO_REPORT_DIR"]
         if len(self.eval_runs) == 0:
             raise ValueError("No evaluation runs to log.")
 
-        if len(okareo_report_dir) > 0 and not os.path.exists(okareo_report_dir):
+        okareo_report_dir = os.getenv("OKAREO_REPORT_DIR")
+        if okareo_report_dir is not None and len(okareo_report_dir) > 0 and not os.path.exists(okareo_report_dir):
             os.makedirs(okareo_report_dir, exist_ok=True)
 
         try:
