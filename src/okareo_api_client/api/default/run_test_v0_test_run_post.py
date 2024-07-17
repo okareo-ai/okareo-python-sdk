@@ -28,6 +28,23 @@ def _get_kwargs(
         "headers": headers,
     }
 
+def _get_kwargs_driver(
+    *,
+    json_body: TestRunPayloadV2,
+    api_key: str,
+) -> Dict[str, Any]:
+    headers = {}
+    headers["api-key"] = api_key
+
+    json_json_body = json_body.to_dict()
+
+    return {
+        "method": "post",
+        "url": "/v0/test_run_conversation",
+        "json": json_json_body,
+        "headers": headers,
+    }
+
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
@@ -108,6 +125,45 @@ def sync_detailed(
     return _build_response(client=client, response=response)
 
 
+def sync_detailed_driver(
+    *,
+    client: Union[AuthenticatedClient, Client],
+    json_body: TestRunPayloadV2,
+    api_key: str,
+) -> Response[Union[ErrorResponse, TestRunItem]]:
+    """Run Test
+
+     Runs tests on a model (mut_id) using previously generated scenario.
+    Feeds the scenario data (scenario_id) into the model and evaulates results
+    depending on the test type specified.
+
+    Returns:
+        The test run data which includes the evaluated metrics from the run.
+
+    Args:
+        api_key (str):
+        json_body (TestRunPayloadV2):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[Union[ErrorResponse, TestRunItem]]
+    """
+
+    kwargs = _get_kwargs_driver(
+        json_body=json_body,
+        api_key=api_key,
+    )
+
+    response = client.get_httpx_client().request(
+        **kwargs,
+    )
+
+    return _build_response(client=client, response=response)
+
+
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
@@ -136,6 +192,39 @@ def sync(
     """
 
     return sync_detailed(
+        client=client,
+        json_body=json_body,
+        api_key=api_key,
+    ).parsed
+
+def sync_driver(
+    *,
+    client: Union[AuthenticatedClient, Client],
+    json_body: TestRunPayloadV2,
+    api_key: str,
+) -> Optional[Union[ErrorResponse, TestRunItem]]:
+    """Run Test
+
+     Runs tests on a model (mut_id) using previously generated scenario.
+    Feeds the scenario data (scenario_id) into the model and evaulates results
+    depending on the test type specified.
+
+    Returns:
+        The test run data which includes the evaluated metrics from the run.
+
+    Args:
+        api_key (str):
+        json_body (TestRunPayloadV2):
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Union[ErrorResponse, TestRunItem]
+    """
+
+    return sync_detailed_driver(
         client=client,
         json_body=json_body,
         api_key=api_key,

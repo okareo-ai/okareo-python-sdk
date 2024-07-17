@@ -168,25 +168,13 @@ class CustomModel(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    driver_type: str
-    driver_model: str
-    driver_tone: str
-    temperature: float
-    target_type: str
-    stopping_criteria: str
-    k: int
-    target_params: Optional[dict] = None
+    driver_params: dict
+    target_params: dict
 
     def params(self) -> dict:
         return {
-            "driver_type": self.driver_type,
-            "driver_model": self.driver_model,
-            "driver_tone": self.driver_tone,
-            "temperature": self.temperature,
-            "target_type": self.target_type,
-            "stopping_criteria": self.stopping_criteria,
-            "k": self.k,
-            "target_params": self.target_params
+            "driver_params": self.driver_params,
+            "target_params": self.target_params,
         }
 
 
@@ -457,6 +445,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
+        driver: Optional[bool] = False,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
@@ -517,22 +506,41 @@ class ModelUnderTest(AsyncProcessorMixin):
                                 return_dict["id"],
                             )
 
-            response = run_test_v0_test_run_post.sync(
-                client=self.client,
-                api_key=self.api_key,
-                json_body=self._get_test_run_payload(
-                    scenario_id,
-                    name,
-                    api_key,
-                    api_keys,
-                    run_api_keys,
-                    metrics_kwargs,
-                    test_run_type,
-                    calculate_metrics,
-                    model_data,
-                    checks,
-                ),
-            )
+            if not driver:
+                response = run_test_v0_test_run_post.sync(
+                                client=self.client,
+                                api_key=self.api_key,
+                                json_body=self._get_test_run_payload(
+                                    scenario_id,
+                                    name,
+                                    api_key,
+                                    api_keys,
+                                    run_api_keys,
+                                    metrics_kwargs,
+                                    test_run_type,
+                                    calculate_metrics,
+                                    model_data,
+                                    checks,
+                                ),
+                            )
+            else:
+                response = run_test_v0_test_run_post.sync_driver(
+                                client=self.client,
+                                api_key=self.api_key,
+                                json_body=self._get_test_run_payload(
+                                    scenario_id,
+                                    name,
+                                    api_key,
+                                    api_keys,
+                                    run_api_keys,
+                                    metrics_kwargs,
+                                    test_run_type,
+                                    calculate_metrics,
+                                    model_data,
+                                    checks,
+                                ),
+                            )
+            
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
             raise
