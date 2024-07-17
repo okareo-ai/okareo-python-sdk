@@ -242,7 +242,6 @@ def large_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
 def test_parallel_predefined_checks(
     rnd: str, okareo: Okareo, large_scenario_set: ScenarioSetResponse
 ) -> None:
-
     class FirstTenChars(CustomModel):
         def invoke(self, input_value: Union[dict, list, str]) -> Any:
             assert isinstance(input_value, str)
