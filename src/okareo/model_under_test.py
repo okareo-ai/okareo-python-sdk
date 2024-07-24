@@ -445,7 +445,6 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
-        driver: Optional[bool] = False,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
         try:
@@ -506,40 +505,22 @@ class ModelUnderTest(AsyncProcessorMixin):
                                 return_dict["id"],
                             )
 
-            if not driver:
-                response = run_test_v0_test_run_post.sync(
-                                client=self.client,
-                                api_key=self.api_key,
-                                json_body=self._get_test_run_payload(
-                                    scenario_id,
-                                    name,
-                                    api_key,
-                                    api_keys,
-                                    run_api_keys,
-                                    metrics_kwargs,
-                                    test_run_type,
-                                    calculate_metrics,
-                                    model_data,
-                                    checks,
-                                ),
-                            )
-            else:
-                response = run_test_v0_test_run_post.sync_driver(
-                                client=self.client,
-                                api_key=self.api_key,
-                                json_body=self._get_test_run_payload(
-                                    scenario_id,
-                                    name,
-                                    api_key,
-                                    api_keys,
-                                    run_api_keys,
-                                    metrics_kwargs,
-                                    test_run_type,
-                                    calculate_metrics,
-                                    model_data,
-                                    checks,
-                                ),
-                            )
+            response = run_test_v0_test_run_post.sync(
+                            client=self.client,
+                            api_key=self.api_key,
+                            json_body=self._get_test_run_payload(
+                                scenario_id,
+                                name,
+                                api_key,
+                                api_keys,
+                                run_api_keys,
+                                metrics_kwargs,
+                                test_run_type,
+                                calculate_metrics,
+                                model_data,
+                                checks,
+                            ),
+                        )
             
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
