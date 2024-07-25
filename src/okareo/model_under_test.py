@@ -93,6 +93,7 @@ class OpenAIModel(BaseModel):
             "system_prompt_template": self.system_prompt_template,
             "user_prompt_template": self.user_prompt_template,
             "dialog_template": self.dialog_template,
+            "type": self.type,
         }
 
 
@@ -164,17 +165,18 @@ class CustomModel(BaseModel):
             "type": self.type,
             "model_invoker": self.invoke,
         }
-    
+
+
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
     driver_params: dict
-    target_params: dict
+    target: OpenAIModel
 
     def params(self) -> dict:
         return {
             "driver_params": self.driver_params,
-            "target_params": self.target_params,
+            "target_params": self.target.params(),
         }
 
 
@@ -506,22 +508,22 @@ class ModelUnderTest(AsyncProcessorMixin):
                             )
 
             response = run_test_v0_test_run_post.sync(
-                            client=self.client,
-                            api_key=self.api_key,
-                            json_body=self._get_test_run_payload(
-                                scenario_id,
-                                name,
-                                api_key,
-                                api_keys,
-                                run_api_keys,
-                                metrics_kwargs,
-                                test_run_type,
-                                calculate_metrics,
-                                model_data,
-                                checks,
-                            ),
-                        )
-            
+                client=self.client,
+                api_key=self.api_key,
+                json_body=self._get_test_run_payload(
+                    scenario_id,
+                    name,
+                    api_key,
+                    api_keys,
+                    run_api_keys,
+                    metrics_kwargs,
+                    test_run_type,
+                    calculate_metrics,
+                    model_data,
+                    checks,
+                ),
+            )
+
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
             raise
