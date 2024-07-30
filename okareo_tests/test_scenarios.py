@@ -193,8 +193,8 @@ def test_generate_scenarios(
     )
     seed_ids = [dp.id for dp in seed_dp]
     for dp in gen_dp:
-        assert dp.meta_data
-        assert dp.meta_data["seed_id"] in seed_ids
+        assert isinstance(dp.meta_data.additional_properties, dict)
+        assert dp.meta_data.additional_properties["seed_id"] in seed_ids
 
 
 def test_generate_scenarios_qa(
@@ -217,8 +217,8 @@ def test_generate_scenarios_qa(
     )
     seed_ids = [dp.id for dp in seed_dp]
     for dp in gen_dp:
-        assert dp.meta_data
-        assert dp.meta_data["seed_id"] in seed_ids
+        assert isinstance(dp.meta_data.additional_properties, dict)
+        assert dp.meta_data.additional_properties["seed_id"] in seed_ids
 
 
 def test_get_scenario_data_points(
