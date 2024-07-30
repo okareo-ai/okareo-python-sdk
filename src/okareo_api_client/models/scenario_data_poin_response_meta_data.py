@@ -3,11 +3,11 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="ScenarioDataPoinResponseMetaDataType0")
+T = TypeVar("T", bound="ScenarioDataPoinResponseMetaData")
 
 
 @_attrs_define
-class ScenarioDataPoinResponseMetaDataType0:
+class ScenarioDataPoinResponseMetaData:
     """ """
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -22,10 +22,10 @@ class ScenarioDataPoinResponseMetaDataType0:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        scenario_data_poin_response_meta_data_type_0 = cls()
+        scenario_data_poin_response_meta_data = cls()
 
-        scenario_data_poin_response_meta_data_type_0.additional_properties = d
-        return scenario_data_poin_response_meta_data_type_0
+        scenario_data_poin_response_meta_data.additional_properties = d
+        return scenario_data_poin_response_meta_data
 
     @property
     def additional_keys(self) -> List[str]:
