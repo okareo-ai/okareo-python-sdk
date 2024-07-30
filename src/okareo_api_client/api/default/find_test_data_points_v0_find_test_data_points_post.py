@@ -7,6 +7,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
 from ...models.find_test_data_point_payload import FindTestDataPointPayload
+from ...models.full_data_point_item import FullDataPointItem
 from ...models.test_data_point_item import TestDataPointItem
 from ...types import Response
 
@@ -31,12 +32,28 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["TestDataPointItem"]]]:
+) -> Optional[Union[ErrorResponse, List[Union["FullDataPointItem", "TestDataPointItem"]]]]:
     if response.status_code == HTTPStatus.CREATED:
         response_201 = []
         _response_201 = response.json()
         for response_201_item_data in _response_201:
-            response_201_item = TestDataPointItem.from_dict(response_201_item_data)
+
+            def _parse_response_201_item(data: object) -> Union["FullDataPointItem", "TestDataPointItem"]:
+                try:
+                    if not isinstance(data, dict):
+                        raise TypeError()
+                    response_201_item_type_0 = FullDataPointItem.from_dict(data)
+
+                    return response_201_item_type_0
+                except:  # noqa: E722
+                    pass
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_201_item_type_1 = TestDataPointItem.from_dict(data)
+
+                return response_201_item_type_1
+
+            response_201_item = _parse_response_201_item(response_201_item_data)
 
             response_201.append(response_201_item)
 
@@ -65,7 +82,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["TestDataPointItem"]]]:
+) -> Response[Union[ErrorResponse, List[Union["FullDataPointItem", "TestDataPointItem"]]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -79,7 +96,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: FindTestDataPointPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["TestDataPointItem"]]]:
+) -> Response[Union[ErrorResponse, List[Union["FullDataPointItem", "TestDataPointItem"]]]]:
     """Find Test Data Points
 
      Find Test Data Point
@@ -96,7 +113,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['TestDataPointItem']]]
+        Response[Union[ErrorResponse, List[Union['FullDataPointItem', 'TestDataPointItem']]]]
     """
 
     kwargs = _get_kwargs(
@@ -116,7 +133,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: FindTestDataPointPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["TestDataPointItem"]]]:
+) -> Optional[Union[ErrorResponse, List[Union["FullDataPointItem", "TestDataPointItem"]]]]:
     """Find Test Data Points
 
      Find Test Data Point
@@ -133,7 +150,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['TestDataPointItem']]
+        Union[ErrorResponse, List[Union['FullDataPointItem', 'TestDataPointItem']]]
     """
 
     return sync_detailed(
@@ -148,7 +165,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: FindTestDataPointPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["TestDataPointItem"]]]:
+) -> Response[Union[ErrorResponse, List[Union["FullDataPointItem", "TestDataPointItem"]]]]:
     """Find Test Data Points
 
      Find Test Data Point
@@ -165,7 +182,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['TestDataPointItem']]]
+        Response[Union[ErrorResponse, List[Union['FullDataPointItem', 'TestDataPointItem']]]]
     """
 
     kwargs = _get_kwargs(
@@ -183,7 +200,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: FindTestDataPointPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["TestDataPointItem"]]]:
+) -> Optional[Union[ErrorResponse, List[Union["FullDataPointItem", "TestDataPointItem"]]]]:
     """Find Test Data Points
 
      Find Test Data Point
@@ -200,7 +217,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['TestDataPointItem']]
+        Union[ErrorResponse, List[Union['FullDataPointItem', 'TestDataPointItem']]]
     """
 
     return (

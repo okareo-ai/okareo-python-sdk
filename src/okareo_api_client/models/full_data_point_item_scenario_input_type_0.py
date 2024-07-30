@@ -3,50 +3,29 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="SemanticPayload")
+T = TypeVar("T", bound="FullDataPointItemScenarioInputType0")
 
 
 @_attrs_define
-class SemanticPayload:
-    """
-    Attributes:
-        source_text (str):
-        output_text (str):
-    """
+class FullDataPointItemScenarioInputType0:
+    """ """
 
-    source_text: str
-    output_text: str
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        source_text = self.source_text
-        output_text = self.output_text
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "source_text": source_text,
-                "output_text": output_text,
-            }
-        )
+        field_dict.update({})
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        source_text = d.pop("source_text")
+        full_data_point_item_scenario_input_type_0 = cls()
 
-        output_text = d.pop("output_text")
-
-        semantic_payload = cls(
-            source_text=source_text,
-            output_text=output_text,
-        )
-
-        semantic_payload.additional_properties = d
-        return semantic_payload
+        full_data_point_item_scenario_input_type_0.additional_properties = d
+        return full_data_point_item_scenario_input_type_0
 
     @property
     def additional_keys(self) -> List[str]:
