@@ -47,6 +47,7 @@ from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
+from okareo_api_client.models.full_data_point_item import FullDataPointItem
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
@@ -328,7 +329,7 @@ class Okareo:
 
     def find_test_data_points(
         self, test_data_point_payload: FindTestDataPointPayload
-    ) -> Union[List[TestDataPointItem], ErrorResponse]:
+    ) -> Union[List[TestDataPointItem | FullDataPointItem], ErrorResponse]:
         data = find_test_data_points_v0_find_test_data_points_post.sync(
             client=self.client, api_key=self.api_key, json_body=test_data_point_payload
         )
