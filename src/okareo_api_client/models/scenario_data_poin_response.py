@@ -7,6 +7,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.scenario_data_poin_response_input_type_0 import ScenarioDataPoinResponseInputType0
+    from ..models.scenario_data_poin_response_meta_data import ScenarioDataPoinResponseMetaData
     from ..models.scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
 
 
@@ -20,13 +21,13 @@ class ScenarioDataPoinResponse:
         id (str):
         input_ (Union['ScenarioDataPoinResponseInputType0', List[Any], str]):
         result (Union['ScenarioDataPoinResponseResultType0', List[Any], str]):
-        meta_data (Union[Unset, str]):
+        meta_data (Union[Unset, ScenarioDataPoinResponseMetaData]):
     """
 
     id: str
     input_: Union["ScenarioDataPoinResponseInputType0", List[Any], str]
     result: Union["ScenarioDataPoinResponseResultType0", List[Any], str]
-    meta_data: Union[Unset, str] = UNSET
+    meta_data: Union[Unset, "ScenarioDataPoinResponseMetaData"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -56,7 +57,9 @@ class ScenarioDataPoinResponse:
         else:
             result = self.result
 
-        meta_data = self.meta_data
+        meta_data: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.meta_data, Unset):
+            meta_data = self.meta_data.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -75,6 +78,7 @@ class ScenarioDataPoinResponse:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.scenario_data_poin_response_input_type_0 import ScenarioDataPoinResponseInputType0
+        from ..models.scenario_data_poin_response_meta_data import ScenarioDataPoinResponseMetaData
         from ..models.scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
 
         d = src_dict.copy()
@@ -122,7 +126,12 @@ class ScenarioDataPoinResponse:
 
         result = _parse_result(d.pop("result"))
 
-        meta_data = d.pop("meta_data", UNSET)
+        _meta_data = d.pop("meta_data", UNSET)
+        meta_data: Union[Unset, ScenarioDataPoinResponseMetaData]
+        if isinstance(_meta_data, Unset):
+            meta_data = UNSET
+        else:
+            meta_data = ScenarioDataPoinResponseMetaData.from_dict(_meta_data)
 
         scenario_data_poin_response = cls(
             id=id,

@@ -3,43 +3,29 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete")
+T = TypeVar("T", bound="ScenarioDataPoinResponseMetaData")
 
 
 @_attrs_define
-class BodyEvaluatorDeleteV0EvaluatorEvaluatorIdDelete:
-    """
-    Attributes:
-        name (str): Name of the Evaluator to delete
-    """
+class ScenarioDataPoinResponseMetaData:
+    """ """
 
-    name: str
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        name = self.name
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "name": name,
-            }
-        )
+        field_dict.update({})
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        name = d.pop("name")
+        scenario_data_poin_response_meta_data = cls()
 
-        body_evaluator_delete_v0_evaluator_evaluator_id_delete = cls(
-            name=name,
-        )
-
-        body_evaluator_delete_v0_evaluator_evaluator_id_delete.additional_properties = d
-        return body_evaluator_delete_v0_evaluator_evaluator_id_delete
+        scenario_data_poin_response_meta_data.additional_properties = d
+        return scenario_data_poin_response_meta_data
 
     @property
     def additional_keys(self) -> List[str]:

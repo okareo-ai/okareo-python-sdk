@@ -174,7 +174,9 @@ def test_create_scenario_set_all_fields(
 
 
 def test_generate_scenarios(
-    generate_scenarios: ScenarioSetResponse, seed_data: List[SeedData]
+    generate_scenarios: ScenarioSetResponse,
+    seed_data: List[SeedData],
+    okareo_client: Okareo,
 ) -> None:
     assert generate_scenarios.type == "REPHRASE_INVARIANT"
     assert generate_scenarios.seed_data == []
@@ -182,10 +184,23 @@ def test_generate_scenarios(
     assert generate_scenarios.scenario_id
     assert generate_scenarios.project_id
     assert generate_scenarios.time_created
+    assert type(generate_scenarios.tags) is list
+
+    # assert each seed_id in generated scenario meta_data is in the seed data
+    gen_dp = okareo_client.get_scenario_data_points(generate_scenarios.scenario_id)
+    seed_dp = okareo_client.get_scenario_data_points(
+        generate_scenarios.tags[0].split(":")[1]
+    )
+    seed_ids = [dp.id for dp in seed_dp]
+    for dp in gen_dp:
+        assert dp.meta_data
+        assert dp.meta_data["seed_id"] in seed_ids
 
 
 def test_generate_scenarios_qa(
-    generate_scenarios_qa: ScenarioSetResponse, seed_data: List[SeedData]
+    generate_scenarios_qa: ScenarioSetResponse,
+    seed_data: List[SeedData],
+    okareo_client: Okareo,
 ) -> None:
     assert generate_scenarios_qa.type == "TEXT_REVERSE_QUESTION_ANSWER"
     assert generate_scenarios_qa.seed_data == []
@@ -193,6 +208,17 @@ def test_generate_scenarios_qa(
     assert generate_scenarios_qa.scenario_id
     assert generate_scenarios_qa.project_id
     assert generate_scenarios_qa.time_created
+    assert type(generate_scenarios_qa.tags) is list
+
+    # assert each seed_id in generated scenario meta_data is in the seed data
+    gen_dp = okareo_client.get_scenario_data_points(generate_scenarios_qa.scenario_id)
+    seed_dp = okareo_client.get_scenario_data_points(
+        generate_scenarios_qa.tags[0].split(":")[1]
+    )
+    seed_ids = [dp.id for dp in seed_dp]
+    for dp in gen_dp:
+        assert dp.meta_data
+        assert dp.meta_data["seed_id"] in seed_ids
 
 
 def test_get_scenario_data_points(
