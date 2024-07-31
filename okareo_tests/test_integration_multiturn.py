@@ -74,8 +74,8 @@ def test_run_multiturn_run_test(rnd: str, okareo: Okareo) -> None:
         scenario=response,
         api_keys={"openai": OPENAI_API_KEY},
         name="CI run test",
-        test_run_type=TestRunType.AGENT_EVAL,
-        calculate_metrics=False,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
         checks=["model_refusal"],
     )
     assert test_run_item.name == "CI run test"
@@ -114,8 +114,8 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
         scenario=response,
         api_keys={"openai": OPENAI_API_KEY},
         name="CI run test",
-        test_run_type=TestRunType.AGENT_EVAL,
-        calculate_metrics=False,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
         checks=["consistency", "fluency"],
     )
     assert test_run_item.name == "CI run test"
@@ -154,8 +154,8 @@ def test_run_multiturn_run_test_rambling(rnd: str, okareo: Okareo) -> None:
         scenario=response,
         api_keys={"openai": OPENAI_API_KEY},
         name="CI run test",
-        test_run_type=TestRunType.AGENT_EVAL,
-        calculate_metrics=False,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
         checks=["model_refusal", "fluency"],
     )
     assert test_run_item.name == "CI run test"

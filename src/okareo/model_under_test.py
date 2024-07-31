@@ -170,7 +170,7 @@ class CustomModel(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    driver_params: dict
+    driver_params: dict | None = {"driver_type": "openai"}
     target: OpenAIModel
 
     def params(self) -> dict:
