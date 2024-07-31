@@ -503,7 +503,6 @@ def test_run_test_custom_ir_tags(
 def test_run_batch_model_classification(
     rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
 ) -> None:
-
     def classification_rules(model_input: str) -> str:
         if "customer support" in model_input:
             return "Support"
@@ -580,7 +579,6 @@ def test_run_batch_model_classification(
 def test_run_batch_model_generation(
     rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
 ) -> None:
-
     def generation_rules(model_input: str) -> str:
         # simple generation rules to ensure consistent model outputs
         out = [s.split(" ")[0] for s in model_input.split(". ")]

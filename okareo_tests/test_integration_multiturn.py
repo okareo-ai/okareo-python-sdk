@@ -23,7 +23,6 @@ def okareo() -> Okareo:
 
 
 def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
-
     mut = okareo.register_model(
         name=rnd,
         model=MultiTurnDriver(
@@ -42,7 +41,6 @@ def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
 
 
 def test_run_multiturn_run_test(rnd: str, okareo: Okareo) -> None:
-
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
         name=rnd + random_string(5),
@@ -82,7 +80,6 @@ def test_run_multiturn_run_test(rnd: str, okareo: Okareo) -> None:
 
 
 def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> None:
-
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
         name=rnd + random_string(5),
@@ -122,7 +119,6 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
 
 
 def test_run_multiturn_run_test_rambling(rnd: str, okareo: Okareo) -> None:
-
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
         name=rnd + random_string(5),
