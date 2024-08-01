@@ -1,0 +1,127 @@
+input,result
+"Given the market trends, how frequently are your prices updated?",pricing
+"Considering the fluctuations in market trends, how regularly do you revise your prices?",pricing
+"In the event that market trends change, how often do you adjust your prices?",pricing
+"Considering Product X, why is its price higher compared to that of your competitor?",pricing
+"Given the pricing of Product X, can you explain why it's higher than your competitor’s?",pricing
+"Facing the price difference between Product X and your competitor, what justifies the higher cost?",pricing
+"Considering the varying prices, why do similar products from different brands have a price difference?",pricing
+"Should you come across similar products from various brands, can you explain the reasons for their price differences?",pricing
+"In the event that you encounter similar products from different brands, could you elaborate on the price discrepancies?",pricing
+"In the event that I find a lower price elsewhere online, do you provide price matching?",pricing
+"When encountering a better price on another online platform, do you match that price?",pricing
+"Given the presence of competitive online prices, do you offer a price matching service?",pricing
+"Considering the bulk purchase of office supplies, could you share more details on the pricing?",pricing
+"Should you be looking to buy office supplies in bulk, could you offer more detailed pricing information?",pricing
+"In the event that we decide to purchase office supplies in large quantities, can you provide more specifics on the pricing?",pricing
+"Should you have to assess, what factors contribute to the changes in pricing for home appliances?",pricing
+"Considering the market for home appliances, which factors drive the fluctuations in pricing?",pricing
+"In the event that you're analyzing, which elements impact the price variations for home appliances?",pricing
+"Thinking of initiating a return for a recently purchased item, what steps should I follow?",returns
+"In the event that I need to return a recently purchased item, how do I start the process?",returns
+"Considering a return for a recently bought item, what procedure should I undertake?",returns
+"Considering the return policy, within what time frame can an unwanted product be returned?",returns
+"In the event that you have an unwanted product, what is the timeframe to return it?",returns
+"Facing the need to return an unwanted product, what is the allowed return period?",returns
+"Should you have to return an item, is there a fee you need to pay?",returns
+"In the event that you need to return an item, will there be a fee involved?",returns
+"When returning an item, is there a fee applicable?",returns
+"Thinking of initiating a return request, what documentation is necessary?",returns
+"With the intention of making a return request, which documents must be provided?",returns
+"In the event that you're filing a return request, what documentation should you supply?",returns
+"Given the loss of the original packaging, am I still able to return the item?",returns
+"In the event that the original packaging is missing, can the item be returned?",returns
+"Should the original packaging be lost, is it possible to proceed with a return?",returns
+"Given the return policy, are there any exceptions for clearance items?",returns
+"In the event that I purchase clearance items, are there any exceptions to the return policy?",returns
+"When considering your return policy, are there any exceptions for clearance item purchases?",returns
+"Should you have a return, how can you monitor its status?",returns
+"Considering you have initiated a return, what are the steps to check its status?",returns
+"In the event that you need to track your return, how would you go about it?",returns
+"Considering online purchases, is it possible to return them to a physical store location?",returns
+"In the event that you've bought items online, can they be returned to a brick-and-mortar store?",returns
+"When dealing with returns for online purchases, are physical store locations an option?",returns
+"Should you have a negative experience with customer service, how can you formally file a complaint?",complaints
+"Given the poor customer service experience, what is the process for lodging a formal complaint?",complaints
+"In the event that you encounter a negative experience with customer service, how should you file a formal complaint?",complaints
+"Considering my previous complaint, why has there been no resolution?",complaints
+"Should I inquire about my past complaint, what explains the absence of a resolution?",complaints
+"In the event that my earlier complaint is still unresolved, what might be the reason for this delay?",complaints
+"In the event that you submit a complaint, what steps will follow?",complaints
+"Considering the submission of a complaint, what actions are taken afterward?",complaints
+"Should you lodge a complaint, what subsequent steps are implemented?",complaints
+"Thinking of filing a complaint, how long should one expect to wait for a response from the complaints team?",complaints
+"When submitting a complaint, what is the typical response time from the complaints team?",complaints
+"In the event that a complaint is lodged, how much time does the complaints team generally take to reply?",complaints
+"Thinking of providing detailed feedback, how might I go about doing so for the service I received?",complaints
+"Should you want to give detailed feedback on the service you experienced, what steps should you follow?",complaints
+"Facing the need to provide comprehensive feedback about the service, in what manner can I do this?",complaints
+"Given that you purchased a shirt online and it doesn't fit, what are the steps to return it?",returns
+"In the event that your online shirt purchase doesn't fit, how can you go about returning it?",returns
+"When dealing with an ill-fitting shirt bought online, what is the procedure for making a return?",returns
+"Thinking of returning a gift that I received, how can I go about it without having the receipt?",returns
+"In the event that I want to return a gift I got, what are my options if I don't have the receipt?",returns
+"Facing a situation where I need to return a gift but lack the receipt, how should I proceed?",returns
+"In the event that the product you ordered differs from what you received, how can you go about returning it?",returns
+"Considering the discrepancy between the ordered product and what was received, what steps should be taken to return it?",returns
+"Should the product you receive not match what you ordered, what is the process to return it?",returns
+"Should you be dissatisfied with the quality of the product, can you return it?",returns
+"In the event that you are not content with the product's quality, is it possible to return it?",returns
+"When dealing with dissatisfaction regarding the product's quality, is returning it an option?",returns
+"Dealing with a faulty item, how should I proceed with returning it?",returns
+"In the event that the purchase turns out to be defective, what is the return process?",returns
+"Facing a situation where the purchased item is faulty, what steps should I take to return it?",returns
+"In the event that I received my order late and no longer need it, am I able to return it?",returns
+"Considering I received my order late and it's no longer required, can I proceed with returning it?",returns
+"Given that my order arrived late and I no longer have use for it, is returning it an option?",returns
+"Should you find that the product you ordered doesn't match the description, can you return it?",returns
+"In the event that the product you received is not as described, is it possible to return it?",returns
+"Facing a situation where the ordered product does not match its description, are you able to return it?",returns
+"Should you find the product not working as expected, would I be able to return it?",returns
+"In the event that the product does not perform as anticipated, am I eligible for a return?",returns
+"When the item fails to meet expectations, what is the process for returning it?",returns
+"In the event that I had a poor experience with your customer service, who is the appropriate person to talk to about this?",complaints
+"Considering the poor experience I had with your customer service, who should I reach out to for resolution?",complaints
+"Facing a poor experience with your customer service, who would be the best contact to address this issue?",complaints
+"Should your product malfunction after merely a week of use, what steps can be taken to resolve the issue?",complaints
+"In the event that your product fails within the first week, how might this problem be addressed?",complaints
+"Given that your product has broken after a week of use, what actions should you consider for resolution?",complaints
+"Should you find yourself dissatisfied with the service provided, to whom should you address your complaint?",complaints
+"Given your unhappiness with the service received, who is the appropriate person to contact regarding a complaint?",complaints
+"In the event that you are not pleased with the service, who should you reach out to for lodging a complaint?",complaints
+"Given an issue with the delivery of my order, whom should I contact?",complaints
+"Should you encounter a problem with the delivery of your order, who is the appropriate person to speak to?",complaints
+"In the event that there is a problem with the delivery of my order, to whom should I reach out?",complaints
+"Dealing with a faulty product, to whom should I direct my complaint?",complaints
+"In the event that I receive a defective product, who is the appropriate contact for my grievance?",complaints
+"Considering I have a defective product, who should I approach to lodge a complaint?",complaints
+"Should you have a complaint about a staff member, whom should you reach out to?",complaints
+"In the event that there is a complaint regarding a staff member, who is the appropriate contact?",complaints
+"Thinking of lodging a complaint about a staff member, who would be the right person to contact?",complaints
+"In the event that my order was missing an item, who should I contact to address this issue?",complaints
+"Should you find that an item is missing from your order, whom can you speak to for assistance?",complaints
+"Given a situation where my order is incomplete, who is the appropriate person to discuss this with?",complaints
+"Should you have noticed the recent price increase of your product, why has this occurred?",pricing
+"Given the recent climb in the price of your product, what are the reasons behind it?",pricing
+"In the event that your product's price has risen recently, what has prompted this change?",pricing
+"Considering that I found a similar product at a lower price elsewhere, do you provide a price matching service?",pricing
+"In the event that I encounter a cheaper equivalent product, do you have a policy for matching that price?",pricing
+"Should I discover a comparable product being offered for less, will you match the price?",pricing
+"Should you find a discrepancy in the prices of our online and in-store products, what factors contribute to this difference?",pricing
+"Considering the price differences between our online and in-store products, what are the reasons behind this variation?",pricing
+"In the event that there is a price difference between your online and in-store purchases, what causes this disparity?",pricing
+"Should you have questions about the pricing of your subscription service, could you provide an explanation?",pricing
+"Considering the pricing structure of your subscription service, could you elucidate the details?",pricing
+"In the event that someone needs clarity on the pricing of your subscription service, how would you explain it?",pricing
+"Should you have a need to buy in bulk, do you provide a discounted rate?",pricing
+"Given the necessity for purchasing in large quantities, is a price reduction available?",pricing
+"In the event that someone wants to make a bulk purchase, do you offer a lower price?",pricing
+"Considering the product, why might its price vary in my country?",pricing
+"Given the market conditions, what explains the price difference of the product in my country?",pricing
+"In the event that a product's price differs globally, what might cause this discrepancy in my country?",pricing
+"Should you have a price guarantee policy in place, what would it entail?",pricing
+"In the event that you offer a price guarantee policy, what details should I know?",pricing
+"Considering a price guarantee policy, do you have one available?",pricing
+"Given the fluctuations, why might the item's price in my cart have changed?",pricing
+"When encountering a price change in my cart, what could be the reason?",pricing
+"In the event that the item's price in my cart has altered, what might be the cause?",pricing

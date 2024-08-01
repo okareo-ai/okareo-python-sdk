@@ -1,0 +1,22 @@
+input,result
+What are the current discounts available on electronic gadgets?,pricing
+Are there any seasonal sales or upcoming promotions I should be aware of?,pricing
+How can I apply a discount code to my purchase?,pricing
+Is there a loyalty program that provides additional savings on purchases?,pricing
+"I'd like to purchase additional filters for my model, how much are they?",pricing
+Do you offer any discounts or promotions?,pricing
+Why was I charged more than the listed price at checkout?,pricing
+I received a damaged item; how do I go about getting a replacement?,returns
+"Will I be refunded in full, or will there be deductions for restocking fees?",returns
+I received a damaged item. What is the process for returning it?,returns
+I accidentally ordered two of the same item. Can I return one?,returns
+I want to exchange the product I bought for a different size. What's the process?,returns
+I have an issue with the quality of Product Y; whom do I contact?,complaints
+Where can I send feedback about a particular problematic order?,complaints
+"My product arrived late, and this has caused inconvenience; what can be done about this?",complaints
+What is the escalation process for unresolved issues?,complaints
+Can I speak directly to a manager about my ongoing issue?,complaints
+"I have some quality concerns with your product, who can I talk to?",complaints
+The product I bought is not working as advertised. Who can I contact?,complaints
+I was overcharged for my purchase. Who can help me with this?,complaints
+The product I bought is of poor quality. Who can I report this to?,complaints

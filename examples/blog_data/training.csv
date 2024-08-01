@@ -1,0 +1,43 @@
+input,result
+How often do you update your prices based on market trends?,pricing
+Why is the price of Product X higher than that of your competitor?,pricing
+Can you explain the price difference between similar products from different brands?,pricing
+Do you offer price matching with other online retailers?,pricing
+Could you provide more details on the bulk pricing for office supplies?,pricing
+What factors influence the pricing changes for home appliances?,pricing
+How do I initiate a return for a recently purchased item?,returns
+What is the time frame within which I can return an unwanted product?,returns
+Is there a fee associated with returning an item?,returns
+What documentation do I need to provide for a return request?,returns
+Can I return an item if I've lost the original packaging?,returns
+Are there any exceptions to your return policy for clearance items?,returns
+How can I track the status of my return?,returns
+Can I return online purchases to a physical store location?,returns
+How do I file a formal complaint about a negative experience with customer service?,complaints
+Why haven't I received a resolution for my previous complaint?,complaints
+What steps are taken aftr I submit a complaint?,complaints
+How long does it take for the complaints team to respond?,complaints
+How can I provide detailed feedback about the service I received?,complaints
+"I bought a shirt online, but it doesn't fit. How can I return it?",returns
+I want to return a gift I received. How can I do that without the receipt?,returns
+The product I ordered is not what I received. How can I return it?,returns
+I'm not satisfied with the quality of the product. Can I return it?,returns
+The item I bought is faulty. How do I return it?,returns
+I received my order late and no longer need it. Can I return it?,returns
+The product I ordered doesn't match the description. Can I return it?,returns
+"The product is not working as expected, I'd like to return it?",returns
+I had a poor experience with your customer service. Who can I talk to about this?,complaints
+My product broke after just a week of use. How can this issue be resolved?,complaints
+I'm not happy with the service I received. Who can I complain to?,complaints
+I have a problem with the delivery of my order. Who can I speak to?,complaints
+I received a faulty product. Who can I complain to?,complaints
+I have a complaint about a staff member. Who should I contact?,complaints
+My order was missing an item. Who can I speak to about this?,complaints
+Why has the price of your product increased recently?,pricing
+I found a similar product cheaper elsewhere. Do you offer price matching?,pricing
+Why is there a difference in price between your online and in-store products?,pricing
+Can you explain the pricing of your subscription service?,pricing
+Do you offer a lower price for bulk purchases?,pricing
+Why is the price of the product different in my country?,pricing
+Do you have a price guarantee policy?,pricing
+Why did the price of the item in my cart change?,pricing
