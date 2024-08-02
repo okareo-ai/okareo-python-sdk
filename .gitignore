@@ -84,4 +84,3 @@ local-rebuild.sh
 
 # Models
 examples/webbizz_classification_model
-**/*.safetensors

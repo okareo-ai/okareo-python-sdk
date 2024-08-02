@@ -166,6 +166,7 @@ class CustomModel(BaseModel):
             "model_invoker": self.invoke,
         }
 
+
 @_attrs_define
 class CustomMultiturnTarget(BaseModel):
     type = "custom_target"
@@ -177,11 +178,12 @@ class CustomMultiturnTarget(BaseModel):
             "endpoint": self.endpoint,
         }
 
+
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: OpenAIModel | CustomMultiturnTarget
-    driver_params: dict | None = {"driver_type": "openai"}
+    target: Union[OpenAIModel, CustomMultiturnTarget]
+    driver_params: Union[dict, None] = {"driver_type": "openai"}
 
     def params(self) -> dict:
         return {
@@ -343,7 +345,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         model_names = list(self.models.keys())
         run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
 
-        if ("custom" not in model_names and "driver" not in model_names) and len(model_names) != len(run_api_keys):
+        if ("custom" not in model_names and "driver" not in model_names) and len(
+            model_names
+        ) != len(run_api_keys):
             raise MissingApiKeyError("Number of models and API keys does not match")
 
         if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
