@@ -187,6 +187,9 @@ class Okareo:
             data, model_invoker = self._get_custom_model_invoker(data)
         if project_id is not None:
             data["project_id"] = project_id
+        server_model = None
+        if "target_params" in data["models"][model.type]:
+            server_model = data["models"][model.type]["target_params"].pop("server_model")
         json_body = ModelUnderTestSchema.from_dict(data)
         response = register_model_v0_register_model_post.sync(
             client=self.client, api_key=self.api_key, json_body=json_body
@@ -194,11 +197,14 @@ class Okareo:
 
         self.validate_response(response)
         assert isinstance(response, ModelUnderTestResponse)
+        if server_model:
+            data["models"][model.type]["target_params"]["server_model"] = server_model
         model_data = data.get("models")
         if model_invoker and isinstance(model_data, dict):
             model_data = self._set_custom_model_invoker(model_data, model_invoker)
         if response.warning:
             print(response.warning)
+
         return ModelUnderTest(
             client=self.client,
             api_key=self.api_key,

@@ -3,6 +3,7 @@ import json
 from abc import abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+import requests
 
 from attrs import define as _attrs_define
 
@@ -41,6 +42,13 @@ from okareo_api_client.models.test_run_payload_v2_model_results import (
 from okareo_api_client.types import UNSET, Unset
 
 from .async_utils import AsyncProcessorMixin
+
+from okareo.custom_api import create_app
+from threading import Thread
+
+def put_up_server(custom_model):
+    app = create_app(custom_model)
+    app.run()
 
 
 class BaseModel:
@@ -171,11 +179,13 @@ class CustomModel(BaseModel):
 class CustomMultiturnTarget(BaseModel):
     type = "custom_target"
     endpoint: str
+    model: CustomModel
 
     def params(self) -> dict:
         return {
             "type": self.type,
             "endpoint": self.endpoint,
+            "server_model": self.model,
         }
 
 
@@ -463,6 +473,13 @@ class ModelUnderTest(AsyncProcessorMixin):
         checks: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
+        server = None
+        if "driver" in self.models:
+            if self.models["driver"]["target_params"]["type"] == "custom_target":
+                server_model = self.models["driver"]["target_params"]["server_model"]
+                server = Thread(target=put_up_server, args=(server_model,))
+                server.start()
+
         try:
             assert isinstance(self.models, dict)
             scenario_id = (
@@ -549,6 +566,13 @@ class ModelUnderTest(AsyncProcessorMixin):
         if not response:
             print("Empty response from API")
         assert response is not None
+        if server:
+            try:
+                endpoint = "http://127.0.0.1:5000"
+                requests.get(f"{endpoint}/shutdown")
+                server.join()
+            except KeyboardInterrupt:
+                pass
         return response
 
     async def run_test_async(

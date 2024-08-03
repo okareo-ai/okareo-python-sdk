@@ -38,6 +38,7 @@ attrs = "^23.1.0"
 langchain = {version = "^0.0.321", optional = true}
 openai = {version = "^1.0.0", optional = true}
 litellm = {version = "^1.29.5", optional = true}
+flask = "3.0.3"
 
 [tool.poetry.extras]
 langchain = ["langchain", "openai", "litellm"]
