@@ -93,6 +93,7 @@ class OpenAIModel(BaseModel):
             "system_prompt_template": self.system_prompt_template,
             "user_prompt_template": self.user_prompt_template,
             "dialog_template": self.dialog_template,
+            "type": self.type,
         }
 
 
@@ -163,6 +164,31 @@ class CustomModel(BaseModel):
             "name": self.name,
             "type": self.type,
             "model_invoker": self.invoke,
+        }
+
+
+@_attrs_define
+class CustomMultiturnTarget(BaseModel):
+    type = "custom_target"
+    endpoint: str
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "endpoint": self.endpoint,
+        }
+
+
+@_attrs_define
+class MultiTurnDriver(BaseModel):
+    type = "driver"
+    target: Union[OpenAIModel, CustomMultiturnTarget]
+    driver_params: Union[dict, None] = {"driver_type": "openai"}
+
+    def params(self) -> dict:
+        return {
+            "driver_params": self.driver_params,
+            "target_params": self.target.params(),
         }
 
 
@@ -319,7 +345,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         model_names = list(self.models.keys())
         run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
 
-        if "custom" not in model_names and len(model_names) != len(run_api_keys):
+        if ("custom" not in model_names and "driver" not in model_names) and len(
+            model_names
+        ) != len(run_api_keys):
             raise MissingApiKeyError("Number of models and API keys does not match")
 
         if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
@@ -509,6 +537,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     checks,
                 ),
             )
+
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
             raise
