@@ -11,6 +11,7 @@ from okareo.model_under_test import (
     CustomBatchModel,
     CustomModel,
     ModelInvocation,
+    OpenAIAssistantModel,
     OpenAIModel,
     PineconeDb,
     QdrantDB,
@@ -37,6 +38,10 @@ def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
+OPENAI_ASSISTANT_ID = os.environ.get(
+    "OPENAI_ASSISTANT_ID", "asst_AL0HD1OdpVZaXYcsGfwva58u"
+)
+
 TEST_SUMMARIZE_TEMPLATE = """
 Provide a brief summary of the following paragraph of text:
 
@@ -44,6 +49,12 @@ Provide a brief summary of the following paragraph of text:
 
 Summary:
 
+"""
+
+TEST_ASSISTANT_TEMPLATE = """
+How does the following text relate to WebBizz's corporate partnership opportunities?
+
+{input}
 """
 
 
@@ -119,6 +130,28 @@ def test_run_test_openai_2prompts(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
+    assert_metrics(run_resp, num_rows=3)
+
+
+def test_run_test_openai_assistant(
+    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"openai-assistant-ci-run-{rnd}",
+        model=OpenAIAssistantModel(
+            model_id=OPENAI_ASSISTANT_ID,
+            user_prompt_template=TEST_ASSISTANT_TEMPLATE,
+        ),
+    )
+
+    run_resp = mut.run_test(
+        name=f"openai-assistant-run-{rnd}",
+        scenario=article_scenario_set,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+    )
+    assert run_resp.name == f"openai-assistant-run-{rnd}"
     assert_metrics(run_resp, num_rows=3)
 
 
