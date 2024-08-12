@@ -3,8 +3,6 @@ import os
 DEFAULT_BASE_URL = "https://api.okareo.com"
 BASE_URL = os.environ.get("BASE_URL", DEFAULT_BASE_URL)
 
-OPENAI_ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID", "NOT SET")
-
 DEFAULT_HTTPX_TIME_OUT = 30
 # being generous to support the longer generations
 HTTPX_TIME_OUT = float(os.environ.get("HTTPX_TIME_OUT", DEFAULT_HTTPX_TIME_OUT))
