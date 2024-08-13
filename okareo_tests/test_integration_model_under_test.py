@@ -1,9 +1,10 @@
 import os
-from typing import Any, Union
+from typing import Any, Generator, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 from okareo_tests.utils import assert_metrics
+from openai import OpenAI
 
 from okareo import Okareo
 from okareo.model_under_test import (
@@ -38,9 +39,10 @@ def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
-OPENAI_ASSISTANT_ID = os.environ.get(
-    "OPENAI_ASSISTANT_ID", "asst_AL0HD1OdpVZaXYcsGfwva58u"
-)
+@pytest.fixture(scope="module")
+def openai_client() -> OpenAI:
+    return OpenAI()
+
 
 TEST_SUMMARIZE_TEMPLATE = """
 Provide a brief summary of the following paragraph of text:
@@ -78,6 +80,25 @@ def article_clf_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     )
 
     return articles
+
+
+@pytest.fixture(scope="module")
+def openai_assistant_id(openai_client: OpenAI) -> Generator[str, None, None]:
+    assistant = openai_client.beta.assistants.create(
+        name="WebBizz B2B Lead Generation",
+        instructions=(
+            "You are a B2B sales associate for WebBizz, an online retail platform. You are responsible for generating leads for new corporate partnerships. Keep the following instructions in mind when answering questions:\n\n"
+            + "Instructions:\n\n"
+            "- Be friendly and helpful.\n"
+            "- Be brief. Keep all your responses to 100 words or less.\n"
+            "- Do not talk about topics that are outside of your context. If the user asks you to discuss irrelevant topics, then nudge them towards discussing corporate partnerships with WebBizz.\n"
+            "- Highlight the advantages for prospective partners of choosing WebBizz as their preferred sales or distribution platform.\n"
+            "- Do not under any circumstances mention direct competitors, especially not Amazine, Demu, or Olli Bobo.\n"
+        ),
+        model="gpt-4o",
+    )
+    yield assistant.id
+    openai_client.beta.assistants.delete(assistant.id)
 
 
 def test_okareo_client_integration() -> None:
@@ -134,12 +155,15 @@ def test_run_test_openai_2prompts(
 
 
 def test_run_test_openai_assistant(
-    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
+    rnd: str,
+    okareo: Okareo,
+    article_scenario_set: ScenarioSetResponse,
+    openai_assistant_id: str,
 ) -> None:
     mut = okareo.register_model(
         name=f"openai-assistant-ci-run-{rnd}",
         model=OpenAIAssistantModel(
-            model_id=OPENAI_ASSISTANT_ID,
+            model_id=openai_assistant_id,
             user_prompt_template=TEST_ASSISTANT_TEMPLATE,
         ),
     )
@@ -536,7 +560,6 @@ def test_run_test_custom_ir_tags(
 def test_run_batch_model_classification(
     rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
 ) -> None:
-
     def classification_rules(model_input: str) -> str:
         if "customer support" in model_input:
             return "Support"
@@ -613,7 +636,6 @@ def test_run_batch_model_classification(
 def test_run_batch_model_generation(
     rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
 ) -> None:
-
     def generation_rules(model_input: str) -> str:
         # simple generation rules to ensure consistent model outputs
         out = [s.split(" ")[0] for s in model_input.split(". ")]
