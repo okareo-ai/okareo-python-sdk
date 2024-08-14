@@ -116,6 +116,7 @@ def test_run_multiturn_run_test_repeat(rnd: str, okareo: Okareo) -> None:
         checks=["model_refusal"],
     )
     assert test_run_item.name == "CI run test"
+    assert test_run_item.test_data_point_count == 2
 
 
 def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> None:
