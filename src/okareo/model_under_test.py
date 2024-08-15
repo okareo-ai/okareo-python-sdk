@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 import json
 import ssl
 import threading
@@ -646,86 +645,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             self._internal_cleanup_custom_model(
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
-
-    async def run_test_async(
-        self,
-        scenario: Union[ScenarioSetResponse, str],
-        name: str,
-        api_key: Optional[str] = None,
-        api_keys: Optional[dict] = None,
-        metrics_kwargs: Optional[dict] = None,
-        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
-        calculate_metrics: bool = True,
-        checks: Optional[List[str]] = None,
-    ) -> TestRunItem:
-        """Server-based version of test-run execution"""
-        try:
-            assert isinstance(self.models, dict)
-            scenario_id = (
-                scenario.scenario_id
-                if isinstance(scenario, ScenarioSetResponse)
-                else scenario
-            )
-            run_api_keys = self._validate_run_test_params(
-                api_key, api_keys, test_run_type
-            )
-
-            model_data: dict = {"model_data": {}}
-            if self._has_custom_model():
-                scenario_data_points = self._get_scenario_data_points(scenario_id)
-
-                custom_model_invoker = self.models["custom"]["model_invoker"]
-                async_custom_model = inspect.iscoroutinefunction(custom_model_invoker)
-                for scenario_data_point in scenario_data_points:
-                    scenario_input: Union[dict, list, str] = (
-                        scenario_data_point.input_.to_dict()
-                        if isinstance(
-                            scenario_data_point.input_,
-                            ScenarioDataPoinResponseInputType0,
-                        )
-                        else scenario_data_point.input_
-                    )
-                    if async_custom_model:
-                        # If the method is async, await it
-                        custom_model_return_value = await custom_model_invoker(
-                            scenario_input
-                        )
-                    else:
-                        # If the method is not async, call it directly
-                        custom_model_return_value = custom_model_invoker(scenario_input)
-
-                    self._add_model_invocation_for_scenario(
-                        custom_model_return_value, model_data, scenario_data_point.id
-                    )
-
-            response = run_test_v0_test_run_post.sync(
-                client=self.client,
-                api_key=self.api_key,
-                json_body=self._get_test_run_payload(
-                    scenario_id,
-                    name,
-                    api_key,
-                    api_keys,
-                    run_api_keys,
-                    metrics_kwargs,
-                    test_run_type,
-                    calculate_metrics,
-                    model_data,
-                    checks,
-                ),
-            )
-        except UnexpectedStatus as e:
-            print(f"Unexpected status {e=}, {e.content=}")
-            raise
-
-        if isinstance(response, ErrorResponse):
-            error_message = f"error: {response}, {response.detail}"
-            print(error_message)
-            raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
-        return response
 
     def get_test_run(self, test_run_id: str) -> TestRunItem:
         try:
