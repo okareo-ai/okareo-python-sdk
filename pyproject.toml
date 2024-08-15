@@ -35,6 +35,8 @@ httpx = ">=0.23"
 types-python-dateutil = "^2.8.19.14"
 python-dateutil = "^2.8.2"
 attrs = "^23.1.0"
+nkeys ="0.1.0"
+nats-py = "^2.8.0"
 langchain = {version = "^0.0.321", optional = true}
 openai = {version = "^1.0.0", optional = true}
 litellm = {version = "^1.29.5", optional = true}
