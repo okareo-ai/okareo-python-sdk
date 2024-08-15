@@ -18,7 +18,6 @@ from okareo_api_client.api.default import (
     create_user_and_get_creds_v0_get_nats_creds_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
-    remove_nats_user_v0_remove_nats_user_delete,
     run_test_v0_test_run_post,
 )
 from okareo_api_client.client import Client
@@ -522,6 +521,12 @@ class ModelUnderTest(AsyncProcessorMixin):
             async def message_handler_custom_model(msg: Any) -> None:
                 try:
                     data = json.loads(msg.data.decode())
+                    if data.get("close"):
+                        await nats_connection.publish(
+                            msg.reply, json.dumps({"status": "disconnected"}).encode()
+                        )
+                        stop_event.set()
+                        return
                     args = data.get("args", [])
                     result = self.call_custom_invoker(args)
                     json_encodable_result = self.get_params_from_custom_result(result)
@@ -566,10 +571,6 @@ class ModelUnderTest(AsyncProcessorMixin):
         if custom_model_thread:
             custom_model_thread.join(timeout=1)
             custom_model_thread = None
-
-        remove_nats_user_v0_remove_nats_user_delete.sync(
-            client=self.client, api_key=self.api_key, mut_id=self.mut_id
-        )
 
     def run_test(
         self,
