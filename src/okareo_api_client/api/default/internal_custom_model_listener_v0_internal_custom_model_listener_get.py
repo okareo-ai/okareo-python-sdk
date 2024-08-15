@@ -24,7 +24,7 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/get_nats_creds",
+        "url": "/v0/internal_custom_model_listener",
         "params": params,
         "headers": headers,
     }
@@ -63,7 +63,7 @@ def sync_detailed(
     mut_id: str,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
-    """Create User And Get Creds
+    """Internal Custom Model Listener
 
     Args:
         mut_id (str):
@@ -95,7 +95,7 @@ def sync(
     mut_id: str,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
-    """Create User And Get Creds
+    """Internal Custom Model Listener
 
     Args:
         mut_id (str):
@@ -122,7 +122,7 @@ async def asyncio_detailed(
     mut_id: str,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
-    """Create User And Get Creds
+    """Internal Custom Model Listener
 
     Args:
         mut_id (str):
@@ -152,7 +152,7 @@ async def asyncio(
     mut_id: str,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
-    """Create User And Get Creds
+    """Internal Custom Model Listener
 
     Args:
         mut_id (str):

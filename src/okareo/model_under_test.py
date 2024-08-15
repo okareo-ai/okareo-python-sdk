@@ -15,9 +15,9 @@ from nkeys import from_seed  # type: ignore
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
-    create_user_and_get_creds_v0_get_nats_creds_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
+    internal_custom_model_listener_v0_internal_custom_model_listener_get,
     run_test_v0_test_run_post,
 )
 from okareo_api_client.client import Client
@@ -514,7 +514,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             result = [r["model_invocation"].params() for r in result]
         return result
 
-    async def run_async_tasks(self, stop_event: Any, nats_jwt: str, seed: str) -> None:
+    async def _internal_run_custom_model_listener(
+        self, stop_event: Any, nats_jwt: str, seed: str
+    ) -> None:
         nats_connection = await self.connect_nats(nats_jwt, seed)
         try:
 
@@ -545,23 +547,25 @@ class ModelUnderTest(AsyncProcessorMixin):
         finally:
             await nats_connection.close()
 
-    def run_async_in_thread(self, coro: Any) -> Any:
+    def _internal_run_custom_model_thread(self, coro: Any) -> Any:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         result = loop.run_until_complete(coro)
         return result
 
-    def start_custom_model_thread(self, nats_jwt: str, seed: str) -> tuple:
+    def _internal_start_custom_model_thread(self, nats_jwt: str, seed: str) -> tuple:
         custom_model_thread_stop_event = asyncio.Event()
         custom_model_thread = threading.Thread(
-            target=self.run_async_in_thread,
+            target=self._internal_run_custom_model_thread,
             args=(
-                self.run_async_tasks(custom_model_thread_stop_event, nats_jwt, seed),
+                self._internal_run_custom_model_listener(
+                    custom_model_thread_stop_event, nats_jwt, seed
+                ),
             ),
         )
         return custom_model_thread, custom_model_thread_stop_event
 
-    def cleanup_custom_model(
+    def _internal_cleanup_custom_model(
         self, custom_model_thread_stop_event: Any, custom_model_thread: Any
     ) -> None:
         if custom_model_thread_stop_event:
@@ -600,14 +604,14 @@ class ModelUnderTest(AsyncProcessorMixin):
 
             model_data: dict = {"model_data": {}}
             if self._has_custom_model():
-                creds = create_user_and_get_creds_v0_get_nats_creds_get.sync(
+                creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
                     client=self.client, api_key=self.api_key, mut_id=self.mut_id
                 )
                 assert isinstance(creds, dict)
                 nats_jwt = creds["jwt"]
                 seed = creds["seed"]
                 self.custom_model_thread, self.custom_model_thread_stop_event = (
-                    self.start_custom_model_thread(nats_jwt, seed)
+                    self._internal_start_custom_model_thread(nats_jwt, seed)
                 )
                 self.custom_model_thread.start()
 
@@ -639,7 +643,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             print(f"Unexpected status {e=}, {e.content=}")
             raise
         finally:
-            self.cleanup_custom_model(
+            self._internal_cleanup_custom_model(
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
 
