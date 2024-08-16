@@ -564,7 +564,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             await nats_connection.subscribe(
                 f"invoke.{self.mut_id}", cb=message_handler_custom_model
             )
-            await stop_event.wait()
+            while not stop_event.is_set():
+                await asyncio.sleep(0.1)
         except Exception as e:
             print(f"An error occurred in the custom model invocation: {str(e)}")
         finally:
@@ -573,11 +574,13 @@ class ModelUnderTest(AsyncProcessorMixin):
     def _internal_run_custom_model_thread(self, coro: Any) -> Any:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(coro)
-        return result
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
 
     def _internal_start_custom_model_thread(self, nats_jwt: str, seed: str) -> tuple:
-        custom_model_thread_stop_event = asyncio.Event()
+        custom_model_thread_stop_event = threading.Event()
         custom_model_thread = threading.Thread(
             target=self._internal_run_custom_model_thread,
             args=(
@@ -589,15 +592,15 @@ class ModelUnderTest(AsyncProcessorMixin):
         return custom_model_thread, custom_model_thread_stop_event
 
     def _internal_cleanup_custom_model(
-        self, custom_model_thread_stop_event: Any, custom_model_thread: Any
+        self,
+        custom_model_thread_stop_event: threading.Event,
+        custom_model_thread: threading.Thread,
     ) -> None:
         if custom_model_thread_stop_event:
-            custom_model_thread_stop_event.set()  # Signal the async task to stop
-            custom_model_thread_stop_event = None
+            custom_model_thread_stop_event.set()  # Signal the thread to stop
 
         if custom_model_thread:
-            custom_model_thread.join(timeout=1)
-            custom_model_thread = None
+            custom_model_thread.join(timeout=5)
 
     def run_test(
         self,
