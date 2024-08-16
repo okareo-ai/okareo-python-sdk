@@ -108,6 +108,24 @@ class OpenAIModel(BaseModel):
 
 
 @_attrs_define
+class OpenAIAssistantModel(BaseModel):
+    type = "openai_assistant"
+    model_id: str
+    assistant_prompt_template: Optional[str] = None
+    user_prompt_template: Optional[str] = None
+    dialog_template: Optional[str] = None
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+            "assistant_prompt_template": self.assistant_prompt_template,
+            "user_prompt_template": self.user_prompt_template,
+            "dialog_template": self.dialog_template,
+            "type": self.type,
+        }
+
+
+@_attrs_define
 class CohereModel(BaseModel):
     type = "cohere"
     model_id: str
