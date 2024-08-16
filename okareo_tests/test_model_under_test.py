@@ -1,6 +1,6 @@
-import random
+import os
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional
 from unittest.mock import Mock
 
 import pytest
@@ -9,12 +9,7 @@ from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
 from okareo.error import MissingApiKeyError, MissingVectorDbError
-from okareo.model_under_test import (
-    CohereModel,
-    CustomModel,
-    ModelInvocation,
-    PineconeDb,
-)
+from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb
 from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
@@ -126,27 +121,18 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         )
         httpx_mock.add_response(status_code=201, json=mut_fixture)
         httpx_mock.add_response(
-            status_code=200,
-            json=[
-                {
-                    "id": "test-run-item-id",
-                    "name": "CI run test",
-                    "input": "",
-                    "result": "",
-                }
-            ],
-        )
-        # add test run
-        httpx_mock.add_response(
             status_code=201,
             json={
-                "id": "test-run-id",
+                "id": "test-run-item-id",
+                "name": "CI run test",
+                "input": "",
+                "result": "",
                 "project_id": "",
                 "mut_id": "",
                 "scenario_set_id": "",
-                "name": "CI run test",
             },
         )
+
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
 
     # generate scenario and return results in one call
@@ -159,24 +145,20 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     response = okareo.create_scenario_set(scenario_set_create)
     response.scenario_id
 
-    # this will return a model if it already exists or create a new one if it doesn't
-    class ClassificationModel(CustomModel):
-        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
-            prediction = random.choice(["returns", "complains", "pricing"])
-            # return a tuple of (actual, overall model response context)
-            return ModelInvocation(
-                model_prediction=prediction,
-                model_output_metadata={"labels": prediction, "confidence": 0.8},
-            )
-
     mut = okareo.register_model(
         name=mut_fixture["name"],
         tags=mut_fixture["tags"],
-        model=ClassificationModel(name="classification"),
+        model=OpenAIModel(
+            model_id="gpt-4o-mini",
+            temperature=1,
+            system_prompt_template="system_prompt_template",
+        ),
     )
 
     # use the scenario id from one of the scenario set notebook examples
-    test_run_item = mut.run_test(scenario=response, name="CI run test")
+    test_run_item = mut.run_test(
+        scenario=response, name="CI run test", api_key=os.environ["OPENAI_API_KEY"]
+    )
     assert test_run_item.name == "CI run test"
 
 
@@ -196,6 +178,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
             ],
             status_code=201,
         )
+
         httpx_mock.add_response(
             status_code=201,
             json={
@@ -205,29 +188,21 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
                 "type": "REPHRASE_INVARIANT",
             },
         )
+
         httpx_mock.add_response(status_code=201, json=mut_fixture)
-        httpx_mock.add_response(
-            status_code=200,
-            json=[
-                {
-                    "id": "test-run-item-id",
-                    "name": "CI run test",
-                    "input": "",
-                    "result": "",
-                }
-            ],
-        )
-        # add test run
         httpx_mock.add_response(
             status_code=201,
             json={
-                "id": "test-run-id",
+                "id": "test-run-item-id",
+                "name": "CI run test",
+                "input": "",
+                "result": "",
                 "project_id": "",
                 "mut_id": "",
                 "scenario_set_id": "",
-                "name": "CI run test",
             },
         )
+
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
@@ -238,24 +213,22 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
     )
     response = okareo.create_scenario_set(scenario_set_create)
 
-    # this will return a model if it already exists or create a new one if it doesn't
-    class ClassificationModel(CustomModel):
-        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
-            prediction = random.choice(["returns", "complains", "pricing"])
-            # return a tuple of (actual, overall model response context)
-            return ModelInvocation(
-                model_prediction=prediction,
-                model_output_metadata={"labels": prediction, "confidence": 0.8},
-            )
-
     mut = okareo.register_model(
         name=mut_fixture["name"],
         tags=mut_fixture["tags"],
-        model=ClassificationModel(name="classification"),
+        model=OpenAIModel(
+            model_id="gpt-4o-mini",
+            temperature=1,
+            system_prompt_template="system_prompt_template",
+        ),
     )
 
     # use the scenario id from one of the scenario set notebook examples
-    test_run_item = mut.run_test(scenario=response.scenario_id, name="CI run test")
+    test_run_item = mut.run_test(
+        scenario=response.scenario_id,
+        name="CI run test",
+        api_key=os.environ["OPENAI_API_KEY"],
+    )
     assert test_run_item.name == "CI run test"
 
 

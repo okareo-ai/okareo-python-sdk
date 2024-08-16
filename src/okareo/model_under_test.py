@@ -1,16 +1,22 @@
-import inspect
+import asyncio
 import json
+import ssl
+import threading
 from abc import abstractmethod
+from base64 import b64encode
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
+import nats
 from attrs import define as _attrs_define
+from nkeys import from_seed  # type: ignore
 
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
+    internal_custom_model_listener_v0_internal_custom_model_listener_get,
     run_test_v0_test_run_post,
 )
 from okareo_api_client.client import Client
@@ -69,11 +75,15 @@ class ModelInvocation:
     model_output_metadata: Union[dict, list, str, None] = None
     """Full model response, including any metadata returned with model's output"""
 
+    session_id: Union[str, None] = None
+    """Session ID to be used for tracking the session of the model invocation"""
+
     def params(self) -> dict:
         return {
             "actual": self.model_prediction,
             "model_input": self.model_input,
             "model_result": self.model_output_metadata,
+            "session_id": self.session_id,
         }
 
 
@@ -200,7 +210,7 @@ class CustomMultiturnTarget(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomMultiturnTarget]
+    target: Union[OpenAIModel, CustomModel]
     driver_params: Union[dict, None] = {"driver_type": "openai"}
 
     def params(self) -> dict:
@@ -375,6 +385,12 @@ class ModelUnderTest(AsyncProcessorMixin):
         return run_api_keys
 
     def _has_custom_model(self) -> bool:
+        assert isinstance(self.models, dict)
+        if (
+            "driver" in self.models
+            and self.models["driver"]["target_params"]["type"] == "custom"
+        ):
+            return True
         custom_model_strs = ["custom", "custom_batch"]
         assert isinstance(self.models, dict)
         return any(
@@ -469,6 +485,123 @@ class ModelUnderTest(AsyncProcessorMixin):
         )
         return scenario_input
 
+    async def connect_nats(self, user_jwt: str, seed: str) -> Any:
+        nkey = from_seed(seed.encode())
+
+        def user_jwt_cb() -> Any:
+            return user_jwt.encode()
+
+        def user_sign_cb(nonce: str) -> Any:
+            sig = nkey.sign(nonce.encode())
+            return b64encode(sig)
+
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = True
+        ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+        ngs_url = "wss://connect.ngs.global:443"
+        nc = await nats.connect(
+            servers=[ngs_url],
+            user_jwt_cb=user_jwt_cb,
+            signature_cb=user_sign_cb,
+            tls=ssl_ctx,
+            connect_timeout=30,
+            allow_reconnect=True,
+            max_reconnect_attempts=5,
+            reconnect_time_wait=1,
+        )
+        return nc
+
+    def call_custom_invoker(self, args: Any) -> Any:
+        assert isinstance(self.models, dict)
+        if self.models.get("custom"):
+            return self.models["custom"]["model_invoker"](args)
+        elif self.models.get("custom_batch"):
+            return self.models["custom_batch"]["model_invoker"](args)
+        else:
+            return self.models["driver"]["target_params"]["model_invoker"](args)
+
+    def get_params_from_custom_result(self, result: Any) -> Any:
+        if isinstance(result, ModelInvocation):
+            result = result.params()
+        if (
+            isinstance(result, list)
+            and len(result) > 0
+            and result[0].get("model_invocation")
+        ):
+            result = [r["model_invocation"].params() for r in result]
+        return result
+
+    async def _internal_run_custom_model_listener(
+        self, stop_event: Any, nats_jwt: str, seed: str
+    ) -> None:
+        nats_connection = await self.connect_nats(nats_jwt, seed)
+        try:
+
+            async def message_handler_custom_model(msg: Any) -> None:
+                try:
+                    data = json.loads(msg.data.decode())
+                    if data.get("close"):
+                        await nats_connection.publish(
+                            msg.reply, json.dumps({"status": "disconnected"}).encode()
+                        )
+                        stop_event.set()
+                        return
+                    args = data.get("args", [])
+                    result = self.call_custom_invoker(args)
+                    json_encodable_result = self.get_params_from_custom_result(result)
+                    await nats_connection.publish(
+                        msg.reply, json.dumps(json_encodable_result).encode()
+                    )
+                except Exception as e:
+                    error_msg = (
+                        f"An error occurred in the custom model invocation: {str(e)}"
+                    )
+                    print(error_msg)
+                    await nats_connection.publish(
+                        msg.reply, json.dumps({"error": error_msg}).encode()
+                    )
+
+            await nats_connection.subscribe(
+                f"invoke.{self.mut_id}", cb=message_handler_custom_model
+            )
+            while not stop_event.is_set():
+                await asyncio.sleep(0.1)
+        except Exception as e:
+            print(f"An error occurred in the custom model invocation: {str(e)}")
+        finally:
+            await nats_connection.close()
+
+    def _internal_run_custom_model_thread(self, coro: Any) -> Any:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+
+    def _internal_start_custom_model_thread(self, nats_jwt: str, seed: str) -> tuple:
+        custom_model_thread_stop_event = threading.Event()
+        custom_model_thread = threading.Thread(
+            target=self._internal_run_custom_model_thread,
+            args=(
+                self._internal_run_custom_model_listener(
+                    custom_model_thread_stop_event, nats_jwt, seed
+                ),
+            ),
+        )
+        return custom_model_thread, custom_model_thread_stop_event
+
+    def _internal_cleanup_custom_model(
+        self,
+        custom_model_thread_stop_event: threading.Event,
+        custom_model_thread: threading.Thread,
+    ) -> None:
+        if custom_model_thread_stop_event:
+            custom_model_thread_stop_event.set()  # Signal the thread to stop
+
+        if custom_model_thread:
+            custom_model_thread.join(timeout=5)
+
     def run_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
@@ -481,6 +614,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         checks: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution"""
+        self.custom_model_thread: Any = None
+        self.custom_model_thread_stop_event: Any = None
+
         try:
             assert isinstance(self.models, dict)
             scenario_id = (
@@ -494,50 +630,16 @@ class ModelUnderTest(AsyncProcessorMixin):
 
             model_data: dict = {"model_data": {}}
             if self._has_custom_model():
-                scenario_data_points = self._get_scenario_data_points(scenario_id)
-                datapoint_len = len(scenario_data_points)
-
-                if not self._has_custom_batch_model():
-                    custom_model_invoker = self.models["custom"]["model_invoker"]
-                    for scenario_data_point in scenario_data_points:
-                        scenario_input = self._extract_input_from_scenario_data_point(
-                            scenario_data_point
-                        )
-
-                        custom_model_return_value = custom_model_invoker(scenario_input)
-                        self._add_model_invocation_for_scenario(
-                            custom_model_return_value,
-                            model_data,
-                            scenario_data_point.id,
-                        )
-                else:
-                    # batch inputs to the custom model
-                    custom_model_invoker = self.models["custom_batch"]["model_invoker"]
-                    batch_size = self.models["custom_batch"]["batch_size"]
-                    for index in range(0, datapoint_len, batch_size):
-                        end_index = min(index + batch_size, datapoint_len)
-                        scenario_data_points_batch = scenario_data_points[
-                            index:end_index
-                        ]
-                        scenario_inputs = [
-                            {
-                                "id": sdp.id,
-                                "input_value": self._extract_input_from_scenario_data_point(
-                                    sdp
-                                ),
-                            }
-                            for sdp in scenario_data_points_batch
-                        ]
-                        custom_model_return_batch = custom_model_invoker(
-                            scenario_inputs
-                        )
-
-                        for return_dict in custom_model_return_batch:
-                            self._add_model_invocation_for_scenario(
-                                return_dict["model_invocation"],
-                                model_data,
-                                return_dict["id"],
-                            )
+                creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
+                    client=self.client, api_key=self.api_key, mut_id=self.mut_id
+                )
+                assert isinstance(creds, dict)
+                nats_jwt = creds["jwt"]
+                seed = creds["seed"]
+                self.custom_model_thread, self.custom_model_thread_stop_event = (
+                    self._internal_start_custom_model_thread(nats_jwt, seed)
+                )
+                self.custom_model_thread.start()
 
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
@@ -555,99 +657,21 @@ class ModelUnderTest(AsyncProcessorMixin):
                     checks,
                 ),
             )
-
+            if isinstance(response, ErrorResponse):
+                error_message = f"error: {response}, {response.detail}"
+                print(error_message)
+                raise
+            if not response:
+                print("Empty response from API")
+            assert response is not None
+            return response
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
             raise
-
-        if isinstance(response, ErrorResponse):
-            error_message = f"error: {response}, {response.detail}"
-            print(error_message)
-            raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
-        return response
-
-    async def run_test_async(
-        self,
-        scenario: Union[ScenarioSetResponse, str],
-        name: str,
-        api_key: Optional[str] = None,
-        api_keys: Optional[dict] = None,
-        metrics_kwargs: Optional[dict] = None,
-        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
-        calculate_metrics: bool = True,
-        checks: Optional[List[str]] = None,
-    ) -> TestRunItem:
-        """Server-based version of test-run execution"""
-        try:
-            assert isinstance(self.models, dict)
-            scenario_id = (
-                scenario.scenario_id
-                if isinstance(scenario, ScenarioSetResponse)
-                else scenario
+        finally:
+            self._internal_cleanup_custom_model(
+                self.custom_model_thread_stop_event, self.custom_model_thread
             )
-            run_api_keys = self._validate_run_test_params(
-                api_key, api_keys, test_run_type
-            )
-
-            model_data: dict = {"model_data": {}}
-            if self._has_custom_model():
-                scenario_data_points = self._get_scenario_data_points(scenario_id)
-
-                custom_model_invoker = self.models["custom"]["model_invoker"]
-                async_custom_model = inspect.iscoroutinefunction(custom_model_invoker)
-                for scenario_data_point in scenario_data_points:
-                    scenario_input: Union[dict, list, str] = (
-                        scenario_data_point.input_.to_dict()
-                        if isinstance(
-                            scenario_data_point.input_,
-                            ScenarioDataPoinResponseInputType0,
-                        )
-                        else scenario_data_point.input_
-                    )
-                    if async_custom_model:
-                        # If the method is async, await it
-                        custom_model_return_value = await custom_model_invoker(
-                            scenario_input
-                        )
-                    else:
-                        # If the method is not async, call it directly
-                        custom_model_return_value = custom_model_invoker(scenario_input)
-
-                    self._add_model_invocation_for_scenario(
-                        custom_model_return_value, model_data, scenario_data_point.id
-                    )
-
-            response = run_test_v0_test_run_post.sync(
-                client=self.client,
-                api_key=self.api_key,
-                json_body=self._get_test_run_payload(
-                    scenario_id,
-                    name,
-                    api_key,
-                    api_keys,
-                    run_api_keys,
-                    metrics_kwargs,
-                    test_run_type,
-                    calculate_metrics,
-                    model_data,
-                    checks,
-                ),
-            )
-        except UnexpectedStatus as e:
-            print(f"Unexpected status {e=}, {e.content=}")
-            raise
-
-        if isinstance(response, ErrorResponse):
-            error_message = f"error: {response}, {response.detail}"
-            print(error_message)
-            raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
-        return response
 
     def get_test_run(self, test_run_id: str) -> TestRunItem:
         try:

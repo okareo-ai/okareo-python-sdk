@@ -27,6 +27,7 @@ from .full_data_point_item_scenario_input_type_0 import FullDataPointItemScenari
 from .full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
 from .general_find_payload import GeneralFindPayload
 from .generation_tone import GenerationTone
+from .http_validation_error import HTTPValidationError
 from .model_under_test_response import ModelUnderTestResponse
 from .model_under_test_response_models import ModelUnderTestResponseModels
 from .model_under_test_response_models_additional_property import ModelUnderTestResponseModelsAdditionalProperty
@@ -61,6 +62,7 @@ from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
 from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 from .test_run_type import TestRunType
 from .update_test_data_point_payload import UpdateTestDataPointPayload
+from .validation_error import ValidationError
 
 __all__ = (
     "BodyCheckDeleteV0CheckCheckIdDelete",
@@ -90,6 +92,7 @@ __all__ = (
     "FullDataPointItemScenarioResultType0",
     "GeneralFindPayload",
     "GenerationTone",
+    "HTTPValidationError",
     "ModelUnderTestResponse",
     "ModelUnderTestResponseModels",
     "ModelUnderTestResponseModelsAdditionalProperty",
@@ -124,4 +127,5 @@ __all__ = (
     "TestRunPayloadV2ModelResults",
     "TestRunType",
     "UpdateTestDataPointPayload",
+    "ValidationError",
 )
