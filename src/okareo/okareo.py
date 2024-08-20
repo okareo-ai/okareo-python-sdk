@@ -154,6 +154,13 @@ class Okareo:
                 model_invoker = data["models"][custom_model_str]["model_invoker"]
                 del data["models"][custom_model_str]["model_invoker"]
                 return data, model_invoker
+        if (
+            "driver" in data["models"].keys()
+            and data["models"]["driver"]["target_params"]["type"] == "custom"
+        ):
+            model_invoker = data["models"]["driver"]["target_params"]["model_invoker"]
+            del data["models"]["driver"]["target_params"]["model_invoker"]
+            return data, model_invoker
         return data, None
 
     def _set_custom_model_invoker(
@@ -162,6 +169,8 @@ class Okareo:
         for custom_model_str in CUSTOM_MODEL_STRS:
             if custom_model_str in data.keys():
                 data[custom_model_str]["model_invoker"] = model_invoker
+        if "driver" in data.keys():
+            data["driver"]["target_params"]["model_invoker"] = model_invoker
         return data
 
     def register_model(

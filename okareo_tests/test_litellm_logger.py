@@ -36,7 +36,7 @@ def dtest_litellm_baselogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
             context_token=context_token,
         )
 
-    litellm.callbacks = [handler]
+    litellm.callbacks = [handler]  # type: ignore
     model = "gpt-3.5-turbo"
     response = "ModelResponse(id='chatcmpl-90E2ohwLpPXSIuPRzm0fc905yVjZh', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Barack Obama is an American politician who served as the 44th President of the United States from 2009 to 2017. He is a member of the Democratic Party and was the first African American to be elected to the presidency. Before becoming president, he served as a U.S. Senator from Illinois and worked as a community organizer and civil rights attorney. He is widely regarded as one of the most influential and charismatic leaders in modern American history.', role='assistant'))], created=1709841014, model='gpt-3.5-turbo-0125', object='chat.completion', system_fingerprint='fp_2b778c6b35', usage=Usage(completion_tokens=92, prompt_tokens=12, total_tokens=104))"
     messages = [{"content": "who is obama?", "role": "user"}]
@@ -72,7 +72,7 @@ def dtest_litellm_openailogger(
             context_token=context_token,
         )
 
-    litellm.callbacks = [handler]
+    litellm.callbacks = [handler]  # type: ignore
     model = "gpt-3.5-turbo"
     response = "ModelResponse(id='chatcmpl-90E2ohwLpPXSIuPRzm0fc905yVjZh', choices=[Choices(finish_reason='stop', index=0, message=Message(content='Barack Obama is an American politician who served as the 44th President of the United States from 2009 to 2017. He is a member of the Democratic Party and was the first African American to be elected to the presidency. Before becoming president, he served as a U.S. Senator from Illinois and worked as a community organizer and civil rights attorney. He is widely regarded as one of the most influential and charismatic leaders in modern American history.', role='assistant'))], created=1709841014, model='gpt-3.5-turbo-0125', object='chat.completion', system_fingerprint='fp_2b778c6b35', usage=Usage(completion_tokens=92, prompt_tokens=12, total_tokens=104))"
     messages = [{"content": "who is obama?", "role": "user"}]
