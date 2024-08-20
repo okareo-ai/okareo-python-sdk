@@ -193,22 +193,10 @@ class CustomModel(BaseModel):
             "type": self.type,
             "model_invoker": self.invoke,
         }
-
-
-@_attrs_define
-class CustomMultiturnTarget(BaseModel):
-    type = "custom_target"
-    endpoint: str
-
-    def params(self) -> dict:
-        return {
-            "type": self.type,
-            "endpoint": self.endpoint,
-        }
     
 @_attrs_define
-class NginxMultiturnTarget(BaseModel):
-    type = "nginx_target"
+class APIModel(BaseModel):
+    type = "api_target"
     init_path: str
     response_path: str
     req_parameters: dict
@@ -229,7 +217,7 @@ class NginxMultiturnTarget(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomModel, NginxMultiturnTarget]
+    target: Union[OpenAIModel, CustomModel, APIModel]
     driver_params: Union[dict, None] = {"driver_type": "openai"}
 
     def params(self) -> dict:
