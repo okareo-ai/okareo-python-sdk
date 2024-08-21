@@ -193,7 +193,8 @@ class CustomModel(BaseModel):
             "type": self.type,
             "model_invoker": self.invoke,
         }
-    
+
+
 @_attrs_define
 class APIModel(BaseModel):
     type = "api_target"
@@ -210,7 +211,7 @@ class APIModel(BaseModel):
             "response_path": self.response_path,
             "req_parameters": self.req_parameters,
             "id_location": self.id_location,
-            "message_location": self.message_location
+            "message_location": self.message_location,
         }
 
 
