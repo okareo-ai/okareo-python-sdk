@@ -211,12 +211,14 @@ class CustomMultiturnTarget(BaseModel):
 class MultiTurnDriver(BaseModel):
     type = "driver"
     target: Union[OpenAIModel, CustomModel]
+    driver: Union[OpenAIModel, CustomModel, None] = None
     driver_params: Union[dict, None] = {"driver_type": "openai"}
 
     def params(self) -> dict:
         return {
             "driver_params": self.driver_params,
-            "target_params": self.target.params(),
+            "target": self.target.params(),
+            "driver": self.driver.params() if self.driver else None,
         }
 
 
