@@ -79,7 +79,7 @@ def test_get_data_points(
             assert isinstance(input_value, dict)
 
             return ModelInvocation(
-                model_prediction=input_value["color"], model_output_metadata=input_value
+                model_prediction=input_value["color"], raw_model_output=input_value
             )
 
     model_under_test = okareo_client.register_model(

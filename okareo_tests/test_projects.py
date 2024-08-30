@@ -80,7 +80,7 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
             # return a tuple of (actual, overall model response context)
             return ModelInvocation(
                 model_prediction=prediction,
-                model_output_metadata={"labels": prediction, "confidence": 0.8},
+                raw_model_output={"labels": prediction, "confidence": 0.8},
             )
 
     mut = okareo_client.register_model(

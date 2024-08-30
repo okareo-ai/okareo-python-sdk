@@ -131,7 +131,7 @@ def test_custom_retrieval(
                     }
                 ],
                 model_input=input_value["question"],
-                model_output_metadata=input_value["metadata"],
+                raw_model_output=input_value["metadata"],
             )
 
     model_under_test = okareo_client.register_model(

@@ -107,7 +107,7 @@ def test_custom_return_invocation(
             return ModelInvocation(
                 model_prediction=input_value["user_id"],
                 model_input=input_value["query"],
-                model_output_metadata=input_value["meta"],
+                raw_model_output=input_value["meta"],
             )
 
     model_under_test = okareo_client.register_model(

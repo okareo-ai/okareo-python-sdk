@@ -436,7 +436,7 @@ def test_run_test_custom_ir_tags(
             query_results.sort(key=lambda x: x["id"], reverse=True)
             return ModelInvocation(
                 model_prediction=query_results,
-                model_output_metadata={"model_data": model_input},
+                raw_model_output={"model_data": model_input},
             )
 
     mut = okareo.register_model(
@@ -528,7 +528,7 @@ def test_run_test_custom_ir_tags(
             query_results.sort(key=lambda x: x["id"], reverse=False)
             return ModelInvocation(
                 model_prediction=query_results,
-                model_output_metadata={"model_data": model_input},
+                raw_model_output={"model_data": model_input},
             )
 
     mut = okareo.register_model(
@@ -575,7 +575,7 @@ def test_run_batch_model_classification(
             return ModelInvocation(
                 model_prediction=classification_rules(input_value),
                 model_input=input_value,
-                model_output_metadata={"model_data": input_value},
+                raw_model_output={"model_data": input_value},
             )
 
     mut = okareo.register_model(
@@ -605,7 +605,7 @@ def test_run_batch_model_classification(
                 invocation = ModelInvocation(
                     model_prediction=classification_rules(input_value),
                     model_input=input_value,
-                    model_output_metadata={"model_data": input_value},
+                    raw_model_output={"model_data": input_value},
                 )
                 invocations.append({"id": batch_id, "model_invocation": invocation})
             return invocations
@@ -646,7 +646,7 @@ def test_run_batch_model_generation(
             return ModelInvocation(
                 model_prediction=generation_rules(input_value),
                 model_input=input_value,
-                model_output_metadata={"model_data": input_value},
+                raw_model_output={"model_data": input_value},
             )
 
     mut = okareo.register_model(
@@ -675,7 +675,7 @@ def test_run_batch_model_generation(
                 invocation = ModelInvocation(
                     model_prediction=generation_rules(input_value),
                     model_input=input_value,
-                    model_output_metadata={"model_data": input_value},
+                    raw_model_output={"model_data": input_value},
                 )
                 invocations.append({"id": batch_id, "model_invocation": invocation})
             return invocations

@@ -230,7 +230,7 @@ def test_custom_retrieval(
                         "metadata": input_value["meta"],
                     }
                 ],
-                model_output_metadata={"meta": input_value["meta"]},
+                raw_model_output={"meta": input_value["meta"]},
             )
 
     model_under_test = okareo_client.register_model(

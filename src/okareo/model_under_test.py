@@ -57,6 +57,21 @@ class BaseModel:
     def params(self) -> dict:
         pass
 
+@_attrs_define
+class ModelMetadata:
+    input_tokens: int = 0
+    """Number of input tokens used in the model invocation"""
+
+    output_tokens: int = 0
+    """Number of output tokens generated in the model invocation"""
+    
+    def get_params(self) -> dict:
+        """Return a dictionary of the ModelMetadata attributes."""
+        return {
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+        }
+
 
 @_attrs_define
 class ModelInvocation:
@@ -67,13 +82,16 @@ class ModelInvocation:
     model_prediction: Union[dict, list, str, None] = None
     """Prediction from the model to be used when running the evaluation,
     e.g. predicted class from classification model or generated text completion from
-    a generative model. This would typically be parsed out of the overall model_output_metadata."""
+    a generative model. This would typically be parsed out of the overall raw_model_output."""
 
     model_input: Union[dict, list, str, None] = None
     """All the input sent to the model"""
 
-    model_output_metadata: Union[dict, list, str, None] = None
+    raw_model_output: Union[dict, list, str, None] = None
     """Full model response, including any metadata returned with model's output"""
+
+    model_metadata: Union[ModelMetadata, None] = None
+    """ModelMetadata for invocation"""
 
     session_id: Union[str, None] = None
     """Session ID to be used for tracking the session of the model invocation"""
@@ -82,7 +100,8 @@ class ModelInvocation:
         return {
             "actual": self.model_prediction,
             "model_input": self.model_input,
-            "model_result": self.model_output_metadata,
+            "model_result": self.raw_model_output,
+            "model_metadata": self.model_metadata.get_params() if self.model_metadata else None,
             "session_id": self.session_id,
         }
 
@@ -424,15 +443,15 @@ class ModelUnderTest(AsyncProcessorMixin):
     ) -> None:
         if isinstance(custom_model_return_value, ModelInvocation):
             model_prediction = custom_model_return_value.model_prediction
-            model_output_metadata = custom_model_return_value.model_output_metadata
+            raw_model_output = custom_model_return_value.raw_model_output
             model_input = custom_model_return_value.model_input
         else:  # assume the preexisting behavior of returning a tuple
-            model_prediction, model_output_metadata = custom_model_return_value
+            model_prediction, raw_model_output = custom_model_return_value
             model_input = None
 
         model_data["model_data"][scenario_data_point_id] = {
             "actual": model_prediction,
-            "model_response": model_output_metadata,
+            "model_response": raw_model_output,
             "model_input": model_input,
         }
 

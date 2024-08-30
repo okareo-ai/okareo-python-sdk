@@ -86,7 +86,7 @@ def test_run_test_retrieval(
             # return a tuple of (parsed_ids_with_scores, overall model response context)
             return ModelInvocation(
                 model_prediction=parsed_ids_with_scores,
-                model_output_metadata=model_response,
+                raw_model_output=model_response,
             )
 
     model_under_test = okareo_client.register_model(
