@@ -166,7 +166,7 @@ def test_classification_cohere(okareo_client: Okareo) -> None:
     mut = okareo_client.register_model(
         name=test_run_name,
         model=CohereModel(
-            model_id="2386d4d1-c617-4183-8c87-5550c7f222e6-ft",
+            model_id="e2b2964d-d741-41e5-a3b7-b363202be88c-ft",
             model_type="classify",
         ),
     )
