@@ -167,7 +167,7 @@ class CustomMultiturnModel(CustomModel):
     def invoke(self, data: Any) -> ModelInvocation:
         session_id = "123"
         content = "I can't help you with that."
-        return ModelInvocation(content, data, {}, session_id)
+        return ModelInvocation(content, data, {}, session_id=session_id)
 
 
 def test_run_multiturn_custom(rnd: str, okareo: Okareo) -> None:
@@ -279,7 +279,7 @@ class LongRunningMultiTurn(CustomModel):
     def invoke(self, data: Any) -> ModelInvocation:
         session_id = "123"
         content = "I can't help you with that."
-        return ModelInvocation(content, data, {}, session_id)
+        return ModelInvocation(content, data, {}, session_id=session_id)
 
 
 def test_run_long_multiturn_custom(rnd: str, okareo: Okareo) -> None:
