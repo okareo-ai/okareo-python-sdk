@@ -57,6 +57,7 @@ class BaseModel:
     def params(self) -> dict:
         pass
 
+
 @_attrs_define
 class ModelMetadata:
     input_tokens: int = 0
@@ -64,7 +65,7 @@ class ModelMetadata:
 
     output_tokens: int = 0
     """Number of output tokens generated in the model invocation"""
-    
+
     def get_params(self) -> dict:
         """Return a dictionary of the ModelMetadata attributes."""
         return {
@@ -101,7 +102,9 @@ class ModelInvocation:
             "actual": self.model_prediction,
             "model_input": self.model_input,
             "model_result": self.raw_model_output,
-            "model_metadata": self.model_metadata.get_params() if self.model_metadata else None,
+            "model_metadata": (
+                self.model_metadata.get_params() if self.model_metadata else None
+            ),
             "session_id": self.session_id,
         }
 
