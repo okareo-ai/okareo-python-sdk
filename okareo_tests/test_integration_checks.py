@@ -105,6 +105,8 @@ def test_run_code_based_predefined_checks(
         "does_code_compile",
         "contains_all_imports",
         "corpus_BLEU",
+        "latency",
+        "is_json",
     ]
     run_resp = mut.run_test(
         name=f"openai-chat-run-predefined-{rnd}",
