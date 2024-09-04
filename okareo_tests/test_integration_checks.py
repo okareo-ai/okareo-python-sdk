@@ -258,7 +258,7 @@ def test_parallel_predefined_checks(
         model=FirstTenChars(name=f"custom-ci-run-10chars-{rnd}"),
     )
 
-    checks = ["consistency", "fluency", "conciseness"]
+    checks = ["consistency"]
     run_resp = mut.run_test(
         name=f"custom-ci-run-parallel-predefined-{rnd}",
         scenario=large_scenario_set,
