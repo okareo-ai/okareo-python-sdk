@@ -234,7 +234,7 @@ def test_custom_retrieval(
             )
 
     model_under_test = okareo_client.register_model(
-        name="ci_json_vectordb_retrieval test",
+        name=f"ci_json_vectordb_retrieval test {rnd_str}",
         model=RetrievalModel(name="ci_custom_retrieval_json"),
     )
 
