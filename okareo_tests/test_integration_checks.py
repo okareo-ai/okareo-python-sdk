@@ -105,6 +105,8 @@ def test_run_code_based_predefined_checks(
         "does_code_compile",
         "contains_all_imports",
         "corpus_BLEU",
+        "latency",
+        "is_json",
     ]
     run_resp = mut.run_test(
         name=f"openai-chat-run-predefined-{rnd}",
@@ -163,10 +165,8 @@ def test_run_model_based_custom_checks(
             check_type=CheckOutputType.SCORE,
         ),
     )
-    checks = [
-        check_sample_pass_fail.name or f"check_sample_pass_fail {rnd}",
-        check_sample_score.name or f"check_sample_score {rnd}",
-    ]
+    checks = [check_sample_score, check_sample_pass_fail]
+    check_names = [check.name or "" for check in checks]
     mut = okareo.register_model(
         name=f"openai-ci-run-levenshtein-{rnd}",
         model=OpenAIModel(
@@ -181,13 +181,15 @@ def test_run_model_based_custom_checks(
         scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        checks=checks,
+        checks=check_names,
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks, num_rows=3)
+    assert_metrics(run_resp, check_names, num_rows=3)
     for check in checks:
-        okareo.delete_check(check, check)
+        assert check.id
+        assert check.name
+        okareo.delete_check(check.id, check.name)
 
 
 def test_run_code_based_custom_checks(
@@ -198,9 +200,8 @@ def test_run_code_based_custom_checks(
         description="check_sample_code",
         check=Check(),  # type: ignore
     )
-    checks = [
-        check_sample_code.name or f"check_sample_code {rnd}",
-    ]
+    assert check_sample_code.id
+    assert check_sample_code.name
     mut = okareo.register_model(
         name=f"openai-ci-run-levenshtein-{rnd}",
         model=OpenAIModel(
@@ -215,13 +216,13 @@ def test_run_code_based_custom_checks(
         scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        checks=checks,
+        checks=[check_sample_code.name],
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, checks, num_rows=3)
-    for check in checks:
-        okareo.delete_check(check, check)
+    assert_metrics(run_resp, [check_sample_code.name], num_rows=3)
+
+    okareo.delete_check(check_sample_code.id, check_sample_code.name)
 
 
 @pytest.fixture(scope="module")
@@ -256,7 +257,7 @@ def test_parallel_predefined_checks(
         model=FirstTenChars(name=f"custom-ci-run-10chars-{rnd}"),
     )
 
-    checks = ["consistency", "fluency", "conciseness"]
+    checks = ["is_json"]
     run_resp = mut.run_test(
         name=f"custom-ci-run-parallel-predefined-{rnd}",
         scenario=large_scenario_set,
