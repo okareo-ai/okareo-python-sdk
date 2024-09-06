@@ -216,27 +216,33 @@ class CustomModel(BaseModel):
 
 
 @_attrs_define
-class CustomMultiturnTarget(BaseModel):
-    type = "custom_target"
-    endpoint: str
+class APIModel(BaseModel):
+    type = "api_target"
+    init_path: str
+    response_path: str
+    req_parameters: dict
 
     def params(self) -> dict:
         return {
             "type": self.type,
-            "endpoint": self.endpoint,
+            "init_path": self.init_path,
+            "response_path": self.response_path,
+            "req_parameters": self.req_parameters,
         }
 
 
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomModel, GenerationModel]
-    driver_params: Union[dict, None] = {"driver_type": "openai"}
+    target: Union[GenerationModel, OpenAIModel, CustomModel, APIModel]
+    driver: Union[GenerationModel, OpenAIModel, None] = None
+    driver_params: Union[dict, None] = {"repeats": 1, "max_turns": 5}
 
     def params(self) -> dict:
         return {
             "driver_params": self.driver_params,
-            "target_params": self.target.params(),
+            "target": self.target.params(),
+            "driver": self.driver.params() if self.driver else None,
         }
 
 
@@ -408,7 +414,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert isinstance(self.models, dict)
         if (
             "driver" in self.models
-            and self.models["driver"]["target_params"]["type"] == "custom"
+            and self.models["driver"]["target"]["type"] == "custom"
         ):
             return True
         custom_model_strs = ["custom", "custom_batch"]
@@ -538,7 +544,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"]["model_invoker"](args)
         else:
-            return self.models["driver"]["target_params"]["model_invoker"](args)
+            return self.models["driver"]["target"]["model_invoker"](args)
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):
