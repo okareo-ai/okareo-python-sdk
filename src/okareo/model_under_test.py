@@ -238,13 +238,15 @@ class APIModel(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomModel, APIModel]
-    driver_params: Union[dict, None] = {"driver_type": "openai"}
+    target: Union[GenerationModel, OpenAIModel, CustomModel, APIModel]
+    driver: Union[GenerationModel, OpenAIModel, None] = None
+    driver_params: Union[dict, None] = {"repeats": 1, "max_turns": 5}
 
     def params(self) -> dict:
         return {
             "driver_params": self.driver_params,
-            "target_params": self.target.params(),
+            "target": self.target.params(),
+            "driver": self.driver.params() if self.driver else None,
         }
 
 
