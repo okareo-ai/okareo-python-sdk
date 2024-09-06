@@ -441,7 +441,7 @@ def test_run_test_custom_ir_tags(
             )
 
     mut = okareo.register_model(
-        name=f"ci-custom-{rnd}", model=RetrievalModel(name="custom retrieval")
+        name=f"ci-custom-retrieval-{rnd}", model=RetrievalModel(name="custom retrieval")
     )
 
     run_resp = mut.run_test(
@@ -651,7 +651,7 @@ def test_run_batch_model_generation(
             )
 
     mut = okareo.register_model(
-        name=f"ci-custom-nlg-{rnd}",
+        name=f"ci-custom-nlg-batch-{rnd}",
         model=GenerationModel(name="test_run_batch_model_generation - GenerationModel"),
         update=True,
     )
@@ -682,7 +682,7 @@ def test_run_batch_model_generation(
             return invocations
 
     batch_mut = okareo.register_model(
-        name=f"ci-custom-nlg-batch-{rnd}",
+        name=f"ci-custom-nlg-batch-2-{rnd}",
         model=GenerationBatchModel(
             name="test_run_batch_model_generation - BatchGenerationModel",
             batch_size=2,
