@@ -221,8 +221,6 @@ class APIModel(BaseModel):
     init_path: str
     response_path: str
     req_parameters: dict
-    id_location: str
-    message_location: str
 
     def params(self) -> dict:
         return {
@@ -230,8 +228,6 @@ class APIModel(BaseModel):
             "init_path": self.init_path,
             "response_path": self.response_path,
             "req_parameters": self.req_parameters,
-            "id_location": self.id_location,
-            "message_location": self.message_location,
         }
 
 
@@ -418,7 +414,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert isinstance(self.models, dict)
         if (
             "driver" in self.models
-            and self.models["driver"]["target_params"]["type"] == "custom"
+            and self.models["driver"]["target"]["type"] == "custom"
         ):
             return True
         custom_model_strs = ["custom", "custom_batch"]
@@ -548,7 +544,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"]["model_invoker"](args)
         else:
-            return self.models["driver"]["target_params"]["model_invoker"](args)
+            return self.models["driver"]["target"]["model_invoker"](args)
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):

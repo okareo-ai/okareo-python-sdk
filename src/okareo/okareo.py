@@ -156,10 +156,10 @@ class Okareo:
                 return data, model_invoker
         if (
             "driver" in data["models"].keys()
-            and data["models"]["driver"]["target_params"]["type"] == "custom"
+            and data["models"]["driver"]["target"]["type"] == "custom"
         ):
-            model_invoker = data["models"]["driver"]["target_params"]["model_invoker"]
-            del data["models"]["driver"]["target_params"]["model_invoker"]
+            model_invoker = data["models"]["driver"]["target"]["model_invoker"]
+            del data["models"]["driver"]["target"]["model_invoker"]
             return data, model_invoker
         return data, None
 
@@ -170,7 +170,7 @@ class Okareo:
             if custom_model_str in data.keys():
                 data[custom_model_str]["model_invoker"] = model_invoker
         if "driver" in data.keys():
-            data["driver"]["target_params"]["model_invoker"] = model_invoker
+            data["driver"]["target"]["model_invoker"] = model_invoker
         return data
 
     def register_model(
