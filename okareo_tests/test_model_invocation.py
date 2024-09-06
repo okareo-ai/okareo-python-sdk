@@ -1,16 +1,12 @@
 from datetime import datetime
-from typing import Any, Union
+from typing import Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CustomModel, ModelInvocation
-from okareo_api_client.models import (
-    DatapointListItemInputType0,
-    ScenarioSetResponse,
-    TestRunType,
-)
+from okareo_api_client.models import ScenarioSetResponse, TestRunType
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 
@@ -57,42 +53,7 @@ def create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
     return scenario
 
 
-def test_custom_return_bc(
-    okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
-) -> None:
-    test_run_name = f"ci_test_custom_return_bc {unique_key}"
-
-    class ClassificationModel(CustomModel):
-        def invoke(self, input_value: Union[dict, list, str]) -> Any:
-            assert isinstance(input_value, dict)
-
-            return input_value["user_id"], input_value["meta"]
-
-    model_under_test = okareo_client.register_model(
-        name=test_run_name,
-        model=ClassificationModel(name=test_run_name),
-    )
-
-    test_run = model_under_test.run_test(
-        scenario=create_scenario_set,
-        name=test_run_name,
-        test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
-        calculate_metrics=True,
-    )
-
-    assert test_run.id
-    assert test_run.model_metrics
-    metrics_dict = test_run.model_metrics.to_dict()
-    assert metrics_dict["weighted_average"] is not None
-    assert metrics_dict["weighted_average"]["f1"] == 1
-
-    dp = okareo_client.find_datapoints(DatapointSearch(test_run_id=test_run.id))
-    assert isinstance(dp, list)
-    assert len(dp) == 3
-    for d in dp:
-        assert isinstance(d.input_, DatapointListItemInputType0)
-        assert d.input_["user_id"] in SCENARIO_USERID
-        assert d.result in SCENARIO_META
+# BC test for custom model removed as it has been phased out of SDK and docs
 
 
 def test_custom_return_invocation(

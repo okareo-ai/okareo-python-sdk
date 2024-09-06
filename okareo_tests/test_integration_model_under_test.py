@@ -61,20 +61,10 @@ How does the following text relate to WebBizz's corporate partnership opportunit
 
 
 @pytest.fixture(scope="module")
-def article_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
-    file_path = os.path.join(os.path.dirname(__file__), "webbizz_3_test_article.jsonl")
-    articles: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
-    )
-
-    return articles
-
-
-@pytest.fixture(scope="module")
 def single_line_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     file_path = os.path.join(os.path.dirname(__file__), "webbizz_1_test_article.jsonl")
     articles: ScenarioSetResponse = okareo.upload_scenario_set(
-        file_path=file_path, scenario_name=f"openai-scenario-set-{rnd}"
+        file_path=file_path, scenario_name=f"openai-scenario-set-single-{rnd}"
     )
 
     return articles
@@ -141,7 +131,7 @@ def test_run_test_openai(
 
 
 def test_run_test_openai_2prompts(
-    rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
+    rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
 ) -> None:
     mut2 = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
@@ -155,13 +145,14 @@ def test_run_test_openai_2prompts(
 
     run_resp = mut2.run_test(
         name=f"openai-chat-run-{rnd}",
-        scenario=article_scenario_set,
+        scenario=single_line_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
+        checks=["fluency"],
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    assert_metrics(run_resp, num_rows=3)
+    assert_metrics(run_resp, ["fluency"], num_rows=1)
 
 
 def test_run_test_openai_assistant(
@@ -450,7 +441,7 @@ def test_run_test_custom_ir_tags(
             )
 
     mut = okareo.register_model(
-        name=f"ci-custom-{rnd}", model=RetrievalModel(name="custom retrieval")
+        name=f"ci-custom-retrieval-{rnd}", model=RetrievalModel(name="custom retrieval")
     )
 
     run_resp = mut.run_test(
@@ -660,7 +651,7 @@ def test_run_batch_model_generation(
             )
 
     mut = okareo.register_model(
-        name=f"ci-custom-nlg-{rnd}",
+        name=f"ci-custom-nlg-batch-{rnd}",
         model=GenerationModel(name="test_run_batch_model_generation - GenerationModel"),
         update=True,
     )
@@ -691,7 +682,7 @@ def test_run_batch_model_generation(
             return invocations
 
     batch_mut = okareo.register_model(
-        name=f"ci-custom-nlg-batch-{rnd}",
+        name=f"ci-custom-nlg-batch-2-{rnd}",
         model=GenerationBatchModel(
             name="test_run_batch_model_generation - BatchGenerationModel",
             batch_size=2,
