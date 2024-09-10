@@ -1,44 +1,34 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.test_run_item import TestRunItem
-from ...models.test_run_payload import TestRunPayload
 from ...types import Response
 
 
 def _get_kwargs(
-    test_run_id: str,
     *,
-    json_body: TestRunPayload,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
     return {
-        "method": "put",
-        "url": "/v0/test_runs/{test_run_id}".format(
-            test_run_id=test_run_id,
-        ),
-        "json": json_json_body,
+        "method": "post",
+        "url": "/v0/generate_api_token",
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, TestRunItem]]:
-    if response.status_code == HTTPStatus.CREATED:
-        response_201 = TestRunItem.from_dict(response.json())
-
-        return response_201
+) -> Optional[Union[ErrorResponse, str]]:
+    if response.status_code == HTTPStatus.OK:
+        response_200 = cast(str, response.json())
+        return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -63,7 +53,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, TestRunItem]]:
+) -> Response[Union[ErrorResponse, str]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,34 +63,24 @@ def _build_response(
 
 
 def sync_detailed(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, TestRunItem]]:
-    """Update Test Run
-
-     Update a Test Run
-    Returns:
-        the updated Test Run
+) -> Response[Union[ErrorResponse, str]]:
+    """Generate Api Token
 
     Args:
-        test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, TestRunItem]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
-        test_run_id=test_run_id,
-        json_body=json_body,
         api_key=api_key,
     )
 
@@ -112,68 +92,48 @@ def sync_detailed(
 
 
 def sync(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, TestRunItem]]:
-    """Update Test Run
-
-     Update a Test Run
-    Returns:
-        the updated Test Run
+) -> Optional[Union[ErrorResponse, str]]:
+    """Generate Api Token
 
     Args:
-        test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, TestRunItem]
+        Union[ErrorResponse, str]
     """
 
     return sync_detailed(
-        test_run_id=test_run_id,
         client=client,
-        json_body=json_body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
     api_key: str,
-) -> Response[Union[ErrorResponse, TestRunItem]]:
-    """Update Test Run
-
-     Update a Test Run
-    Returns:
-        the updated Test Run
+) -> Response[Union[ErrorResponse, str]]:
+    """Generate Api Token
 
     Args:
-        test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, TestRunItem]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
-        test_run_id=test_run_id,
-        json_body=json_body,
         api_key=api_key,
     )
 
@@ -183,36 +143,26 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    test_run_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
     api_key: str,
-) -> Optional[Union[ErrorResponse, TestRunItem]]:
-    """Update Test Run
-
-     Update a Test Run
-    Returns:
-        the updated Test Run
+) -> Optional[Union[ErrorResponse, str]]:
+    """Generate Api Token
 
     Args:
-        test_run_id (str): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, TestRunItem]
+        Union[ErrorResponse, str]
     """
 
     return (
         await asyncio_detailed(
-            test_run_id=test_run_id,
             client=client,
-            json_body=json_body,
             api_key=api_key,
         )
     ).parsed
