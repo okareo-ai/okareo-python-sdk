@@ -219,7 +219,7 @@ def test_generate_scenarios(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios.type == "custom"
+    assert generate_scenarios.type == "REPHRASE_INVARIANT"
     assert generate_scenarios.seed_data == []
     assert generate_scenarios is not None
     assert generate_scenarios.scenario_id
