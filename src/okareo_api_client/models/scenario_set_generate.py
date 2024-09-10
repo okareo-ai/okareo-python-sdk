@@ -21,7 +21,7 @@ class ScenarioSetGenerate:
         generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
         generation_tone (Union[Unset, GenerationTone]): An enumeration. Default: GenerationTone.NEUTRAL.
         generation_prompt (Union[Unset, str]): Prompt for the generator to use when generating scenarios. Only supported
-            by FewShotGenerator type.
+            by CustomGenerator type.
         pre_template (Union[Unset, str]): Template for pre-processing scenario before sending it to generator
         post_template (Union[Unset, str]): Template for post-processing scenario after generator before it's saved
     """

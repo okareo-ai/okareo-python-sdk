@@ -37,7 +37,7 @@ def seed_data() -> List[SeedData]:
 
 
 @pytest.fixture(scope="module")
-def few_shot_data() -> List[SeedData]:
+def custom_data() -> List[SeedData]:
     return [
         SeedData(input_="Lorem ipsum dolor sit amet", result="N/A"),
         SeedData(input_="consectetur adipiscing elit, sed do", result="N/A"),
@@ -66,11 +66,11 @@ def create_scenario_set(
 
 @pytest.fixture(scope="module")
 def create_examples_scenario_set(
-    okareo_client: Okareo, few_shot_data: List[SeedData]
+    okareo_client: Okareo, custom_data: List[SeedData]
 ) -> ScenarioSetResponse:
     scenario_set_create = ScenarioSetCreate(
         name=examples_scenario_name,
-        seed_data=few_shot_data,
+        seed_data=custom_data,
     )
     examples: ScenarioSetResponse = okareo_client.create_scenario_set(
         scenario_set_create
@@ -107,15 +107,15 @@ def generate_scenarios_qa(
 
 
 @pytest.fixture(scope="module")
-def generate_scenarios_few_shot(
+def generate_scenarios_custom(
     okareo_client: Okareo, create_examples_scenario_set: ScenarioSetResponse
 ) -> ScenarioSetResponse:
     scenario_set_generate = ScenarioSetGenerate(
         source_scenario_id=create_examples_scenario_set.scenario_id,
-        name=f"generated few shot scenario set {random_string(5)}",
+        name=f"generated custom scenario set {random_string(5)}",
         number_examples=1,
-        generation_type=ScenarioType.FEW_SHOT,
-        generation_prompt="generate 5 words of lorem ipsum",
+        generation_type=ScenarioType.CUSTOM_GENERATOR,
+        generation_prompt="generate the next 5 words of 'lorem ipsum' based on the following text: {input}",
     )
     response = okareo_client.generate_scenario_set(scenario_set_generate)
     print(response)
@@ -219,7 +219,7 @@ def test_generate_scenarios(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios.type == "FEW_SHOT"
+    assert generate_scenarios.type == "custom"
     assert generate_scenarios.seed_data == []
     assert generate_scenarios is not None
     assert generate_scenarios.scenario_id
@@ -262,25 +262,25 @@ def test_generate_scenarios_qa(
         assert dp.meta_data["seed_id"] in seed_ids
 
 
-def test_generate_scenarios_few_shot(
-    generate_scenarios_few_shot: ScenarioSetResponse,
+def test_generate_scenarios_custom(
+    generate_scenarios_custom: ScenarioSetResponse,
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios_few_shot.type == "FEW_SHOT"
-    assert generate_scenarios_few_shot.seed_data == []
-    assert generate_scenarios_few_shot is not None
-    assert generate_scenarios_few_shot.scenario_id
-    assert generate_scenarios_few_shot.project_id
-    assert generate_scenarios_few_shot.time_created
-    assert type(generate_scenarios_few_shot.tags) is list
+    assert generate_scenarios_custom.type == "CUSTOM_GENERATOR"
+    assert generate_scenarios_custom.seed_data == []
+    assert generate_scenarios_custom is not None
+    assert generate_scenarios_custom.scenario_id
+    assert generate_scenarios_custom.project_id
+    assert generate_scenarios_custom.time_created
+    assert type(generate_scenarios_custom.tags) is list
 
     # assert each seed_id in generated scenario meta_data is in the seed data
     gen_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_few_shot.scenario_id
+        generate_scenarios_custom.scenario_id
     )
     seed_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_few_shot.tags[0].split(":")[1]
+        generate_scenarios_custom.tags[0].split(":")[1]
     )
     seed_ids = [dp.id for dp in seed_dp]
     for dp in gen_dp:
