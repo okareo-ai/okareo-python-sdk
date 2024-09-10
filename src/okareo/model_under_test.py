@@ -216,14 +216,29 @@ class CustomModel(BaseModel):
 
 
 @_attrs_define
-class CustomMultiturnTarget(BaseModel):
+class CustomTarget(BaseModel):
     type = "custom_target"
-    endpoint: str
+    name: str
+
+    @abstractmethod
+    def startConversation(self) -> dict:
+        """method for starting a conversation with the target model
+        returns: dict - conversation ID and initial messages from the target.
+        """
+    
+    @abstractmethod
+    def continueConversation(self, conversation_id: str, messages: list) -> Union[ModelInvocation, Any]:
+        """method for continuing a conversation with the target model
+        conversation_id: str - conversation ID returned by startConversation
+        messages: the message history of the current conversation
+        """
 
     def params(self) -> dict:
         return {
+            "name": self.name,
             "type": self.type,
-            "endpoint": self.endpoint,
+            "startConversation": self.startConversation,
+            "continueConversation": self.continueConversation,
         }
 
 
