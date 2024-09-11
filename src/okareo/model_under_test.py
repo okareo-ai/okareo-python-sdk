@@ -227,7 +227,7 @@ class CustomTarget(BaseModel):
         """
     
     @abstractmethod
-    def continueConversation(self, conversation_id: str, messages: list) -> Union[ModelInvocation, Any]:
+    def continueConversation(self, conversation_id: str, messages: list) -> dict:
         """method for continuing a conversation with the target model
         conversation_id: str - conversation ID returned by startConversation
         messages: the message history of the current conversation
@@ -245,7 +245,7 @@ class CustomTarget(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomModel, GenerationModel]
+    target: Union[OpenAIModel, CustomTarget, GenerationModel]
     driver_params: Union[dict, None] = {"driver_type": "openai"}
 
     def params(self) -> dict:
