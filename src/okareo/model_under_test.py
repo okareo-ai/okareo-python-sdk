@@ -546,14 +546,14 @@ class ModelUnderTest(AsyncProcessorMixin):
         )
         return nc
 
-    def call_custom_invoker(self, args: Any) -> Any:
+    def call_custom_invoker(self, args: Any, invoke: str = "model_invoker") -> Any:
         assert isinstance(self.models, dict)
         if self.models.get("custom"):
-            return self.models["custom"]["model_invoker"](args)
+            return self.models["custom"][invoke](args)
         elif self.models.get("custom_batch"):
-            return self.models["custom_batch"]["model_invoker"](args)
+            return self.models["custom_batch"][invoke](args)
         else:
-            return self.models["driver"]["target_params"]["model_invoker"](args)
+            return self.models["driver"]["target_params"][invoke](args)
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):
@@ -582,7 +582,8 @@ class ModelUnderTest(AsyncProcessorMixin):
                         stop_event.set()
                         return
                     args = data.get("args", [])
-                    result = self.call_custom_invoker(args)
+                    function = data.get("function", "model_invoker")
+                    result = self.call_custom_invoker(args, function)
                     json_encodable_result = self.get_params_from_custom_result(result)
                     await nats_connection.publish(
                         msg.reply, json.dumps(json_encodable_result).encode()
