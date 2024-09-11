@@ -221,13 +221,13 @@ class CustomTarget(BaseModel):
     name: str
 
     @abstractmethod
-    def startConversation(self) -> dict:
+    def startConversation(self) -> Union[ModelInvocation, Any]:
         """method for starting a conversation with the target model
         returns: dict - conversation ID and initial messages from the target.
         """
     
     @abstractmethod
-    def continueConversation(self, conversation_id: str, messages: list) -> dict:
+    def continueConversation(self, conversation_id: str, messages: list) -> Union[ModelInvocation, Any]:
         """method for continuing a conversation with the target model
         conversation_id: str - conversation ID returned by startConversation
         messages: the message history of the current conversation
@@ -423,8 +423,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert isinstance(self.models, dict)
         if (
             "driver" in self.models
-            and self.models["driver"]["target_params"]["type"] == "custom"
+            and self.models["driver"]["target_params"]["type"] == "custom_target"
         ):
+            print("Custom target model detected")
             return True
         custom_model_strs = ["custom", "custom_batch"]
         assert isinstance(self.models, dict)
@@ -553,7 +554,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"][invoke](args)
         else:
-            return self.models["driver"]["target_params"][invoke](args)
+            return self.models["driver"]["target_params"][invoke](**args)
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):
