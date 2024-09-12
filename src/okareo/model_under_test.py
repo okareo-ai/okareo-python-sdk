@@ -75,15 +75,11 @@ class ModelInvocation:
     model_output_metadata: Union[dict, list, str, None] = None
     """Full model response, including any metadata returned with model's output"""
 
-    session_id: Union[str, None] = None
-    """Session ID to be used for tracking the session of the model invocation"""
-
     def params(self) -> dict:
         return {
             "actual": self.model_prediction,
             "model_input": self.model_input,
             "model_result": self.model_output_metadata,
-            "session_id": self.session_id,
         }
 
 
@@ -222,7 +218,7 @@ class CustomTarget(BaseModel):
 
     @abstractmethod
     def invoke(
-        self, messages: list
+        self, messages: List[dict[str, str]]
     ) -> Union[ModelInvocation, Any]:
         """method for continueing a multiturn conversation with a custom model
         messages: list - list of messages in the conversation
@@ -236,33 +232,28 @@ class CustomTarget(BaseModel):
         }
 
 @_attrs_define
-class DriverConfiguration:
-    driver_type: str
-    driver_model: Optional[str] = "gpt-4o-mini"
-    driver_temperature: Optional[float] = 0.8
-    repeats: Optional[int] = 1
-    max_turns: Optional[int] = 5
-    conversation_opener: Optional[str] = "target"
-
-    def params(self) -> dict:
-        return {
-            "driver_type": self.driver_type,
-            "driver_model": self.driver_model,
-            "driver_temperature": self.driver_temperature,
-            "repeats": self.repeats,
-            "max_turns": self.max_turns,
-            "conversation_opener": self.conversation_opener,
-        }
-
-@_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
     target: Union[OpenAIModel, CustomTarget, GenerationModel]
-    driver_params: Union[DriverConfiguration, dict, None] = {"driver_type": "openai"}
+    driver_temperature: Optional[float] = 0.8
+    repeats: Optional[int] = 1
+    max_turns: Optional[int] = 5
+    first_turn: Optional[str] = "target"
+    driver_params: Optional[dict] = None
 
     def params(self) -> dict:
+        # for backwards compatibility
+        if self.driver_params is None:
+            params = {
+                "driver_temperature": self.driver_temperature,
+                "repeats": self.repeats,
+                "max_turns": self.max_turns,
+                "first_turn": self.first_turn,
+            }
+        else:
+            params = self.driver_params
         return {
-            "driver_params": self.driver_params.params() if isinstance(self.driver_params, DriverConfiguration) else self.driver_params,
+            "driver_params": params,
             "target_params": self.target.params(),
         }
 

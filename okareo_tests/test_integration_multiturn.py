@@ -33,9 +33,6 @@ def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
     mut = okareo.register_model(
         name=rnd,
         model=MultiTurnDriver(
-            driver_params={
-                "driver_type": "openai",
-            },
             target=OpenAIModel(
                 model_id="gpt-4o-mini",
                 temperature=0,
@@ -63,7 +60,8 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     mut = okareo.register_model(
         name=rnd,
         model=MultiTurnDriver(
-            driver_params={"driver_type": "openai", "max_turns": 1, "repeats": 1},
+            max_turns=1,
+            repeats=1,
             target=GenerationModel(
                 model_id="gpt-4o-mini",
                 temperature=0,
@@ -102,7 +100,7 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
     mut = okareo.register_model(
         name=rnd,
         model=MultiTurnDriver(
-            driver_params={"driver_type": "openai", "max_turns": 1},
+            driver_params={"max_turns": 1, "repeats": 2},
             target=OpenAIModel(
                 model_id="gpt-4o-mini",
                 temperature=1,
@@ -122,15 +120,15 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
         checks=["corpus_BLEU", "levenshtein_distance"],
     )
     assert test_run_item.name == "CI run test"
+    assert test_run_item.test_data_point_count == 2
 
 
 
 
 class CustomMultiturnModel(CustomTarget):
     def invoke(self, data: Any) -> ModelInvocation:
-        session_id = "123"
         content = "I can't help you with that."
-        return ModelInvocation(content, data, {}, session_id)
+        return ModelInvocation(content, data, {})
 
 def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     custom_model = CustomMultiturnModel(name="custom_multiturn_model")
@@ -138,13 +136,9 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     model_under_test = okareo.register_model(
         name=f"AdHoc Driver Test {rnd}",
         model=MultiTurnDriver(
-            driver_params={
-                "driver_type": "openai",
-                "driver_model": "gpt-4o-mini",
-                "driver_temperature": 1,
-                "max_turns": 2,
-                "repeats": 2,
-            },
+            driver_temperature=1,
+            max_turns=2,
+            repeats=2,
             target=custom_model,
         ),
         update=True,
@@ -161,7 +155,7 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
     evaluation = model_under_test.run_test(
-        name=f"Competitor Mentions - {random_string}",
+        name=f"Competitor Mentions - {rnd}",
         api_key=OPENAI_API_KEY,
         scenario=scenario,
         test_run_type=TestRunType.NL_GENERATION,
