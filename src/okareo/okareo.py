@@ -156,7 +156,7 @@ class Okareo:
                 return data, model_invoker
         if (
             "driver" in data["models"].keys()
-            and data["models"]["driver"]["target_params"]["type"] == "custom"
+            and data["models"]["driver"]["target_params"]["type"] == "custom_target"
         ):
             model_invoker = data["models"]["driver"]["target_params"]["model_invoker"]
             del data["models"]["driver"]["target_params"]["model_invoker"]

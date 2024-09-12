@@ -216,26 +216,53 @@ class CustomModel(BaseModel):
 
 
 @_attrs_define
-class CustomMultiturnTarget(BaseModel):
+class CustomTarget(BaseModel):
     type = "custom_target"
-    endpoint: str
+    name: str
+
+    @abstractmethod
+    def invoke(
+        self, messages: list
+    ) -> Union[ModelInvocation, Any]:
+        """method for continueing a multiturn conversation with a custom model
+        messages: list - list of messages in the conversation
+        """
 
     def params(self) -> dict:
         return {
+            "name": self.name,
             "type": self.type,
-            "endpoint": self.endpoint,
+            "model_invoker": self.invoke,
         }
 
+@_attrs_define
+class DriverConfiguration:
+    driver_type: str
+    driver_model: Optional[str] = "gpt-4o-mini"
+    driver_temperature: Optional[float] = 0.8
+    repeats: Optional[int] = 1
+    max_turns: Optional[int] = 5
+    conversation_opener: Optional[str] = "target"
+
+    def params(self) -> dict:
+        return {
+            "driver_type": self.driver_type,
+            "driver_model": self.driver_model,
+            "driver_temperature": self.driver_temperature,
+            "repeats": self.repeats,
+            "max_turns": self.max_turns,
+            "conversation_opener": self.conversation_opener,
+        }
 
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomModel, GenerationModel]
-    driver_params: Union[dict, None] = {"driver_type": "openai"}
+    target: Union[OpenAIModel, CustomTarget, GenerationModel]
+    driver_params: Union[DriverConfiguration, dict, None] = {"driver_type": "openai"}
 
     def params(self) -> dict:
         return {
-            "driver_params": self.driver_params,
+            "driver_params": self.driver_params.params() if isinstance(self.driver_params, DriverConfiguration) else self.driver_params,
             "target_params": self.target.params(),
         }
 
@@ -408,7 +435,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert isinstance(self.models, dict)
         if (
             "driver" in self.models
-            and self.models["driver"]["target_params"]["type"] == "custom"
+            and self.models["driver"]["target_params"]["type"] == "custom_target"
         ):
             return True
         custom_model_strs = ["custom", "custom_batch"]
