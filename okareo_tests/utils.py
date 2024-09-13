@@ -9,7 +9,8 @@ def assert_scores_geval(scores: dict) -> None:
     for dimension in dimension_keys:
         assert dimension in scores
         assert isinstance(scores[dimension], float)
-        assert 1 <= scores[dimension] <= 5
+        # Due to the imprecision of logprob calculation and python floats, the value can sometimes be 5.0000000000001
+        assert 1 <= scores[dimension] <= 5.001
 
 
 def assert_scores(scores: dict, custom_dimensions: List[str]) -> None:

@@ -20,6 +20,8 @@ class ScenarioSetGenerate:
         project_id (Union[Unset, str]): ID for the project
         generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
         generation_tone (Union[Unset, GenerationTone]): An enumeration. Default: GenerationTone.NEUTRAL.
+        generation_prompt (Union[Unset, str]): Prompt for the generator to use when generating scenarios. Only supported
+            by CustomGenerator type.
         pre_template (Union[Unset, str]): Template for pre-processing scenario before sending it to generator
         post_template (Union[Unset, str]): Template for post-processing scenario after generator before it's saved
     """
@@ -30,6 +32,7 @@ class ScenarioSetGenerate:
     project_id: Union[Unset, str] = UNSET
     generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT
     generation_tone: Union[Unset, GenerationTone] = GenerationTone.NEUTRAL
+    generation_prompt: Union[Unset, str] = UNSET
     pre_template: Union[Unset, str] = UNSET
     post_template: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -47,6 +50,7 @@ class ScenarioSetGenerate:
         if not isinstance(self.generation_tone, Unset):
             generation_tone = self.generation_tone.value
 
+        generation_prompt = self.generation_prompt
         pre_template = self.pre_template
         post_template = self.post_template
 
@@ -65,6 +69,8 @@ class ScenarioSetGenerate:
             field_dict["generation_type"] = generation_type
         if generation_tone is not UNSET:
             field_dict["generation_tone"] = generation_tone
+        if generation_prompt is not UNSET:
+            field_dict["generation_prompt"] = generation_prompt
         if pre_template is not UNSET:
             field_dict["pre_template"] = pre_template
         if post_template is not UNSET:
@@ -97,6 +103,8 @@ class ScenarioSetGenerate:
         else:
             generation_tone = GenerationTone(_generation_tone)
 
+        generation_prompt = d.pop("generation_prompt", UNSET)
+
         pre_template = d.pop("pre_template", UNSET)
 
         post_template = d.pop("post_template", UNSET)
@@ -108,6 +116,7 @@ class ScenarioSetGenerate:
             project_id=project_id,
             generation_type=generation_type,
             generation_tone=generation_tone,
+            generation_prompt=generation_prompt,
             pre_template=pre_template,
             post_template=post_template,
         )

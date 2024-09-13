@@ -230,7 +230,7 @@ class CustomMultiturnTarget(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomModel]
+    target: Union[OpenAIModel, CustomModel, GenerationModel]
     driver_params: Union[dict, None] = {"driver_type": "openai"}
 
     def params(self) -> dict:
