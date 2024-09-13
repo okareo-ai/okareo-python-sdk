@@ -217,9 +217,7 @@ class CustomTarget(BaseModel):
     name: str
 
     @abstractmethod
-    def invoke(
-        self, messages: List[dict[str, str]]
-    ) -> Union[ModelInvocation, Any]:
+    def invoke(self, messages: List[dict[str, str]]) -> Union[ModelInvocation, Any]:
         """method for continueing a multiturn conversation with a custom model
         messages: list - list of messages in the conversation
         """
@@ -230,6 +228,7 @@ class CustomTarget(BaseModel):
             "type": self.type,
             "model_invoker": self.invoke,
         }
+
 
 @_attrs_define
 class MultiTurnDriver(BaseModel):

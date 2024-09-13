@@ -1,5 +1,4 @@
 import os
-from typing import Any
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -42,6 +41,7 @@ def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
         update=True,
     )
     assert mut.name == rnd
+
 
 def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> None:
     # generate scenario and return results in one call
@@ -123,12 +123,11 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
     assert test_run_item.test_data_point_count == 2
 
 
-
-
 class CustomMultiturnModel(CustomTarget):
-    def invoke(self, data: Any) -> ModelInvocation:
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
         content = "I can't help you with that."
-        return ModelInvocation(content, data, {})
+        return ModelInvocation(content, messages, {})
+
 
 def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     custom_model = CustomMultiturnModel(name="custom_multiturn_model")
