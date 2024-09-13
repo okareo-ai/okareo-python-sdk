@@ -5,7 +5,7 @@ from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import (
-    CustomTarget,
+    CustomMultiturnTarget,
     GenerationModel,
     ModelInvocation,
     MultiTurnDriver,
@@ -123,7 +123,7 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
     assert test_run_item.test_data_point_count == 2
 
 
-class CustomMultiturnModel(CustomTarget):
+class CustomMultiturnModel(CustomMultiturnTarget):
     def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
         content = "I can't help you with that."
         return ModelInvocation(content, messages, {})

@@ -212,7 +212,7 @@ class CustomModel(BaseModel):
 
 
 @_attrs_define
-class CustomTarget(BaseModel):
+class CustomMultiturnTarget(BaseModel):
     type = "custom_target"
     name: str
 
@@ -233,7 +233,7 @@ class CustomTarget(BaseModel):
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomTarget, GenerationModel]
+    target: Union[OpenAIModel, CustomMultiturnTarget, GenerationModel]
     driver_temperature: Optional[float] = 0.8
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
