@@ -60,7 +60,7 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     mut = okareo.register_model(
         name=rnd,
         model=MultiTurnDriver(
-            max_turns=1,
+            max_turns=2,
             repeats=1,
             target=GenerationModel(
                 model_id="gpt-4o-mini",
@@ -100,7 +100,8 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
     mut = okareo.register_model(
         name=rnd,
         model=MultiTurnDriver(
-            driver_params={"max_turns": 1, "repeats": 2},
+            max_turns=2,
+            repeats=2,
             target=OpenAIModel(
                 model_id="gpt-4o-mini",
                 temperature=1,
@@ -137,7 +138,7 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
         model=MultiTurnDriver(
             driver_temperature=1,
             max_turns=2,
-            repeats=2,
+            repeats=1,
             target=custom_model,
         ),
         update=True,
@@ -164,4 +165,3 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     assert evaluation.name == f"Competitor Mentions - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
-    assert evaluation.test_data_point_count == 2

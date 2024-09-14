@@ -238,22 +238,15 @@ class MultiTurnDriver(BaseModel):
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
     first_turn: Optional[str] = "target"
-    driver_params: Optional[dict] = None
 
     def params(self) -> dict:
-        # for backwards compatibility
-        if self.driver_params is None:
-            params = {
-                "driver_temperature": self.driver_temperature,
-                "repeats": self.repeats,
-                "max_turns": self.max_turns,
-                "first_turn": self.first_turn,
-            }
-        else:
-            params = self.driver_params
         return {
-            "driver_params": params,
-            "target_params": self.target.params(),
+            "type": self.type,
+            "target": self.target.params(),
+            "driver_temperature": self.driver_temperature,
+            "repeats": self.repeats,
+            "max_turns": self.max_turns,
+            "first_turn": self.first_turn,
         }
 
 
@@ -410,9 +403,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         model_names = list(self.models.keys())
         run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
 
-        if ("custom" not in model_names and "driver" not in model_names) and len(
-            model_names
-        ) != len(run_api_keys):
+        if ("custom" not in model_names) and len(model_names) != len(run_api_keys):
             raise MissingApiKeyError("Number of models and API keys does not match")
 
         if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
@@ -425,7 +416,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert isinstance(self.models, dict)
         if (
             "driver" in self.models
-            and self.models["driver"]["target_params"]["type"] == "custom_target"
+            and self.models["driver"]["target"]["type"] == "custom_target"
         ):
             return True
         custom_model_strs = ["custom", "custom_batch"]
@@ -555,7 +546,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"]["model_invoker"](args)
         else:
-            return self.models["driver"]["target_params"]["model_invoker"](args)
+            return self.models["driver"]["target"]["model_invoker"](args)
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):
