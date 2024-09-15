@@ -75,15 +75,11 @@ class ModelInvocation:
     model_output_metadata: Union[dict, list, str, None] = None
     """Full model response, including any metadata returned with model's output"""
 
-    session_id: Union[str, None] = None
-    """Session ID to be used for tracking the session of the model invocation"""
-
     def params(self) -> dict:
         return {
             "actual": self.model_prediction,
             "model_input": self.model_input,
             "model_result": self.model_output_metadata,
-            "session_id": self.session_id,
         }
 
 
@@ -218,25 +214,39 @@ class CustomModel(BaseModel):
 @_attrs_define
 class CustomMultiturnTarget(BaseModel):
     type = "custom_target"
-    endpoint: str
+    name: str
+
+    @abstractmethod
+    def invoke(self, messages: List[dict[str, str]]) -> Union[ModelInvocation, Any]:
+        """method for continueing a multiturn conversation with a custom model
+        messages: list - list of messages in the conversation
+        """
 
     def params(self) -> dict:
         return {
+            "name": self.name,
             "type": self.type,
-            "endpoint": self.endpoint,
+            "model_invoker": self.invoke,
         }
 
 
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomModel, GenerationModel]
-    driver_params: Union[dict, None] = {"driver_type": "openai"}
+    target: Union[OpenAIModel, CustomMultiturnTarget, GenerationModel]
+    driver_temperature: Optional[float] = 0.8
+    repeats: Optional[int] = 1
+    max_turns: Optional[int] = 5
+    first_turn: Optional[str] = "target"
 
     def params(self) -> dict:
         return {
-            "driver_params": self.driver_params,
-            "target_params": self.target.params(),
+            "type": self.type,
+            "target": self.target.params(),
+            "driver_temperature": self.driver_temperature,
+            "repeats": self.repeats,
+            "max_turns": self.max_turns,
+            "first_turn": self.first_turn,
         }
 
 
@@ -393,9 +403,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         model_names = list(self.models.keys())
         run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
 
-        if ("custom" not in model_names and "driver" not in model_names) and len(
-            model_names
-        ) != len(run_api_keys):
+        if ("custom" not in model_names) and len(model_names) != len(run_api_keys):
             raise MissingApiKeyError("Number of models and API keys does not match")
 
         if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
@@ -408,7 +416,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert isinstance(self.models, dict)
         if (
             "driver" in self.models
-            and self.models["driver"]["target_params"]["type"] == "custom"
+            and self.models["driver"]["target"]["type"] == "custom_target"
         ):
             return True
         custom_model_strs = ["custom", "custom_batch"]
@@ -538,7 +546,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"]["model_invoker"](args)
         else:
-            return self.models["driver"]["target_params"]["model_invoker"](args)
+            return self.models["driver"]["target"]["model_invoker"](args)
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):
