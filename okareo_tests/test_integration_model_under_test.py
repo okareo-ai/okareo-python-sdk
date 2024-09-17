@@ -703,7 +703,7 @@ def test_run_batch_model_generation(
                 model_prediction=generation_rules(input_value),
                 model_input=input_value,
                 model_output_metadata={"model_data": input_value},
-                tool_calls=[{"function": "function"}]
+                tool_calls=[{"function": "function"}],
             )
 
     mut = okareo.register_model(
