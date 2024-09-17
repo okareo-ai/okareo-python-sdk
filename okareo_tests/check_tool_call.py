@@ -6,8 +6,7 @@ class Check(CodeBasedCheck):
     def evaluate(
         model_output: str, scenario_input: str, scenario_result: str, metadata: dict
     ) -> bool:
-        return (
-            True
-            if len(model_output + scenario_input + scenario_result) >= 20
-            else False
-        )
+        # Check if metadata is empty
+        if metadata.get("tool_calls"):
+            return True if len(metadata["tool_calls"]) > 0 else False
+        return False

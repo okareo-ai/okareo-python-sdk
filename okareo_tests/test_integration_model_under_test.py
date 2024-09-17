@@ -28,6 +28,8 @@ from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 from okareo_api_client.models.test_run_type import TestRunType
 
+from .check_tool_call import Check
+
 
 @pytest.fixture(scope="module")
 def rnd() -> str:
@@ -153,6 +155,59 @@ def test_run_test_openai_2prompts(
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
     assert_metrics(run_resp, ["fluency"], num_rows=1)
+
+
+def test_run_test_openai_with_tool_calls(
+    rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
+) -> None:
+    okareo.create_or_update_check(
+        name="tool_call_check",
+        description="tool_call_check",
+        check=Check(),
+    )
+    mut = okareo.register_model(
+        name=f"openai-tool-calls-ci-run-{rnd}",
+        model=OpenAIModel(
+            model_id="gpt-3.5-turbo",
+            temperature=0,
+            system_prompt_template="You are a helpful assistant that can get weather information.",
+            user_prompt_template="Find the weather of sf ca",
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "get_current_weather",
+                        "description": "Get the current weather in a given location",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "location": {
+                                    "type": "string",
+                                    "description": "The city and state, e.g. San Francisco, CA",
+                                },
+                                "unit": {
+                                    "type": "string",
+                                    "enum": ["celsius", "fahrenheit"],
+                                },
+                            },
+                            "required": ["location"],
+                        },
+                    },
+                }
+            ],
+        ),
+    )
+
+    run_resp = mut.run_test(
+        name=f"openai-tool-calls-run-{rnd}",
+        scenario=single_line_scenario_set,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=["tool_call_check"],
+    )
+    assert run_resp.name == f"openai-tool-calls-run-{rnd}"
+    assert_metrics(run_resp, ["tool_call_check"], num_rows=1)
 
 
 def test_run_test_openai_assistant(
