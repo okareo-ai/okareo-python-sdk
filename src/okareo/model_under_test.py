@@ -75,11 +75,15 @@ class ModelInvocation:
     model_output_metadata: Union[dict, list, str, None] = None
     """Full model response, including any metadata returned with model's output"""
 
+    tool_calls: Optional[List] = None
+    """List of tool calls made during the model invocation, if any"""
+
     def params(self) -> dict:
         return {
             "actual": self.model_prediction,
             "model_input": self.model_input,
             "model_result": self.model_output_metadata,
+            "tool_calls": self.tool_calls,
         }
 
 
