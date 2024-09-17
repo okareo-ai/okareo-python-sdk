@@ -90,7 +90,7 @@ def test_run_test_retrieval(
             )
 
     model_under_test = okareo_client.register_model(
-        name="vectordb_retrieval test",
+        name=f"vectordb_retrieval test {rnd_str}",
         model=RetrievalModel(name="custom retrieval"),
     )
 
