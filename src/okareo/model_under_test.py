@@ -589,9 +589,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                         msg.reply, json.dumps(json_encodable_result).encode()
                     )
                 except Exception as e:
-                    error_msg = (
-                        f"An error occurred in the custom model invocation: {str(e)}"
-                    )
+                    error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
                     print(error_msg)
                     await nats_connection.publish(
                         msg.reply, json.dumps({"error": error_msg}).encode()
