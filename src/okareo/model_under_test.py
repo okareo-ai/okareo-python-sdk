@@ -239,9 +239,19 @@ class CustomMultiturnTarget(BaseModel):
 
 
 @_attrs_define
+class StopCheck:
+    check_name: str
+    stop_on_pass: bool
+
+    def params(self) -> dict:
+        return {"check_name": self.check_name, "stop_on_pass": self.stop_on_pass}
+
+
+@_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
     target: Union[OpenAIModel, CustomMultiturnTarget, GenerationModel]
+    stop_check: StopCheck
     driver_temperature: Optional[float] = 0.8
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
@@ -255,6 +265,7 @@ class MultiTurnDriver(BaseModel):
             "repeats": self.repeats,
             "max_turns": self.max_turns,
             "first_turn": self.first_turn,
+            "stop_check": self.stop_check.params(),
         }
 
 
