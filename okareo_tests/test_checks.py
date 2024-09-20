@@ -23,7 +23,6 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
         # concurrency issues with this test when ran in parallel
 
 
-
 def test_generate_and_create_check(okareo_client: Okareo) -> None:
     generate_request = EvaluatorSpecRequest(
         description="""
