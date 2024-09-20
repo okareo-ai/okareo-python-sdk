@@ -37,6 +37,7 @@ def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
                 temperature=0,
                 system_prompt_template="target_system_prompt",
             ),
+            stop_check={"check_name": "behavior_adherence", "stop_on": True},
         ),
         update=True,
     )
@@ -67,6 +68,7 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
                 temperature=0,
                 system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
             ),
+            stop_check={"check_name": "model_refusal", "stop_on": False},
         ),
         update=True,
     )
@@ -78,7 +80,6 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
         name="CI run test",
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
-        checks=["model_refusal"],
     )
     assert test_run_item.name == "CI run test"
 
@@ -107,6 +108,7 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
                 temperature=1,
                 system_prompt_template="Be very brief. Finish all of your responses with a haiku about your favorite color",
             ),
+            stop_check={"check_name": "model_refusal", "stop_on": False},
         ),
         update=True,
     )
@@ -140,6 +142,7 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
             max_turns=2,
             repeats=1,
             target=custom_model,
+            stop_check={"check_name": "model_refusal", "stop_on": False},
         ),
         update=True,
     )
