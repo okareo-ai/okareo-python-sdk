@@ -4,6 +4,7 @@ import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
+from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import (
     CustomMultiturnTarget,
     GenerationModel,
@@ -246,5 +247,95 @@ def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
     )
 
     assert evaluation.name == f"Multi-turn Tools Demo Evaluation - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+
+
+def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
+    multiturn_model = okareo.register_model(
+        name=f"MultiTurn Driver with Tools Test {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=0,
+            max_turns=2,
+            repeats=1,
+            target=GenerationModel(
+                model_id="command-r-plus",
+                temperature=0,
+                system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
+                tools=[
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "get_current_weather",
+                            "description": "Get the current weather in a given location",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "location": {
+                                        "type": "string",
+                                        "description": "The city and state, e.g. San Francisco, CA",
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "enum": ["celsius", "fahrenheit"],
+                                    },
+                                },
+                                "required": ["location"],
+                            },
+                        },
+                    }
+                ],
+            ),
+            stop_check=StopConfig(
+                check_name="task_completion_travel_short_prompt", stop_on=True
+            ),
+        ),
+        update=True,
+    )
+    simple_prompt = "task completion is travel itenerary generation with an hour by hour itenerary, output True if task completion is done otherwise false. Check this output: {generation}"
+
+    okareo.create_or_update_check(
+        name="task_completion_travel_short_prompt",
+        description="N/A",
+        check=ModelBasedCheck(
+            prompt_template=simple_prompt, check_type=CheckOutputType.PASS_FAIL
+        ),
+    )
+
+    seeds = [
+        SeedData(
+            input_=(
+                "You are interacting with a travel agent. "
+                "First ask about the weather in SF. "
+                "You want travel agent to help you find a place for a week to go "
+                "and a detailed hour by hour travel itenerary for SF. "
+                "Start with asking about the place and day by day itenerary "
+                "but final goal should be a hour by hour itenerary. "
+                "Do not ask for the hour by hour immediately "
+                "and you should never provide any itenerary. "
+                "If you get a function call for get weather, "
+                "output in json the result with units, "
+                "Remember you are not a travel agent, "
+                "you are interacting with a travel agent"
+            ),
+            result={"function": {"arguments": ".*", "name": "get_current_weather"}},  # type: ignore
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Multi-turn Tools Demo Scenario - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    evaluation = multiturn_model.run_test(
+        name=f"Multi-turn Tools Demo Evaluation w/ Mock - {rnd}",
+        api_key=os.environ["COHERE_API_KEY"],
+        scenario=scenario,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=["task_completion_travel_short_prompt"],
+    )
+
+    assert evaluation.name == f"Multi-turn Tools Demo Evaluation w/ Mock - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
