@@ -10,6 +10,7 @@ from okareo.model_under_test import (
     ModelInvocation,
     MultiTurnDriver,
     OpenAIModel,
+    StopConfig,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
@@ -166,5 +167,84 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
         checks=["model_refusal"],
     )
     assert evaluation.name == f"Competitor Mentions - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+
+
+def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
+    multiturn_model = okareo.register_model(
+        name=f"MultiTurn Driver with Tools Test {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=0,
+            max_turns=5,
+            repeats=1,
+            target=GenerationModel(
+                model_id="command-r-plus",
+                temperature=0,
+                system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
+                tools=[
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "get_current_weather",
+                            "description": "Get the current weather in a given location",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "location": {
+                                        "type": "string",
+                                        "description": "The city and state, e.g. San Francisco, CA",
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "enum": ["celsius", "fahrenheit"],
+                                    },
+                                },
+                                "required": ["location"],
+                            },
+                        },
+                    }
+                ],
+            ),
+            stop_check=StopConfig(check_name="function_call_validator", stop_on=True),
+        ),
+        update=True,
+    )
+
+    seeds = [
+        SeedData(
+            input_=(
+                "You are interacting with a travel agent. "
+                "First ask about the weather in SF. "
+                "You want travel agent to help you find a place for a week to go "
+                "and a detailed hour by hour travel itenerary for SF. "
+                "Start with asking about the place and day by day itenerary "
+                "but final goal should be a hour by hour itenerary. "
+                "Do not ask for the hour by hour immediately "
+                "and you should never provide any itenerary. "
+                "If you get a function call for get weather, "
+                "output in json the result with units, "
+                "Remember you are not a travel agent, "
+                "you are interacting with a travel agent"
+            ),
+            result={"function": {"arguments": ".*", "name": "get_current_weather"}},  # type: ignore
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Multi-turn Tools Demo Scenario - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    evaluation = multiturn_model.run_test(
+        name=f"Multi-turn Tools Demo Evaluation - {rnd}",
+        api_key=os.environ["COHERE_API_KEY"],
+        scenario=scenario,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=["function_call_validator"],
+    )
+
+    assert evaluation.name == f"Multi-turn Tools Demo Evaluation - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
