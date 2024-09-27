@@ -95,7 +95,7 @@ def test_dialog_input(
         model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
-            dialog_template="{input}",
+            dialog_template="{scenario_input}",
         ),
     )
 
@@ -116,12 +116,12 @@ def test_dialog_input(
 DAILOG_TEMPLATE = """
 [
     {
-        "role": "{input.0.role}",
-        "content": "{input.0.content}"
+        "role": "{scenario_input.0.role}",
+        "content": "{scenario_input.0.content}"
     },
     {
-        "role": "{input.2.role}",
-        "content": "{input.2.content}"
+        "role": "{scenario_input.2.role}",
+        "content": "{scenario_input.2.content}"
     }
 ]
 """

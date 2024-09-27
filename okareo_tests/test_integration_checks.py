@@ -27,7 +27,7 @@ def okareo() -> Okareo:
 TEST_SUMMARIZE_TEMPLATE = """
 Provide a brief summary of the following paragraph of text:
 
-{input}
+{scenario_input}
 
 Summary:
 
@@ -161,7 +161,7 @@ def test_run_model_based_custom_checks(
         name=f"check_sample_score {rnd}",
         description="check_sample_score",
         check=ModelBasedCheck(  # type: ignore
-            prompt_template="Only output the number of words in the following text: {input} {output} {generation}",
+            prompt_template="Only output the number of words in the following text: {scenario_input} {output} {model_output}",
             check_type=CheckOutputType.SCORE,
         ),
     )
