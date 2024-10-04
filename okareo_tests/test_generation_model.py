@@ -83,7 +83,7 @@ def test_gpt35(
         model_id="gpt-3.5-turbo",
         api_key=os.environ["OPENAI_API_KEY"],
         system_prompt="You are an AI assistant with a flair for dramatic storytelling and exaggeration.",
-        user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {input}",
+        user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {scenario_input}",
     )
 
 
@@ -97,7 +97,7 @@ def test_claude3(
         model_id="claude-3-haiku-20240307",
         api_key=os.environ["ANTHROPIC_API_KEY"],
         system_prompt="You are an AI assistant with a flair for dramatic storytelling and exaggeration.",
-        user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {input}",
+        user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {scenario_input}",
     )
 
 
@@ -111,5 +111,5 @@ def test_cohere(
         model_id="command-r",
         api_key=os.environ["COHERE_API_KEY"],
         system_prompt="You are an AI assistant with a flair for dramatic storytelling and exaggeration.",
-        user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {input}",
+        user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {scenario_input}",
     )

@@ -49,7 +49,7 @@ def openai_client() -> OpenAI:
 TEST_SUMMARIZE_TEMPLATE = """
 Provide a brief summary of the following paragraph of text:
 
-{input}
+{scenario_input}
 
 Summary:
 
@@ -58,7 +58,7 @@ Summary:
 TEST_ASSISTANT_TEMPLATE = """
 How does the following text relate to WebBizz's corporate partnership opportunities?
 
-{input}
+{scenario_input}
 """
 
 

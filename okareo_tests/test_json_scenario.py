@@ -196,7 +196,7 @@ def test_classification_openai(okareo_client: Okareo) -> None:
         model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
-            system_prompt_template="Classify this by label equal to one of (red,blue,green): {input} label:\n",
+            system_prompt_template="Classify this by label equal to one of (red,blue,green): {scenario_input} label:\n",
             user_prompt_template=None,
         ),
     )
@@ -263,8 +263,8 @@ def test_generation_openai(
         model=OpenAIModel(
             model_id="gpt-3.5-turbo",
             temperature=0,
-            system_prompt_template="Do system stuff with JSON: {input.query} and {input.meta} \n",
-            user_prompt_template="Do user stuff with JSON: {input.user_id} \n",
+            system_prompt_template="Do system stuff with JSON: {scenario_input.query} and {scenario_input.meta} \n",
+            user_prompt_template="Do user stuff with JSON: {scenario_input.user_id} \n",
         ),
     )
 
