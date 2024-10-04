@@ -7,7 +7,7 @@ from base64 import b64encode
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import nats
+import nats  # type: ignore
 from attrs import define as _attrs_define
 from nkeys import from_seed  # type: ignore
 
