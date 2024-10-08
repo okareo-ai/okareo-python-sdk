@@ -55,7 +55,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
         else:
             self.okareo = Okareo(api_key)
 
-        self.session_id = str(uuid.uuid4())
+        self.session_id = str(config.get("context_token", str(uuid.uuid4())))
 
         random_str = "".join(
             random.choices(string.ascii_lowercase + string.digits, k=5)
