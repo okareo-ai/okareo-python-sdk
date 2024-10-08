@@ -26,3 +26,7 @@ def integration(func: Callable) -> Any:
 
 def random_string(length: int) -> str:
     return "".join(random.choices(string.ascii_letters, k=length))
+
+
+# if unavailable, mock a valid OpenAI API kley
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", f"sk-{random_string(48)}")
