@@ -2,6 +2,7 @@ import datetime
 import json
 import random
 import string
+import traceback
 import uuid
 from typing import Any
 
@@ -66,8 +67,6 @@ class CrewAISpanProcessor(SpanProcessor):
                 tags=self.tags,
             )
         except Exception as e:
-            import traceback
-
             print(f"Error adding data point: {str(e)}")
             print("Traceback:")
             print(traceback.format_exc())

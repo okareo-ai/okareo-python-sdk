@@ -67,7 +67,7 @@ pep8-naming = "*"
 pre-commit = "*"
 pymdown-extensions = "*"
 pytest = "*"
-pytest-httpx = "*"
+pytest-httpx = {version = "0.30.0"}
 pytest-github-actions-annotate-failures = "*"
 pytest-cov = "*"
 python-kacl = "*"
