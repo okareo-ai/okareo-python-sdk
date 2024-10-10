@@ -1,13 +1,11 @@
 import json
 from typing import Any
 
-import autogen  # type: ignore
-from okareo_tests.common import API_KEY, OPENAI_API_KEY, random_string
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.crewai_logger import CrewAILogger
 from okareo_api_client.models.datapoint_search import DatapointSearch
-
 
 
 def get_logger_config() -> dict[str, Any]:
@@ -19,7 +17,6 @@ def get_logger_config() -> dict[str, Any]:
     return logger_config
 
 
-
 def test_crewai_logger() -> None:
 
     logger_config = get_logger_config()
@@ -29,16 +26,17 @@ def test_crewai_logger() -> None:
 
     tracer = trace.get_tracer("crewai.telemetry")
     with tracer.start_as_current_span("test_span") as span:
-        span.set_attribute("test_attribute", json.dumps({
-            "agent": "test_agent",
-            "message": "This is a test message",
-            "timestamp": "2024-03-14T12:00:00Z",
-            "metadata": {
-                "task_id": "123456",
-                "priority": "high"
-            }
-        }))
-
+        span.set_attribute(
+            "test_attribute",
+            json.dumps(
+                {
+                    "agent": "test_agent",
+                    "message": "This is a test message",
+                    "timestamp": "2024-03-14T12:00:00Z",
+                    "metadata": {"task_id": "123456", "priority": "high"},
+                }
+            ),
+        )
 
     okareo = Okareo(api_key=API_KEY)
     dp = okareo.find_datapoints(
@@ -46,4 +44,3 @@ def test_crewai_logger() -> None:
     )
     assert isinstance(dp, list)
     assert len(dp) >= 1
-

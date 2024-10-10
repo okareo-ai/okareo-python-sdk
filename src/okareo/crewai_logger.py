@@ -3,11 +3,10 @@ import json
 import random
 import string
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, TracerProvider
-from opentelemetry.trace import Status, StatusCode
 
 from okareo import Okareo
 
@@ -22,13 +21,14 @@ class CrewAISpanProcessor(SpanProcessor):
         )
         self.session_id = str(config.get("context_token", uuid.uuid4()))
         self.tags = config.get("tags", [])
-        
-        random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+
+        random_suffix = "".join(
+            random.choices(string.ascii_lowercase + string.digits, k=5)
+        )
         self.mut_name = config.get("mut_name", f"crewai-chat-{random_suffix}")
-        
+
         self.registered_model = self.okareo.register_model(
-            name=self.mut_name,
-            tags=self.tags
+            name=self.mut_name, tags=self.tags
         )
 
     def _format_span_data(self, span: ReadableSpan) -> dict:
@@ -41,7 +41,9 @@ class CrewAISpanProcessor(SpanProcessor):
         }
 
     def _get_timestamp_iso(self, epoch_ns: Any) -> str:
-        return datetime.datetime.fromtimestamp(epoch_ns / 1e9, tz=datetime.timezone.utc).isoformat()
+        return datetime.datetime.fromtimestamp(
+            epoch_ns / 1e9, tz=datetime.timezone.utc
+        ).isoformat()
 
     def on_end(self, span: ReadableSpan) -> None:
         if span.instrumentation_info.name != "crewai.telemetry":
@@ -65,6 +67,7 @@ class CrewAISpanProcessor(SpanProcessor):
             )
         except Exception as e:
             import traceback
+
             print(f"Error adding data point: {str(e)}")
             print("Traceback:")
             print(traceback.format_exc())
@@ -85,6 +88,7 @@ class CrewAISpanProcessor(SpanProcessor):
         if isinstance(obj, (list, tuple)):
             return all(CrewAISpanProcessor.is_serializable(item) for item in obj)
         return False
+
 
 class CrewAILogger:
     def __init__(self, logger_config: dict[str, Any]):
