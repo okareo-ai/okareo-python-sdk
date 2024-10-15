@@ -7,6 +7,7 @@ import httpx
 from okareo.checks import BaseCheck
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
+    add_model_to_group_v0_groups_group_id_models_post,
     check_create_or_update_v0_check_create_or_update_post,
     check_delete_v0_check_check_id_delete,
     check_generate_v0_check_generate_post,
@@ -21,6 +22,7 @@ from okareo_api_client.api.default import (
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
+    create_group_v0_groups_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
 from okareo_api_client.models.body_check_delete_v0_check_check_id_delete import (
@@ -33,6 +35,8 @@ from okareo_api_client.models.check_create_update_schema import CheckCreateUpdat
 from okareo_api_client.models.check_create_update_schema_check_config import (
     CheckCreateUpdateSchemaCheckConfig,
 )
+from okareo_api_client.models.create_group_v0_groups_post_response_create_group_v0_groups_post import CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost
+from okareo_api_client.models.create_group_v0_groups_post_source import CreateGroupV0GroupsPostSource
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.error_response import ErrorResponse
@@ -443,3 +447,33 @@ class Okareo:
         assert isinstance(response, EvaluatorDetailedResponse)
 
         return response
+    
+    def create_group(
+            self, name: str, tags: Union[List[str], None] = None, source: Union[dict, None] = None
+    ) -> Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]:
+        json_body = CreateGroupV0GroupsPostSource()
+        if source:
+            json_body.additional_properties.update(source)
+        response = create_group_v0_groups_post.sync_detailed(
+            client=self.client,
+            json_body=json_body,
+            name=name,
+            tags=tags,
+            api_key=self.api_key
+        )
+        self.validate_response(response)
+        print(response)
+        import json
+        return json.loads(response.content)
+
+    def add_model_to_group(
+            self, group: Any, model: Any
+    ) -> Union[Any, ErrorResponse]:
+        response = add_model_to_group_v0_groups_group_id_models_post.sync_detailed(
+            client=self.client,
+            group_id=group.get('id', ''),
+            model_id=model.mut_id,
+            api_key=self.api_key
+        )
+        self.validate_response(response)
+        return response.parsed.additional_properties
