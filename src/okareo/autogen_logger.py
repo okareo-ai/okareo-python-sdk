@@ -7,18 +7,17 @@ import string
 import threading
 import traceback
 import uuid
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 import autogen  # type: ignore
+from autogen import Agent
 from autogen.logger.base_logger import BaseLogger  # type: ignore
 from autogen.logger.logger_utils import get_current_ts, to_dict  # type: ignore
 from openai import AzureOpenAI, OpenAI
 from openai.types.chat import ChatCompletion
 
 from okareo import Okareo
-
-if TYPE_CHECKING:
-    from autogen import Agent
+from okareo.model_under_test import ModelUnderTest
 
 logger = logging.getLogger(__name__)
 
@@ -69,15 +68,15 @@ class OkareoLogger(BaseLogger):  # type: ignore
             tags=self.tags,
             source={"log_source": "autogen"},
         )
-        self.agent_names = []
-        self.registered_models = {}
+        self.agent_names: list[str] = []
+        self.registered_models: dict[str, ModelUnderTest] = {}
         self.cur_model = None
 
         # set default logging options
         self._log_chat_completion = config.get("log_chat_completion", True)
         self._log_function_use = config.get("log_function_use", True)
-        self._log_new_agent = config.get("log_new_agent", False)
-        self._log_event = config.get("log_event", False)
+        self._log_new_agent = config.get("log_new_agent", True)
+        self._log_event = config.get("log_event", True)
         self._log_new_wrapper = config.get("log_new_wrapper", False)
         self._log_new_client = config.get("log_new_client", False)
         self._log_types = [
@@ -102,7 +101,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
     def start(self) -> str:
         """Start the logger and return the session_id."""
         try:
-            print(f"[Okareo] Started new session with Session ID: {self.session_id}")
+            print(f"[Okareo] Started new logging session with context_token: {self.session_id}")
             print(f"[Okareo] Logging data points under mut_name '{self.mut_name}'.")
             print("[Okareo] Logging the following events:")
             for log_type in self._log_types:
