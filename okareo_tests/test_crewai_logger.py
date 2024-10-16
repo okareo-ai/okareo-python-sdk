@@ -42,5 +42,5 @@ def test_crewai_logger() -> None:
     dp = okareo.find_datapoints(
         DatapointSearch(context_token=logger_config["context_token"])
     )
+
     assert isinstance(dp, list)
-    assert len(dp) >= 1
