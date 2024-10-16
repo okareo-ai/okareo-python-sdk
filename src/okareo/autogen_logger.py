@@ -42,6 +42,8 @@ def safe_serialize(obj: Any) -> str:
 
 
 class OkareoLogger(BaseLogger):  # type: ignore
+    # For more info on BaseLogger class, see Autogen docs.
+    # https://microsoft.github.io/autogen/0.2/docs/reference/logger/base_logger
     def __init__(
         self,
         config: dict[str, Any],
@@ -57,14 +59,19 @@ class OkareoLogger(BaseLogger):  # type: ignore
 
         self.session_id = str(config.get("context_token", str(uuid.uuid4())))
 
-        random_str = "".join(
+        random_suffix = "".join(
             random.choices(string.ascii_lowercase + string.digits, k=5)
         )
-        self.mut_name = config.get("mut_name", f"autogen-chat-{random_str}")
         self.tags = config.get("tags", [])
-        self.registered_model = self.okareo.register_model(
-            name=self.mut_name, tags=self.tags
+        self.group_name = config.get("group_name", f"autogen-chat-{random_suffix}")
+        self.group = self.okareo.create_group(
+            name=self.group_name,
+            tags=self.tags,
+            source={"log_source": "autogen"},
         )
+        self.agent_names = []
+        self.registered_models = {}
+        self.cur_model = None
 
         # set default logging options
         self._log_chat_completion = config.get("log_chat_completion", True)
@@ -81,6 +88,16 @@ class OkareoLogger(BaseLogger):  # type: ignore
             "new_wrapper",
             "new_client",
         ]
+
+    def register_new_model(self, agent_name: str, tags: list[str]) -> None:
+        """Register an agent as a new model in Okareo, and add the model to the group."""
+        new_model = self.okareo.register_model(
+            name=agent_name,
+            tags=tags,
+        )
+        self.okareo.add_model_to_group(self.group, new_model)
+        self.registered_models[agent_name] = new_model
+        print(f"[Okareo] New agent registered under model: {agent_name}")
 
     def start(self) -> str:
         """Start the logger and return the session_id."""
@@ -108,7 +125,9 @@ class OkareoLogger(BaseLogger):  # type: ignore
         start_time: str,
     ) -> None:
         """
-        Log a chat completion.
+        Log a chat completion to Okareo. From the Autogen docs:
+
+        "In AutoGen, chat completions are somewhat complicated because they are handled by the autogen.oai.OpenAIWrapper class. One invocation to create can lead to multiple underlying OpenAI calls, depending on the llm_config list used, and any errors or retries."
         """
         if self._log_chat_completion:
             thread_id = threading.get_ident()
@@ -123,7 +142,11 @@ class OkareoLogger(BaseLogger):  # type: ignore
                         response if isinstance(response, str) else response.model_dump()
                     )
                 )
-                self.registered_model.add_data_point_async(
+                # register new model if need be
+                if source_name not in self.registered_models:
+                    self.register_new_model(source_name, self.tags)
+                # parse the response to get the proper message
+                self.registered_models[source_name].add_data_point_async(
                     input_obj=request,
                     input_datetime=start_time,
                     result_obj=json.dumps(
@@ -142,6 +165,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     result_datetime=get_current_ts(),
                     context_token=self.session_id,
                     tags=self.tags,
+                    group_id=self.group.get("id"),
                 )
             except Exception:
                 tb = traceback.format_exc()
@@ -156,11 +180,15 @@ class OkareoLogger(BaseLogger):  # type: ignore
         self, agent: Any, init_args: dict[str, Any]  # TODO: ConversableAgent,
     ) -> None:
         """
-        Log a new agent instance.
+        Log the birth of a new agent to Okareo.
         """
         if self._log_new_agent:
             thread_id = threading.get_ident()
-
+            agent_name = None
+            if isinstance(agent, str):
+                agent_name = getattr(agent, "name", "unknown")
+            else:
+                agent_name = agent.name
             try:
                 # make init_args['chat_messages'] serializable
                 if (
@@ -171,7 +199,11 @@ class OkareoLogger(BaseLogger):  # type: ignore
                         agent_obj_to_name(k): agent_obj_to_name(v)
                         for k, v in init_args["chat_messages"].items()
                     }
-                self.registered_model.add_data_point_async(
+                # register new model if need be
+                if agent_name not in self.registered_models:
+                    self.register_new_model(agent_name, self.tags)
+                # parse the response to get the proper message
+                self.registered_models[agent_name].add_data_point_async(
                     result_obj=json.dumps(
                         {
                             "log_type": "new_agent",
@@ -196,6 +228,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     result_datetime=get_current_ts(),
                     context_token=self.session_id,
                     tags=self.tags,
+                    group_id=self.group.get("id"),
                 )
             except Exception:
                 tb = traceback.format_exc()
@@ -222,18 +255,42 @@ class OkareoLogger(BaseLogger):  # type: ignore
             )
             thread_id = threading.get_ident()
 
-            if isinstance(source, Agent):
+            # register new model if need be
+            source_name = str(source.name) if hasattr(source, "name") else source
+            if source_name not in self.registered_models:
+                self.register_new_model(source_name, self.tags)
+
+            if isinstance(source, str):
                 try:
-                    self.registered_model.add_data_point_async(
+                    # register new model if need be
+                    self.registered_models[source_name].add_data_point_async(
                         result_obj=json.dumps(
                             {
                                 "log_type": "event",
                                 "source_id": id(source),
-                                "source_name": (
-                                    str(source.name)
-                                    if hasattr(source, "name")
-                                    else source
-                                ),
+                                "source_name": source_name,
+                                "event_name": name,
+                                "json_state": json_args,
+                                "timestamp": get_current_ts(),
+                                "thread_id": thread_id,
+                            }
+                        ),
+                        result_datetime=get_current_ts(),
+                        context_token=self.session_id,
+                        tags=self.tags,
+                        group_id=self.group.get("id"),
+                    )
+                except Exception as e:
+                    print(f"[Okareo AutogenLogger] Failed to log event: {e}")
+            else:
+                try:
+                    # parse the response to get the proper message
+                    self.registered_models[source_name].add_data_point_async(
+                        result_obj=json.dumps(
+                            {
+                                "log_type": "event",
+                                "source_id": id(source),
+                                "source_name": source_name,
                                 "event_name": name,
                                 "agent_module": source.__module__,
                                 "agent_class": source.__class__.__name__,
@@ -245,30 +302,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                         result_datetime=get_current_ts(),
                         context_token=self.session_id,
                         tags=self.tags,
-                    )
-                except Exception as e:
-                    print(f"[Okareo AutogenLogger] Failed to log event: {e}")
-            else:
-                try:
-                    self.registered_model.add_data_point_async(
-                        result_obj=json.dumps(
-                            {
-                                "log_type": "event",
-                                "source_id": id(source),
-                                "source_name": (
-                                    str(source.name)
-                                    if hasattr(source, "name")
-                                    else source
-                                ),
-                                "event_name": name,
-                                "json_state": json_args,
-                                "timestamp": get_current_ts(),
-                                "thread_id": thread_id,
-                            }
-                        ),
-                        result_datetime=get_current_ts(),
-                        context_token=self.session_id,
-                        tags=self.tags,
+                        group_id=self.group.get("id"),
                     )
                 except Exception as e:
                     print(f"[Okareo AutogenLogger] Failed to log event: {e}")
@@ -286,6 +320,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
         if self._log_new_wrapper:
             thread_id = threading.get_ident()
             try:
+                # TODO: figure out if/where agent name occurs
                 self.registered_model.add_data_point_async(
                     result_obj=json.dumps(
                         {
@@ -300,6 +335,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     result_datetime=get_current_ts(),
                     context_token=self.session_id,
                     tags=self.tags,
+                    group_id=self.group.get("id"),
                 )
             except Exception:
                 tb = traceback.format_exc()
@@ -323,6 +359,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
             thread_id = threading.get_ident()
 
             try:
+                # TODO: figure out if/where agent name occurs
                 self.registered_model.add_data_point_async(
                     result_obj=json.dumps(
                         {
@@ -339,6 +376,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     result_datetime=get_current_ts(),
                     context_token=self.session_id,
                     tags=self.tags,
+                    group_id=self.group.get("id"),
                 )
             except Exception as e:
                 print(f"[Okareo AutogenLogger] Failed to log new client: {e}")
@@ -353,20 +391,21 @@ class OkareoLogger(BaseLogger):  # type: ignore
         returns: Any,
     ) -> None:
         """
-        Log a registered function(can be a tool) use from an agent or a string source.
+        Log a registered function (can be a tool) use from an agent or a string source.
         """
         if self._log_function_use:
             thread_id = threading.get_ident()
 
             try:
-                self.registered_model.add_data_point_async(
+                source_name = str(source.name) if hasattr(source, "name") else source
+                if source_name not in self.registered_models:
+                    self.register_new_model(source_name, self.tags)
+                self.registered_models[source_name].add_data_point_async(
                     result_obj=json.dumps(
                         {
                             "log_type": "new_client",
                             "source_id": id(source),
-                            "source_name": (
-                                str(source.name) if hasattr(source, "name") else source
-                            ),
+                            "source_name": source_name,
                             "agent_module": source.__module__,
                             "agent_class": source.__class__.__name__,
                             "timestamp": get_current_ts(),
@@ -378,6 +417,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     result_datetime=get_current_ts(),
                     context_token=self.session_id,
                     tags=self.tags,
+                    group_id=self.group.get("id"),
                 )
             except Exception as e:
                 print(f"[Okareo AutogenLogger] Failed to log function use: {e}")
@@ -391,9 +431,8 @@ class OkareoLogger(BaseLogger):  # type: ignore
         """Close the file handler and remove it from the logger."""
         print(f"[Okareo] Finished logging Session ID: {self.session_id}")
         print(
-            f"[Okareo] Logged data points for autogen chat under mut_name '{self.mut_name}'."
+            f"[Okareo] Logged data points for autogen chat under group_name '{self.group_name}' with ID '{self.group['id']}'."
         )
-        print(f"[Okareo] View data points at {self.registered_model.app_link}.")
 
 
 class AutogenLogger:
