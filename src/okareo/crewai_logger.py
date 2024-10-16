@@ -1,30 +1,40 @@
 import datetime
+import importlib.metadata
 import json
+import logging
 import random
 import string
-import traceback
 import uuid
-from typing import Any
+from typing import Any, Collection, Optional
 
 from opentelemetry import trace
+from opentelemetry.instrumentation.instrumentor import BaseInstrumentor  # type: ignore
 from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.trace import get_tracer
+from wrapt import wrap_function_wrapper  # type: ignore
 
 from okareo import Okareo
 
-def get_agent_names(json_data):
+logging.basicConfig(level=logging.FATAL)
+
+
+def get_agent_names(json_data: Any) -> Any:
     data = json.loads(json_data)
-    agents = data.get('crew_agents', [])
-    agent_names = [agent['role'] for agent in agents]
+    agents = data.get("crew_agents", [])
+    agent_names = [agent["role"] for agent in agents]
     return agent_names
 
-def find_agent_role(json_data, id_prefix):
+
+def find_agent_role(json_data: Any, id_prefix: Any) -> Any:
     data = json.loads(json_data)
-    
+
     for task in data["crew_tasks"]:
         if task["id"].startswith(id_prefix):
             role = task["agent_role"]
             return role
     return None
+
 
 class CrewAISpanProcessor(SpanProcessor):
     def __init__(self, config: dict[str, Any]) -> None:
@@ -44,8 +54,8 @@ class CrewAISpanProcessor(SpanProcessor):
         self.group = self.okareo.create_group(
             name=self.group_name, tags=self.tags, source={"log_source": "crewai"}
         )
-        self.created_obj = {}
-        self.cur_model = None
+        self.created_obj: Any = {}
+        self.cur_model: Any = None
 
     def _format_span_data(self, span: ReadableSpan) -> dict:
         if span.attributes is None:
@@ -70,7 +80,7 @@ class CrewAISpanProcessor(SpanProcessor):
         try:
             if span.name == "Crew Created":
                 self.created_obj = self._format_span_data(span)
-            
+
                 agent_names = get_agent_names(json.dumps(self.created_obj))
                 self.models = []
                 for agent_name in agent_names:
@@ -82,11 +92,13 @@ class CrewAISpanProcessor(SpanProcessor):
             if span.name == "Crew Created":
                 models_to_add = self.models
             elif span.name == "Task Created":
-                role = find_agent_role(json.dumps(self.created_obj), span_data.get("task_id"))
+                role = find_agent_role(
+                    json.dumps(self.created_obj), span_data.get("task_id")
+                )
                 self.cur_model = self.okareo.register_model(name=role)
                 models_to_add = [self.cur_model]
             else:
-                models_to_add = [self.cur_model] 
+                models_to_add = [self.cur_model]
 
             result_obj = {
                 "log_type": span.name,
@@ -101,10 +113,10 @@ class CrewAISpanProcessor(SpanProcessor):
                     result_datetime=self._get_timestamp_iso(span.end_time),
                     context_token=self.context_id,
                     tags=self.tags,
-                    group_id=self.group.get('id'),
+                    group_id=self.group.get("id"),
                 )
-        except Exception as e:
-            pass
+        except Exception:
+            print("Unable to log CrewAI datapoints")
 
     @staticmethod
     def safe_loads(data: Any) -> Any:
@@ -125,9 +137,128 @@ class CrewAISpanProcessor(SpanProcessor):
         return False
 
 
+def completion_wrapper(version: Any, tracer: Any) -> Any:
+    def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+        with tracer.start_as_current_span("litellm.completion") as span:
+            span.set_attribute("litellm.version", version)
+
+            model = kwargs.get("model") or args[0] if args else None
+            if model:
+                span.set_attribute("litellm.model", model)
+
+            try:
+                result = wrapped(*args, **kwargs)
+
+                if isinstance(result, dict):
+                    span.set_attribute(
+                        "litellm.completion_tokens",
+                        result.get("usage", {}).get("completion_tokens"),
+                    )
+                    span.set_attribute(
+                        "litellm.prompt_tokens",
+                        result.get("usage", {}).get("prompt_tokens"),
+                    )
+                    span.set_attribute(
+                        "litellm.total_tokens",
+                        result.get("usage", {}).get("total_tokens"),
+                    )
+
+                return result
+            except Exception as e:
+                span.record_exception(e)
+                raise
+
+    return wrapper
+
+
+class LiteLLMInstrumentation(BaseInstrumentor):  # type: ignore
+    def instrumentation_dependencies(self) -> Collection[str]:
+        return ["litellm >= 1.48.0", "opentelemetry-api >= 1.0.0"]
+
+    def _instrument(self, **kwargs: Any) -> None:
+        tracer_provider: Optional[TracerProvider] = kwargs.get("tracer_provider")
+        tracer = get_tracer(__name__, "", tracer_provider)
+        version: str = importlib.metadata.version("litellm")
+
+        wrap_function_wrapper(
+            "litellm",
+            "completion",
+            completion_wrapper(version, tracer),
+        )
+        wrap_function_wrapper(
+            "litellm",
+            "text_completion",
+            completion_wrapper(version, tracer),
+        )
+
+    def _uninstrument(self, **kwargs: Any) -> None:
+        pass
+
+
+def chat_completions_create(version: Any, tracer: Any) -> Any:
+    def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+        with tracer.start_as_current_span("openai.chat.completions.create") as span:
+            span.set_attribute("openai.version", version)
+
+            model = kwargs.get("model")
+            if model:
+                span.set_attribute("openai.model", model)
+
+            messages = kwargs.get("messages")
+            if messages:
+                span.set_attribute("openai.message_count", len(messages))
+
+            try:
+                result = wrapped(*args, **kwargs)
+
+                if hasattr(result, "usage"):
+                    span.set_attribute(
+                        "openai.completion_tokens", result.usage.completion_tokens
+                    )
+                    span.set_attribute(
+                        "openai.prompt_tokens", result.usage.prompt_tokens
+                    )
+                    span.set_attribute("openai.total_tokens", result.usage.total_tokens)
+
+                return result
+            except Exception as e:
+                span.record_exception(e)
+                raise
+
+    return wrapper
+
+
+class OpenAIInstrumentation(BaseInstrumentor):  # type: ignore
+    def instrumentation_dependencies(self) -> Collection[str]:
+        return ["openai >= 0.27.0", "opentelemetry-api >= 1.0.0"]
+
+    def _instrument(self, **kwargs: Any) -> None:
+        tracer_provider: Optional[TracerProvider] = kwargs.get("tracer_provider")
+        tracer = get_tracer(__name__, "", tracer_provider)
+        version: str = importlib.metadata.version("openai")
+
+        wrap_function_wrapper(
+            "openai.resources.chat.completions",
+            "Completions.create",
+            chat_completions_create(version, tracer),
+        )
+        wrap_function_wrapper(
+            "openai.resources.chat.completions",
+            "AsyncCompletions.create",
+            chat_completions_create(version, tracer),
+        )
+
+    def _uninstrument(self, **kwargs: Any) -> None:
+        pass
+
+
 class CrewAILogger:
     def __init__(self, logger_config: dict[str, Any]):
         provider = TracerProvider()
         span_processor = CrewAISpanProcessor(logger_config)
-        provider.add_span_processor(span_processor)
         trace.set_tracer_provider(provider)
+        provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+        provider.add_span_processor(span_processor)
+
+        LiteLLMInstrumentation().instrument()
+        OpenAIInstrumentation().instrument()
