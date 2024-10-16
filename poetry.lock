@@ -247,7 +247,7 @@ tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
 name = "autogen-agentchat"
 version = "0.2.36"
 description = "Enabling Next-Gen LLM Applications via Multi-Agent Conversation Framework"
-optional = false
+optional = true
 python-versions = "<3.13,>=3.8"
 files = [
     {file = "autogen-agentchat-0.2.36.tar.gz", hash = "sha256:90429a22214c8e2cf4a239382d9dbf143bead83d8127c8e2b67701ce6a6361f2"},
@@ -783,7 +783,7 @@ dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "sphinx (<2)", "tox"]
 name = "diskcache"
 version = "5.6.3"
 description = "Disk Cache -- Disk and file backed persistent cache."
-optional = false
+optional = true
 python-versions = ">=3"
 files = [
     {file = "diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19"},
@@ -816,7 +816,7 @@ files = [
 name = "docker"
 version = "7.1.0"
 description = "A Python library for the Docker Engine API."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "docker-7.1.0-py3-none-any.whl", hash = "sha256:c96b93b7f0a746f9e77d325bcfb87422a3d8bd4f03136ae8a85b37f1898d5fc0"},
@@ -1003,7 +1003,7 @@ test = ["PyHamcrest", "pytest", "pytest-cov"]
 name = "flaml"
 version = "2.3.1"
 description = "A fast library for automated machine learning and tuning"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "FLAML-2.3.1-py3-none-any.whl", hash = "sha256:c633c73bcb4e0ec56d7ccd1db9577c40ccf8247455a51868da2a2b93795bb26a"},
@@ -4042,7 +4042,7 @@ test = ["pytest", "tornado (>=4.5)", "typeguard"]
 name = "termcolor"
 version = "2.5.0"
 description = "ANSI color formatting for output in terminal"
-optional = false
+optional = true
 python-versions = ">=3.9"
 files = [
     {file = "termcolor-2.5.0-py3-none-any.whl", hash = "sha256:37b17b5fc1e604945c2642c872a3764b5d547a48009871aea3edd3afa180afb8"},
@@ -4638,4 +4638,4 @@ langchain = ["langchain", "litellm", "openai"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "c6ff85f287eae4879f39a96199c5d6ac16abf87de8e3f79347f13cfac2b072f0"
+content-hash = "51e1b2ea847ce2f8d896ecef7200e1c25017b1f39cd763f03618fb590d9df7ca"
