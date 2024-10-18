@@ -10,7 +10,6 @@ from typing import Any, Collection, Optional
 from opentelemetry import trace
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor  # type: ignore
 from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace import get_tracer
 from wrapt import wrap_function_wrapper  # type: ignore
 
@@ -40,10 +39,13 @@ class CrewAISpanProcessor(SpanProcessor):
     def __init__(self, config: dict[str, Any]) -> None:
         if "api_key" not in config:
             raise ValueError("api_key is required in the config")
+        base_path = config.get("base_path", None)
+        api_key = config["api_key"]
 
-        self.okareo = Okareo(
-            config["api_key"],
-        )
+        if base_path and len(base_path) > 0:
+            self.okareo = Okareo(api_key, base_path=base_path)
+        else:
+            self.okareo = Okareo(api_key)
         self.context_id = str(config.get("context_token", uuid.uuid4()))
         self.tags = config.get("tags", [])
         random_suffix = "".join(
@@ -74,8 +76,6 @@ class CrewAISpanProcessor(SpanProcessor):
         return timestamp
 
     def on_end(self, span: ReadableSpan) -> None:
-        if span.instrumentation_info.name != "crewai.telemetry":
-            return
 
         try:
             if span.name == "Crew Created":
@@ -139,6 +139,7 @@ class CrewAISpanProcessor(SpanProcessor):
 
 def completion_wrapper(version: Any, tracer: Any) -> Any:
     def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
+
         with tracer.start_as_current_span("litellm.completion") as span:
             span.set_attribute("litellm.version", version)
 
@@ -146,26 +147,33 @@ def completion_wrapper(version: Any, tracer: Any) -> Any:
             if model:
                 span.set_attribute("litellm.model", model)
 
+            messages = kwargs.get("messages")
+            if messages:
+                messages_json = json.dumps(messages, indent=2)
+                span.set_attribute("messages", messages_json)
+
             try:
                 result = wrapped(*args, **kwargs)
 
                 if isinstance(result, dict):
+                    usage = result.get("usage", {})
                     span.set_attribute(
                         "litellm.completion_tokens",
-                        result.get("usage", {}).get("completion_tokens"),
+                        usage.get("completion_tokens"),
                     )
                     span.set_attribute(
                         "litellm.prompt_tokens",
-                        result.get("usage", {}).get("prompt_tokens"),
+                        usage.get("prompt_tokens"),
                     )
                     span.set_attribute(
                         "litellm.total_tokens",
-                        result.get("usage", {}).get("total_tokens"),
+                        usage.get("total_tokens"),
                     )
 
                 return result
             except Exception as e:
                 span.record_exception(e)
+
                 raise
 
     return wrapper
@@ -179,12 +187,12 @@ class LiteLLMInstrumentation(BaseInstrumentor):  # type: ignore
         tracer_provider: Optional[TracerProvider] = kwargs.get("tracer_provider")
         tracer = get_tracer(__name__, "", tracer_provider)
         version: str = importlib.metadata.version("litellm")
-
         wrap_function_wrapper(
             "litellm",
             "completion",
             completion_wrapper(version, tracer),
         )
+
         wrap_function_wrapper(
             "litellm",
             "text_completion",
@@ -256,9 +264,8 @@ class CrewAILogger:
     def __init__(self, logger_config: dict[str, Any]):
         provider = TracerProvider()
         span_processor = CrewAISpanProcessor(logger_config)
-        trace.set_tracer_provider(provider)
-        provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
         provider.add_span_processor(span_processor)
-
-        LiteLLMInstrumentation().instrument()
-        OpenAIInstrumentation().instrument()
+        trace.set_tracer_provider(provider)
+        trace.get_tracer(__name__)
+        LiteLLMInstrumentation().instrument(tracer_provider=provider)
+        OpenAIInstrumentation().instrument(tracer_provider=provider)
