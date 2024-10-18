@@ -46,6 +46,7 @@ class CrewAISpanProcessor(SpanProcessor):
             self.okareo = Okareo(api_key, base_path=base_path)
         else:
             self.okareo = Okareo(api_key)
+        self.is_context_set = "context_token" in config
         self.context_id = str(config.get("context_token", uuid.uuid4()))
         self.tags = config.get("tags", [])
         random_suffix = "".join(
@@ -79,6 +80,8 @@ class CrewAISpanProcessor(SpanProcessor):
 
         try:
             if span.name == "Crew Created":
+                if not self.is_context_set:
+                    self.context_id = str(uuid.uuid4())
                 self.created_obj = self._format_span_data(span)
 
                 agent_names = get_agent_names(json.dumps(self.created_obj))
