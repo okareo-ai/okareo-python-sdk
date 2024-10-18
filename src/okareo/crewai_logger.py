@@ -69,7 +69,7 @@ class CrewAISpanProcessor(SpanProcessor):
             if self.is_serializable(self.safe_loads(v))
         }
         if 'openai.message_get' in formatted_data:
-            formatted_data['openai.message_get'] = json.loads(formatted_data['openai.message_get'])
+            formatted_data['openai.message_get'] = self.safe_loads(formatted_data['openai.message_get'])
         return formatted_data
 
     def _get_timestamp_iso(self, epoch_ns: Any) -> str:
