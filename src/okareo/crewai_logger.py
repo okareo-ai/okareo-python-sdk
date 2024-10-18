@@ -68,6 +68,8 @@ class CrewAISpanProcessor(SpanProcessor):
             for k, v in span.attributes.items()
             if self.is_serializable(self.safe_loads(v))
         }
+        if 'openai.message_get' in formatted_data:
+            formatted_data['openai.message_get'] = json.loads(formatted_data['openai.message_get'])
         return formatted_data
 
     def _get_timestamp_iso(self, epoch_ns: Any) -> str:
@@ -77,7 +79,7 @@ class CrewAISpanProcessor(SpanProcessor):
         return timestamp
 
     def on_end(self, span: ReadableSpan) -> None:
-
+        print(self._format_span_data(span))
         try:
             if span.name == "Crew Created":
                 if not self.is_context_set:
@@ -205,7 +207,6 @@ class LiteLLMInstrumentation(BaseInstrumentor):  # type: ignore
     def _uninstrument(self, **kwargs: Any) -> None:
         pass
 
-
 def chat_completions_create(version: Any, tracer: Any) -> Any:
     def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
         with tracer.start_as_current_span("openai.chat.completions.create") as span:
@@ -215,9 +216,9 @@ def chat_completions_create(version: Any, tracer: Any) -> Any:
             if model:
                 span.set_attribute("openai.model", model)
 
+
             messages = kwargs.get("messages")
-            if messages:
-                span.set_attribute("openai.message_count", len(messages))
+            span.set_attribute("openai.message_get", json.dumps(messages))
 
             try:
                 result = wrapped(*args, **kwargs)
