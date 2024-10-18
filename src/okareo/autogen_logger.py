@@ -104,7 +104,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
             print(
                 f"[Okareo] Started new logging session with context_token: {self.session_id}"
             )
-            print(f"[Okareo] Logging data points under mut_name '{self.mut_name}'.")
+            print(f"[Okareo] Logging data points under group_name '{self.group_name}'.")
             print("[Okareo] Logging the following events:")
             for log_type in self._log_types:
                 if getattr(self, f"_log_{log_type}"):
