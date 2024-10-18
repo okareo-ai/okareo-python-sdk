@@ -27,6 +27,7 @@ class DatapointSchema:
         context_token (Union[Unset, str]): Context token is a unique token to link various datapoints which originate
             from the same context
         test_run_id (Union[Unset, str]): ID of testrun
+        group_id (Union[Unset, str]): ID of the group
     """
 
     mut_id: Union[Unset, str] = UNSET
@@ -40,6 +41,7 @@ class DatapointSchema:
     error_code: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET
     test_run_id: Union[Unset, str] = UNSET
+    group_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -63,6 +65,7 @@ class DatapointSchema:
         error_code = self.error_code
         context_token = self.context_token
         test_run_id = self.test_run_id
+        group_id = self.group_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -89,6 +92,8 @@ class DatapointSchema:
             field_dict["context_token"] = context_token
         if test_run_id is not UNSET:
             field_dict["test_run_id"] = test_run_id
+        if group_id is not UNSET:
+            field_dict["group_id"] = group_id
 
         return field_dict
 
@@ -127,6 +132,8 @@ class DatapointSchema:
 
         test_run_id = d.pop("test_run_id", UNSET)
 
+        group_id = d.pop("group_id", UNSET)
+
         datapoint_schema = cls(
             mut_id=mut_id,
             input_=input_,
@@ -139,6 +146,7 @@ class DatapointSchema:
             error_code=error_code,
             context_token=context_token,
             test_run_id=test_run_id,
+            group_id=group_id,
         )
 
         datapoint_schema.additional_properties = d

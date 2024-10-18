@@ -9,6 +9,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.datapoint_list_item_input_type_0 import DatapointListItemInputType0
+    from ..models.datapoint_list_item_model_metadata import DatapointListItemModelMetadata
     from ..models.datapoint_list_item_result_type_0 import DatapointListItemResultType0
 
 
@@ -34,6 +35,8 @@ class DatapointListItem:
         project_id (Union[Unset, str]):
         test_run_id (Union[Unset, str]):
         total_search_count (Union[Unset, int]):
+        model_metadata (Union[Unset, DatapointListItemModelMetadata]):
+        group_id (Union[Unset, str]): Group ID
     """
 
     id: str
@@ -51,6 +54,8 @@ class DatapointListItem:
     project_id: Union[Unset, str] = UNSET
     test_run_id: Union[Unset, str] = UNSET
     total_search_count: Union[Unset, int] = UNSET
+    model_metadata: Union[Unset, "DatapointListItemModelMetadata"] = UNSET
+    group_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -116,6 +121,11 @@ class DatapointListItem:
         project_id = self.project_id
         test_run_id = self.test_run_id
         total_search_count = self.total_search_count
+        model_metadata: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.model_metadata, Unset):
+            model_metadata = self.model_metadata.to_dict()
+
+        group_id = self.group_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -152,12 +162,17 @@ class DatapointListItem:
             field_dict["test_run_id"] = test_run_id
         if total_search_count is not UNSET:
             field_dict["total_search_count"] = total_search_count
+        if model_metadata is not UNSET:
+            field_dict["model_metadata"] = model_metadata
+        if group_id is not UNSET:
+            field_dict["group_id"] = group_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.datapoint_list_item_input_type_0 import DatapointListItemInputType0
+        from ..models.datapoint_list_item_model_metadata import DatapointListItemModelMetadata
         from ..models.datapoint_list_item_result_type_0 import DatapointListItemResultType0
 
         d = src_dict.copy()
@@ -258,6 +273,15 @@ class DatapointListItem:
 
         total_search_count = d.pop("total_search_count", UNSET)
 
+        _model_metadata = d.pop("model_metadata", UNSET)
+        model_metadata: Union[Unset, DatapointListItemModelMetadata]
+        if isinstance(_model_metadata, Unset):
+            model_metadata = UNSET
+        else:
+            model_metadata = DatapointListItemModelMetadata.from_dict(_model_metadata)
+
+        group_id = d.pop("group_id", UNSET)
+
         datapoint_list_item = cls(
             id=id,
             tags=tags,
@@ -274,6 +298,8 @@ class DatapointListItem:
             project_id=project_id,
             test_run_id=test_run_id,
             total_search_count=total_search_count,
+            model_metadata=model_metadata,
+            group_id=group_id,
         )
 
         datapoint_list_item.additional_properties = d

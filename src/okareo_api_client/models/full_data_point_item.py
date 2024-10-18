@@ -7,6 +7,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
+    from ..models.full_data_point_item_model_metadata import FullDataPointItemModelMetadata
     from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
     from ..models.full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
 
@@ -28,6 +29,7 @@ class FullDataPointItem:
         tags (Union[Unset, List[str]]):
         model_input (Union[Unset, Any]):
         model_result (Union[Unset, Any]):
+        model_metadata (Union[Unset, FullDataPointItemModelMetadata]):
     """
 
     id: str
@@ -40,6 +42,7 @@ class FullDataPointItem:
     tags: Union[Unset, List[str]] = UNSET
     model_input: Union[Unset, Any] = UNSET
     model_result: Union[Unset, Any] = UNSET
+    model_metadata: Union[Unset, "FullDataPointItemModelMetadata"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -80,6 +83,9 @@ class FullDataPointItem:
 
         model_input = self.model_input
         model_result = self.model_result
+        model_metadata: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.model_metadata, Unset):
+            model_metadata = self.model_metadata.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -100,12 +106,15 @@ class FullDataPointItem:
             field_dict["model_input"] = model_input
         if model_result is not UNSET:
             field_dict["model_result"] = model_result
+        if model_metadata is not UNSET:
+            field_dict["model_metadata"] = model_metadata
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
+        from ..models.full_data_point_item_model_metadata import FullDataPointItemModelMetadata
         from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
         from ..models.full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
 
@@ -168,6 +177,13 @@ class FullDataPointItem:
 
         model_result = d.pop("model_result", UNSET)
 
+        _model_metadata = d.pop("model_metadata", UNSET)
+        model_metadata: Union[Unset, FullDataPointItemModelMetadata]
+        if isinstance(_model_metadata, Unset):
+            model_metadata = UNSET
+        else:
+            model_metadata = FullDataPointItemModelMetadata.from_dict(_model_metadata)
+
         full_data_point_item = cls(
             id=id,
             scenario_data_point_id=scenario_data_point_id,
@@ -179,6 +195,7 @@ class FullDataPointItem:
             tags=tags,
             model_input=model_input,
             model_result=model_result,
+            model_metadata=model_metadata,
         )
 
         full_data_point_item.additional_properties = d

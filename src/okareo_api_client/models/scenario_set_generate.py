@@ -24,6 +24,8 @@ class ScenarioSetGenerate:
             by CustomGenerator type.
         pre_template (Union[Unset, str]): Template for pre-processing scenario before sending it to generator
         post_template (Union[Unset, str]): Template for post-processing scenario after generator before it's saved
+        lock_result (Union[Unset, bool]): Whether to lock the result of the generated scenario. Used in the Custom
+            Generator type.
     """
 
     source_scenario_id: str
@@ -35,6 +37,7 @@ class ScenarioSetGenerate:
     generation_prompt: Union[Unset, str] = UNSET
     pre_template: Union[Unset, str] = UNSET
     post_template: Union[Unset, str] = UNSET
+    lock_result: Union[Unset, bool] = False
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -53,6 +56,7 @@ class ScenarioSetGenerate:
         generation_prompt = self.generation_prompt
         pre_template = self.pre_template
         post_template = self.post_template
+        lock_result = self.lock_result
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -75,6 +79,8 @@ class ScenarioSetGenerate:
             field_dict["pre_template"] = pre_template
         if post_template is not UNSET:
             field_dict["post_template"] = post_template
+        if lock_result is not UNSET:
+            field_dict["lock_result"] = lock_result
 
         return field_dict
 
@@ -109,6 +115,8 @@ class ScenarioSetGenerate:
 
         post_template = d.pop("post_template", UNSET)
 
+        lock_result = d.pop("lock_result", UNSET)
+
         scenario_set_generate = cls(
             source_scenario_id=source_scenario_id,
             name=name,
@@ -119,6 +127,7 @@ class ScenarioSetGenerate:
             generation_prompt=generation_prompt,
             pre_template=pre_template,
             post_template=post_template,
+            lock_result=lock_result,
         )
 
         scenario_set_generate.additional_properties = d

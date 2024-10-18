@@ -15,11 +15,13 @@ class ProjectResponse:
         id (str):
         name (str):
         tags (Union[Unset, List[str]]):
+        num_evals (Union[Unset, int]):
     """
 
     id: str
     name: str
     tags: Union[Unset, List[str]] = UNSET
+    num_evals: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -28,6 +30,8 @@ class ProjectResponse:
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
+
+        num_evals = self.num_evals
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -39,6 +43,8 @@ class ProjectResponse:
         )
         if tags is not UNSET:
             field_dict["tags"] = tags
+        if num_evals is not UNSET:
+            field_dict["num_evals"] = num_evals
 
         return field_dict
 
@@ -51,10 +57,13 @@ class ProjectResponse:
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
+        num_evals = d.pop("num_evals", UNSET)
+
         project_response = cls(
             id=id,
             name=name,
             tags=tags,
+            num_evals=num_evals,
         )
 
         project_response.additional_properties = d

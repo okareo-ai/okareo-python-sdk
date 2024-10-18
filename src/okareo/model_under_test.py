@@ -345,6 +345,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         project_id: Union[str, None] = None,
         tags: Union[List[str], None] = None,
         test_run_id: Union[None, str] = None,
+        group_id: Union[None, str] = None,
     ) -> Union[DatapointResponse, ErrorResponse]:
         body = {
             "tags": tags or [],
@@ -367,6 +368,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             "project_id": self.project_id,
             "mut_id": self.mut_id,
             "test_run_id": test_run_id,
+            "group_id": group_id,
         }
         response = add_datapoint_v0_datapoints_post.sync(
             client=self.client,
@@ -392,6 +394,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         project_id: Union[str, None] = None,
         tags: Union[List[str], None] = None,
         test_run_id: Union[None, str] = None,
+        group_id: Union[None, str] = None,
     ) -> bool:
         body = {
             "tags": tags or [],
@@ -414,6 +417,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             "project_id": self.project_id,
             "mut_id": self.mut_id,
             "test_run_id": test_run_id,
+            "group_id": group_id,
         }
 
         return self.async_call(
