@@ -5,69 +5,51 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ProjectResponse")
+T = TypeVar("T", bound="GroupSchema")
 
 
 @_attrs_define
-class ProjectResponse:
+class GroupSchema:
     """
     Attributes:
-        id (str):
-        name (str):
-        tags (Union[Unset, List[str]]):
-        num_evals (Union[Unset, int]):
+        name (Union[Unset, str]): Name of the group
+        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter groups in the Okareo app
     """
 
-    id: str
-    name: str
+    name: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
-    num_evals: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        id = self.id
         name = self.name
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        num_evals = self.num_evals
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "id": id,
-                "name": name,
-            }
-        )
+        field_dict.update({})
+        if name is not UNSET:
+            field_dict["name"] = name
         if tags is not UNSET:
             field_dict["tags"] = tags
-        if num_evals is not UNSET:
-            field_dict["num_evals"] = num_evals
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        id = d.pop("id")
-
-        name = d.pop("name")
+        name = d.pop("name", UNSET)
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
-        num_evals = d.pop("num_evals", UNSET)
-
-        project_response = cls(
-            id=id,
+        group_schema = cls(
             name=name,
             tags=tags,
-            num_evals=num_evals,
         )
 
-        project_response.additional_properties = d
-        return project_response
+        group_schema.additional_properties = d
+        return group_schema
 
     @property
     def additional_keys(self) -> List[str]:

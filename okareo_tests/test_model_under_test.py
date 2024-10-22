@@ -137,7 +137,7 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
 
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
-        name="my test scenario set",
+        name=f"my test scenario set {random_string(10)}",
         seed_data=[
             SeedData(input_="example question or statement", result="example result")
         ],
@@ -206,7 +206,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
     okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
-        name="my test scenario set",
+        name=f"my test scenario set {random_string(10)}",
         seed_data=[
             SeedData(input_="example question or statement", result="example result")
         ],
