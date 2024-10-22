@@ -110,6 +110,8 @@ exclude_lines = [
 [tool.coverage.run]
 omit = [
     "src/okareo_api_client/*",
+    "src/okareo/crewai_logger.py",
+    "src/okareo/autogen_logger.py",
     "okareo_tests/*",
 ]
 

@@ -44,3 +44,29 @@ def test_crewai_logger() -> None:
     )
 
     assert isinstance(dp, list)
+
+
+def test_create_group() -> Any:
+    okareo = Okareo(api_key=API_KEY)
+    group_name = f"test_group_{random_string(5)}"
+    tags = ["test", "crewai"]
+    group = okareo.create_group(name=group_name, tags=tags)
+    assert isinstance(group, dict)
+    assert group.get("name") == group_name
+    assert set(group.get("tags", [])) == set(tags)
+
+
+def test_add_model_to_group() -> Any:
+    okareo = Okareo(api_key=API_KEY)
+    group_name = f"test_group_{random_string(5)}"
+    group = okareo.create_group(name=group_name)
+    model = okareo.register_model(name=f"test_model_{random_string(5)}")
+    result = okareo.add_model_to_group(group, model)
+    assert isinstance(result, dict)
+
+
+def test_create_trace_eval() -> Any:
+    okareo = Okareo(api_key=API_KEY)
+    group_name = f"test_group_{random_string(5)}"
+    group = okareo.create_group(name=group_name)
+    okareo.create_trace_eval(group, "context_token")
