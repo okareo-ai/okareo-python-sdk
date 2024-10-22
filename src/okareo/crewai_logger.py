@@ -114,15 +114,16 @@ class CrewAISpanProcessor(SpanProcessor):
             "span_id": format(span.context.span_id, "016x"),
         }
         for cur_model in models_to_add:
-            cur_model.add_data_point(
-                input_obj=span_data,
-                input_datetime=self._get_timestamp_iso(span.start_time),
-                result_obj=json.dumps(result_obj),
-                result_datetime=self._get_timestamp_iso(span.end_time),
-                context_token=self.context_id,
-                tags=self.tags,
-                group_id=self.group.get("id"),
-            )
+            if cur_model:
+                cur_model.add_data_point(
+                    input_obj=span_data,
+                    input_datetime=self._get_timestamp_iso(span.start_time),
+                    result_obj=json.dumps(result_obj),
+                    result_datetime=self._get_timestamp_iso(span.end_time),
+                    context_token=self.context_id,
+                    tags=self.tags,
+                    group_id=self.group.get("id"),
+                )
         if span.name == "Task Execution":
             self.task_count += 1
             if self.task_count == self.total_task_count:
