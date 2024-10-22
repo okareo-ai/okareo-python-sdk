@@ -271,11 +271,42 @@ class OpenAIInstrumentation(BaseInstrumentor):  # type: ignore
 
 
 class CrewAILogger:
-    def __init__(self, logger_config: dict[str, Any]):
-        provider = TracerProvider()
-        span_processor = CrewAISpanProcessor(logger_config)
-        provider.add_span_processor(span_processor)
-        trace.set_tracer_provider(provider)
-        trace.get_tracer(__name__)
-        LiteLLMInstrumentation().instrument(tracer_provider=provider)
-        OpenAIInstrumentation().instrument(tracer_provider=provider)
+    _instance = None
+    _provider = None
+
+    def __new__(cls, *args, **kwargs) -> Any:  # type: ignore
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, logger_config: dict[str, Any]) -> None:
+        self.logger_config: Any = logger_config
+        self.span_processor: Any = None
+
+    def start(self) -> None:
+        if CrewAILogger._provider is None:
+            CrewAILogger._provider = TracerProvider()
+            trace.set_tracer_provider(CrewAILogger._provider)
+            LiteLLMInstrumentation().instrument(tracer_provider=CrewAILogger._provider)
+            OpenAIInstrumentation().instrument(tracer_provider=CrewAILogger._provider)
+
+        if self.span_processor is None:
+            self.span_processor = CrewAISpanProcessor(self.logger_config)
+            CrewAILogger._provider.add_span_processor(self.span_processor)
+
+    def stop(self) -> None:
+        if self.span_processor:
+            self.span_processor.shutdown()
+            self.span_processor = None
+        # Note: We're not removing the span processor from the TracerProvider
+        # as there's no built-in method to do so.
+
+    def __enter__(self) -> "CrewAILogger":
+        self.start()
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.stop()
+
+    def __del__(self) -> None:
+        self.stop()
