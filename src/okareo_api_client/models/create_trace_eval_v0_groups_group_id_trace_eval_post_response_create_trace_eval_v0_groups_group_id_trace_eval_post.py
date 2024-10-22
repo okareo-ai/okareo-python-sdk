@@ -3,11 +3,11 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="GetDatapointsInGroupV0GroupsGroupIdDatapointsGetResponse201Item")
+T = TypeVar("T", bound="CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost")
 
 
 @_attrs_define
-class GetDatapointsInGroupV0GroupsGroupIdDatapointsGetResponse201Item:
+class CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost:
     """ """
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -22,10 +22,10 @@ class GetDatapointsInGroupV0GroupsGroupIdDatapointsGetResponse201Item:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        get_datapoints_in_group_v0_groups_group_id_datapoints_get_response_201_item = cls()
+        create_trace_eval_v0_groups_group_id_trace_eval_post_response_create_trace_eval_v0_groups_group_id_trace_eval_post = cls()
 
-        get_datapoints_in_group_v0_groups_group_id_datapoints_get_response_201_item.additional_properties = d
-        return get_datapoints_in_group_v0_groups_group_id_datapoints_get_response_201_item
+        create_trace_eval_v0_groups_group_id_trace_eval_post_response_create_trace_eval_v0_groups_group_id_trace_eval_post.additional_properties = d
+        return create_trace_eval_v0_groups_group_id_trace_eval_post_response_create_trace_eval_v0_groups_group_id_trace_eval_post
 
     @property
     def additional_keys(self) -> List[str]:

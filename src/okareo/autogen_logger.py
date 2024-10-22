@@ -430,7 +430,8 @@ class OkareoLogger(BaseLogger):  # type: ignore
 
     def stop(self) -> None:
         """Close the file handler and remove it from the logger."""
-        print(f"[Okareo] Finished logging Session ID: {self.session_id}")
+        print(f"[Okareo] Evaluating logging Session ID: {self.session_id}")
+        self.okareo.create_trace_eval(self.group, self.session_id)
         print(
             f"[Okareo] Logged data points for autogen chat under group_name '{self.group_name}' with ID '{self.group['id']}'."
         )

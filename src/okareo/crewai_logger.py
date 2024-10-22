@@ -59,6 +59,8 @@ class CrewAISpanProcessor(SpanProcessor):
         )
         self.created_obj: Any = {}
         self.cur_model: Any = None
+        self.total_task_count = 0
+        self.task_count = 0
 
     def _format_span_data(self, span: ReadableSpan) -> dict:
         if span.attributes is None:
@@ -68,8 +70,10 @@ class CrewAISpanProcessor(SpanProcessor):
             for k, v in span.attributes.items()
             if self.is_serializable(self.safe_loads(v))
         }
-        if 'openai.message_get' in formatted_data:
-            formatted_data['openai.message_get'] = self.safe_loads(formatted_data['openai.message_get'])
+        if "openai.message_get" in formatted_data:
+            formatted_data["openai.message_get"] = self.safe_loads(
+                formatted_data["openai.message_get"]
+            )
         return formatted_data
 
     def _get_timestamp_iso(self, epoch_ns: Any) -> str:
@@ -79,49 +83,50 @@ class CrewAISpanProcessor(SpanProcessor):
         return timestamp
 
     def on_end(self, span: ReadableSpan) -> None:
-        print(self._format_span_data(span))
-        try:
-            if span.name == "Crew Created":
-                if not self.is_context_set:
-                    self.context_id = str(uuid.uuid4())
-                self.created_obj = self._format_span_data(span)
+        if span.name == "Crew Created":
+            if not self.is_context_set:
+                self.context_id = str(uuid.uuid4())
+            self.created_obj = self._format_span_data(span)
+            self.total_task_count = len(self.created_obj["crew_tasks"])
 
-                agent_names = get_agent_names(json.dumps(self.created_obj))
-                self.models = []
-                for agent_name in agent_names:
-                    model = self.okareo.register_model(name=agent_name)
-                    self.models.append(model)
-                    self.okareo.add_model_to_group(self.group, model)
-            models_to_add = []
-            span_data = self._format_span_data(span)
-            if span.name == "Crew Created":
-                models_to_add = self.models
-            elif span.name == "Task Created":
-                role = find_agent_role(
-                    json.dumps(self.created_obj), span_data.get("task_id")
-                )
-                self.cur_model = self.okareo.register_model(name=role)
-                models_to_add = [self.cur_model]
-            else:
-                models_to_add = [self.cur_model]
+            agent_names = get_agent_names(json.dumps(self.created_obj))
+            self.models = []
+            for agent_name in agent_names:
+                model = self.okareo.register_model(name=agent_name)
+                self.models.append(model)
+                self.okareo.add_model_to_group(self.group, model)
+        models_to_add = []
+        span_data = self._format_span_data(span)
+        if span.name == "Crew Created":
+            models_to_add = self.models
+        elif span.name == "Task Created":
+            role = find_agent_role(
+                json.dumps(self.created_obj), span_data.get("task_id")
+            )
+            self.cur_model = self.okareo.register_model(name=role)
+            models_to_add = [self.cur_model]
+        else:
+            models_to_add = [self.cur_model]
 
-            result_obj = {
-                "log_type": span.name,
-                "trace_id": format(span.context.trace_id, "032x"),
-                "span_id": format(span.context.span_id, "016x"),
-            }
-            for cur_model in models_to_add:
-                cur_model.add_data_point(
-                    input_obj=span_data,
-                    input_datetime=self._get_timestamp_iso(span.start_time),
-                    result_obj=json.dumps(result_obj),
-                    result_datetime=self._get_timestamp_iso(span.end_time),
-                    context_token=self.context_id,
-                    tags=self.tags,
-                    group_id=self.group.get("id"),
-                )
-        except Exception:
-            print("Unable to log CrewAI datapoints")
+        result_obj = {
+            "log_type": span.name,
+            "trace_id": format(span.context.trace_id, "032x"),
+            "span_id": format(span.context.span_id, "016x"),
+        }
+        for cur_model in models_to_add:
+            cur_model.add_data_point(
+                input_obj=span_data,
+                input_datetime=self._get_timestamp_iso(span.start_time),
+                result_obj=json.dumps(result_obj),
+                result_datetime=self._get_timestamp_iso(span.end_time),
+                context_token=self.context_id,
+                tags=self.tags,
+                group_id=self.group.get("id"),
+            )
+        if span.name == "Task Execution":
+            self.task_count += 1
+            if self.task_count == self.total_task_count:
+                self.okareo.create_trace_eval(self.group, self.context_id)
 
     @staticmethod
     def safe_loads(data: Any) -> Any:
@@ -207,6 +212,7 @@ class LiteLLMInstrumentation(BaseInstrumentor):  # type: ignore
     def _uninstrument(self, **kwargs: Any) -> None:
         pass
 
+
 def chat_completions_create(version: Any, tracer: Any) -> Any:
     def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
         with tracer.start_as_current_span("openai.chat.completions.create") as span:
@@ -215,7 +221,6 @@ def chat_completions_create(version: Any, tracer: Any) -> Any:
             model = kwargs.get("model")
             if model:
                 span.set_attribute("openai.model", model)
-
 
             messages = kwargs.get("messages")
             span.set_attribute("openai.message_get", json.dumps(messages))

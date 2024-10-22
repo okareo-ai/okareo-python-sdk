@@ -15,6 +15,7 @@ from okareo_api_client.api.default import (
     create_group_v0_groups_post,
     create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
+    create_trace_eval_v0_groups_group_id_trace_eval_post,
     find_test_data_points_v0_find_test_data_points_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
@@ -479,3 +480,26 @@ class Okareo:
         )
         self.validate_response(response)
         return response.parsed.additional_properties  # type: ignore
+
+    def create_trace_eval(self, group: Any, context_token: str) -> Any:
+        """
+        Create a trace evaluation for a group.
+
+        Args:
+            group_id (str): The ID of the group.
+            context_token (str): The context token for the trace.
+
+        Returns:
+            The created trace evaluation details.
+
+        Raises:
+            OkareoAPIException: If the API request fails.
+        """
+        response = create_trace_eval_v0_groups_group_id_trace_eval_post.sync_detailed(
+            client=self.client,
+            group_id=group.get("id", ""),
+            context_token=context_token,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        return response.parsed

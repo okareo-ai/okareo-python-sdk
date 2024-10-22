@@ -98,10 +98,10 @@ def sync_detailed(
 ) -> Response[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
     """Create Group
 
-     Create a new group for models under test.
+     Create a new group for models under test or return existing group with the same name.
 
     Returns:
-        The created group's details
+        The group's details (either newly created or existing)
 
     Args:
         name (str): The name of the group
@@ -141,10 +141,10 @@ def sync(
 ) -> Optional[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
     """Create Group
 
-     Create a new group for models under test.
+     Create a new group for models under test or return existing group with the same name.
 
     Returns:
-        The created group's details
+        The group's details (either newly created or existing)
 
     Args:
         name (str): The name of the group
@@ -179,10 +179,10 @@ async def asyncio_detailed(
 ) -> Response[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
     """Create Group
 
-     Create a new group for models under test.
+     Create a new group for models under test or return existing group with the same name.
 
     Returns:
-        The created group's details
+        The group's details (either newly created or existing)
 
     Args:
         name (str): The name of the group
@@ -220,10 +220,10 @@ async def asyncio(
 ) -> Optional[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
     """Create Group
 
-     Create a new group for models under test.
+     Create a new group for models under test or return existing group with the same name.
 
     Returns:
-        The created group's details
+        The group's details (either newly created or existing)
 
     Args:
         name (str): The name of the group

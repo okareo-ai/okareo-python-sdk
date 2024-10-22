@@ -1,36 +1,41 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
+from ...models.group_schema import GroupSchema
 from ...types import Response
 
 
 def _get_kwargs(
     group_id: str,
     *,
+    json_body: GroupSchema,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
+    json_json_body = json_body.to_dict()
+
     return {
-        "method": "get",
-        "url": "/v0/groups/{group_id}/datapoints".format(
+        "method": "put",
+        "url": "/v0/groups/{group_id}".format(
             group_id=group_id,
         ),
+        "json": json_json_body,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Optional[Union[ErrorResponse, str]]:
     if response.status_code == HTTPStatus.CREATED:
-        response_201 = response.json()
+        response_201 = cast(str, response.json())
         return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
@@ -56,7 +61,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Union[ErrorResponse, str]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -69,29 +74,32 @@ def sync_detailed(
     group_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: GroupSchema,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+) -> Response[Union[ErrorResponse, str]]:
+    """Update Group
 
-     Get all datapoints in a specific group.
+     Update a group
 
     Returns:
-        A list of datapoints in the group
+        the updated group
 
     Args:
         group_id (str): The ID of the group
         api_key (str):
+        json_body (GroupSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
         group_id=group_id,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -106,30 +114,33 @@ def sync(
     group_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: GroupSchema,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+) -> Optional[Union[ErrorResponse, str]]:
+    """Update Group
 
-     Get all datapoints in a specific group.
+     Update a group
 
     Returns:
-        A list of datapoints in the group
+        the updated group
 
     Args:
         group_id (str): The ID of the group
         api_key (str):
+        json_body (GroupSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, str]
     """
 
     return sync_detailed(
         group_id=group_id,
         client=client,
+        json_body=json_body,
         api_key=api_key,
     ).parsed
 
@@ -138,29 +149,32 @@ async def asyncio_detailed(
     group_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: GroupSchema,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+) -> Response[Union[ErrorResponse, str]]:
+    """Update Group
 
-     Get all datapoints in a specific group.
+     Update a group
 
     Returns:
-        A list of datapoints in the group
+        the updated group
 
     Args:
         group_id (str): The ID of the group
         api_key (str):
+        json_body (GroupSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
         group_id=group_id,
+        json_body=json_body,
         api_key=api_key,
     )
 
@@ -173,31 +187,34 @@ async def asyncio(
     group_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    json_body: GroupSchema,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+) -> Optional[Union[ErrorResponse, str]]:
+    """Update Group
 
-     Get all datapoints in a specific group.
+     Update a group
 
     Returns:
-        A list of datapoints in the group
+        the updated group
 
     Args:
         group_id (str): The ID of the group
         api_key (str):
+        json_body (GroupSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, str]
     """
 
     return (
         await asyncio_detailed(
             group_id=group_id,
             client=client,
+            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

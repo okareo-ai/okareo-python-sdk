@@ -19,7 +19,7 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/groups/{group_id}/datapoints".format(
+        "url": "/v0/traces/{group_id}/datapoints".format(
             group_id=group_id,
         ),
         "headers": headers,
@@ -71,7 +71,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+    """Get Datapoints In Group Trace
 
      Get all datapoints in a specific group.
 
@@ -108,7 +108,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+    """Get Datapoints In Group Trace
 
      Get all datapoints in a specific group.
 
@@ -140,7 +140,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+    """Get Datapoints In Group Trace
 
      Get all datapoints in a specific group.
 
@@ -175,7 +175,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Get Datapoints In Group
+    """Get Datapoints In Group Trace
 
      Get all datapoints in a specific group.
 
