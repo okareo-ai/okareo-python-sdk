@@ -88,6 +88,9 @@ class OkareoLogger(BaseLogger):  # type: ignore
             "new_client",
         ]
 
+        # set verbosity
+        self.verbose = config.get("verbose", False)
+
     def register_new_model(self, agent_name: str, tags: list[str]) -> None:
         """Register an agent as a new model in Okareo, and add the model to the group."""
         new_model = self.okareo.register_model(
@@ -96,16 +99,20 @@ class OkareoLogger(BaseLogger):  # type: ignore
         )
         self.okareo.add_model_to_group(self.group, new_model)
         self.registered_models[agent_name] = new_model
-        print(f"[Okareo] New agent registered under model: {agent_name}")
+        if self.verbose:
+            print(f"[Okareo] New agent registered under model: {agent_name}")
 
     def start(self) -> str:
         """Start the logger and return the session_id."""
         try:
-            print(
-                f"[Okareo] Started new logging session with context_token: {self.session_id}"
-            )
-            print(f"[Okareo] Logging data points under group_name '{self.group_name}'.")
-            print("[Okareo] Logging the following events:")
+            if self.verbose:
+                print(
+                    f"[Okareo] Started new logging session with context_token: {self.session_id}"
+                )
+                print(
+                    f"[Okareo] Logging data points under group_name '{self.group_name}'."
+                )
+                print("[Okareo] Logging the following events:")
             for log_type in self._log_types:
                 if getattr(self, f"_log_{log_type}"):
                     print(f"[Okareo] - {log_type}")
@@ -172,7 +179,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                 tb = traceback.format_exc()
                 line_number = tb.splitlines()[-3].split(",")[1].strip().split()[1]
                 print(
-                    f"[Okareo AutogenLogger] Failed to log chat completion (Line {line_number}): {tb}"
+                    f"[Okareo] Failed to log chat completion (Line {line_number}): {tb}"
                 )
         else:
             pass
@@ -234,9 +241,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
             except Exception:
                 tb = traceback.format_exc()
                 line_number = tb.splitlines()[-3].split(",")[1].strip().split()[1]
-                print(
-                    f"[Okareo AutogenLogger] Failed to log new agent (Line {line_number}): {tb}"
-                )
+                print(f"[Okareo] Failed to log new agent (Line {line_number}): {tb}")
         else:
             pass
 
@@ -282,7 +287,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                         group_id=self.group.get("id"),
                     )
                 except Exception as e:
-                    print(f"[Okareo AutogenLogger] Failed to log event: {e}")
+                    print(f"[Okareo] Failed to log event: {e}")
             else:
                 try:
                     # parse the response to get the proper message
@@ -306,7 +311,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                         group_id=self.group.get("id"),
                     )
                 except Exception as e:
-                    print(f"[Okareo AutogenLogger] Failed to log event: {e}")
+                    print(f"[Okareo] Failed to log event: {e}")
         else:
             pass
 
@@ -341,9 +346,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
             except Exception:
                 tb = traceback.format_exc()
                 line_number = tb.splitlines()[-3].split(",")[1].strip().split()[1]
-                print(
-                    f"[Okareo AutogenLogger] Failed to log new wrapper (Line {line_number}): {tb}"
-                )
+                print(f"[Okareo] Failed to log new wrapper (Line {line_number}): {tb}")
         else:
             pass
 
@@ -380,7 +383,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     group_id=self.group.get("id"),
                 )
             except Exception as e:
-                print(f"[Okareo AutogenLogger] Failed to log new client: {e}")
+                print(f"[Okareor] Failed to log new client: {e}")
         else:
             pass
 
@@ -421,7 +424,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     group_id=self.group.get("id"),
                 )
             except Exception as e:
-                print(f"[Okareo AutogenLogger] Failed to log function use: {e}")
+                print(f"[Okareo] Failed to log function use: {e}")
         else:
             pass
 
@@ -430,7 +433,8 @@ class OkareoLogger(BaseLogger):  # type: ignore
 
     def stop(self) -> None:
         """Close the file handler and remove it from the logger."""
-        print(f"[Okareo] Evaluating logging Session ID: {self.session_id}")
+        if self.verbose:
+            print(f"[Okareo] Evaluating logging Session ID: {self.session_id}")
         self.okareo.create_trace_eval(self.group, self.session_id)
         print(
             f"[Okareo] Logged data points for autogen chat under group_name '{self.group_name}' with ID '{self.group['id']}'."
