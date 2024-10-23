@@ -287,8 +287,12 @@ class CrewAILogger:
         if CrewAILogger._provider is None:
             CrewAILogger._provider = TracerProvider()
             trace.set_tracer_provider(CrewAILogger._provider)
-            LiteLLMInstrumentation().instrument(tracer_provider=CrewAILogger._provider)
-            OpenAIInstrumentation().instrument(tracer_provider=CrewAILogger._provider)
+            LiteLLMInstrumentation().instrument(
+                tracer_provider=CrewAILogger._provider, skip_dep_check=True
+            )
+            OpenAIInstrumentation().instrument(
+                tracer_provider=CrewAILogger._provider, skip_dep_check=True
+            )
 
         if self.span_processor is None:
             self.span_processor = CrewAISpanProcessor(self.logger_config)
