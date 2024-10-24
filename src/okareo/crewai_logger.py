@@ -84,6 +84,8 @@ class CrewAISpanProcessor(SpanProcessor):
 
     def on_end(self, span: ReadableSpan) -> None:
         if span.name == "Crew Created":
+            self.task_count = 0
+            self.total_task_count = 0
             if not self.is_context_set:
                 self.context_id = str(uuid.uuid4())
             self.created_obj = self._format_span_data(span)
