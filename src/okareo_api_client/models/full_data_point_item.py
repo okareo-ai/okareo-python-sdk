@@ -7,7 +7,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
-    from ..models.full_data_point_item_model_metadata import FullDataPointItemModelMetadata
+    from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
     from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
     from ..models.full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
 
@@ -20,108 +20,136 @@ class FullDataPointItem:
     """
     Attributes:
         id (str):
-        scenario_data_point_id (str):
         test_run_id (str):
         metric_type (str):
         metric_value (FullDataPointItemMetricValue):
-        scenario_input (Union['FullDataPointItemScenarioInputType0', List[Any], str]):
-        scenario_result (Union['FullDataPointItemScenarioResultType0', List[Any], str]):
         tags (Union[Unset, List[str]]):
+        scenario_data_point_id (Union[Unset, str]):
         model_input (Union[Unset, Any]):
         model_result (Union[Unset, Any]):
-        model_metadata (Union[Unset, FullDataPointItemModelMetadata]):
+        scenario_input (Union['FullDataPointItemScenarioInputType0', List[Any], Unset, str]):
+        scenario_result (Union['FullDataPointItemScenarioResultType0', List[Any], Unset, str]):
+        model_metadata (Union['FullDataPointItemModelMetadataType0', Any, Unset]):
+        time_created (Union[Unset, str]):
     """
 
     id: str
-    scenario_data_point_id: str
     test_run_id: str
     metric_type: str
     metric_value: "FullDataPointItemMetricValue"
-    scenario_input: Union["FullDataPointItemScenarioInputType0", List[Any], str]
-    scenario_result: Union["FullDataPointItemScenarioResultType0", List[Any], str]
     tags: Union[Unset, List[str]] = UNSET
+    scenario_data_point_id: Union[Unset, str] = UNSET
     model_input: Union[Unset, Any] = UNSET
     model_result: Union[Unset, Any] = UNSET
-    model_metadata: Union[Unset, "FullDataPointItemModelMetadata"] = UNSET
+    scenario_input: Union["FullDataPointItemScenarioInputType0", List[Any], Unset, str] = UNSET
+    scenario_result: Union["FullDataPointItemScenarioResultType0", List[Any], Unset, str] = UNSET
+    model_metadata: Union["FullDataPointItemModelMetadataType0", Any, Unset] = UNSET
+    time_created: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
         from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
         from ..models.full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
 
         id = self.id
-        scenario_data_point_id = self.scenario_data_point_id
         test_run_id = self.test_run_id
         metric_type = self.metric_type
         metric_value = self.metric_value.to_dict()
-
-        scenario_input: Union[Dict[str, Any], List[Any], str]
-
-        if isinstance(self.scenario_input, FullDataPointItemScenarioInputType0):
-            scenario_input = self.scenario_input.to_dict()
-
-        elif isinstance(self.scenario_input, list):
-            scenario_input = self.scenario_input
-
-        else:
-            scenario_input = self.scenario_input
-
-        scenario_result: Union[Dict[str, Any], List[Any], str]
-
-        if isinstance(self.scenario_result, FullDataPointItemScenarioResultType0):
-            scenario_result = self.scenario_result.to_dict()
-
-        elif isinstance(self.scenario_result, list):
-            scenario_result = self.scenario_result
-
-        else:
-            scenario_result = self.scenario_result
 
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
+        scenario_data_point_id = self.scenario_data_point_id
         model_input = self.model_input
         model_result = self.model_result
-        model_metadata: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.model_metadata, Unset):
-            model_metadata = self.model_metadata.to_dict()
+        scenario_input: Union[Dict[str, Any], List[Any], Unset, str]
+        if isinstance(self.scenario_input, Unset):
+            scenario_input = UNSET
+
+        elif isinstance(self.scenario_input, FullDataPointItemScenarioInputType0):
+            scenario_input = UNSET
+            if not isinstance(self.scenario_input, Unset):
+                scenario_input = self.scenario_input.to_dict()
+
+        elif isinstance(self.scenario_input, list):
+            scenario_input = UNSET
+            if not isinstance(self.scenario_input, Unset):
+                scenario_input = self.scenario_input
+
+        else:
+            scenario_input = self.scenario_input
+
+        scenario_result: Union[Dict[str, Any], List[Any], Unset, str]
+        if isinstance(self.scenario_result, Unset):
+            scenario_result = UNSET
+
+        elif isinstance(self.scenario_result, FullDataPointItemScenarioResultType0):
+            scenario_result = UNSET
+            if not isinstance(self.scenario_result, Unset):
+                scenario_result = self.scenario_result.to_dict()
+
+        elif isinstance(self.scenario_result, list):
+            scenario_result = UNSET
+            if not isinstance(self.scenario_result, Unset):
+                scenario_result = self.scenario_result
+
+        else:
+            scenario_result = self.scenario_result
+
+        model_metadata: Union[Any, Dict[str, Any], Unset]
+        if isinstance(self.model_metadata, Unset):
+            model_metadata = UNSET
+
+        elif isinstance(self.model_metadata, FullDataPointItemModelMetadataType0):
+            model_metadata = UNSET
+            if not isinstance(self.model_metadata, Unset):
+                model_metadata = self.model_metadata.to_dict()
+
+        else:
+            model_metadata = self.model_metadata
+
+        time_created = self.time_created
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "scenario_data_point_id": scenario_data_point_id,
                 "test_run_id": test_run_id,
                 "metric_type": metric_type,
                 "metric_value": metric_value,
-                "scenario_input": scenario_input,
-                "scenario_result": scenario_result,
             }
         )
         if tags is not UNSET:
             field_dict["tags"] = tags
+        if scenario_data_point_id is not UNSET:
+            field_dict["scenario_data_point_id"] = scenario_data_point_id
         if model_input is not UNSET:
             field_dict["model_input"] = model_input
         if model_result is not UNSET:
             field_dict["model_result"] = model_result
+        if scenario_input is not UNSET:
+            field_dict["scenario_input"] = scenario_input
+        if scenario_result is not UNSET:
+            field_dict["scenario_result"] = scenario_result
         if model_metadata is not UNSET:
             field_dict["model_metadata"] = model_metadata
+        if time_created is not UNSET:
+            field_dict["time_created"] = time_created
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
-        from ..models.full_data_point_item_model_metadata import FullDataPointItemModelMetadata
+        from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
         from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
         from ..models.full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
 
         d = src_dict.copy()
         id = d.pop("id")
-
-        scenario_data_point_id = d.pop("scenario_data_point_id")
 
         test_run_id = d.pop("test_run_id")
 
@@ -129,11 +157,26 @@ class FullDataPointItem:
 
         metric_value = FullDataPointItemMetricValue.from_dict(d.pop("metric_value"))
 
-        def _parse_scenario_input(data: object) -> Union["FullDataPointItemScenarioInputType0", List[Any], str]:
+        tags = cast(List[str], d.pop("tags", UNSET))
+
+        scenario_data_point_id = d.pop("scenario_data_point_id", UNSET)
+
+        model_input = d.pop("model_input", UNSET)
+
+        model_result = d.pop("model_result", UNSET)
+
+        def _parse_scenario_input(data: object) -> Union["FullDataPointItemScenarioInputType0", List[Any], Unset, str]:
+            if isinstance(data, Unset):
+                return data
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                scenario_input_type_0 = FullDataPointItemScenarioInputType0.from_dict(data)
+                _scenario_input_type_0 = data
+                scenario_input_type_0: Union[Unset, FullDataPointItemScenarioInputType0]
+                if isinstance(_scenario_input_type_0, Unset):
+                    scenario_input_type_0 = UNSET
+                else:
+                    scenario_input_type_0 = FullDataPointItemScenarioInputType0.from_dict(_scenario_input_type_0)
 
                 return scenario_input_type_0
             except:  # noqa: E722
@@ -146,15 +189,24 @@ class FullDataPointItem:
                 return scenario_input_type_1
             except:  # noqa: E722
                 pass
-            return cast(Union["FullDataPointItemScenarioInputType0", List[Any], str], data)
+            return cast(Union["FullDataPointItemScenarioInputType0", List[Any], Unset, str], data)
 
-        scenario_input = _parse_scenario_input(d.pop("scenario_input"))
+        scenario_input = _parse_scenario_input(d.pop("scenario_input", UNSET))
 
-        def _parse_scenario_result(data: object) -> Union["FullDataPointItemScenarioResultType0", List[Any], str]:
+        def _parse_scenario_result(
+            data: object,
+        ) -> Union["FullDataPointItemScenarioResultType0", List[Any], Unset, str]:
+            if isinstance(data, Unset):
+                return data
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                scenario_result_type_0 = FullDataPointItemScenarioResultType0.from_dict(data)
+                _scenario_result_type_0 = data
+                scenario_result_type_0: Union[Unset, FullDataPointItemScenarioResultType0]
+                if isinstance(_scenario_result_type_0, Unset):
+                    scenario_result_type_0 = UNSET
+                else:
+                    scenario_result_type_0 = FullDataPointItemScenarioResultType0.from_dict(_scenario_result_type_0)
 
                 return scenario_result_type_0
             except:  # noqa: E722
@@ -167,35 +219,45 @@ class FullDataPointItem:
                 return scenario_result_type_1
             except:  # noqa: E722
                 pass
-            return cast(Union["FullDataPointItemScenarioResultType0", List[Any], str], data)
+            return cast(Union["FullDataPointItemScenarioResultType0", List[Any], Unset, str], data)
 
-        scenario_result = _parse_scenario_result(d.pop("scenario_result"))
+        scenario_result = _parse_scenario_result(d.pop("scenario_result", UNSET))
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        def _parse_model_metadata(data: object) -> Union["FullDataPointItemModelMetadataType0", Any, Unset]:
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                _model_metadata_type_0 = data
+                model_metadata_type_0: Union[Unset, FullDataPointItemModelMetadataType0]
+                if isinstance(_model_metadata_type_0, Unset):
+                    model_metadata_type_0 = UNSET
+                else:
+                    model_metadata_type_0 = FullDataPointItemModelMetadataType0.from_dict(_model_metadata_type_0)
 
-        model_input = d.pop("model_input", UNSET)
+                return model_metadata_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["FullDataPointItemModelMetadataType0", Any, Unset], data)
 
-        model_result = d.pop("model_result", UNSET)
+        model_metadata = _parse_model_metadata(d.pop("model_metadata", UNSET))
 
-        _model_metadata = d.pop("model_metadata", UNSET)
-        model_metadata: Union[Unset, FullDataPointItemModelMetadata]
-        if isinstance(_model_metadata, Unset):
-            model_metadata = UNSET
-        else:
-            model_metadata = FullDataPointItemModelMetadata.from_dict(_model_metadata)
+        time_created = d.pop("time_created", UNSET)
 
         full_data_point_item = cls(
             id=id,
-            scenario_data_point_id=scenario_data_point_id,
             test_run_id=test_run_id,
             metric_type=metric_type,
             metric_value=metric_value,
-            scenario_input=scenario_input,
-            scenario_result=scenario_result,
             tags=tags,
+            scenario_data_point_id=scenario_data_point_id,
             model_input=model_input,
             model_result=model_result,
+            scenario_input=scenario_input,
+            scenario_result=scenario_result,
             model_metadata=model_metadata,
+            time_created=time_created,
         )
 
         full_data_point_item.additional_properties = d

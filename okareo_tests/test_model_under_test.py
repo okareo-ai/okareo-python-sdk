@@ -224,6 +224,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
     )
 
     # use the scenario id from one of the scenario set notebook examples
+    assert isinstance(response.scenario_id, str)
     test_run_item = mut.run_test(
         scenario=response.scenario_id,
         name="CI run test",

@@ -6,15 +6,14 @@ from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import CustomModel, ModelInvocation
-from okareo_api_client.models import (
-    DatapointListItemInputType0,
-    DatapointListItemResultType0,
-    ScenarioSetResponse,
-    TestRunType,
-)
+from okareo_api_client.models import ScenarioSetResponse, TestRunType
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
+)
+from okareo_api_client.models.full_data_point_item import FullDataPointItem
+from okareo_api_client.models.full_data_point_item_metric_value import (
+    FullDataPointItemMetricValue,
 )
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
@@ -104,12 +103,11 @@ def test_get_data_points(
     assert isinstance(dp, list)
     assert len(dp) == 3
     for d in dp:
-        assert isinstance(d.input_, DatapointListItemInputType0)
+        assert isinstance(d.input_, dict)
         assert d.input_["animal"] in SCENARIO_INPUTS
         assert d.input_["color"] in SCENARIO_RESULTS
-        assert isinstance(d.result, DatapointListItemResultType0)
-        assert d.result["animal"] in SCENARIO_INPUTS
-        assert d.result["color"] in SCENARIO_RESULTS
+        assert d.result in SCENARIO_RESULTS
+    assert isinstance(create_scenario_set.scenario_id, str)
 
     sdp = okareo_client.get_scenario_data_points(
         scenario_id=create_scenario_set.scenario_id
@@ -131,11 +129,13 @@ def test_get_data_points(
     assert isinstance(tdp, list)
     assert len(dp) == 3
     for td in tdp:
-        assert isinstance(td, TestDataPointItem)
+        assert isinstance(td, TestDataPointItem) or isinstance(td, FullDataPointItem)
         assert td.scenario_data_point_id in scenario_ids
         assert td.test_run_id == test_run.id
         assert td.metric_type == "MULTI_CLASS_CLASSIFICATION"
-        assert isinstance(td.metric_value, TestDataPointItemMetricValue)
+        assert isinstance(td.metric_value, TestDataPointItemMetricValue) or isinstance(
+            td.metric_value, FullDataPointItemMetricValue
+        )
         assert (
             td.metric_value.additional_properties["expected"]
             == td.metric_value.additional_properties["actual"]

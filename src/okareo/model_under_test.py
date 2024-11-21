@@ -497,7 +497,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def _get_test_run_payload(
         self,
-        scenario_id: str,
+        scenario_id: Any,
         name: str,
         api_key: Optional[str],
         api_keys: Optional[dict],

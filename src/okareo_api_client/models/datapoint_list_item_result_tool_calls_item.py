@@ -3,11 +3,11 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="FullDataPointItemModelMetadata")
+T = TypeVar("T", bound="DatapointListItemResultToolCallsItem")
 
 
 @_attrs_define
-class FullDataPointItemModelMetadata:
+class DatapointListItemResultToolCallsItem:
     """ """
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -22,10 +22,10 @@ class FullDataPointItemModelMetadata:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        full_data_point_item_model_metadata = cls()
+        datapoint_list_item_result_tool_calls_item = cls()
 
-        full_data_point_item_model_metadata.additional_properties = d
-        return full_data_point_item_model_metadata
+        datapoint_list_item_result_tool_calls_item.additional_properties = d
+        return datapoint_list_item_result_tool_calls_item
 
     @property
     def additional_keys(self) -> List[str]:

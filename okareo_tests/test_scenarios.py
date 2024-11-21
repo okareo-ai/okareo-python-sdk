@@ -126,6 +126,7 @@ def generate_scenarios_custom(
 def get_scenario_data_points(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> List[ScenarioDataPoinResponse]:
+    assert isinstance(create_scenario_set.scenario_id, str)
     return okareo_client.get_scenario_data_points(create_scenario_set.scenario_id)
 
 
@@ -349,6 +350,7 @@ def dtest_create_delete_scenario_set_contraction_tiny_load(
     if isinstance(scenario.tags, list) and isinstance(scenario.name, str):
         scenario_seed_id = scenario.tags[0].split(":")[1]
         delete_scenario_data_points(API_KEY, scenario_seed_id, scenario.name)
+        assert isinstance(scenario.scenario_id, str)
         delete_scenario_data_points(API_KEY, scenario.scenario_id, scenario.name)
 
     assert scenario.type == "COMMON_CONTRACTIONS"
@@ -383,6 +385,8 @@ def dtest_create_delete_scenario_set_misspelling_tiny_load(
     if isinstance(scenario.tags, list) and isinstance(scenario.name, str):
         scenario_seed_id = scenario.tags[0].split(":")[1]
         delete_scenario_data_points(API_KEY, scenario_seed_id, scenario.name)
+        assert isinstance(scenario.scenario_id, str)
+
         delete_scenario_data_points(API_KEY, scenario.scenario_id, scenario.name)
 
     assert scenario.type == "COMMON_MISSPELLINGS"

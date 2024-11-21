@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -7,6 +7,10 @@ from ..models.generation_tone import GenerationTone
 from ..models.scenario_type import ScenarioType
 from ..types import UNSET, Unset
 
+if TYPE_CHECKING:
+    from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
+
+
 T = TypeVar("T", bound="ScenarioSetGenerate")
 
 
@@ -14,10 +18,15 @@ T = TypeVar("T", bound="ScenarioSetGenerate")
 class ScenarioSetGenerate:
     """
     Attributes:
-        source_scenario_id (str): ID for the scenario set that the generated scenario set will use as a source
         name (str): Name of the generated scenario set
         number_examples (int): Number of examples to be generated for the scenario set
         project_id (Union[Unset, str]): ID for the project
+        source_scenario_id (Union[Unset, str]): ID for the scenario set that the generated scenario set will use as a
+            source. Will throw an exception if 'source_scenario_rows' is also provided.
+        source_scenario_rows (Union[Unset, List['ScenarioDataPoinResponse']]): Rows for the scenario set that the
+            generated scenario set will use as a source. Will throw an exception if 'source_scenario_id' is also provided.
+        save_generated_scenario (Union[Unset, bool]): Whether to save the generated scenarios. Defaults to True.
+            Default: True.
         generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
         generation_tone (Union[Unset, GenerationTone]): An enumeration. Default: GenerationTone.NEUTRAL.
         generation_prompt (Union[Unset, str]): Prompt for the generator to use when generating scenarios. Only supported
@@ -28,10 +37,12 @@ class ScenarioSetGenerate:
             Generator type.
     """
 
-    source_scenario_id: str
     name: str
     number_examples: int
     project_id: Union[Unset, str] = UNSET
+    source_scenario_id: Union[Unset, str] = UNSET
+    source_scenario_rows: Union[Unset, List["ScenarioDataPoinResponse"]] = UNSET
+    save_generated_scenario: Union[Unset, bool] = True
     generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT
     generation_tone: Union[Unset, GenerationTone] = GenerationTone.NEUTRAL
     generation_prompt: Union[Unset, str] = UNSET
@@ -41,10 +52,19 @@ class ScenarioSetGenerate:
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        source_scenario_id = self.source_scenario_id
         name = self.name
         number_examples = self.number_examples
         project_id = self.project_id
+        source_scenario_id = self.source_scenario_id
+        source_scenario_rows: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.source_scenario_rows, Unset):
+            source_scenario_rows = []
+            for source_scenario_rows_item_data in self.source_scenario_rows:
+                source_scenario_rows_item = source_scenario_rows_item_data.to_dict()
+
+                source_scenario_rows.append(source_scenario_rows_item)
+
+        save_generated_scenario = self.save_generated_scenario
         generation_type: Union[Unset, str] = UNSET
         if not isinstance(self.generation_type, Unset):
             generation_type = self.generation_type.value
@@ -62,13 +82,18 @@ class ScenarioSetGenerate:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "source_scenario_id": source_scenario_id,
                 "name": name,
                 "number_examples": number_examples,
             }
         )
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if source_scenario_id is not UNSET:
+            field_dict["source_scenario_id"] = source_scenario_id
+        if source_scenario_rows is not UNSET:
+            field_dict["source_scenario_rows"] = source_scenario_rows
+        if save_generated_scenario is not UNSET:
+            field_dict["save_generated_scenario"] = save_generated_scenario
         if generation_type is not UNSET:
             field_dict["generation_type"] = generation_type
         if generation_tone is not UNSET:
@@ -86,14 +111,25 @@ class ScenarioSetGenerate:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        source_scenario_id = d.pop("source_scenario_id")
+        from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
 
+        d = src_dict.copy()
         name = d.pop("name")
 
         number_examples = d.pop("number_examples")
 
         project_id = d.pop("project_id", UNSET)
+
+        source_scenario_id = d.pop("source_scenario_id", UNSET)
+
+        source_scenario_rows = []
+        _source_scenario_rows = d.pop("source_scenario_rows", UNSET)
+        for source_scenario_rows_item_data in _source_scenario_rows or []:
+            source_scenario_rows_item = ScenarioDataPoinResponse.from_dict(source_scenario_rows_item_data)
+
+            source_scenario_rows.append(source_scenario_rows_item)
+
+        save_generated_scenario = d.pop("save_generated_scenario", UNSET)
 
         _generation_type = d.pop("generation_type", UNSET)
         generation_type: Union[Unset, ScenarioType]
@@ -118,10 +154,12 @@ class ScenarioSetGenerate:
         lock_result = d.pop("lock_result", UNSET)
 
         scenario_set_generate = cls(
-            source_scenario_id=source_scenario_id,
             name=name,
             number_examples=number_examples,
             project_id=project_id,
+            source_scenario_id=source_scenario_id,
+            source_scenario_rows=source_scenario_rows,
+            save_generated_scenario=save_generated_scenario,
             generation_type=generation_type,
             generation_tone=generation_tone,
             generation_prompt=generation_prompt,

@@ -28,6 +28,9 @@ class DatapointSchema:
             from the same context
         test_run_id (Union[Unset, str]): ID of testrun
         group_id (Union[Unset, str]): ID of the group
+        model_metadata (Union[Unset, str]): Additional metadata about the model used for this datapoint
+        input_metadata (Union[Unset, str]): Metadata about the input
+        result_metadata (Union[Unset, str]): Metadata about the result
     """
 
     mut_id: Union[Unset, str] = UNSET
@@ -42,6 +45,9 @@ class DatapointSchema:
     context_token: Union[Unset, str] = UNSET
     test_run_id: Union[Unset, str] = UNSET
     group_id: Union[Unset, str] = UNSET
+    model_metadata: Union[Unset, str] = UNSET
+    input_metadata: Union[Unset, str] = UNSET
+    result_metadata: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -66,6 +72,9 @@ class DatapointSchema:
         context_token = self.context_token
         test_run_id = self.test_run_id
         group_id = self.group_id
+        model_metadata = self.model_metadata
+        input_metadata = self.input_metadata
+        result_metadata = self.result_metadata
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -94,6 +103,12 @@ class DatapointSchema:
             field_dict["test_run_id"] = test_run_id
         if group_id is not UNSET:
             field_dict["group_id"] = group_id
+        if model_metadata is not UNSET:
+            field_dict["model_metadata"] = model_metadata
+        if input_metadata is not UNSET:
+            field_dict["input_metadata"] = input_metadata
+        if result_metadata is not UNSET:
+            field_dict["result_metadata"] = result_metadata
 
         return field_dict
 
@@ -134,6 +149,12 @@ class DatapointSchema:
 
         group_id = d.pop("group_id", UNSET)
 
+        model_metadata = d.pop("model_metadata", UNSET)
+
+        input_metadata = d.pop("input_metadata", UNSET)
+
+        result_metadata = d.pop("result_metadata", UNSET)
+
         datapoint_schema = cls(
             mut_id=mut_id,
             input_=input_,
@@ -147,6 +168,9 @@ class DatapointSchema:
             context_token=context_token,
             test_run_id=test_run_id,
             group_id=group_id,
+            model_metadata=model_metadata,
+            input_metadata=input_metadata,
+            result_metadata=result_metadata,
         )
 
         datapoint_schema.additional_properties = d

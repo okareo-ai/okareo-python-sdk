@@ -77,13 +77,6 @@ def sync_detailed(
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Run Test
 
-     Runs tests on a model (mut_id) using previously generated scenario.
-    Feeds the scenario data (scenario_id) into the model and evaulates results
-    depending on the test type specified.
-
-    Returns:
-        The test run data which includes the evaluated metrics from the run.
-
     Args:
         api_key (str):
         json_body (TestRunPayloadV2):
@@ -116,13 +109,6 @@ def sync(
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Run Test
 
-     Runs tests on a model (mut_id) using previously generated scenario.
-    Feeds the scenario data (scenario_id) into the model and evaulates results
-    depending on the test type specified.
-
-    Returns:
-        The test run data which includes the evaluated metrics from the run.
-
     Args:
         api_key (str):
         json_body (TestRunPayloadV2):
@@ -149,13 +135,6 @@ async def asyncio_detailed(
     api_key: str,
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Run Test
-
-     Runs tests on a model (mut_id) using previously generated scenario.
-    Feeds the scenario data (scenario_id) into the model and evaulates results
-    depending on the test type specified.
-
-    Returns:
-        The test run data which includes the evaluated metrics from the run.
 
     Args:
         api_key (str):
@@ -186,13 +165,6 @@ async def asyncio(
     api_key: str,
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Run Test
-
-     Runs tests on a model (mut_id) using previously generated scenario.
-    Feeds the scenario data (scenario_id) into the model and evaulates results
-    depending on the test type specified.
-
-    Returns:
-        The test run data which includes the evaluated metrics from the run.
 
     Args:
         api_key (str):

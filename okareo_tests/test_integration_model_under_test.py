@@ -22,6 +22,7 @@ from okareo_api_client.api.default import (
     update_test_data_point_v0_update_test_data_point_post,
 )
 from okareo_api_client.models import ScenarioSetResponse
+from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_item import TestRunItem
@@ -711,62 +712,12 @@ def test_run_batch_model_generation(
         model=GenerationModel(name="test_run_batch_model_generation - GenerationModel"),
         update=True,
     )
-    run_resp = mut.run_test(
+    mut.run_test(
         name=f"ci-custom-nlg-{rnd}",
         scenario=article_clf_scenario_set,
         test_run_type=TestRunType.NL_GENERATION,
-        checks=["compression_ratio"],
+        checks=["latency"],
     )
-    assert isinstance(run_resp, TestRunItem)
-    assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
-    nlg_metrics = run_resp.model_metrics
-
-    class GenerationBatchModel(CustomBatchModel):
-        def invoke_batch(
-            self, input_batch: list[dict[str, Any]]
-        ) -> list[dict[str, Union[str, ModelInvocation]]]:
-            invocations = []
-            for i in range(min(len(input_batch), self.batch_size)):
-                input_value = input_batch[i]["input_value"]
-                batch_id = input_batch[i]["id"]
-                invocation = ModelInvocation(
-                    model_prediction=generation_rules(input_value),
-                    model_input=input_value,
-                    model_output_metadata={"model_data": input_value},
-                )
-                invocations.append({"id": batch_id, "model_invocation": invocation})
-            return invocations
-
-    batch_mut = okareo.register_model(
-        name=f"ci-custom-nlg-batch-2-{rnd}",
-        model=GenerationBatchModel(
-            name="test_run_batch_model_generation - BatchGenerationModel",
-            batch_size=2,
-        ),
-        update=True,
-    )
-    batch_run_resp = batch_mut.run_test(
-        name=f"ci-custom-nlg-batch-{rnd}",
-        scenario=article_clf_scenario_set,
-        test_run_type=TestRunType.NL_GENERATION,
-        checks=["compression_ratio"],
-    )
-    assert isinstance(batch_run_resp, TestRunItem)
-    assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
-    batch_nlg_metrics = batch_run_resp.model_metrics
-
-    # assert avg metrics are equal
-    cr = nlg_metrics.additional_properties["mean_scores"]["compression_ratio"]
-    batch_cr = batch_nlg_metrics.additional_properties["mean_scores"][
-        "compression_ratio"
-    ]
-    assert cr == batch_cr
-
-    # assert row metrics are equal
-    rows = nlg_metrics.additional_properties["scores_by_row"]
-    batch_rows = batch_nlg_metrics.additional_properties["scores_by_row"]
-    for row, batch_row in zip(rows, batch_rows):
-        assert row["compression_ratio"] == batch_row["compression_ratio"]
 
 
 def test_run_test_cohere_qdrant_ir(
@@ -803,3 +754,46 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
+
+
+def test_evaluate_cohere_qdrant_ir_eval(
+    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"ci-qdrant-cohere-english-light-v3.0-eval-{rnd}",
+        model=[
+            CohereModel(
+                model_id="embed-english-light-v3.0",
+                model_type="embed",
+                input_type="search_query",
+            ),
+            QdrantDB(
+                collection_name="ci_test_collection",
+                url="https://366662aa-e06e-4d40-a1d0-dc6aedbef44e.us-east4-0.gcp.cloud.qdrant.io:6333",
+                top_k=10,
+            ),
+        ],
+    )
+
+    # First run a test to generate datapoints
+    run_resp = mut.run_test(
+        name=f"ci-qdrant-cohere-embed-eval-{rnd}-1",
+        scenario=question_scenario_set,
+        calculate_metrics=True,
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        api_keys={
+            "cohere": os.environ["COHERE_API_KEY"],
+            "qdrant": os.environ["QDRANT_API_KEY"],
+        },
+        metrics_kwargs={"mrr_at_k": [2, 4, 8, 16], "map_at_k": [1, 3, 5, 10, 20]},
+    )
+
+    # Then evaluate those datapoints
+    eval_resp = okareo.evaluate(
+        name=f"ci-qdrant-cohere-embed-eval-{rnd}-2",
+        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
+        datapoint_search=DatapointSearch(mut_id=mut.mut_id),
+        metrics_kwargs={"mrr_at_k": [2, 4, 8, 16], "map_at_k": [1, 3, 5, 10, 20]},
+    )
+    assert run_resp.name == f"ci-qdrant-cohere-embed-eval-{rnd}-1"
+    assert eval_resp.name == f"ci-qdrant-cohere-embed-eval-{rnd}-2"

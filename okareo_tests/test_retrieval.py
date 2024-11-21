@@ -33,6 +33,7 @@ def uploaded_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
 def generate_scenarios(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> ScenarioSetResponse:
+    assert isinstance(uploaded_scenario_set.scenario_id, str)
     questions: ScenarioSetResponse = okareo_client.generate_scenarios(
         source_scenario=uploaded_scenario_set.scenario_id,
         name=f"test_generate_scenarios {unique_key}",
