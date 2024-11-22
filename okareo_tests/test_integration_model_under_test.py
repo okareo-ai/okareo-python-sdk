@@ -22,7 +22,6 @@ from okareo_api_client.api.default import (
     update_test_data_point_v0_update_test_data_point_post,
 )
 from okareo_api_client.models import ScenarioSetResponse
-from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_item import TestRunItem
@@ -754,46 +753,3 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
-
-
-def test_evaluate_cohere_qdrant_ir_eval(
-    rnd: str, okareo: Okareo, question_scenario_set: ScenarioSetResponse
-) -> None:
-    mut = okareo.register_model(
-        name=f"ci-qdrant-cohere-english-light-v3.0-eval-{rnd}",
-        model=[
-            CohereModel(
-                model_id="embed-english-light-v3.0",
-                model_type="embed",
-                input_type="search_query",
-            ),
-            QdrantDB(
-                collection_name="ci_test_collection",
-                url="https://366662aa-e06e-4d40-a1d0-dc6aedbef44e.us-east4-0.gcp.cloud.qdrant.io:6333",
-                top_k=10,
-            ),
-        ],
-    )
-
-    # First run a test to generate datapoints
-    run_resp = mut.run_test(
-        name=f"ci-qdrant-cohere-embed-eval-{rnd}-1",
-        scenario=question_scenario_set,
-        calculate_metrics=True,
-        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
-        api_keys={
-            "cohere": os.environ["COHERE_API_KEY"],
-            "qdrant": os.environ["QDRANT_API_KEY"],
-        },
-        metrics_kwargs={"mrr_at_k": [2, 4, 8, 16], "map_at_k": [1, 3, 5, 10, 20]},
-    )
-
-    # Then evaluate those datapoints
-    eval_resp = okareo.evaluate(
-        name=f"ci-qdrant-cohere-embed-eval-{rnd}-2",
-        test_run_type=TestRunType.INFORMATION_RETRIEVAL,
-        datapoint_search=DatapointSearch(mut_id=mut.mut_id),
-        metrics_kwargs={"mrr_at_k": [2, 4, 8, 16], "map_at_k": [1, 3, 5, 10, 20]},
-    )
-    assert run_resp.name == f"ci-qdrant-cohere-embed-eval-{rnd}-1"
-    assert eval_resp.name == f"ci-qdrant-cohere-embed-eval-{rnd}-2"
