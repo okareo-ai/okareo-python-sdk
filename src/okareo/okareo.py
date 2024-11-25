@@ -516,9 +516,9 @@ class Okareo:
         name: str,
         test_run_type: TestRunType,
         datapoint_search: DatapointSearch,
-        tags: Union[Unset | list[str]] = UNSET,
+        tags: Union[Unset, list[str]] = UNSET,
         metrics_kwargs: Union[Dict[str, Any], Unset] = UNSET,
-        checks: Union[Unset | list[str]] = UNSET,
+        checks: Union[Unset, list[str]] = UNSET,
     ) -> TestRunItem:
         """
         Evaluate datapoints using the specified parameters.
