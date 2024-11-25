@@ -16,6 +16,7 @@ from okareo_api_client.api.default import (
     create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
     create_trace_eval_v0_groups_group_id_trace_eval_post,
+    evaluate_v0_evaluate_post,
     find_test_data_points_v0_find_test_data_points_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
@@ -43,6 +44,10 @@ from okareo_api_client.models.create_group_v0_groups_post_source import (
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.error_response import ErrorResponse
+from okareo_api_client.models.evaluation_payload import EvaluationPayload
+from okareo_api_client.models.evaluation_payload_metrics_kwargs import (
+    EvaluationPayloadMetricsKwargs,
+)
 from okareo_api_client.models.evaluator_brief_response import EvaluatorBriefResponse
 from okareo_api_client.models.evaluator_detailed_response import (
     EvaluatorDetailedResponse,
@@ -70,6 +75,8 @@ from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.seed_data_input_type_0 import SeedDataInputType0
 from okareo_api_client.models.seed_data_result_type_0 import SeedDataResultType0
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
+from okareo_api_client.models.test_run_item import TestRunItem
+from okareo_api_client.models.test_run_type import TestRunType
 from okareo_api_client.types import UNSET, File, Unset
 
 from .common import BASE_URL, HTTPX_TIME_OUT
@@ -503,3 +510,72 @@ class Okareo:
         )
         self.validate_response(response)
         return response.parsed
+
+    def evaluate(
+        self,
+        name: str,
+        test_run_type: TestRunType,
+        datapoint_search: DatapointSearch,
+        tags: Union[Unset | list[str]] = UNSET,
+        metrics_kwargs: Union[Dict[str, Any], Unset] = UNSET,
+        checks: Union[Unset | list[str]] = UNSET,
+    ) -> TestRunItem:
+        """
+        Evaluate datapoints using the specified parameters.
+
+        Args:
+            scenario_id: ID of the scenario set
+            metrics_kwargs: Dictionary of metrics to be measured
+            name: Name of the test run
+            test_run_type: Type of test run
+            tags: Tags for filtering test runs
+            checks: List of checks to include
+            from_date: Earliest date to include
+            to_date: Latest date to include
+            feedback: Feedback value (0 to 1)
+            error_code: Error code if applicable
+            context_token: Context token for linking datapoints
+            project_id: Project ID
+            mut_id: Model ID
+            datapoint_ids: List of datapoint IDs to filter by
+
+        Returns:
+            The evaluation results
+        """
+        payload = EvaluationPayload(
+            metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
+                metrics_kwargs or {}
+            ),
+            name=name,
+            type=test_run_type,
+            evaluation_tags=tags,
+            checks=checks,
+            from_date=datapoint_search.from_date,
+            to_date=datapoint_search.to_date,
+            feedback=datapoint_search.feedback,
+            error_code=datapoint_search.error_code,
+            context_token=datapoint_search.context_token,
+            project_id=datapoint_search.project_id,
+            mut_id=datapoint_search.mut_id,
+            test_run_id=datapoint_search.test_run_id,
+            search_value=datapoint_search.search_value,
+            offset=datapoint_search.offset,
+            limit=datapoint_search.limit,
+            datapoint_ids=datapoint_search.datapoint_ids,
+            tags=datapoint_search.tags,
+        )
+
+        response = evaluate_v0_evaluate_post.sync(
+            client=self.client,
+            json_body=payload,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        if isinstance(response, ErrorResponse):
+            error_message = f"error: {response}, {response.detail}"
+            print(error_message)
+            raise
+        if not response:
+            print("Empty response from API")
+        assert response is not None
+        return response

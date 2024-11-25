@@ -27,6 +27,7 @@ generate_scenario_name = f"ci_json_test_generate_scenarios {unique_key}"
 
 @pytest.fixture(scope="module")
 def okareo_client() -> Okareo:
+    print(API_KEY)
     return Okareo(api_key=API_KEY)
 
 
@@ -117,6 +118,7 @@ def test_download_scenario_set(
 def generate_scenarios(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> ScenarioSetResponse:
+    assert isinstance(uploaded_scenario_set.scenario_id, str)
     questions: ScenarioSetResponse = okareo_client.generate_scenarios(
         source_scenario=uploaded_scenario_set.scenario_id,
         name=generate_scenario_name,

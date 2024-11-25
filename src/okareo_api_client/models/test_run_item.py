@@ -20,8 +20,8 @@ class TestRunItem:
     Attributes:
         id (str):
         project_id (str):
-        mut_id (str):
-        scenario_set_id (str):
+        mut_id (Union[Unset, str]):
+        scenario_set_id (Union[Unset, str]):
         name (Union[Unset, str]):
         tags (Union[Unset, List[str]]):
         type (Union[Unset, str]):
@@ -35,8 +35,8 @@ class TestRunItem:
 
     id: str
     project_id: str
-    mut_id: str
-    scenario_set_id: str
+    mut_id: Union[Unset, str] = UNSET
+    scenario_set_id: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     type: Union[Unset, str] = UNSET
@@ -84,10 +84,12 @@ class TestRunItem:
             {
                 "id": id,
                 "project_id": project_id,
-                "mut_id": mut_id,
-                "scenario_set_id": scenario_set_id,
             }
         )
+        if mut_id is not UNSET:
+            field_dict["mut_id"] = mut_id
+        if scenario_set_id is not UNSET:
+            field_dict["scenario_set_id"] = scenario_set_id
         if name is not UNSET:
             field_dict["name"] = name
         if tags is not UNSET:
@@ -118,9 +120,9 @@ class TestRunItem:
 
         project_id = d.pop("project_id")
 
-        mut_id = d.pop("mut_id")
+        mut_id = d.pop("mut_id", UNSET)
 
-        scenario_set_id = d.pop("scenario_set_id")
+        scenario_set_id = d.pop("scenario_set_id", UNSET)
 
         name = d.pop("name", UNSET)
 

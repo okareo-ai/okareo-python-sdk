@@ -94,4 +94,4 @@ def test_custom_return_invocation(
     assert len(dp) == 3
     for d in dp:
         assert d.input_ in SCENARIO_QUERY
-        assert d.result in SCENARIO_META
+        assert d.result in SCENARIO_USERID

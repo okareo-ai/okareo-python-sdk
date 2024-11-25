@@ -92,6 +92,7 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
     assert mut.project_id == project.id
 
     # use the scenario id from one of the scenario set notebook examples
+    assert isinstance(response.scenario_id, str)
     test_run_item = mut.run_test(
         scenario=response.scenario_id,
         name=f"CI test_full_eval_in_new_project {rnd}",
