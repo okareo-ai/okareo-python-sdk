@@ -154,7 +154,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                 if source_name not in self.registered_models:
                     self.register_new_model(source_name, self.tags)
                 # parse the response to get the proper message
-                self.registered_models[source_name].add_data_point_async(
+                self.registered_models[source_name].add_data_point(
                     input_obj=request,
                     input_datetime=start_time,
                     result_obj=json.dumps(
@@ -175,6 +175,8 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     tags=self.tags,
                     group_id=self.group.get("id"),
                 )
+                if self.verbose:
+                    print(f"[Okareo] Logged chat completion for agent '{source_name}'")
             except Exception:
                 tb = traceback.format_exc()
                 line_number = tb.splitlines()[-3].split(",")[1].strip().split()[1]
@@ -211,7 +213,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
                 if agent_name not in self.registered_models:
                     self.register_new_model(agent_name, self.tags)
                 # parse the response to get the proper message
-                self.registered_models[agent_name].add_data_point_async(
+                self.registered_models[agent_name].add_data_point(
                     result_obj=json.dumps(
                         {
                             "log_type": "new_agent",
@@ -238,6 +240,8 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     tags=self.tags,
                     group_id=self.group.get("id"),
                 )
+                if self.verbose:
+                    print(f"[Okareo] Logged new agent '{agent_name}'")
             except Exception:
                 tb = traceback.format_exc()
                 line_number = tb.splitlines()[-3].split(",")[1].strip().split()[1]
@@ -269,7 +273,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
             if isinstance(source, str):
                 try:
                     # register new model if need be
-                    self.registered_models[source_name].add_data_point_async(
+                    self.registered_models[source_name].add_data_point(
                         result_obj=json.dumps(
                             {
                                 "log_type": "event",
@@ -286,12 +290,16 @@ class OkareoLogger(BaseLogger):  # type: ignore
                         tags=self.tags,
                         group_id=self.group.get("id"),
                     )
+                    if self.verbose:
+                        print(
+                            f"[Okareo] Logged event '{name}' for agent '{source_name}'"
+                        )
                 except Exception as e:
                     print(f"[Okareo] Failed to log event: {e}")
             else:
                 try:
                     # parse the response to get the proper message
-                    self.registered_models[source_name].add_data_point_async(
+                    self.registered_models[source_name].add_data_point(
                         result_obj=json.dumps(
                             {
                                 "log_type": "event",
@@ -327,7 +335,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
             thread_id = threading.get_ident()
             try:
                 # TODO: figure out if/where agent name occurs
-                self.registered_model.add_data_point_async(
+                self.registered_model.add_data_point(
                     result_obj=json.dumps(
                         {
                             "log_type": "new_wrapper",
@@ -343,6 +351,8 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     tags=self.tags,
                     group_id=self.group.get("id"),
                 )
+                if self.verbose:
+                    print(f"[Okareo] Logged wrapper '{wrapper}''")
             except Exception:
                 tb = traceback.format_exc()
                 line_number = tb.splitlines()[-3].split(",")[1].strip().split()[1]
@@ -364,7 +374,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
 
             try:
                 # TODO: figure out if/where agent name occurs
-                self.registered_model.add_data_point_async(
+                self.registered_model.add_data_point(
                     result_obj=json.dumps(
                         {
                             "log_type": "new_client",
@@ -382,8 +392,12 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     tags=self.tags,
                     group_id=self.group.get("id"),
                 )
+                if self.verbose:
+                    print(
+                        f"[Okareo] Logged new_client '{client}' for wrapper '{wrapper}'"
+                    )
             except Exception as e:
-                print(f"[Okareor] Failed to log new client: {e}")
+                print(f"[Okareo] Failed to log new client: {e}")
         else:
             pass
 
@@ -399,15 +413,16 @@ class OkareoLogger(BaseLogger):  # type: ignore
         """
         if self._log_function_use:
             thread_id = threading.get_ident()
-
+            if self.verbose:
+                print(f"[Okareo] function use with:\n-> args={args}\nreturns={returns}")
             try:
                 source_name = str(source.name) if hasattr(source, "name") else source
                 if source_name not in self.registered_models:
                     self.register_new_model(source_name, self.tags)
-                self.registered_models[source_name].add_data_point_async(
+                self.registered_models[source_name].add_data_point(
                     result_obj=json.dumps(
                         {
-                            "log_type": "new_client",
+                            "log_type": "function_use",
                             "source_id": id(source),
                             "source_name": source_name,
                             "agent_module": source.__module__,
@@ -423,6 +438,10 @@ class OkareoLogger(BaseLogger):  # type: ignore
                     tags=self.tags,
                     group_id=self.group.get("id"),
                 )
+                if self.verbose:
+                    print(
+                        f"[Okareo] Logged function use '{thread_id}' for agent '{source_name}'"
+                    )
             except Exception as e:
                 print(f"[Okareo] Failed to log function use: {e}")
         else:
