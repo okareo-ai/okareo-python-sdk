@@ -56,7 +56,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
         else:
             self.okareo = Okareo(api_key)
 
-        self.session_id = str(config.get("context_token", str(uuid.uuid4())))
+        self.context_token = str(config.get("context_token", ""))
 
         random_suffix = "".join(
             random.choices(string.ascii_lowercase + string.digits, k=5)
@@ -104,6 +104,9 @@ class OkareoLogger(BaseLogger):  # type: ignore
 
     def start(self) -> str:
         """Start the logger and return the session_id."""
+        self.session_id = (
+            self.context_token if len(self.context_token) > 0 else str(uuid.uuid4())
+        )
         try:
             if self.verbose:
                 print(
@@ -456,7 +459,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
             print(f"[Okareo] Evaluating logging Session ID: {self.session_id}")
         self.okareo.create_trace_eval(self.group, self.session_id)
         print(
-            f"[Okareo] Logged data points for autogen chat under group_name '{self.group_name}' with ID '{self.group['id']}'."
+            f"[Okareo] Logged data points with:\n-> Context Token '{self.session_id}'\n-> Group Name '{self.group_name}'\n-> Group ID '{self.group['id']}'"
         )
 
 
