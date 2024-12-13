@@ -52,7 +52,7 @@ def call_autogen_agents(message: str) -> None:
         human_input_mode="NEVER",  # Never ask for human input.
     )
 
-    joe.initiate_chat(cathy, message=message)
+    joe.initiate_chat(cathy, message=message, max_turns=1)
 
 
 def test_autogen_logger() -> None:
