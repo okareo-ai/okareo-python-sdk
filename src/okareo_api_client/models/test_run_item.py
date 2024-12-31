@@ -22,6 +22,7 @@ class TestRunItem:
         project_id (str):
         mut_id (Union[Unset, str]):
         scenario_set_id (Union[Unset, str]):
+        filter_group_id (Union[Unset, str]):
         name (Union[Unset, str]):
         tags (Union[Unset, List[str]]):
         type (Union[Unset, str]):
@@ -37,6 +38,7 @@ class TestRunItem:
     project_id: str
     mut_id: Union[Unset, str] = UNSET
     scenario_set_id: Union[Unset, str] = UNSET
+    filter_group_id: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     type: Union[Unset, str] = UNSET
@@ -53,6 +55,7 @@ class TestRunItem:
         project_id = self.project_id
         mut_id = self.mut_id
         scenario_set_id = self.scenario_set_id
+        filter_group_id = self.filter_group_id
         name = self.name
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
@@ -90,6 +93,8 @@ class TestRunItem:
             field_dict["mut_id"] = mut_id
         if scenario_set_id is not UNSET:
             field_dict["scenario_set_id"] = scenario_set_id
+        if filter_group_id is not UNSET:
+            field_dict["filter_group_id"] = filter_group_id
         if name is not UNSET:
             field_dict["name"] = name
         if tags is not UNSET:
@@ -123,6 +128,8 @@ class TestRunItem:
         mut_id = d.pop("mut_id", UNSET)
 
         scenario_set_id = d.pop("scenario_set_id", UNSET)
+
+        filter_group_id = d.pop("filter_group_id", UNSET)
 
         name = d.pop("name", UNSET)
 
@@ -162,6 +169,7 @@ class TestRunItem:
             project_id=project_id,
             mut_id=mut_id,
             scenario_set_id=scenario_set_id,
+            filter_group_id=filter_group_id,
             name=name,
             tags=tags,
             type=type,

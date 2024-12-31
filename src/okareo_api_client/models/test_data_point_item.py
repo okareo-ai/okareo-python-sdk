@@ -22,6 +22,7 @@ class TestDataPointItem:
         metric_type (str):
         metric_value (TestDataPointItemMetricValue):
         tags (Union[Unset, List[str]]):
+        checks (Union[Unset, Any]):
     """
 
     id: str
@@ -30,6 +31,7 @@ class TestDataPointItem:
     metric_type: str
     metric_value: "TestDataPointItemMetricValue"
     tags: Union[Unset, List[str]] = UNSET
+    checks: Union[Unset, Any] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -42,6 +44,8 @@ class TestDataPointItem:
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
+
+        checks = self.checks
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -56,6 +60,8 @@ class TestDataPointItem:
         )
         if tags is not UNSET:
             field_dict["tags"] = tags
+        if checks is not UNSET:
+            field_dict["checks"] = checks
 
         return field_dict
 
@@ -76,6 +82,8 @@ class TestDataPointItem:
 
         tags = cast(List[str], d.pop("tags", UNSET))
 
+        checks = d.pop("checks", UNSET)
+
         test_data_point_item = cls(
             id=id,
             scenario_data_point_id=scenario_data_point_id,
@@ -83,6 +91,7 @@ class TestDataPointItem:
             metric_type=metric_type,
             metric_value=metric_value,
             tags=tags,
+            checks=checks,
         )
 
         test_data_point_item.additional_properties = d

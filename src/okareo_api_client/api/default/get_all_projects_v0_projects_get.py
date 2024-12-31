@@ -1,12 +1,11 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.project_response import ProjectResponse
 from ...types import Response
 
 
@@ -26,15 +25,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["ProjectResponse"]]]:
+) -> Optional[Union[Any, ErrorResponse]]:
     if response.status_code == HTTPStatus.CREATED:
-        response_201 = []
-        _response_201 = response.json()
-        for response_201_item_data in _response_201:
-            response_201_item = ProjectResponse.from_dict(response_201_item_data)
-
-            response_201.append(response_201_item)
-
+        response_201 = response.json()
         return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
@@ -60,7 +53,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["ProjectResponse"]]]:
+) -> Response[Union[Any, ErrorResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,7 +66,7 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ProjectResponse"]]]:
+) -> Response[Union[Any, ErrorResponse]]:
     """Get All Projects
 
      Get a list of projects for this organization
@@ -89,7 +82,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ProjectResponse']]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -107,7 +100,7 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ProjectResponse"]]]:
+) -> Optional[Union[Any, ErrorResponse]]:
     """Get All Projects
 
      Get a list of projects for this organization
@@ -123,7 +116,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ProjectResponse']]
+        Union[Any, ErrorResponse]
     """
 
     return sync_detailed(
@@ -136,7 +129,7 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ProjectResponse"]]]:
+) -> Response[Union[Any, ErrorResponse]]:
     """Get All Projects
 
      Get a list of projects for this organization
@@ -152,7 +145,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ProjectResponse']]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -168,7 +161,7 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ProjectResponse"]]]:
+) -> Optional[Union[Any, ErrorResponse]]:
     """Get All Projects
 
      Get a list of projects for this organization
@@ -184,7 +177,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ProjectResponse']]
+        Union[Any, ErrorResponse]
     """
 
     return (

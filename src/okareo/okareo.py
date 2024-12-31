@@ -515,7 +515,9 @@ class Okareo:
         self,
         name: str,
         test_run_type: TestRunType,
-        datapoint_search: DatapointSearch,
+        scenario_id: Union[Unset, str] = UNSET,
+        datapoint_ids: Union[Unset, list[str]] = UNSET,
+        filter_group_id: Union[Unset, str] = UNSET,
         tags: Union[Unset, list[str]] = UNSET,
         metrics_kwargs: Union[Dict[str, Any], Unset] = UNSET,
         checks: Union[Unset, list[str]] = UNSET,
@@ -530,15 +532,9 @@ class Okareo:
             test_run_type: Type of test run
             tags: Tags for filtering test runs
             checks: List of checks to include
-            from_date: Earliest date to include
-            to_date: Latest date to include
-            feedback: Feedback value (0 to 1)
-            error_code: Error code if applicable
-            context_token: Context token for linking datapoints
-            project_id: Project ID
-            mut_id: Model ID
+            scenario_id: ID of scenario set to evaluate
             datapoint_ids: List of datapoint IDs to filter by
-
+            filter_group_id: ID of the datapoint filter group to apply
         Returns:
             The evaluation results
         """
@@ -548,21 +544,11 @@ class Okareo:
             ),
             name=name,
             type=test_run_type,
-            evaluation_tags=tags,
+            tags=tags,
             checks=checks,
-            from_date=datapoint_search.from_date,
-            to_date=datapoint_search.to_date,
-            feedback=datapoint_search.feedback,
-            error_code=datapoint_search.error_code,
-            context_token=datapoint_search.context_token,
-            project_id=datapoint_search.project_id,
-            mut_id=datapoint_search.mut_id,
-            test_run_id=datapoint_search.test_run_id,
-            search_value=datapoint_search.search_value,
-            offset=datapoint_search.offset,
-            limit=datapoint_search.limit,
-            datapoint_ids=datapoint_search.datapoint_ids,
-            tags=datapoint_search.tags,
+            scenario_id=scenario_id,
+            datapoint_ids=datapoint_ids,
+            filter_group_id=filter_group_id,
         )
 
         response = evaluate_v0_evaluate_post.sync(
