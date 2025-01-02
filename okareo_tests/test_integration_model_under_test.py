@@ -732,7 +732,7 @@ def test_run_test_cohere_qdrant_ir(
             ),
             QdrantDB(
                 collection_name="ci_test_collection",
-                url="https://366662aa-e06e-4d40-a1d0-dc6aedbef44e.us-east4-0.gcp.cloud.qdrant.io:6333",
+                url="https://d59789f4-3a07-4cbe-8ae1-6f74c0c233a6.us-east4-0.gcp.cloud.qdrant.io:6333",
                 top_k=10,
             ),
         ],
