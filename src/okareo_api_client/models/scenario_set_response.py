@@ -27,6 +27,7 @@ class ScenarioSetResponse:
         name (Union[Unset, str]):
         seed_data (Union[Unset, List['SeedData']]):
         scenario_data (Union[Unset, List['ScenarioDataPoinResponse']]):
+        failed_data (Union[Unset, List['ScenarioDataPoinResponse']]):
         scenario_count (Union[Unset, int]):
         scenario_input (Union[Unset, List[str]]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this scenario set Default: ''.
@@ -41,6 +42,7 @@ class ScenarioSetResponse:
     name: Union[Unset, str] = UNSET
     seed_data: Union[Unset, List["SeedData"]] = UNSET
     scenario_data: Union[Unset, List["ScenarioDataPoinResponse"]] = UNSET
+    failed_data: Union[Unset, List["ScenarioDataPoinResponse"]] = UNSET
     scenario_count: Union[Unset, int] = 0
     scenario_input: Union[Unset, List[str]] = UNSET
     app_link: Union[Unset, str] = ""
@@ -74,6 +76,14 @@ class ScenarioSetResponse:
 
                 scenario_data.append(scenario_data_item)
 
+        failed_data: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.failed_data, Unset):
+            failed_data = []
+            for failed_data_item_data in self.failed_data:
+                failed_data_item = failed_data_item_data.to_dict()
+
+                failed_data.append(failed_data_item)
+
         scenario_count = self.scenario_count
         scenario_input: Union[Unset, List[str]] = UNSET
         if not isinstance(self.scenario_input, Unset):
@@ -101,6 +111,8 @@ class ScenarioSetResponse:
             field_dict["seed_data"] = seed_data
         if scenario_data is not UNSET:
             field_dict["scenario_data"] = scenario_data
+        if failed_data is not UNSET:
+            field_dict["failed_data"] = failed_data
         if scenario_count is not UNSET:
             field_dict["scenario_count"] = scenario_count
         if scenario_input is not UNSET:
@@ -144,6 +156,13 @@ class ScenarioSetResponse:
 
             scenario_data.append(scenario_data_item)
 
+        failed_data = []
+        _failed_data = d.pop("failed_data", UNSET)
+        for failed_data_item_data in _failed_data or []:
+            failed_data_item = ScenarioDataPoinResponse.from_dict(failed_data_item_data)
+
+            failed_data.append(failed_data_item)
+
         scenario_count = d.pop("scenario_count", UNSET)
 
         scenario_input = cast(List[str], d.pop("scenario_input", UNSET))
@@ -161,6 +180,7 @@ class ScenarioSetResponse:
             name=name,
             seed_data=seed_data,
             scenario_data=scenario_data,
+            failed_data=failed_data,
             scenario_count=scenario_count,
             scenario_input=scenario_input,
             app_link=app_link,

@@ -8,6 +8,7 @@ from .body_check_upload_v0_check_upload_post import BodyCheckUploadV0CheckUpload
 from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
 from .check_create_update_schema import CheckCreateUpdateSchema
 from .check_create_update_schema_check_config import CheckCreateUpdateSchemaCheckConfig
+from .comparison_operator import ComparisonOperator
 from .create_group_v0_groups_post_response_create_group_v0_groups_post import (
     CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost,
 )
@@ -15,6 +16,12 @@ from .create_group_v0_groups_post_source import CreateGroupV0GroupsPostSource
 from .create_trace_eval_v0_groups_group_id_trace_eval_post_response_create_trace_eval_v0_groups_group_id_trace_eval_post import (
     CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost,
 )
+from .datapoint_field import DatapointField
+from .datapoint_filter_create import DatapointFilterCreate
+from .datapoint_filter_delete import DatapointFilterDelete
+from .datapoint_filter_item import DatapointFilterItem
+from .datapoint_filter_item_latest_test_run_type_0 import DatapointFilterItemLatestTestRunType0
+from .datapoint_filter_search import DatapointFilterSearch
 from .datapoint_list_item import DatapointListItem
 from .datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
 from .datapoint_list_item_checks import DatapointListItemChecks
@@ -25,6 +32,7 @@ from .datapoint_response import DatapointResponse
 from .datapoint_schema import DatapointSchema
 from .datapoint_search import DatapointSearch
 from .datapoint_summary_item import DatapointSummaryItem
+from .datapoint_tags_schema import DatapointTagsSchema
 from .error_response import ErrorResponse
 from .evaluation_payload import EvaluationPayload
 from .evaluation_payload_metrics_kwargs import EvaluationPayloadMetricsKwargs
@@ -35,6 +43,7 @@ from .evaluator_detailed_response_check_config import EvaluatorDetailedResponseC
 from .evaluator_generate_response import EvaluatorGenerateResponse
 from .evaluator_spec_request import EvaluatorSpecRequest
 from .feedback_range_summary import FeedbackRangeSummary
+from .filter_condition import FilterCondition
 from .find_test_data_point_payload import FindTestDataPointPayload
 from .full_data_point_item import FullDataPointItem
 from .full_data_point_item_metric_value import FullDataPointItemMetricValue
@@ -60,6 +69,7 @@ from .scenario_data_poin_response_meta_data import ScenarioDataPoinResponseMetaD
 from .scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
 from .scenario_set_create import ScenarioSetCreate
 from .scenario_set_generate import ScenarioSetGenerate
+from .scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
 from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
@@ -89,9 +99,16 @@ __all__ = (
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
     "CheckCreateUpdateSchema",
     "CheckCreateUpdateSchemaCheckConfig",
+    "ComparisonOperator",
     "CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost",
     "CreateGroupV0GroupsPostSource",
     "CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost",
+    "DatapointField",
+    "DatapointFilterCreate",
+    "DatapointFilterDelete",
+    "DatapointFilterItem",
+    "DatapointFilterItemLatestTestRunType0",
+    "DatapointFilterSearch",
     "DatapointListItem",
     "DatapointListItemAgentMetadataType0",
     "DatapointListItemChecks",
@@ -102,6 +119,7 @@ __all__ = (
     "DatapointSchema",
     "DatapointSearch",
     "DatapointSummaryItem",
+    "DatapointTagsSchema",
     "ErrorResponse",
     "EvaluationPayload",
     "EvaluationPayloadMetricsKwargs",
@@ -112,6 +130,7 @@ __all__ = (
     "EvaluatorGenerateResponse",
     "EvaluatorSpecRequest",
     "FeedbackRangeSummary",
+    "FilterCondition",
     "FindTestDataPointPayload",
     "FullDataPointItem",
     "FullDataPointItemMetricValue",
@@ -137,6 +156,7 @@ __all__ = (
     "ScenarioDataPoinResponseResultType0",
     "ScenarioSetCreate",
     "ScenarioSetGenerate",
+    "ScenarioSetGenerateChecksItemType1",
     "ScenarioSetResponse",
     "ScenarioSetUpdate",
     "ScenarioType",

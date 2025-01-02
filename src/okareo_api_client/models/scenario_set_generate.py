@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -9,6 +9,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
+    from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
 
 
 T = TypeVar("T", bound="ScenarioSetGenerate")
@@ -35,6 +36,8 @@ class ScenarioSetGenerate:
         post_template (Union[Unset, str]): Template for post-processing scenario after generator before it's saved
         lock_result (Union[Unset, bool]): Whether to lock the result of the generated scenario. Used in the Custom
             Generator type.
+        checks (Union[Unset, List[Union['ScenarioSetGenerateChecksItemType1', str]]]): List of check names or check
+            configs to run on the generated scenarios
     """
 
     name: str
@@ -49,9 +52,12 @@ class ScenarioSetGenerate:
     pre_template: Union[Unset, str] = UNSET
     post_template: Union[Unset, str] = UNSET
     lock_result: Union[Unset, bool] = False
+    checks: Union[Unset, List[Union["ScenarioSetGenerateChecksItemType1", str]]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
+
         name = self.name
         number_examples = self.number_examples
         project_id = self.project_id
@@ -77,6 +83,19 @@ class ScenarioSetGenerate:
         pre_template = self.pre_template
         post_template = self.post_template
         lock_result = self.lock_result
+        checks: Union[Unset, List[Union[Dict[str, Any], str]]] = UNSET
+        if not isinstance(self.checks, Unset):
+            checks = []
+            for checks_item_data in self.checks:
+                checks_item: Union[Dict[str, Any], str]
+
+                if isinstance(checks_item_data, ScenarioSetGenerateChecksItemType1):
+                    checks_item = checks_item_data.to_dict()
+
+                else:
+                    checks_item = checks_item_data
+
+                checks.append(checks_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -106,12 +125,15 @@ class ScenarioSetGenerate:
             field_dict["post_template"] = post_template
         if lock_result is not UNSET:
             field_dict["lock_result"] = lock_result
+        if checks is not UNSET:
+            field_dict["checks"] = checks
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
+        from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
 
         d = src_dict.copy()
         name = d.pop("name")
@@ -153,6 +175,25 @@ class ScenarioSetGenerate:
 
         lock_result = d.pop("lock_result", UNSET)
 
+        checks = []
+        _checks = d.pop("checks", UNSET)
+        for checks_item_data in _checks or []:
+
+            def _parse_checks_item(data: object) -> Union["ScenarioSetGenerateChecksItemType1", str]:
+                try:
+                    if not isinstance(data, dict):
+                        raise TypeError()
+                    checks_item_type_1 = ScenarioSetGenerateChecksItemType1.from_dict(data)
+
+                    return checks_item_type_1
+                except:  # noqa: E722
+                    pass
+                return cast(Union["ScenarioSetGenerateChecksItemType1", str], data)
+
+            checks_item = _parse_checks_item(checks_item_data)
+
+            checks.append(checks_item)
+
         scenario_set_generate = cls(
             name=name,
             number_examples=number_examples,
@@ -166,6 +207,7 @@ class ScenarioSetGenerate:
             pre_template=pre_template,
             post_template=post_template,
             lock_result=lock_result,
+            checks=checks,
         )
 
         scenario_set_generate.additional_properties = d

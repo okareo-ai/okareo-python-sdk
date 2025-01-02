@@ -50,6 +50,9 @@ class DatapointListItem:
         agent_metadata (Union['DatapointListItemAgentMetadataType0', Any, Unset]):
         provider (Union[Unset, str]):
         total_search_count (Union[Unset, int]):
+        request_model_name (Union[Unset, str]):
+        response_model_name (Union[Unset, str]):
+        cost (Union[Unset, float]):
     """
 
     id: str
@@ -80,6 +83,9 @@ class DatapointListItem:
     agent_metadata: Union["DatapointListItemAgentMetadataType0", Any, Unset] = UNSET
     provider: Union[Unset, str] = UNSET
     total_search_count: Union[Unset, int] = UNSET
+    request_model_name: Union[Unset, str] = UNSET
+    response_model_name: Union[Unset, str] = UNSET
+    cost: Union[Unset, float] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -165,6 +171,9 @@ class DatapointListItem:
 
         provider = self.provider
         total_search_count = self.total_search_count
+        request_model_name = self.request_model_name
+        response_model_name = self.response_model_name
+        cost = self.cost
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -227,6 +236,12 @@ class DatapointListItem:
             field_dict["provider"] = provider
         if total_search_count is not UNSET:
             field_dict["total_search_count"] = total_search_count
+        if request_model_name is not UNSET:
+            field_dict["request_model_name"] = request_model_name
+        if response_model_name is not UNSET:
+            field_dict["response_model_name"] = response_model_name
+        if cost is not UNSET:
+            field_dict["cost"] = cost
 
         return field_dict
 
@@ -361,6 +376,12 @@ class DatapointListItem:
 
         total_search_count = d.pop("total_search_count", UNSET)
 
+        request_model_name = d.pop("request_model_name", UNSET)
+
+        response_model_name = d.pop("response_model_name", UNSET)
+
+        cost = d.pop("cost", UNSET)
+
         datapoint_list_item = cls(
             id=id,
             tags=tags,
@@ -390,6 +411,9 @@ class DatapointListItem:
             agent_metadata=agent_metadata,
             provider=provider,
             total_search_count=total_search_count,
+            request_model_name=request_model_name,
+            response_model_name=response_model_name,
+            cost=cost,
         )
 
         datapoint_list_item.additional_properties = d

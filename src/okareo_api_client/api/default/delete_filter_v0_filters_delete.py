@@ -1,18 +1,18 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.datapoint_filter_delete import DatapointFilterDelete
 from ...models.error_response import ErrorResponse
-from ...models.general_find_payload import GeneralFindPayload
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    json_body: GeneralFindPayload,
+    json_body: DatapointFilterDelete,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -21,8 +21,8 @@ def _get_kwargs(
     json_json_body = json_body.to_dict()
 
     return {
-        "method": "post",
-        "url": "/v0/find_test_runs",
+        "method": "delete",
+        "url": "/v0/filters",
         "json": json_json_body,
         "headers": headers,
     }
@@ -31,9 +31,9 @@ def _get_kwargs(
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.CREATED:
-        response_201 = response.json()
-        return response_201
+    if response.status_code == HTTPStatus.NO_CONTENT:
+        response_204 = cast(Any, None)
+        return response_204
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -70,14 +70,20 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
+    json_body: DatapointFilterDelete,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Find Test Run
+    """Delete Filter
+
+     Delete a datapoint filter.
+
+    Args:
+        request: The FastAPI request object
+        payload: Filter deletion payload containing filter ID
 
     Args:
         api_key (str):
-        json_body (GeneralFindPayload):
+        json_body (DatapointFilterDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -102,14 +108,20 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
+    json_body: DatapointFilterDelete,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Find Test Run
+    """Delete Filter
+
+     Delete a datapoint filter.
+
+    Args:
+        request: The FastAPI request object
+        payload: Filter deletion payload containing filter ID
 
     Args:
         api_key (str):
-        json_body (GeneralFindPayload):
+        json_body (DatapointFilterDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -129,14 +141,20 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
+    json_body: DatapointFilterDelete,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Find Test Run
+    """Delete Filter
+
+     Delete a datapoint filter.
+
+    Args:
+        request: The FastAPI request object
+        payload: Filter deletion payload containing filter ID
 
     Args:
         api_key (str):
-        json_body (GeneralFindPayload):
+        json_body (DatapointFilterDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -159,14 +177,20 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: GeneralFindPayload,
+    json_body: DatapointFilterDelete,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Find Test Run
+    """Delete Filter
+
+     Delete a datapoint filter.
+
+    Args:
+        request: The FastAPI request object
+        payload: Filter deletion payload containing filter ID
 
     Args:
         api_key (str):
-        json_body (GeneralFindPayload):
+        json_body (DatapointFilterDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
