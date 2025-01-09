@@ -669,7 +669,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
 
             model_data: dict = {"model_data": {}}
-            if self._has_custom_model():
+            if self._has_custom_model() and "driver" in self.models:
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
                     client=self.client, api_key=self.api_key, mut_id=self.mut_id
                 )
@@ -681,6 +681,8 @@ class ModelUnderTest(AsyncProcessorMixin):
                     self.custom_model_thread_stop_event,
                 ) = self._internal_start_custom_model_thread(nats_jwt, seed)
                 self.custom_model_thread.start()
+            elif self._has_custom_model():
+                self._custom_exec(scenario_id, model_data)
 
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
@@ -735,3 +737,55 @@ class ModelUnderTest(AsyncProcessorMixin):
         if response is None:
             print("Received no response (None) from the API")
             raise ValueError("No response received")
+
+    def _extract_input_from_scenario_data_point(
+        self, scenario_data_point: ScenarioDataPoinResponse
+    ) -> Any:
+        """helper method to handle different scenario data point formats"""
+        scenario_input = scenario_data_point.input_
+        return scenario_input
+
+    def _custom_exec(self, scenario_id: Any, model_data: Any) -> Any:
+        assert isinstance(self.models, dict)
+
+        assert scenario_id
+        scenario_data_points = self._get_scenario_data_points(scenario_id)
+        datapoint_len = len(scenario_data_points)
+
+        if not self._has_custom_batch_model():
+            custom_model_invoker = self.models["custom"]["model_invoker"]
+            for scenario_data_point in scenario_data_points:
+                scenario_input = self._extract_input_from_scenario_data_point(
+                    scenario_data_point
+                )
+
+                custom_model_return_value = custom_model_invoker(scenario_input)
+                self._add_model_invocation_for_scenario(
+                    custom_model_return_value,
+                    model_data,
+                    scenario_data_point.id,
+                )
+        else:
+            # batch inputs to the custom model
+            custom_model_invoker = self.models["custom_batch"]["model_invoker"]
+            batch_size = self.models["custom_batch"]["batch_size"]
+            for index in range(0, datapoint_len, batch_size):
+                end_index = min(index + batch_size, datapoint_len)
+                scenario_data_points_batch = scenario_data_points[index:end_index]
+                scenario_inputs = [
+                    {
+                        "id": sdp.id,
+                        "input_value": self._extract_input_from_scenario_data_point(
+                            sdp
+                        ),
+                    }
+                    for sdp in scenario_data_points_batch
+                ]
+                custom_model_return_batch = custom_model_invoker(scenario_inputs)
+
+                for return_dict in custom_model_return_batch:
+                    self._add_model_invocation_for_scenario(
+                        return_dict["model_invocation"],
+                        model_data,
+                        return_dict["id"],
+                    )
