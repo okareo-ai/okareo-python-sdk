@@ -39,9 +39,9 @@ def seed_data() -> List[SeedData]:
 @pytest.fixture(scope="module")
 def custom_data() -> List[SeedData]:
     return [
-        SeedData(input_="Lorem ipsum dolor sit amet", result="N/A"),
-        SeedData(input_="consectetur adipiscing elit, sed do", result="N/A"),
-        SeedData(input_="eiusmod tempor incididunt ut labore", result="N/A"),
+        SeedData(input_="Lorem ipsum dolor sit amet", result="1"),
+        SeedData(input_="consectetur adipiscing elit, sed do", result="2"),
+        SeedData(input_="eiusmod tempor incididunt ut labore", result="3"),
     ]
 
 
@@ -118,7 +118,21 @@ def generate_scenarios_custom(
         generation_prompt="generate the next 5 words of 'lorem ipsum' based on the following text: {input}",
     )
     response = okareo_client.generate_scenario_set(scenario_set_generate)
-    print(response)
+    return response
+
+
+@pytest.fixture(scope="module")
+def generate_scenarios_custom_multi_chunk(
+    okareo_client: Okareo, create_examples_scenario_set: ScenarioSetResponse
+) -> ScenarioSetResponse:
+    scenario_set_generate = ScenarioSetGenerate(
+        source_scenario_id=create_examples_scenario_set.scenario_id,
+        name=f"generated custom multi-chunk scenario set {random_string(5)}",
+        number_examples=1,
+        generation_type=ScenarioType.CUSTOM_MULTI_CHUNK_GENERATOR,
+        generation_prompt="generate the next 5 words of 'lorem ipsum' based on the following text: {input}",
+    )
+    response = okareo_client.generate_scenario_set(scenario_set_generate)
     return response
 
 
@@ -287,6 +301,33 @@ def test_generate_scenarios_custom(
     for dp in gen_dp:
         assert dp.meta_data
         assert dp.meta_data["seed_id"] in seed_ids
+
+
+def test_generate_scenarios_custom_multi_chunk(
+    generate_scenarios_custom_multi_chunk: ScenarioSetResponse,
+    seed_data: List[SeedData],
+    okareo_client: Okareo,
+) -> None:
+    assert generate_scenarios_custom_multi_chunk.type == "CUSTOM_MULTI_CHUNK_GENERATOR"
+    assert generate_scenarios_custom_multi_chunk.seed_data == []
+    assert generate_scenarios_custom_multi_chunk is not None
+    assert generate_scenarios_custom_multi_chunk.scenario_id
+    assert generate_scenarios_custom_multi_chunk.project_id
+    assert generate_scenarios_custom_multi_chunk.time_created
+    assert type(generate_scenarios_custom_multi_chunk.tags) is list
+
+    # assert each seed_id in generated scenario meta_data is in the list of seed data
+    gen_dp = okareo_client.get_scenario_data_points(
+        generate_scenarios_custom_multi_chunk.scenario_id
+    )
+    seed_dp = okareo_client.get_scenario_data_points(
+        generate_scenarios_custom_multi_chunk.tags[0].split(":")[1]
+    )
+    seed_ids = [dp.id for dp in seed_dp]
+    for dp in gen_dp:
+        assert dp.meta_data
+        for gen_id in json.loads(dp.meta_data["seed_id"]):
+            assert gen_id in seed_ids
 
 
 def test_get_scenario_data_points(
