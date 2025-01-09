@@ -259,7 +259,6 @@ class OkareoLogger(BaseLogger):  # type: ignore
         Log an event from an agent or a string source.
         """
         if self._log_event:
-
             # This takes an object o as input and returns a string. If the object o cannot be serialized, instead of raising an error,
             # it returns a string indicating that the object is non-serializable, along with its type's qualified name obtained using __qualname__.
             json_args = json.dumps(

@@ -152,7 +152,6 @@ class CrewAISpanProcessor(SpanProcessor):
 
 def completion_wrapper(version: Any, tracer: Any) -> Any:
     def wrapper(wrapped: Any, instance: Any, args: Any, kwargs: Any) -> Any:
-
         with tracer.start_as_current_span("litellm.completion") as span:
             span.set_attribute("litellm.version", version)
 

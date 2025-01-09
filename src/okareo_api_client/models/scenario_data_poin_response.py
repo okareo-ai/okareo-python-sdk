@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -6,9 +6,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.scenario_data_poin_response_input_type_0 import ScenarioDataPoinResponseInputType0
     from ..models.scenario_data_poin_response_meta_data import ScenarioDataPoinResponseMetaData
-    from ..models.scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
 
 
 T = TypeVar("T", bound="ScenarioDataPoinResponse")
@@ -19,44 +17,21 @@ class ScenarioDataPoinResponse:
     """
     Attributes:
         id (str):
-        input_ (Union['ScenarioDataPoinResponseInputType0', List[Any], str]):
-        result (Union['ScenarioDataPoinResponseResultType0', List[Any], str]):
+        input_ (Union[Unset, Any]):
+        result (Union[Unset, Any]):
         meta_data (Union[Unset, ScenarioDataPoinResponseMetaData]):
     """
 
     id: str
-    input_: Union["ScenarioDataPoinResponseInputType0", List[Any], str]
-    result: Union["ScenarioDataPoinResponseResultType0", List[Any], str]
+    input_: Union[Unset, Any] = UNSET
+    result: Union[Unset, Any] = UNSET
     meta_data: Union[Unset, "ScenarioDataPoinResponseMetaData"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        from ..models.scenario_data_poin_response_input_type_0 import ScenarioDataPoinResponseInputType0
-        from ..models.scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
-
         id = self.id
-        input_: Union[Dict[str, Any], List[Any], str]
-
-        if isinstance(self.input_, ScenarioDataPoinResponseInputType0):
-            input_ = self.input_.to_dict()
-
-        elif isinstance(self.input_, list):
-            input_ = self.input_
-
-        else:
-            input_ = self.input_
-
-        result: Union[Dict[str, Any], List[Any], str]
-
-        if isinstance(self.result, ScenarioDataPoinResponseResultType0):
-            result = self.result.to_dict()
-
-        elif isinstance(self.result, list):
-            result = self.result
-
-        else:
-            result = self.result
-
+        input_ = self.input_
+        result = self.result
         meta_data: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.meta_data, Unset):
             meta_data = self.meta_data.to_dict()
@@ -66,10 +41,12 @@ class ScenarioDataPoinResponse:
         field_dict.update(
             {
                 "id": id,
-                "input": input_,
-                "result": result,
             }
         )
+        if input_ is not UNSET:
+            field_dict["input"] = input_
+        if result is not UNSET:
+            field_dict["result"] = result
         if meta_data is not UNSET:
             field_dict["meta_data"] = meta_data
 
@@ -77,54 +54,14 @@ class ScenarioDataPoinResponse:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.scenario_data_poin_response_input_type_0 import ScenarioDataPoinResponseInputType0
         from ..models.scenario_data_poin_response_meta_data import ScenarioDataPoinResponseMetaData
-        from ..models.scenario_data_poin_response_result_type_0 import ScenarioDataPoinResponseResultType0
 
         d = src_dict.copy()
         id = d.pop("id")
 
-        def _parse_input_(data: object) -> Union["ScenarioDataPoinResponseInputType0", List[Any], str]:
-            try:
-                if not isinstance(data, dict):
-                    raise TypeError()
-                input_type_0 = ScenarioDataPoinResponseInputType0.from_dict(data)
+        input_ = d.pop("input", UNSET)
 
-                return input_type_0
-            except:  # noqa: E722
-                pass
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                input_type_1 = cast(List[Any], data)
-
-                return input_type_1
-            except:  # noqa: E722
-                pass
-            return cast(Union["ScenarioDataPoinResponseInputType0", List[Any], str], data)
-
-        input_ = _parse_input_(d.pop("input"))
-
-        def _parse_result(data: object) -> Union["ScenarioDataPoinResponseResultType0", List[Any], str]:
-            try:
-                if not isinstance(data, dict):
-                    raise TypeError()
-                result_type_0 = ScenarioDataPoinResponseResultType0.from_dict(data)
-
-                return result_type_0
-            except:  # noqa: E722
-                pass
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                result_type_1 = cast(List[Any], data)
-
-                return result_type_1
-            except:  # noqa: E722
-                pass
-            return cast(Union["ScenarioDataPoinResponseResultType0", List[Any], str], data)
-
-        result = _parse_result(d.pop("result"))
+        result = d.pop("result", UNSET)
 
         _meta_data = d.pop("meta_data", UNSET)
         meta_data: Union[Unset, ScenarioDataPoinResponseMetaData]

@@ -18,7 +18,6 @@ def get_logger_config() -> dict[str, Any]:
 
 
 def test_crewai_logger() -> None:
-
     logger_config = get_logger_config()
     CrewAILogger(logger_config)
 
