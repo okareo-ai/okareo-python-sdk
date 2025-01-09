@@ -18,9 +18,6 @@ from okareo_api_client.models.full_data_point_item_metric_value import (
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
-from okareo_api_client.models.scenario_data_poin_response_input_type_0 import (
-    ScenarioDataPoinResponseInputType0,
-)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_data_point_item_metric_value import (
@@ -116,9 +113,9 @@ def test_get_data_points(
     assert len(sdp) == 3
     for sd in sdp:
         assert isinstance(sd, ScenarioDataPoinResponse)
-        assert isinstance(sd.input_, ScenarioDataPoinResponseInputType0)
-        assert sd.input_.additional_properties["animal"] in SCENARIO_INPUTS
-        assert sd.input_.additional_properties["color"] in SCENARIO_RESULTS
+        assert isinstance(sd.input_, dict)
+        assert sd.input_["animal"] in SCENARIO_INPUTS
+        assert sd.input_["color"] in SCENARIO_RESULTS
         assert sd.result in SCENARIO_RESULTS
 
     scenario_ids = [s.id for s in sdp]

@@ -72,8 +72,6 @@ from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
-from okareo_api_client.models.seed_data_input_type_0 import SeedDataInputType0
-from okareo_api_client.models.seed_data_result_type_0 import SeedDataResultType0
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
@@ -122,16 +120,8 @@ class Okareo:
         """
         seed_data_list = []
         for data in data_list:
-            seed_input: Union[SeedDataInputType0, list, str] = (
-                SeedDataInputType0.from_dict(data["input"])
-                if isinstance(data["input"], dict)
-                else data["input"]
-            )
-            seed_result: Union[SeedDataResultType0, list, str] = (
-                SeedDataResultType0.from_dict(data["result"])
-                if isinstance(data["result"], dict)
-                else data["result"]
-            )
+            seed_input: Union[dict, list, str] = data["input"]
+            seed_result: Union[dict, list, str] = data["result"]
             seed_data = SeedData(input_=seed_input, result=seed_result)
             seed_data_list.append(seed_data)
 

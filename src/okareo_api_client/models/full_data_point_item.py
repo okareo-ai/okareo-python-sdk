@@ -32,6 +32,7 @@ class FullDataPointItem:
         model_metadata (Union['FullDataPointItemModelMetadataType0', Any, Unset]):
         time_created (Union[Unset, str]):
         checks (Union[Unset, Any]):
+        end_time (Union[Unset, Any]):
     """
 
     id: str
@@ -47,6 +48,7 @@ class FullDataPointItem:
     model_metadata: Union["FullDataPointItemModelMetadataType0", Any, Unset] = UNSET
     time_created: Union[Unset, str] = UNSET
     checks: Union[Unset, Any] = UNSET
+    end_time: Union[Unset, Any] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -114,6 +116,7 @@ class FullDataPointItem:
 
         time_created = self.time_created
         checks = self.checks
+        end_time = self.end_time
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -143,6 +146,8 @@ class FullDataPointItem:
             field_dict["time_created"] = time_created
         if checks is not UNSET:
             field_dict["checks"] = checks
+        if end_time is not UNSET:
+            field_dict["end_time"] = end_time
 
         return field_dict
 
@@ -252,6 +257,8 @@ class FullDataPointItem:
 
         checks = d.pop("checks", UNSET)
 
+        end_time = d.pop("end_time", UNSET)
+
         full_data_point_item = cls(
             id=id,
             test_run_id=test_run_id,
@@ -266,6 +273,7 @@ class FullDataPointItem:
             model_metadata=model_metadata,
             time_created=time_created,
             checks=checks,
+            end_time=end_time,
         )
 
         full_data_point_item.additional_properties = d

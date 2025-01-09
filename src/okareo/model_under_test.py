@@ -30,9 +30,6 @@ from okareo_api_client.models import (
     TestRunType,
 )
 from okareo_api_client.models.error_response import ErrorResponse
-from okareo_api_client.models.scenario_data_poin_response_input_type_0 import (
-    ScenarioDataPoinResponseInputType0,
-)
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
 from okareo_api_client.models.test_run_payload_v2_api_keys import (
@@ -530,20 +527,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks=checks if checks else UNSET,
         )
 
-    def _extract_input_from_scenario_data_point(
-        self, scenario_data_point: ScenarioDataPoinResponse
-    ) -> Union[dict, list, str]:
-        """helper method to handle different scenario data point formats"""
-        scenario_input: Union[dict, list, str] = (
-            scenario_data_point.input_.to_dict()
-            if isinstance(
-                scenario_data_point.input_,
-                ScenarioDataPoinResponseInputType0,
-            )
-            else scenario_data_point.input_
-        )
-        return scenario_input
-
     async def connect_nats(self, user_jwt: str, seed: str) -> Any:
         nkey = from_seed(seed.encode())
 
@@ -693,9 +676,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                 assert isinstance(creds, dict)
                 nats_jwt = creds["jwt"]
                 seed = creds["seed"]
-                self.custom_model_thread, self.custom_model_thread_stop_event = (
-                    self._internal_start_custom_model_thread(nats_jwt, seed)
-                )
+                (
+                    self.custom_model_thread,
+                    self.custom_model_thread_stop_event,
+                ) = self._internal_start_custom_model_thread(nats_jwt, seed)
                 self.custom_model_thread.start()
 
             response = run_test_v0_test_run_post.sync(

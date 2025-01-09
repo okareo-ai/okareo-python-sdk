@@ -56,7 +56,6 @@ def call_autogen_agents(message: str) -> None:
 
 
 def test_autogen_logger() -> None:
-
     logger_config = get_logger_config()
     autogen_logger = AutogenLogger(logger_config)
 
