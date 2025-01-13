@@ -37,6 +37,15 @@ def seed_data() -> List[SeedData]:
 
 
 @pytest.fixture(scope="module")
+def synonym_data() -> List[SeedData]:
+    return [
+        SeedData(input_=["ipsum", "foo"], result="N/A"),
+        SeedData(input_=["elit", "bar"], result="N/A"),
+        SeedData(input_=["labore", "foobar"], result="N/A"),
+    ]
+
+
+@pytest.fixture(scope="module")
 def custom_data() -> List[SeedData]:
     return [
         SeedData(input_="Lorem ipsum dolor sit amet", result="1"),
@@ -46,6 +55,7 @@ def custom_data() -> List[SeedData]:
 
 
 create_scenario_name = f"my_test_scenario_set_{random_string(5)}"
+synonym_scenario_name = f"my_synonym_scenario_set_{random_string(5)}"
 examples_scenario_name = f"my_examples_scenario_set_{random_string(5)}"
 
 
@@ -56,6 +66,21 @@ def create_scenario_set(
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=seed_data,
+    )
+    articles: ScenarioSetResponse = okareo_client.create_scenario_set(
+        scenario_set_create
+    )
+
+    return articles
+
+
+@pytest.fixture(scope="module")
+def create_synonym_set(
+    okareo_client: Okareo, synonym_data: List[SeedData]
+) -> ScenarioSetResponse:
+    scenario_set_create = ScenarioSetCreate(
+        name=synonym_scenario_name,
+        seed_data=synonym_data,
     )
     articles: ScenarioSetResponse = okareo_client.create_scenario_set(
         scenario_set_create
@@ -101,6 +126,23 @@ def generate_scenarios_qa(
         name=f"generated scenario set {random_string(5)}",
         number_examples=1,
         generation_type=ScenarioType.TEXT_REVERSE_QUESTION_ANSWER,
+    )
+    response = okareo_client.generate_scenario_set(scenario_set_generate)
+    return response
+
+
+@pytest.fixture(scope="module")
+def generate_scenarios_synonym(
+    okareo_client: Okareo,
+    create_examples_scenario_set: ScenarioSetResponse,
+    create_synonym_set: ScenarioSetResponse,
+) -> ScenarioSetResponse:
+    scenario_set_generate = ScenarioSetGenerate(
+        source_scenario_id=create_examples_scenario_set.scenario_id,
+        name=f"generated scenario synonyms set {random_string(5)}",
+        number_examples=1,
+        generation_type=ScenarioType.SYNONYMS,
+        synonym_set_id=create_synonym_set.scenario_id,
     )
     response = okareo_client.generate_scenario_set(scenario_set_generate)
     return response
@@ -270,6 +312,29 @@ def test_generate_scenarios_qa(
     gen_dp = okareo_client.get_scenario_data_points(generate_scenarios_qa.scenario_id)
     seed_dp = okareo_client.get_scenario_data_points(
         generate_scenarios_qa.tags[0].split(":")[1]
+    )
+    seed_ids = [dp.id for dp in seed_dp]
+    for dp in gen_dp:
+        assert dp.meta_data
+        assert dp.meta_data["seed_id"] in seed_ids
+
+def test_generate_scenarios_synonyms(
+    generate_scenarios_synonym: ScenarioSetResponse,
+    seed_data: List[SeedData],
+    okareo_client: Okareo,
+) -> None:
+    assert generate_scenarios_synonym.type == "SYNONYMS"
+    assert generate_scenarios_synonym.seed_data == []
+    assert generate_scenarios_synonym is not None
+    assert generate_scenarios_synonym.scenario_id
+    assert generate_scenarios_synonym.project_id
+    assert generate_scenarios_synonym.time_created
+    assert type(generate_scenarios_synonym.tags) is list
+
+    # assert each seed_id in generated scenario meta_data is in the seed data
+    gen_dp = okareo_client.get_scenario_data_points(generate_scenarios_synonym.scenario_id)
+    seed_dp = okareo_client.get_scenario_data_points(
+        generate_scenarios_synonym.tags[0].split(":")[1]
     )
     seed_ids = [dp.id for dp in seed_dp]
     for dp in gen_dp:
