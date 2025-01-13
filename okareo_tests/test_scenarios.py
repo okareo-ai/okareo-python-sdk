@@ -318,6 +318,7 @@ def test_generate_scenarios_qa(
         assert dp.meta_data
         assert dp.meta_data["seed_id"] in seed_ids
 
+
 def test_generate_scenarios_synonyms(
     generate_scenarios_synonym: ScenarioSetResponse,
     seed_data: List[SeedData],
@@ -332,7 +333,9 @@ def test_generate_scenarios_synonyms(
     assert type(generate_scenarios_synonym.tags) is list
 
     # assert each seed_id in generated scenario meta_data is in the seed data
-    gen_dp = okareo_client.get_scenario_data_points(generate_scenarios_synonym.scenario_id)
+    gen_dp = okareo_client.get_scenario_data_points(
+        generate_scenarios_synonym.scenario_id
+    )
     seed_dp = okareo_client.get_scenario_data_points(
         generate_scenarios_synonym.tags[0].split(":")[1]
     )
@@ -393,6 +396,26 @@ def test_generate_scenarios_custom_multi_chunk(
         assert dp.meta_data
         for gen_id in json.loads(dp.meta_data["seed_id"]):
             assert gen_id in seed_ids
+
+
+def test_generate_scenarios_empty(
+    okareo_client: Okareo,
+    create_scenario_set: ScenarioSetResponse,
+    create_synonym_set: ScenarioSetResponse,
+) -> None:
+    scenario_set_generate = ScenarioSetGenerate(
+        source_scenario_id=create_scenario_set.scenario_id,
+        name=f"generated scenario synonyms set {random_string(5)}",
+        number_examples=1,
+        generation_type=ScenarioType.SYNONYMS,
+        synonym_set_id=create_synonym_set.scenario_id,
+    )
+    # expect a TypeError since no synonyms are found in the source scenario rows
+    with pytest.raises(
+        TypeError,
+        match="No scenario rows generated for scenario_id",
+    ):
+        okareo_client.generate_scenario_set(scenario_set_generate)
 
 
 def test_get_scenario_data_points(
