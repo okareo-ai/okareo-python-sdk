@@ -41,6 +41,7 @@ class ModelBasedCheck(BaseCheck):
 
     The prompt template should be a string that includes at least one of
     the following placeholders, which will be replaced with the actual values:
+    - `{model_input}` -> corresponds to the model's input
     - "{generation}" -> corresponds to the model's output
     - "{scenario_input}" -> corresponds to the scenario input
     - "{scenario_result}" -> corresponds to the scenario result
