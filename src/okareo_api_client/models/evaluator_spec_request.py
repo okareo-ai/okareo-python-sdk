@@ -19,6 +19,7 @@ class EvaluatorSpecRequest:
         requires_scenario_result (Union[Unset, bool]): Whether the evaluator requires scenario expected result
         output_data_type (Union[Unset, str]): Evaluator output data type (i.e., bool, int, float)
         project_id (Union[Unset, str]): ID for the project
+        check_type (Union[Unset, str]): model or code based check Default: 'code'.
     """
 
     name: Union[Unset, str] = UNSET
@@ -27,6 +28,7 @@ class EvaluatorSpecRequest:
     requires_scenario_result: Union[Unset, bool] = False
     output_data_type: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
+    check_type: Union[Unset, str] = "code"
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -36,6 +38,7 @@ class EvaluatorSpecRequest:
         requires_scenario_result = self.requires_scenario_result
         output_data_type = self.output_data_type
         project_id = self.project_id
+        check_type = self.check_type
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -52,6 +55,8 @@ class EvaluatorSpecRequest:
             field_dict["output_data_type"] = output_data_type
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if check_type is not UNSET:
+            field_dict["check_type"] = check_type
 
         return field_dict
 
@@ -70,6 +75,8 @@ class EvaluatorSpecRequest:
 
         project_id = d.pop("project_id", UNSET)
 
+        check_type = d.pop("check_type", UNSET)
+
         evaluator_spec_request = cls(
             name=name,
             description=description,
@@ -77,6 +84,7 @@ class EvaluatorSpecRequest:
             requires_scenario_result=requires_scenario_result,
             output_data_type=output_data_type,
             project_id=project_id,
+            check_type=check_type,
         )
 
         evaluator_spec_request.additional_properties = d

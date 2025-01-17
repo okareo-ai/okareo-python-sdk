@@ -18,6 +18,8 @@ class EvaluatorGenerateResponse:
         requires_scenario_result (Union[Unset, bool]):
         output_data_type (Union[Unset, str]):
         generated_code (Union[Unset, str]):
+        generated_prompt (Union[Unset, str]):
+        warning (Union[Unset, str]):
     """
 
     name: Union[Unset, str] = UNSET
@@ -26,6 +28,8 @@ class EvaluatorGenerateResponse:
     requires_scenario_result: Union[Unset, bool] = UNSET
     output_data_type: Union[Unset, str] = UNSET
     generated_code: Union[Unset, str] = UNSET
+    generated_prompt: Union[Unset, str] = UNSET
+    warning: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -35,6 +39,8 @@ class EvaluatorGenerateResponse:
         requires_scenario_result = self.requires_scenario_result
         output_data_type = self.output_data_type
         generated_code = self.generated_code
+        generated_prompt = self.generated_prompt
+        warning = self.warning
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -51,6 +57,10 @@ class EvaluatorGenerateResponse:
             field_dict["output_data_type"] = output_data_type
         if generated_code is not UNSET:
             field_dict["generated_code"] = generated_code
+        if generated_prompt is not UNSET:
+            field_dict["generated_prompt"] = generated_prompt
+        if warning is not UNSET:
+            field_dict["warning"] = warning
 
         return field_dict
 
@@ -69,6 +79,10 @@ class EvaluatorGenerateResponse:
 
         generated_code = d.pop("generated_code", UNSET)
 
+        generated_prompt = d.pop("generated_prompt", UNSET)
+
+        warning = d.pop("warning", UNSET)
+
         evaluator_generate_response = cls(
             name=name,
             description=description,
@@ -76,6 +90,8 @@ class EvaluatorGenerateResponse:
             requires_scenario_result=requires_scenario_result,
             output_data_type=output_data_type,
             generated_code=generated_code,
+            generated_prompt=generated_prompt,
+            warning=warning,
         )
 
         evaluator_generate_response.additional_properties = d

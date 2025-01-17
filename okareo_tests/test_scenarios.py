@@ -37,11 +37,11 @@ def seed_data() -> List[SeedData]:
 
 
 @pytest.fixture(scope="module")
-def synonym_data() -> List[SeedData]:
+def synonym_data() -> List[List[str]]:
     return [
-        SeedData(input_=["sit", "sit amet"], result="N/A"),
-        SeedData(input_=["elit", "bar"], result="N/A"),
-        SeedData(input_=["labore", "foobar"], result="N/A"),
+        ["sit", "sit amet"],
+        ["elit", "bar"],
+        ["labore", "foobar"],
     ]
 
 
@@ -66,21 +66,6 @@ def create_scenario_set(
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=seed_data,
-    )
-    articles: ScenarioSetResponse = okareo_client.create_scenario_set(
-        scenario_set_create
-    )
-
-    return articles
-
-
-@pytest.fixture(scope="module")
-def create_synonym_set(
-    okareo_client: Okareo, synonym_data: List[SeedData]
-) -> ScenarioSetResponse:
-    scenario_set_create = ScenarioSetCreate(
-        name=synonym_scenario_name,
-        seed_data=synonym_data,
     )
     articles: ScenarioSetResponse = okareo_client.create_scenario_set(
         scenario_set_create
@@ -135,14 +120,14 @@ def generate_scenarios_qa(
 def generate_scenarios_synonym(
     okareo_client: Okareo,
     create_examples_scenario_set: ScenarioSetResponse,
-    create_synonym_set: ScenarioSetResponse,
+    synonym_data: List[List[str]],
 ) -> ScenarioSetResponse:
     scenario_set_generate = ScenarioSetGenerate(
         source_scenario_id=create_examples_scenario_set.scenario_id,
         name=f"generated scenario synonyms set {random_string(5)}",
         number_examples=1,
         generation_type=ScenarioType.SYNONYMS,
-        synonym_set_id=create_synonym_set.scenario_id,
+        synonym_sets=synonym_data,
     )
     response = okareo_client.generate_scenario_set(scenario_set_generate)
     return response
@@ -402,14 +387,14 @@ def test_generate_scenarios_custom_multi_chunk(
 def test_generate_scenarios_empty(
     okareo_client: Okareo,
     create_scenario_set: ScenarioSetResponse,
-    create_synonym_set: ScenarioSetResponse,
+    synonym_data: List[List[str]],
 ) -> None:
     scenario_set_generate = ScenarioSetGenerate(
         source_scenario_id=create_scenario_set.scenario_id,
         name=f"generated scenario synonyms set {random_string(5)}",
         number_examples=1,
         generation_type=ScenarioType.SYNONYMS,
-        synonym_set_id=create_synonym_set.scenario_id,
+        synonym_sets=synonym_data,
     )
     # expect a TypeError since no synonyms are found in the source scenario rows
     with pytest.raises(

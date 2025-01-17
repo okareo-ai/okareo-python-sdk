@@ -26,8 +26,8 @@ class ScenarioSetGenerate:
             source. Will throw an exception if 'source_scenario_rows' is also provided.
         source_scenario_rows (Union[Unset, List['ScenarioDataPoinResponse']]): Rows for the scenario set that the
             generated scenario set will use as a source. Will throw an exception if 'source_scenario_id' is also provided.
-        synonym_set_id (Union[Unset, str]): ID for the synonym scenario that the generated scenario set will use to
-            determine synonyms. Used with the SYNONYMS generation type.
+        synonym_sets (Union[Unset, List[List[str]]]): 2D list used by the generator to determine synonyms. Used with the
+            SYNONYMS generation type.
         save_generated_scenario (Union[Unset, bool]): Whether to save the generated scenarios. Defaults to True.
             Default: True.
         generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
@@ -47,7 +47,7 @@ class ScenarioSetGenerate:
     project_id: Union[Unset, str] = UNSET
     source_scenario_id: Union[Unset, str] = UNSET
     source_scenario_rows: Union[Unset, List["ScenarioDataPoinResponse"]] = UNSET
-    synonym_set_id: Union[Unset, str] = UNSET
+    synonym_sets: Union[Unset, List[List[str]]] = UNSET
     save_generated_scenario: Union[Unset, bool] = True
     generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT
     generation_tone: Union[Unset, GenerationTone] = GenerationTone.NEUTRAL
@@ -73,7 +73,14 @@ class ScenarioSetGenerate:
 
                 source_scenario_rows.append(source_scenario_rows_item)
 
-        synonym_set_id = self.synonym_set_id
+        synonym_sets: Union[Unset, List[List[str]]] = UNSET
+        if not isinstance(self.synonym_sets, Unset):
+            synonym_sets = []
+            for synonym_sets_item_data in self.synonym_sets:
+                synonym_sets_item = synonym_sets_item_data
+
+                synonym_sets.append(synonym_sets_item)
+
         save_generated_scenario = self.save_generated_scenario
         generation_type: Union[Unset, str] = UNSET
         if not isinstance(self.generation_type, Unset):
@@ -115,8 +122,8 @@ class ScenarioSetGenerate:
             field_dict["source_scenario_id"] = source_scenario_id
         if source_scenario_rows is not UNSET:
             field_dict["source_scenario_rows"] = source_scenario_rows
-        if synonym_set_id is not UNSET:
-            field_dict["synonym_set_id"] = synonym_set_id
+        if synonym_sets is not UNSET:
+            field_dict["synonym_sets"] = synonym_sets
         if save_generated_scenario is not UNSET:
             field_dict["save_generated_scenario"] = save_generated_scenario
         if generation_type is not UNSET:
@@ -157,7 +164,12 @@ class ScenarioSetGenerate:
 
             source_scenario_rows.append(source_scenario_rows_item)
 
-        synonym_set_id = d.pop("synonym_set_id", UNSET)
+        synonym_sets = []
+        _synonym_sets = d.pop("synonym_sets", UNSET)
+        for synonym_sets_item_data in _synonym_sets or []:
+            synonym_sets_item = cast(List[str], synonym_sets_item_data)
+
+            synonym_sets.append(synonym_sets_item)
 
         save_generated_scenario = d.pop("save_generated_scenario", UNSET)
 
@@ -208,7 +220,7 @@ class ScenarioSetGenerate:
             project_id=project_id,
             source_scenario_id=source_scenario_id,
             source_scenario_rows=source_scenario_rows,
-            synonym_set_id=synonym_set_id,
+            synonym_sets=synonym_sets,
             save_generated_scenario=save_generated_scenario,
             generation_type=generation_type,
             generation_tone=generation_tone,
