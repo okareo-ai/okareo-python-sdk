@@ -39,7 +39,7 @@ def seed_data() -> List[SeedData]:
 @pytest.fixture(scope="module")
 def synonym_data() -> List[SeedData]:
     return [
-        SeedData(input_=["ipsum", "foo"], result="N/A"),
+        SeedData(input_=["sit", "sit amet"], result="N/A"),
         SeedData(input_=["elit", "bar"], result="N/A"),
         SeedData(input_=["labore", "foobar"], result="N/A"),
     ]
@@ -336,6 +336,7 @@ def test_generate_scenarios_synonyms(
     gen_dp = okareo_client.get_scenario_data_points(
         generate_scenarios_synonym.scenario_id
     )
+    assert len(gen_dp) == 3
     seed_dp = okareo_client.get_scenario_data_points(
         generate_scenarios_synonym.tags[0].split(":")[1]
     )
