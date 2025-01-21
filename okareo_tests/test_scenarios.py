@@ -171,6 +171,33 @@ def get_scenario_data_points(
     return okareo_client.get_scenario_data_points(create_scenario_set.scenario_id)
 
 
+def assert_generated_scenarios_seed_ids(
+    okareo_client: Okareo,
+    generated_scenario: ScenarioSetResponse,
+    expect_multiple_seeds: bool = False,
+) -> None:
+    """Assert that each generated scenario's seed_id exists in the source scenario's data points.
+
+    Args:
+        okareo_client: The Okareo client instance
+        generated_scenario: The generated scenario response to validate
+        expect_multiple_seeds: If True, expects seed_id to be a JSON string containing multiple IDs
+    """
+    gen_dp = okareo_client.get_scenario_data_points(generated_scenario.scenario_id)  # type: ignore
+    seed_dp = okareo_client.get_scenario_data_points(
+        generated_scenario.tags[0].split(":")[1]  # type: ignore
+    )
+    seed_ids = [dp.id for dp in seed_dp]
+
+    for dp in gen_dp:
+        assert dp.meta_data
+        if expect_multiple_seeds:
+            for gen_id in json.loads(dp.meta_data["seed_id"]):
+                assert gen_id in seed_ids
+        else:
+            assert dp.meta_data["seed_id"] in seed_ids
+
+
 def test_create_scenario_set(
     create_scenario_set: ScenarioSetResponse, seed_data: List[SeedData]
 ) -> None:
@@ -269,15 +296,7 @@ def test_generate_scenarios(
     assert generate_scenarios.time_created
     assert type(generate_scenarios.tags) is list
 
-    # assert each seed_id in generated scenario meta_data is in the seed data
-    gen_dp = okareo_client.get_scenario_data_points(generate_scenarios.scenario_id)
-    seed_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios.tags[0].split(":")[1]
-    )
-    seed_ids = [dp.id for dp in seed_dp]
-    for dp in gen_dp:
-        assert dp.meta_data
-        assert dp.meta_data["seed_id"] in seed_ids
+    assert_generated_scenarios_seed_ids(okareo_client, generate_scenarios)
 
 
 def test_generate_scenarios_qa(
@@ -293,15 +312,7 @@ def test_generate_scenarios_qa(
     assert generate_scenarios_qa.time_created
     assert type(generate_scenarios_qa.tags) is list
 
-    # assert each seed_id in generated scenario meta_data is in the seed data
-    gen_dp = okareo_client.get_scenario_data_points(generate_scenarios_qa.scenario_id)
-    seed_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_qa.tags[0].split(":")[1]
-    )
-    seed_ids = [dp.id for dp in seed_dp]
-    for dp in gen_dp:
-        assert dp.meta_data
-        assert dp.meta_data["seed_id"] in seed_ids
+    assert_generated_scenarios_seed_ids(okareo_client, generate_scenarios_qa)
 
 
 def test_generate_scenarios_synonyms(
@@ -317,18 +328,7 @@ def test_generate_scenarios_synonyms(
     assert generate_scenarios_synonym.time_created
     assert type(generate_scenarios_synonym.tags) is list
 
-    # assert each seed_id in generated scenario meta_data is in the seed data
-    gen_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_synonym.scenario_id
-    )
-    assert len(gen_dp) == 3
-    seed_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_synonym.tags[0].split(":")[1]
-    )
-    seed_ids = [dp.id for dp in seed_dp]
-    for dp in gen_dp:
-        assert dp.meta_data
-        assert dp.meta_data["seed_id"] in seed_ids
+    assert_generated_scenarios_seed_ids(okareo_client, generate_scenarios_synonym)
 
 
 def test_generate_scenarios_custom(
@@ -344,17 +344,7 @@ def test_generate_scenarios_custom(
     assert generate_scenarios_custom.time_created
     assert type(generate_scenarios_custom.tags) is list
 
-    # assert each seed_id in generated scenario meta_data is in the seed data
-    gen_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_custom.scenario_id
-    )
-    seed_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_custom.tags[0].split(":")[1]
-    )
-    seed_ids = [dp.id for dp in seed_dp]
-    for dp in gen_dp:
-        assert dp.meta_data
-        assert dp.meta_data["seed_id"] in seed_ids
+    assert_generated_scenarios_seed_ids(okareo_client, generate_scenarios_custom)
 
 
 def test_generate_scenarios_custom_multi_chunk(
@@ -370,18 +360,9 @@ def test_generate_scenarios_custom_multi_chunk(
     assert generate_scenarios_custom_multi_chunk.time_created
     assert type(generate_scenarios_custom_multi_chunk.tags) is list
 
-    # assert each seed_id in generated scenario meta_data is in the list of seed data
-    gen_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_custom_multi_chunk.scenario_id
+    assert_generated_scenarios_seed_ids(
+        okareo_client, generate_scenarios_custom_multi_chunk
     )
-    seed_dp = okareo_client.get_scenario_data_points(
-        generate_scenarios_custom_multi_chunk.tags[0].split(":")[1]
-    )
-    seed_ids = [dp.id for dp in seed_dp]
-    for dp in gen_dp:
-        assert dp.meta_data
-        for gen_id in json.loads(dp.meta_data["seed_id"]):
-            assert gen_id in seed_ids
 
 
 def test_generate_scenarios_empty(
