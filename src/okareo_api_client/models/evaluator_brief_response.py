@@ -24,6 +24,7 @@ class EvaluatorBriefResponse:
         output_data_type (Union[Unset, str]):  Default: ''.
         time_created (Union[Unset, datetime.datetime]):
         check_config (Union[Unset, EvaluatorBriefResponseCheckConfig]):
+        is_predefined (Union[Unset, bool]):
     """
 
     id: Union[Unset, str] = UNSET
@@ -32,6 +33,7 @@ class EvaluatorBriefResponse:
     output_data_type: Union[Unset, str] = ""
     time_created: Union[Unset, datetime.datetime] = UNSET
     check_config: Union[Unset, "EvaluatorBriefResponseCheckConfig"] = UNSET
+    is_predefined: Union[Unset, bool] = False
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -46,6 +48,8 @@ class EvaluatorBriefResponse:
         check_config: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.check_config, Unset):
             check_config = self.check_config.to_dict()
+
+        is_predefined = self.is_predefined
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -62,6 +66,8 @@ class EvaluatorBriefResponse:
             field_dict["time_created"] = time_created
         if check_config is not UNSET:
             field_dict["check_config"] = check_config
+        if is_predefined is not UNSET:
+            field_dict["is_predefined"] = is_predefined
 
         return field_dict
 
@@ -92,6 +98,8 @@ class EvaluatorBriefResponse:
         else:
             check_config = EvaluatorBriefResponseCheckConfig.from_dict(_check_config)
 
+        is_predefined = d.pop("is_predefined", UNSET)
+
         evaluator_brief_response = cls(
             id=id,
             name=name,
@@ -99,6 +107,7 @@ class EvaluatorBriefResponse:
             output_data_type=output_data_type,
             time_created=time_created,
             check_config=check_config,
+            is_predefined=is_predefined,
         )
 
         evaluator_brief_response.additional_properties = d

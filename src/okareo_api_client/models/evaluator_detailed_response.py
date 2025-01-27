@@ -29,6 +29,7 @@ class EvaluatorDetailedResponse:
         time_created (Union[Unset, datetime.datetime]):
         warning (Union[Unset, str]):
         check_config (Union[Unset, EvaluatorDetailedResponseCheckConfig]):
+        is_predefined (Union[Unset, bool]):
     """
 
     id: Union[Unset, str] = UNSET
@@ -42,6 +43,7 @@ class EvaluatorDetailedResponse:
     time_created: Union[Unset, datetime.datetime] = UNSET
     warning: Union[Unset, str] = UNSET
     check_config: Union[Unset, "EvaluatorDetailedResponseCheckConfig"] = UNSET
+    is_predefined: Union[Unset, bool] = False
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -61,6 +63,8 @@ class EvaluatorDetailedResponse:
         check_config: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.check_config, Unset):
             check_config = self.check_config.to_dict()
+
+        is_predefined = self.is_predefined
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -87,6 +91,8 @@ class EvaluatorDetailedResponse:
             field_dict["warning"] = warning
         if check_config is not UNSET:
             field_dict["check_config"] = check_config
+        if is_predefined is not UNSET:
+            field_dict["is_predefined"] = is_predefined
 
         return field_dict
 
@@ -127,6 +133,8 @@ class EvaluatorDetailedResponse:
         else:
             check_config = EvaluatorDetailedResponseCheckConfig.from_dict(_check_config)
 
+        is_predefined = d.pop("is_predefined", UNSET)
+
         evaluator_detailed_response = cls(
             id=id,
             project_id=project_id,
@@ -139,6 +147,7 @@ class EvaluatorDetailedResponse:
             time_created=time_created,
             warning=warning,
             check_config=check_config,
+            is_predefined=is_predefined,
         )
 
         evaluator_detailed_response.additional_properties = d
