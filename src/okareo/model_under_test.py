@@ -482,6 +482,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_prediction = custom_model_return_value.model_prediction
             model_output_metadata = custom_model_return_value.model_output_metadata
             model_input = custom_model_return_value.model_input
+            tool_calls = custom_model_return_value.tool_calls
         else:  # assume the preexisting behavior of returning a tuple
             model_prediction, model_output_metadata = custom_model_return_value
             model_input = None
@@ -490,6 +491,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             "actual": model_prediction,
             "model_response": model_output_metadata,
             "model_input": model_input,
+            "tool_calls": tool_calls,
         }
 
     def _get_test_run_payload(
