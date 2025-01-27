@@ -20,6 +20,7 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
         assert type(check.description) is str
         assert type(check.output_data_type) is str
         assert check.time_created
+        assert isinstance(check.is_predefined, bool)
         # concurrency issues with this test when ran in parallel
 
 
@@ -40,4 +41,5 @@ def test_generate_and_create_check(okareo_client: Okareo) -> None:
     )
     assert uploaded_check.id
     assert uploaded_check.name
+    assert uploaded_check.is_predefined is False
     okareo_client.delete_check(uploaded_check.id, uploaded_check.name)
