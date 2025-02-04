@@ -378,11 +378,16 @@ def test_generate_scenarios_empty(
         synonym_sets=synonym_data,
     )
     # expect a TypeError since no synonyms are found in the source scenario rows
-    with pytest.raises(
-        TypeError,
+    with pytest.warns(
+        UserWarning,
         match="No scenario rows generated for scenario_id",
     ):
-        okareo_client.generate_scenario_set(scenario_set_generate)
+        generated_scenario = okareo_client.generate_scenario_set(scenario_set_generate)
+        print(f"generated_scenario: {generated_scenario}")
+        assert generated_scenario is not None
+        assert generated_scenario.scenario_id == ""
+        assert generated_scenario.time_created
+        assert generated_scenario.type == "SYNONYMS"
 
 
 def test_get_scenario_data_points(
