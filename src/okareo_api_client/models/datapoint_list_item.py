@@ -10,6 +10,7 @@ from ..types import UNSET, Unset
 if TYPE_CHECKING:
     from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
     from ..models.datapoint_list_item_checks import DatapointListItemChecks
+    from ..models.datapoint_list_item_input_tools_item import DatapointListItemInputToolsItem
     from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
     from ..models.datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
     from ..models.datapoint_list_item_result_tool_calls_item import DatapointListItemResultToolCallsItem
@@ -44,6 +45,7 @@ class DatapointListItem:
         output_tokens (Union[Unset, int]):
         source (Union[Unset, str]):
         temperature (Union[Unset, str]):
+        input_tools (Union[Unset, List['DatapointListItemInputToolsItem']]):
         result_tool_calls (Union[Unset, List['DatapointListItemResultToolCallsItem']]):
         result_embeddings (Union[Unset, List['DatapointListItemResultEmbeddingsItem']]):
         checks (Union[Unset, DatapointListItemChecks]):
@@ -53,6 +55,7 @@ class DatapointListItem:
         request_model_name (Union[Unset, str]):
         response_model_name (Union[Unset, str]):
         cost (Union[Unset, float]):
+        status (Union[Unset, str]):  Default: ''.
     """
 
     id: str
@@ -77,6 +80,7 @@ class DatapointListItem:
     output_tokens: Union[Unset, int] = UNSET
     source: Union[Unset, str] = UNSET
     temperature: Union[Unset, str] = UNSET
+    input_tools: Union[Unset, List["DatapointListItemInputToolsItem"]] = UNSET
     result_tool_calls: Union[Unset, List["DatapointListItemResultToolCallsItem"]] = UNSET
     result_embeddings: Union[Unset, List["DatapointListItemResultEmbeddingsItem"]] = UNSET
     checks: Union[Unset, "DatapointListItemChecks"] = UNSET
@@ -86,6 +90,7 @@ class DatapointListItem:
     request_model_name: Union[Unset, str] = UNSET
     response_model_name: Union[Unset, str] = UNSET
     cost: Union[Unset, float] = UNSET
+    status: Union[Unset, str] = ""
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -137,6 +142,14 @@ class DatapointListItem:
         output_tokens = self.output_tokens
         source = self.source
         temperature = self.temperature
+        input_tools: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.input_tools, Unset):
+            input_tools = []
+            for input_tools_item_data in self.input_tools:
+                input_tools_item = input_tools_item_data.to_dict()
+
+                input_tools.append(input_tools_item)
+
         result_tool_calls: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.result_tool_calls, Unset):
             result_tool_calls = []
@@ -174,6 +187,7 @@ class DatapointListItem:
         request_model_name = self.request_model_name
         response_model_name = self.response_model_name
         cost = self.cost
+        status = self.status
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -224,6 +238,8 @@ class DatapointListItem:
             field_dict["source"] = source
         if temperature is not UNSET:
             field_dict["temperature"] = temperature
+        if input_tools is not UNSET:
+            field_dict["input_tools"] = input_tools
         if result_tool_calls is not UNSET:
             field_dict["result_tool_calls"] = result_tool_calls
         if result_embeddings is not UNSET:
@@ -242,6 +258,8 @@ class DatapointListItem:
             field_dict["response_model_name"] = response_model_name
         if cost is not UNSET:
             field_dict["cost"] = cost
+        if status is not UNSET:
+            field_dict["status"] = status
 
         return field_dict
 
@@ -249,6 +267,7 @@ class DatapointListItem:
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
         from ..models.datapoint_list_item_checks import DatapointListItemChecks
+        from ..models.datapoint_list_item_input_tools_item import DatapointListItemInputToolsItem
         from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
         from ..models.datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
         from ..models.datapoint_list_item_result_tool_calls_item import DatapointListItemResultToolCallsItem
@@ -331,6 +350,13 @@ class DatapointListItem:
 
         temperature = d.pop("temperature", UNSET)
 
+        input_tools = []
+        _input_tools = d.pop("input_tools", UNSET)
+        for input_tools_item_data in _input_tools or []:
+            input_tools_item = DatapointListItemInputToolsItem.from_dict(input_tools_item_data)
+
+            input_tools.append(input_tools_item)
+
         result_tool_calls = []
         _result_tool_calls = d.pop("result_tool_calls", UNSET)
         for result_tool_calls_item_data in _result_tool_calls or []:
@@ -382,6 +408,8 @@ class DatapointListItem:
 
         cost = d.pop("cost", UNSET)
 
+        status = d.pop("status", UNSET)
+
         datapoint_list_item = cls(
             id=id,
             tags=tags,
@@ -405,6 +433,7 @@ class DatapointListItem:
             output_tokens=output_tokens,
             source=source,
             temperature=temperature,
+            input_tools=input_tools,
             result_tool_calls=result_tool_calls,
             result_embeddings=result_embeddings,
             checks=checks,
@@ -414,6 +443,7 @@ class DatapointListItem:
             request_model_name=request_model_name,
             response_model_name=response_model_name,
             cost=cost,
+            status=status,
         )
 
         datapoint_list_item.additional_properties = d

@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import warnings
@@ -84,6 +85,10 @@ CHECK_DEPRECATION_WARNING = (
     "The `evaluator` naming convention is deprecated and will not be supported in a future release. "
     "Please use `check` in place of `evaluator` when invoking this method."
 )
+
+# Error message for empty generation
+# TODO: Determine warning criteria by status_code = 422
+_EMPTY_GENERATION_MESSAGE = "No scenario rows generated for scenario_id"
 
 CUSTOM_MODEL_STRS = ["custom", "custom_batch"]
 
@@ -321,8 +326,23 @@ class Okareo:
             client=self.client, api_key=self.api_key, json_body=create_request
         )
 
-        self.validate_response(response)
-        assert isinstance(response, ScenarioSetResponse)
+        if self.validate_generate_scenario_response(response):
+            self.validate_response(response)
+            assert isinstance(response, ScenarioSetResponse)
+        else:
+            # return empty response
+            return ScenarioSetResponse(
+                project_id=(
+                    create_request.project_id if create_request.project_id else ""
+                ),
+                scenario_id="",
+                time_created=datetime.datetime.now(),
+                type=(
+                    create_request.generation_type.value
+                    if create_request.generation_type
+                    else ""
+                ),
+            )
 
         return response
 
@@ -358,6 +378,23 @@ class Okareo:
         if response is None:
             print("Received no response (None) from the API")
             raise ValueError("No response received")
+
+    def validate_generate_scenario_response(self, response: Any) -> bool:
+        if (
+            isinstance(response, ErrorResponse)
+            and _EMPTY_GENERATION_MESSAGE in response.detail[0]
+        ):
+            # TODO: parse 422 status code rather than string matching
+            # Generated scenario is empty. Raise warning rather than error.
+            warning_message = f"warning: {response.detail}"
+            print(warning_message)
+            warnings.warn(
+                warning_message,
+                category=UserWarning,
+                stacklevel=2,
+            )
+            return False
+        return True
 
     def find_datapoints(
         self, datapoint_search: DatapointSearch
