@@ -5,7 +5,12 @@ from okareo_api_client.types import Unset
 
 
 def assert_scores_geval(scores: dict) -> None:
-    dimension_keys = ["consistency", "coherence", "fluency", "relevance"]
+    dimension_keys = [
+        "consistency_summary",
+        "coherence_summary",
+        "fluency_summary",
+        "relevance_summary",
+    ]
     for dimension in dimension_keys:
         assert dimension in scores
         assert isinstance(scores[dimension], float)

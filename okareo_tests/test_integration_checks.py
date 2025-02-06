@@ -133,7 +133,7 @@ def test_run_model_based_predefined_checks(
         ),
     )
 
-    checks = ["consistency", "fluency", "conciseness"]
+    checks = ["consistency_summary", "fluency_summary", "relevance_summary"]
     run_resp = mut.run_test(
         name=f"openai-chat-run-predefined-{rnd}",
         scenario=article_scenario_set,
@@ -161,7 +161,7 @@ def test_run_model_based_custom_checks(
         name=f"check_sample_score {rnd}",
         description="check_sample_score",
         check=ModelBasedCheck(  # type: ignore
-            prompt_template="Only output the number of words in the following text: {scenario_input} {output} {model_output}",
+            prompt_template="Only output the number of words in the following text: {scenario_input} {output} {generation}",
             check_type=CheckOutputType.SCORE,
         ),
     )

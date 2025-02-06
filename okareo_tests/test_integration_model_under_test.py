@@ -151,10 +151,10 @@ def test_run_test_openai_2prompts(
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
-        checks=["fluency"],
+        checks=["fluency_summary"],
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    assert_metrics(run_resp, ["fluency"], num_rows=1)
+    assert_metrics(run_resp, ["fluency_summary"], num_rows=1)
 
 
 def test_run_test_openai_with_tool_calls(
