@@ -486,6 +486,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         else:  # assume the preexisting behavior of returning a tuple
             model_prediction, model_output_metadata = custom_model_return_value
             model_input = None
+            tool_calls = None
 
         model_data["model_data"][scenario_data_point_id] = {
             "actual": model_prediction,
