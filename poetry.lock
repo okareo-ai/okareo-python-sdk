@@ -2565,7 +2565,7 @@ wrapt = ">=1.0.0,<2.0.0"
 name = "opentelemetry-proto"
 version = "1.32.1"
 description = "OpenTelemetry Python Proto"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "opentelemetry_proto-1.32.1-py3-none-any.whl", hash = "sha256:fe56df31033ab0c40af7525f8bf4c487313377bbcfdf94184b701a8ccebc800e"},
@@ -2959,7 +2959,7 @@ files = [
 name = "protobuf"
 version = "5.29.4"
 description = ""
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "protobuf-5.29.4-cp310-abi3-win32.whl", hash = "sha256:13eb236f8eb9ec34e63fc8b1d6efd2777d062fa6aaa68268fb67cf77f6839ad7"},
@@ -4676,4 +4676,4 @@ langchain = ["langchain", "litellm", "openai"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "2c7d8f9e59c1e7fe824966f1b6f2be35b96263472c1e495e77524d1b3bdcb83d"
+content-hash = "96399c7f816a004d566ce5be6b41db7930950f3d2ec1ebd41cb0be79cf83497c"
