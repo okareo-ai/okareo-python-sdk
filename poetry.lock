@@ -2959,7 +2959,7 @@ files = [
 name = "protobuf"
 version = "5.29.4"
 description = ""
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "protobuf-5.29.4-cp310-abi3-win32.whl", hash = "sha256:13eb236f8eb9ec34e63fc8b1d6efd2777d062fa6aaa68268fb67cf77f6839ad7"},
@@ -4676,4 +4676,4 @@ langchain = ["langchain", "litellm", "openai"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "96399c7f816a004d566ce5be6b41db7930950f3d2ec1ebd41cb0be79cf83497c"
+content-hash = "2d54bb5480c4e83053326a255fe2e73a3016a310615c6bae0278ec8cde363d50"
