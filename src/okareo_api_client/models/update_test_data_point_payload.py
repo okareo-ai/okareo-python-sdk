@@ -12,25 +12,33 @@ T = TypeVar("T", bound="UpdateTestDataPointPayload")
 class UpdateTestDataPointPayload:
     """
     Attributes:
-        id (Union[Unset, str]): ID of the datapoint
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test data points in the Okareo app
+        ids (Union[Unset, List[str]]): IDs of the datapoints to update
+        tags (Union[Unset, List[List[str]]]): Tags are strings that can be used to filter test data points in the Okareo
+            app
     """
 
-    id: Union[Unset, str] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
+    ids: Union[Unset, List[str]] = UNSET
+    tags: Union[Unset, List[List[str]]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        tags: Union[Unset, List[str]] = UNSET
+        ids: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.ids, Unset):
+            ids = self.ids
+
+        tags: Union[Unset, List[List[str]]] = UNSET
         if not isinstance(self.tags, Unset):
-            tags = self.tags
+            tags = []
+            for tags_item_data in self.tags:
+                tags_item = tags_item_data
+
+                tags.append(tags_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
-        if id is not UNSET:
-            field_dict["id"] = id
+        if ids is not UNSET:
+            field_dict["ids"] = ids
         if tags is not UNSET:
             field_dict["tags"] = tags
 
@@ -39,12 +47,17 @@ class UpdateTestDataPointPayload:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        id = d.pop("id", UNSET)
+        ids = cast(List[str], d.pop("ids", UNSET))
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = []
+        _tags = d.pop("tags", UNSET)
+        for tags_item_data in _tags or []:
+            tags_item = cast(List[str], tags_item_data)
+
+            tags.append(tags_item)
 
         update_test_data_point_payload = cls(
-            id=id,
+            ids=ids,
             tags=tags,
         )
 

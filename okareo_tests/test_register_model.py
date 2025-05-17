@@ -16,6 +16,7 @@ def test_register_model(httpx_mock: HTTPXMock) -> None:
             {
                 "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
                 "name": "Global",
+                "onboarding_status": "onboarding_status",
                 "tags": [],
                 "additional_properties": {},
             }

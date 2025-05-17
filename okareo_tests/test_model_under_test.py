@@ -14,17 +14,20 @@ from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
 
+GLOBAL_PROJECT_RESPONSE = [
+    {
+        "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+        "name": "Global",
+        "onboarding_status": "onboarding_status",
+        "tags": [],
+        "additional_properties": {},
+    }
+]
+
 
 def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
     httpx_mock.add_response(
-        json=[
-            {
-                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                "name": "Global",
-                "tags": [],
-                "additional_properties": {},
-            }
-        ],
+        json=GLOBAL_PROJECT_RESPONSE,
         status_code=201,
     )
     fixture = get_mut_fixture("NotebookModel")
@@ -49,14 +52,7 @@ def test_register_model(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> Non
     fixture = get_mut_fixture()
     if okareo_api.is_mock:
         httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
+            json=GLOBAL_PROJECT_RESPONSE,
             status_code=201,
         )
         httpx_mock.add_response(status_code=201, json=fixture)
@@ -73,14 +69,7 @@ def test_add_datapoint_optional_integration(
     fixture = get_mut_fixture()
     if okareo_api.is_mock:
         httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
+            json=GLOBAL_PROJECT_RESPONSE,
             status_code=201,
         )
         httpx_mock.add_response(status_code=201, json=fixture)
@@ -100,14 +89,7 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
 
     if okareo_api.is_mock:
         httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
+            json=GLOBAL_PROJECT_RESPONSE,
             status_code=201,
         )
         httpx_mock.add_response(
@@ -168,14 +150,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
 
     if okareo_api.is_mock:
         httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
+            json=GLOBAL_PROJECT_RESPONSE,
             status_code=201,
         )
 
@@ -281,14 +256,7 @@ def test_get_test_run(httpx_mock: HTTPXMock) -> None:
 
 def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
-        json=[
-            {
-                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                "name": "Global",
-                "tags": [],
-                "additional_properties": {},
-            }
-        ],
+        json=GLOBAL_PROJECT_RESPONSE,
         status_code=201,
     )
     httpx_mock.add_response(status_code=201, json=get_mut_fixture())
@@ -313,14 +281,7 @@ def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
 
 def test_missing_vector_db_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
-        json=[
-            {
-                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                "name": "Global",
-                "tags": [],
-                "additional_properties": {},
-            }
-        ],
+        json=GLOBAL_PROJECT_RESPONSE,
         status_code=201,
     )
     httpx_mock.add_response(status_code=201, json=get_mut_fixture())

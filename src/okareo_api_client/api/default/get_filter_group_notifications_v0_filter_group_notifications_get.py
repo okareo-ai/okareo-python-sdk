@@ -5,38 +5,37 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.datapoint_summary_item import DatapointSummaryItem
 from ...models.error_response import ErrorResponse
-from ...models.summary_datapoint_search import SummaryDatapointSearch
+from ...models.get_filter_group_notifications_v0_filter_group_notifications_get_response_200_item import (
+    GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item,
+)
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    json_body: SummaryDatapointSearch,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
     return {
-        "method": "post",
-        "url": "/v0/summary_datapoints",
-        "json": json_json_body,
+        "method": "get",
+        "url": "/v0/filter_group_notifications",
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
+) -> Optional[Union[ErrorResponse, List["GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item"]]]:
     if response.status_code == HTTPStatus.OK:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
-            response_200_item = DatapointSummaryItem.from_dict(response_200_item_data)
+            response_200_item = GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item.from_dict(
+                response_200_item_data
+            )
 
             response_200.append(response_200_item)
 
@@ -65,7 +64,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
+) -> Response[Union[ErrorResponse, List["GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,31 +76,33 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Response[Union[ErrorResponse, List["GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item"]]]:
+    """Get Filter Group Notifications
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Get all notification settings for filter groups in the current project.
+
+    This endpoint retrieves information about all filter groups with notification
+    configurations, including their enabled status and channel types (email/slack).
+
+    Args:
+        request: The HTTP request
 
     Returns:
-        list: An array of datapoint objects.
+        list: A list of dictionaries containing notification settings for each filter group
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointSummaryItem']]]
+        Response[Union[ErrorResponse, List['GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item']]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
         api_key=api_key,
     )
 
@@ -115,32 +116,34 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Optional[Union[ErrorResponse, List["GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item"]]]:
+    """Get Filter Group Notifications
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Get all notification settings for filter groups in the current project.
+
+    This endpoint retrieves information about all filter groups with notification
+    configurations, including their enabled status and channel types (email/slack).
+
+    Args:
+        request: The HTTP request
 
     Returns:
-        list: An array of datapoint objects.
+        list: A list of dictionaries containing notification settings for each filter group
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointSummaryItem']]
+        Union[ErrorResponse, List['GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item']]
     """
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
         api_key=api_key,
     ).parsed
 
@@ -148,31 +151,33 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Response[Union[ErrorResponse, List["GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item"]]]:
+    """Get Filter Group Notifications
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Get all notification settings for filter groups in the current project.
+
+    This endpoint retrieves information about all filter groups with notification
+    configurations, including their enabled status and channel types (email/slack).
+
+    Args:
+        request: The HTTP request
 
     Returns:
-        list: An array of datapoint objects.
+        list: A list of dictionaries containing notification settings for each filter group
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointSummaryItem']]]
+        Response[Union[ErrorResponse, List['GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item']]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
         api_key=api_key,
     )
 
@@ -184,33 +189,35 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Optional[Union[ErrorResponse, List["GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item"]]]:
+    """Get Filter Group Notifications
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Get all notification settings for filter groups in the current project.
+
+    This endpoint retrieves information about all filter groups with notification
+    configurations, including their enabled status and channel types (email/slack).
+
+    Args:
+        request: The HTTP request
 
     Returns:
-        list: An array of datapoint objects.
+        list: A list of dictionaries containing notification settings for each filter group
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointSummaryItem']]
+        Union[ErrorResponse, List['GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item']]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

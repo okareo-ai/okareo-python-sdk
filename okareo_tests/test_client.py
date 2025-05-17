@@ -24,6 +24,7 @@ def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
             {
                 "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
                 "name": "Global",
+                "onboarding_status": "onboarding_status",
                 "tags": [],
                 "additional_properties": {},
             }
@@ -51,6 +52,7 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
                 {
                     "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
                     "name": "Global",
+                    "onboarding_status": "onboarding_status",
                     "tags": [],
                     "additional_properties": {},
                 }

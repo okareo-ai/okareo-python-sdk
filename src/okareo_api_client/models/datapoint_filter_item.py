@@ -1,7 +1,9 @@
+import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -27,7 +29,16 @@ class DatapointFilterItem:
         latest_test_run (Union['DatapointFilterItemLatestTestRunType0', Any, Unset]): Group ID for filter
         datapoint_count (Union[Any, Unset, int]): Group ID for filter
         issue_count (Union[Any, Unset, int]): Count of issues for this filter
+        error_count (Union[Any, Unset, int]): Count of errors for this filter
         average_metrics (Union['DatapointFilterItemAverageMetricsType0', Any, Unset]): Metrics for checks in this filter
+        failed_checks (Union[Unset, Any]): Array of failed cheßck names
+        avg_latency (Union[Any, Unset, float]): Average latency for completions
+        total_cost (Union[Any, Unset, float]): Total dollar cost of all completions
+        avg_num_turns (Union[Any, Unset, float]): Average number of turns for completions
+        slack_enabled (Union[Unset, bool]): Whether Slack notifications are enabled for this filter group
+        email_enabled (Union[Unset, bool]): Whether Email notifications are enabled for this filter group
+        time_created (Union[Unset, datetime.datetime]): Created datetime for this filter group
+        time_updated (Union[Unset, datetime.datetime]): Last updated datetime for this filter group
     """
 
     filters: List["FilterCondition"]
@@ -39,7 +50,16 @@ class DatapointFilterItem:
     latest_test_run: Union["DatapointFilterItemLatestTestRunType0", Any, Unset] = UNSET
     datapoint_count: Union[Any, Unset, int] = UNSET
     issue_count: Union[Any, Unset, int] = UNSET
+    error_count: Union[Any, Unset, int] = UNSET
     average_metrics: Union["DatapointFilterItemAverageMetricsType0", Any, Unset] = UNSET
+    failed_checks: Union[Unset, Any] = UNSET
+    avg_latency: Union[Any, Unset, float] = UNSET
+    total_cost: Union[Any, Unset, float] = UNSET
+    avg_num_turns: Union[Any, Unset, float] = UNSET
+    slack_enabled: Union[Unset, bool] = UNSET
+    email_enabled: Union[Unset, bool] = UNSET
+    time_created: Union[Unset, datetime.datetime] = UNSET
+    time_updated: Union[Unset, datetime.datetime] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -86,6 +106,13 @@ class DatapointFilterItem:
         else:
             issue_count = self.issue_count
 
+        error_count: Union[Any, Unset, int]
+        if isinstance(self.error_count, Unset):
+            error_count = UNSET
+
+        else:
+            error_count = self.error_count
+
         average_metrics: Union[Any, Dict[str, Any], Unset]
         if isinstance(self.average_metrics, Unset):
             average_metrics = UNSET
@@ -97,6 +124,38 @@ class DatapointFilterItem:
 
         else:
             average_metrics = self.average_metrics
+
+        failed_checks = self.failed_checks
+        avg_latency: Union[Any, Unset, float]
+        if isinstance(self.avg_latency, Unset):
+            avg_latency = UNSET
+
+        else:
+            avg_latency = self.avg_latency
+
+        total_cost: Union[Any, Unset, float]
+        if isinstance(self.total_cost, Unset):
+            total_cost = UNSET
+
+        else:
+            total_cost = self.total_cost
+
+        avg_num_turns: Union[Any, Unset, float]
+        if isinstance(self.avg_num_turns, Unset):
+            avg_num_turns = UNSET
+
+        else:
+            avg_num_turns = self.avg_num_turns
+
+        slack_enabled = self.slack_enabled
+        email_enabled = self.email_enabled
+        time_created: Union[Unset, str] = UNSET
+        if not isinstance(self.time_created, Unset):
+            time_created = self.time_created.isoformat()
+
+        time_updated: Union[Unset, str] = UNSET
+        if not isinstance(self.time_updated, Unset):
+            time_updated = self.time_updated.isoformat()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -121,8 +180,26 @@ class DatapointFilterItem:
             field_dict["datapoint_count"] = datapoint_count
         if issue_count is not UNSET:
             field_dict["issue_count"] = issue_count
+        if error_count is not UNSET:
+            field_dict["error_count"] = error_count
         if average_metrics is not UNSET:
             field_dict["average_metrics"] = average_metrics
+        if failed_checks is not UNSET:
+            field_dict["failed_checks"] = failed_checks
+        if avg_latency is not UNSET:
+            field_dict["avg_latency"] = avg_latency
+        if total_cost is not UNSET:
+            field_dict["total_cost"] = total_cost
+        if avg_num_turns is not UNSET:
+            field_dict["avg_num_turns"] = avg_num_turns
+        if slack_enabled is not UNSET:
+            field_dict["slack_enabled"] = slack_enabled
+        if email_enabled is not UNSET:
+            field_dict["email_enabled"] = email_enabled
+        if time_created is not UNSET:
+            field_dict["time_created"] = time_created
+        if time_updated is not UNSET:
+            field_dict["time_updated"] = time_updated
 
         return field_dict
 
@@ -184,6 +261,13 @@ class DatapointFilterItem:
 
         issue_count = _parse_issue_count(d.pop("issue_count", UNSET))
 
+        def _parse_error_count(data: object) -> Union[Any, Unset, int]:
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[Any, Unset, int], data)
+
+        error_count = _parse_error_count(d.pop("error_count", UNSET))
+
         def _parse_average_metrics(data: object) -> Union["DatapointFilterItemAverageMetricsType0", Any, Unset]:
             if isinstance(data, Unset):
                 return data
@@ -204,6 +288,47 @@ class DatapointFilterItem:
 
         average_metrics = _parse_average_metrics(d.pop("average_metrics", UNSET))
 
+        failed_checks = d.pop("failed_checks", UNSET)
+
+        def _parse_avg_latency(data: object) -> Union[Any, Unset, float]:
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[Any, Unset, float], data)
+
+        avg_latency = _parse_avg_latency(d.pop("avg_latency", UNSET))
+
+        def _parse_total_cost(data: object) -> Union[Any, Unset, float]:
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[Any, Unset, float], data)
+
+        total_cost = _parse_total_cost(d.pop("total_cost", UNSET))
+
+        def _parse_avg_num_turns(data: object) -> Union[Any, Unset, float]:
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[Any, Unset, float], data)
+
+        avg_num_turns = _parse_avg_num_turns(d.pop("avg_num_turns", UNSET))
+
+        slack_enabled = d.pop("slack_enabled", UNSET)
+
+        email_enabled = d.pop("email_enabled", UNSET)
+
+        _time_created = d.pop("time_created", UNSET)
+        time_created: Union[Unset, datetime.datetime]
+        if isinstance(_time_created, Unset):
+            time_created = UNSET
+        else:
+            time_created = isoparse(_time_created)
+
+        _time_updated = d.pop("time_updated", UNSET)
+        time_updated: Union[Unset, datetime.datetime]
+        if isinstance(_time_updated, Unset):
+            time_updated = UNSET
+        else:
+            time_updated = isoparse(_time_updated)
+
         datapoint_filter_item = cls(
             filters=filters,
             name=name,
@@ -214,7 +339,16 @@ class DatapointFilterItem:
             latest_test_run=latest_test_run,
             datapoint_count=datapoint_count,
             issue_count=issue_count,
+            error_count=error_count,
             average_metrics=average_metrics,
+            failed_checks=failed_checks,
+            avg_latency=avg_latency,
+            total_cost=total_cost,
+            avg_num_turns=avg_num_turns,
+            slack_enabled=slack_enabled,
+            email_enabled=email_enabled,
+            time_created=time_created,
+            time_updated=time_updated,
         )
 
         datapoint_filter_item.additional_properties = d

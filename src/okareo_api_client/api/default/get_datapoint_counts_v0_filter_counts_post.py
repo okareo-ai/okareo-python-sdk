@@ -1,19 +1,21 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.datapoint_summary_item import DatapointSummaryItem
+from ...models.datapoint_filter_search import DatapointFilterSearch
 from ...models.error_response import ErrorResponse
-from ...models.summary_datapoint_search import SummaryDatapointSearch
+from ...models.get_datapoint_counts_v0_filter_counts_post_response_get_datapoint_counts_v0_filter_counts_post import (
+    GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost,
+)
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    json_body: SummaryDatapointSearch,
+    json_body: DatapointFilterSearch,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -23,7 +25,7 @@ def _get_kwargs(
 
     return {
         "method": "post",
-        "url": "/v0/summary_datapoints",
+        "url": "/v0/filter_counts",
         "json": json_json_body,
         "headers": headers,
     }
@@ -31,14 +33,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
+) -> Optional[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = DatapointSummaryItem.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
+        response_200 = GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost.from_dict(
+            response.json()
+        )
 
         return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
@@ -65,7 +64,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
+) -> Response[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,27 +76,27 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    json_body: DatapointFilterSearch,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Response[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]:
+    """Get Datapoint Counts
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
+    data.
 
     Returns:
-        list: An array of datapoint objects.
+        dict: Object containing filtered_count and total_count
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
+        json_body (DatapointFilterSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointSummaryItem']]]
+        Response[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]
     """
 
     kwargs = _get_kwargs(
@@ -115,27 +114,27 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    json_body: DatapointFilterSearch,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Optional[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]:
+    """Get Datapoint Counts
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
+    data.
 
     Returns:
-        list: An array of datapoint objects.
+        dict: Object containing filtered_count and total_count
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
+        json_body (DatapointFilterSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointSummaryItem']]
+        Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]
     """
 
     return sync_detailed(
@@ -148,27 +147,27 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    json_body: DatapointFilterSearch,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Response[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]:
+    """Get Datapoint Counts
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
+    data.
 
     Returns:
-        list: An array of datapoint objects.
+        dict: Object containing filtered_count and total_count
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
+        json_body (DatapointFilterSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointSummaryItem']]]
+        Response[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]
     """
 
     kwargs = _get_kwargs(
@@ -184,27 +183,27 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    json_body: DatapointFilterSearch,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Optional[Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]]:
+    """Get Datapoint Counts
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
+     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
+    data.
 
     Returns:
-        list: An array of datapoint objects.
+        dict: Object containing filtered_count and total_count
 
     Args:
         api_key (str):
-        json_body (SummaryDatapointSearch):
+        json_body (DatapointFilterSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointSummaryItem']]
+        Union[ErrorResponse, GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]
     """
 
     return (

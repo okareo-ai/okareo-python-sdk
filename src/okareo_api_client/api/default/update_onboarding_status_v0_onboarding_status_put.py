@@ -1,45 +1,40 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.datapoint_summary_item import DatapointSummaryItem
 from ...models.error_response import ErrorResponse
-from ...models.summary_datapoint_search import SummaryDatapointSearch
-from ...types import Response
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
     *,
-    json_body: SummaryDatapointSearch,
+    status: str,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
+    params: Dict[str, Any] = {}
+    params["status"] = status
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
-        "method": "post",
-        "url": "/v0/summary_datapoints",
-        "json": json_json_body,
+        "method": "put",
+        "url": "/v0/onboarding_status",
+        "params": params,
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
+) -> Optional[Union[ErrorResponse, str]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = DatapointSummaryItem.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
-
+        response_200 = cast(str, response.json())
         return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
@@ -65,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
+) -> Response[Union[ErrorResponse, str]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,31 +72,33 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    status: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Response[Union[ErrorResponse, str]]:
+    """Update Onboarding Status
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
-
-    Returns:
-        list: An array of datapoint objects.
+     Update the onboarding completion status for the organization
 
     Args:
+        status (str): The new onboarding completion status
+
+    Returns:
+        str: The updated onboarding completion status
+
+    Args:
+        status (str):
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointSummaryItem']]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        status=status,
         api_key=api_key,
     )
 
@@ -115,32 +112,34 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    status: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Optional[Union[ErrorResponse, str]]:
+    """Update Onboarding Status
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
-
-    Returns:
-        list: An array of datapoint objects.
+     Update the onboarding completion status for the organization
 
     Args:
+        status (str): The new onboarding completion status
+
+    Returns:
+        str: The updated onboarding completion status
+
+    Args:
+        status (str):
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointSummaryItem']]
+        Union[ErrorResponse, str]
     """
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
+        status=status,
         api_key=api_key,
     ).parsed
 
@@ -148,31 +147,33 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    status: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Response[Union[ErrorResponse, str]]:
+    """Update Onboarding Status
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
-
-    Returns:
-        list: An array of datapoint objects.
+     Update the onboarding completion status for the organization
 
     Args:
+        status (str): The new onboarding completion status
+
+    Returns:
+        str: The updated onboarding completion status
+
+    Args:
+        status (str):
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointSummaryItem']]]
+        Response[Union[ErrorResponse, str]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        status=status,
         api_key=api_key,
     )
 
@@ -184,33 +185,35 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: SummaryDatapointSearch,
+    status: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointSummaryItem"]]]:
-    """Get Datapoints Summary
+) -> Optional[Union[ErrorResponse, str]]:
+    """Update Onboarding Status
 
-     Expects a date range and returns a summary of datapoint counts by group and feedback range.
-    Defaults to 90-day lookback window.
-
-    Returns:
-        list: An array of datapoint objects.
+     Update the onboarding completion status for the organization
 
     Args:
+        status (str): The new onboarding completion status
+
+    Returns:
+        str: The updated onboarding completion status
+
+    Args:
+        status (str):
         api_key (str):
-        json_body (SummaryDatapointSearch):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointSummaryItem']]
+        Union[ErrorResponse, str]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
+            status=status,
             api_key=api_key,
         )
     ).parsed
