@@ -9,39 +9,39 @@ if TYPE_CHECKING:
     from ..models.filter_condition import FilterCondition
 
 
-T = TypeVar("T", bound="DatapointFilterCreate")
+T = TypeVar("T", bound="DatapointFilterUpdate")
 
 
 @_attrs_define
-class DatapointFilterCreate:
+class DatapointFilterUpdate:
     """
     Attributes:
-        filters (List['FilterCondition']): List of filter conditions to apply
+        filters (Union[Unset, List['FilterCondition']]): List of filter conditions to apply
         name (Union[Unset, str]): Optional name describing this filter
         description (Union[Unset, str]): Optional description of the filter
         checks (Union[Unset, List[str]]): Optional list of checks to apply to datapoints in the filter
-        slack_enabled (Union[Unset, bool]): Whether to enable Slack notifications for this filter group. Default is
-            False (off).
-        email_enabled (Union[Unset, bool]): Whether to enable Email notifications for this filter group. Default is
-            False (off).
+        slack_enabled (Union[Unset, bool]): Whether to enable Slack notifications for this filter group.
+        email_enabled (Union[Unset, bool]): Whether to enable Email notifications for this filter group.
         project_id (Union[Unset, str]): Project ID these filters belong to
     """
 
-    filters: List["FilterCondition"]
+    filters: Union[Unset, List["FilterCondition"]] = UNSET
     name: Union[Unset, str] = UNSET
     description: Union[Unset, str] = UNSET
     checks: Union[Unset, List[str]] = UNSET
-    slack_enabled: Union[Unset, bool] = False
-    email_enabled: Union[Unset, bool] = False
+    slack_enabled: Union[Unset, bool] = UNSET
+    email_enabled: Union[Unset, bool] = UNSET
     project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        filters = []
-        for filters_item_data in self.filters:
-            filters_item = filters_item_data.to_dict()
+        filters: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.filters, Unset):
+            filters = []
+            for filters_item_data in self.filters:
+                filters_item = filters_item_data.to_dict()
 
-            filters.append(filters_item)
+                filters.append(filters_item)
 
         name = self.name
         description = self.description
@@ -55,11 +55,9 @@ class DatapointFilterCreate:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "filters": filters,
-            }
-        )
+        field_dict.update({})
+        if filters is not UNSET:
+            field_dict["filters"] = filters
         if name is not UNSET:
             field_dict["name"] = name
         if description is not UNSET:
@@ -81,8 +79,8 @@ class DatapointFilterCreate:
 
         d = src_dict.copy()
         filters = []
-        _filters = d.pop("filters")
-        for filters_item_data in _filters:
+        _filters = d.pop("filters", UNSET)
+        for filters_item_data in _filters or []:
             filters_item = FilterCondition.from_dict(filters_item_data)
 
             filters.append(filters_item)
@@ -99,7 +97,7 @@ class DatapointFilterCreate:
 
         project_id = d.pop("project_id", UNSET)
 
-        datapoint_filter_create = cls(
+        datapoint_filter_update = cls(
             filters=filters,
             name=name,
             description=description,
@@ -109,8 +107,8 @@ class DatapointFilterCreate:
             project_id=project_id,
         )
 
-        datapoint_filter_create.additional_properties = d
-        return datapoint_filter_create
+        datapoint_filter_update.additional_properties = d
+        return datapoint_filter_update
 
     @property
     def additional_keys(self) -> List[str]:

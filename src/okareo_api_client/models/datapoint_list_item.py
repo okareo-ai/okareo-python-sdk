@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
     from ..models.datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
     from ..models.datapoint_list_item_result_tool_calls_item import DatapointListItemResultToolCallsItem
+    from ..models.datapoint_list_item_user_metadata_type_0 import DatapointListItemUserMetadataType0
 
 
 T = TypeVar("T", bound="DatapointListItem")
@@ -32,6 +33,7 @@ class DatapointListItem:
         feedback (Union[Unset, float]):
         error_message (Union[Unset, str]):
         error_code (Union[Unset, str]):
+        error_type (Union[Unset, str]):
         context_token (Union[Unset, str]):
         time_created (Union[Unset, datetime.datetime]):
         model_metadata (Union['DatapointListItemModelMetadataType0', Any, Unset]):
@@ -52,10 +54,15 @@ class DatapointListItem:
         agent_metadata (Union['DatapointListItemAgentMetadataType0', Any, Unset]):
         provider (Union[Unset, str]):
         total_search_count (Union[Unset, int]):
+        total_datapoint_count (Union[Unset, int]):
         request_model_name (Union[Unset, str]):
         response_model_name (Union[Unset, str]):
         cost (Union[Unset, float]):
         status (Union[Unset, str]):  Default: ''.
+        failed_checks (Union[Unset, List[str]]): Array of failed check names
+        resolved (Union[Unset, bool]): Manual marking from user on resolved status
+        user_metadata (Union['DatapointListItemUserMetadataType0', Any, Unset]): User-provided metadata provided as
+            context to the completion call.
     """
 
     id: str
@@ -67,6 +74,7 @@ class DatapointListItem:
     feedback: Union[Unset, float] = UNSET
     error_message: Union[Unset, str] = UNSET
     error_code: Union[Unset, str] = UNSET
+    error_type: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET
     time_created: Union[Unset, datetime.datetime] = UNSET
     model_metadata: Union["DatapointListItemModelMetadataType0", Any, Unset] = UNSET
@@ -87,15 +95,20 @@ class DatapointListItem:
     agent_metadata: Union["DatapointListItemAgentMetadataType0", Any, Unset] = UNSET
     provider: Union[Unset, str] = UNSET
     total_search_count: Union[Unset, int] = UNSET
+    total_datapoint_count: Union[Unset, int] = UNSET
     request_model_name: Union[Unset, str] = UNSET
     response_model_name: Union[Unset, str] = UNSET
     cost: Union[Unset, float] = UNSET
     status: Union[Unset, str] = ""
+    failed_checks: Union[Unset, List[str]] = UNSET
+    resolved: Union[Unset, bool] = False
+    user_metadata: Union["DatapointListItemUserMetadataType0", Any, Unset] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
         from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
+        from ..models.datapoint_list_item_user_metadata_type_0 import DatapointListItemUserMetadataType0
 
         id = self.id
         tags: Union[Unset, List[str]] = UNSET
@@ -115,6 +128,7 @@ class DatapointListItem:
         feedback = self.feedback
         error_message = self.error_message
         error_code = self.error_code
+        error_type = self.error_type
         context_token = self.context_token
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
@@ -184,10 +198,27 @@ class DatapointListItem:
 
         provider = self.provider
         total_search_count = self.total_search_count
+        total_datapoint_count = self.total_datapoint_count
         request_model_name = self.request_model_name
         response_model_name = self.response_model_name
         cost = self.cost
         status = self.status
+        failed_checks: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.failed_checks, Unset):
+            failed_checks = self.failed_checks
+
+        resolved = self.resolved
+        user_metadata: Union[Any, Dict[str, Any], Unset]
+        if isinstance(self.user_metadata, Unset):
+            user_metadata = UNSET
+
+        elif isinstance(self.user_metadata, DatapointListItemUserMetadataType0):
+            user_metadata = UNSET
+            if not isinstance(self.user_metadata, Unset):
+                user_metadata = self.user_metadata.to_dict()
+
+        else:
+            user_metadata = self.user_metadata
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -212,6 +243,8 @@ class DatapointListItem:
             field_dict["error_message"] = error_message
         if error_code is not UNSET:
             field_dict["error_code"] = error_code
+        if error_type is not UNSET:
+            field_dict["error_type"] = error_type
         if context_token is not UNSET:
             field_dict["context_token"] = context_token
         if time_created is not UNSET:
@@ -252,6 +285,8 @@ class DatapointListItem:
             field_dict["provider"] = provider
         if total_search_count is not UNSET:
             field_dict["total_search_count"] = total_search_count
+        if total_datapoint_count is not UNSET:
+            field_dict["total_datapoint_count"] = total_datapoint_count
         if request_model_name is not UNSET:
             field_dict["request_model_name"] = request_model_name
         if response_model_name is not UNSET:
@@ -260,6 +295,12 @@ class DatapointListItem:
             field_dict["cost"] = cost
         if status is not UNSET:
             field_dict["status"] = status
+        if failed_checks is not UNSET:
+            field_dict["failed_checks"] = failed_checks
+        if resolved is not UNSET:
+            field_dict["resolved"] = resolved
+        if user_metadata is not UNSET:
+            field_dict["user_metadata"] = user_metadata
 
         return field_dict
 
@@ -271,6 +312,7 @@ class DatapointListItem:
         from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
         from ..models.datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
         from ..models.datapoint_list_item_result_tool_calls_item import DatapointListItemResultToolCallsItem
+        from ..models.datapoint_list_item_user_metadata_type_0 import DatapointListItemUserMetadataType0
 
         d = src_dict.copy()
         id = d.pop("id")
@@ -300,6 +342,8 @@ class DatapointListItem:
         error_message = d.pop("error_message", UNSET)
 
         error_code = d.pop("error_code", UNSET)
+
+        error_type = d.pop("error_type", UNSET)
 
         context_token = d.pop("context_token", UNSET)
 
@@ -402,6 +446,8 @@ class DatapointListItem:
 
         total_search_count = d.pop("total_search_count", UNSET)
 
+        total_datapoint_count = d.pop("total_datapoint_count", UNSET)
+
         request_model_name = d.pop("request_model_name", UNSET)
 
         response_model_name = d.pop("response_model_name", UNSET)
@@ -409,6 +455,30 @@ class DatapointListItem:
         cost = d.pop("cost", UNSET)
 
         status = d.pop("status", UNSET)
+
+        failed_checks = cast(List[str], d.pop("failed_checks", UNSET))
+
+        resolved = d.pop("resolved", UNSET)
+
+        def _parse_user_metadata(data: object) -> Union["DatapointListItemUserMetadataType0", Any, Unset]:
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                _user_metadata_type_0 = data
+                user_metadata_type_0: Union[Unset, DatapointListItemUserMetadataType0]
+                if isinstance(_user_metadata_type_0, Unset):
+                    user_metadata_type_0 = UNSET
+                else:
+                    user_metadata_type_0 = DatapointListItemUserMetadataType0.from_dict(_user_metadata_type_0)
+
+                return user_metadata_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["DatapointListItemUserMetadataType0", Any, Unset], data)
+
+        user_metadata = _parse_user_metadata(d.pop("user_metadata", UNSET))
 
         datapoint_list_item = cls(
             id=id,
@@ -420,6 +490,7 @@ class DatapointListItem:
             feedback=feedback,
             error_message=error_message,
             error_code=error_code,
+            error_type=error_type,
             context_token=context_token,
             time_created=time_created,
             model_metadata=model_metadata,
@@ -440,10 +511,14 @@ class DatapointListItem:
             agent_metadata=agent_metadata,
             provider=provider,
             total_search_count=total_search_count,
+            total_datapoint_count=total_datapoint_count,
             request_model_name=request_model_name,
             response_model_name=response_model_name,
             cost=cost,
             status=status,
+            failed_checks=failed_checks,
+            resolved=resolved,
+            user_metadata=user_metadata,
         )
 
         datapoint_list_item.additional_properties = d

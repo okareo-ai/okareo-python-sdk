@@ -13,9 +13,11 @@ class DatapointTagsSchema:
     """
     Attributes:
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
+        resolved (Union[Unset, bool]): If the datapoint is resolved or not
     """
 
     tags: Union[Unset, List[str]] = UNSET
+    resolved: Union[Unset, bool] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -23,11 +25,15 @@ class DatapointTagsSchema:
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
+        resolved = self.resolved
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if tags is not UNSET:
             field_dict["tags"] = tags
+        if resolved is not UNSET:
+            field_dict["resolved"] = resolved
 
         return field_dict
 
@@ -36,8 +42,11 @@ class DatapointTagsSchema:
         d = src_dict.copy()
         tags = cast(List[str], d.pop("tags", UNSET))
 
+        resolved = d.pop("resolved", UNSET)
+
         datapoint_tags_schema = cls(
             tags=tags,
+            resolved=resolved,
         )
 
         datapoint_tags_schema.additional_properties = d

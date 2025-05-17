@@ -9,6 +9,16 @@ from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
 
+GLOBAL_PROJECT_RESPONSE = [
+    {
+        "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+        "name": "Global",
+        "onboarding_status": "onboarding_status",
+        "tags": [],
+        "additional_properties": {},
+    }
+]
+
 
 @pytest.fixture
 def rnd() -> str:
@@ -18,14 +28,7 @@ def rnd() -> str:
 @pytest.fixture
 def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
     httpx_mock.add_response(
-        json=[
-            {
-                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                "name": "Global",
-                "tags": [],
-                "additional_properties": {},
-            }
-        ],
+        json=GLOBAL_PROJECT_RESPONSE,
         status_code=201,
     )
     return Okareo("foo", "http://mocked.com")

@@ -294,9 +294,9 @@ def test_run_test_cohere_pinecone_ir(
                 input_type="search_query",
             ),
             PineconeDb(
-                index_name="my-test-index",
-                region="gcp-starter",
-                project_id="kwnp6kx",
+                index_name="okareo-ci",
+                region="aped-4627-b74a",
+                project_id="ggr8s2p",
                 top_k=3,
             ),
         ],
@@ -331,9 +331,9 @@ def test_run_test_cohere_pinecone_ir_tags(
                 input_type="search_query",
             ),
             PineconeDb(
-                index_name="my-test-index",
-                region="gcp-starter",
-                project_id="kwnp6kx",
+                index_name="okareo-ci",
+                region="aped-4627-b74a",
+                project_id="ggr8s2p",
                 top_k=3,
             ),
         ],
@@ -364,8 +364,8 @@ def test_run_test_cohere_pinecone_ir_tags(
     update_test_data_point_v0_update_test_data_point_post.sync(
         client=okareo.client,
         json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
-            tags=["ci-testing"],
-            id=test_data_points[0].id,
+            tags=[["ci-testing"]],
+            ids=[test_data_points[0].id],
         ),
         api_key=API_KEY,
     )
@@ -403,9 +403,9 @@ def test_run_test_cohere_pinecone_ir_tags(
                 input_type="search_query",
             ),
             PineconeDb(
-                index_name="my-test-index",
-                region="gcp-starter",
-                project_id="kwnp6kx",
+                index_name="okareo-ci",
+                region="aped-4627-b74a",
+                project_id="ggr8s2p",
                 top_k=1,
             ),
         ],
@@ -520,8 +520,8 @@ def test_run_test_custom_ir_tags(
     update_test_data_point_v0_update_test_data_point_post.sync(
         client=okareo.client,
         json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
-            tags=["ci-testing"],
-            id=test_data_points[0].id,
+            tags=[["ci-testing"]],
+            ids=[test_data_points[0].id],
         ),
         api_key=API_KEY,
     )

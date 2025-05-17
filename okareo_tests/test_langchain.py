@@ -14,6 +14,16 @@ from okareo.callbacks import CallbackHandler
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
+MOCK_GLOBAL_RESPONSE = [
+    {
+        "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+        "name": "Global",
+        "onboarding_status": "onboarding_status",
+        "tags": [],
+        "additional_properties": {},
+    }
+]
+
 
 def get_mut_response() -> dict:
     return ModelUnderTestResponse(
@@ -32,14 +42,7 @@ def test_llm_generates_datapoints(
     context_token = random_string(10)
     if okareo_api.is_mock:
         httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
+            json=MOCK_GLOBAL_RESPONSE,
             status_code=201,
         )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
@@ -73,14 +76,7 @@ def test_llm_auto_generate_model(
     context_token = "".join(random.choices(string.ascii_letters, k=10))
     if okareo_api.is_mock:
         httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
+            json=MOCK_GLOBAL_RESPONSE,
             status_code=201,
         )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
@@ -112,14 +108,7 @@ def test_chain_generates_datapoints(
     context_token = random_string(10)
     if okareo_api.is_mock:
         httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
+            json=MOCK_GLOBAL_RESPONSE,
             status_code=201,
         )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)

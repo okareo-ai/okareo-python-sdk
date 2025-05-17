@@ -6,10 +6,14 @@ class DatapointField(str, Enum):
     COST = "cost"
     ERROR_CODE = "error_code"
     ERROR_MESSAGE = "error_message"
+    ERROR_TYPE = "error_type"
     FEEDBACK = "feedback"
+    ID = "id"
     INPUT = "input"
     INPUT_DATETIME = "input_datetime"
     INPUT_TOKENS = "input_tokens"
+    INPUT_TOOLS = "input_tools"
+    ISSUE_TYPE = "issue_type"
     LATENCY = "latency"
     MODEL_METADATA = "model_metadata"
     OUTPUT_TOKENS = "output_tokens"
@@ -18,10 +22,12 @@ class DatapointField(str, Enum):
     RESPONSE_MODEL_NAME = "response_model_name"
     RESULT = "result"
     RESULT_DATETIME = "result_datetime"
+    RESULT_TOOL_CALLS = "result_tool_calls"
     SOURCE = "source"
     TAGS = "tags"
     TEMPERATURE = "temperature"
     TIME_CREATED = "time_created"
+    USER_METADATA = "user_metadata"
 
     def __str__(self) -> str:
         return str(self.value)

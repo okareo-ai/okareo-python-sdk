@@ -23,6 +23,7 @@ from .datapoint_filter_item import DatapointFilterItem
 from .datapoint_filter_item_average_metrics_type_0 import DatapointFilterItemAverageMetricsType0
 from .datapoint_filter_item_latest_test_run_type_0 import DatapointFilterItemLatestTestRunType0
 from .datapoint_filter_search import DatapointFilterSearch
+from .datapoint_filter_update import DatapointFilterUpdate
 from .datapoint_list_item import DatapointListItem
 from .datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
 from .datapoint_list_item_checks import DatapointListItemChecks
@@ -30,10 +31,12 @@ from .datapoint_list_item_input_tools_item import DatapointListItemInputToolsIte
 from .datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
 from .datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
 from .datapoint_list_item_result_tool_calls_item import DatapointListItemResultToolCallsItem
+from .datapoint_list_item_user_metadata_type_0 import DatapointListItemUserMetadataType0
 from .datapoint_response import DatapointResponse
 from .datapoint_schema import DatapointSchema
 from .datapoint_search import DatapointSearch
 from .datapoint_summary_item import DatapointSummaryItem
+from .datapoint_summary_item_user_metadata_type_0 import DatapointSummaryItemUserMetadataType0
 from .datapoint_tags_schema import DatapointTagsSchema
 from .error_response import ErrorResponse
 from .evaluation_payload import EvaluationPayload
@@ -53,8 +56,23 @@ from .full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMe
 from .full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
 from .full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
 from .general_find_payload import GeneralFindPayload
+from .generate_slack_auth_url_v0_generate_slack_auth_url_post_project_data import (
+    GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
+)
+from .generate_slack_auth_url_v0_generate_slack_auth_url_post_response_generate_slack_auth_url_v0_generate_slack_auth_url_post import (
+    GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
+)
 from .generation_tone import GenerationTone
+from .get_datapoint_counts_v0_filter_counts_post_response_get_datapoint_counts_v0_filter_counts_post import (
+    GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost,
+)
+from .get_filter_group_notifications_v0_filter_group_notifications_get_response_200_item import (
+    GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item,
+)
 from .get_groups_v0_groups_get_response_200_item import GetGroupsV0GroupsGetResponse200Item
+from .get_notification_history_v0_notification_history_get_response_200_item import (
+    GetNotificationHistoryV0NotificationHistoryGetResponse200Item,
+)
 from .group_schema import GroupSchema
 from .http_validation_error import HTTPValidationError
 from .model_under_test_response import ModelUnderTestResponse
@@ -74,6 +92,12 @@ from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
 from .seed_data import SeedData
+from .setup_filter_group_notification_v0_setup_filter_group_notification_post_response_setup_filter_group_notification_v0_setup_filter_group_notification_post import (
+    SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
+)
+from .slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_get import (
+    SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
+)
 from .summary_datapoint_search import SummaryDatapointSearch
 from .test_data_point_item import TestDataPointItem
 from .test_data_point_item_metric_value import TestDataPointItemMetricValue
@@ -108,6 +132,7 @@ __all__ = (
     "DatapointFilterItemAverageMetricsType0",
     "DatapointFilterItemLatestTestRunType0",
     "DatapointFilterSearch",
+    "DatapointFilterUpdate",
     "DatapointListItem",
     "DatapointListItemAgentMetadataType0",
     "DatapointListItemChecks",
@@ -115,10 +140,12 @@ __all__ = (
     "DatapointListItemModelMetadataType0",
     "DatapointListItemResultEmbeddingsItem",
     "DatapointListItemResultToolCallsItem",
+    "DatapointListItemUserMetadataType0",
     "DatapointResponse",
     "DatapointSchema",
     "DatapointSearch",
     "DatapointSummaryItem",
+    "DatapointSummaryItemUserMetadataType0",
     "DatapointTagsSchema",
     "ErrorResponse",
     "EvaluationPayload",
@@ -138,8 +165,13 @@ __all__ = (
     "FullDataPointItemScenarioInputType0",
     "FullDataPointItemScenarioResultType0",
     "GeneralFindPayload",
+    "GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData",
+    "GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost",
     "GenerationTone",
+    "GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost",
+    "GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item",
     "GetGroupsV0GroupsGetResponse200Item",
+    "GetNotificationHistoryV0NotificationHistoryGetResponse200Item",
     "GroupSchema",
     "HTTPValidationError",
     "ModelUnderTestResponse",
@@ -159,6 +191,8 @@ __all__ = (
     "ScenarioSetUpdate",
     "ScenarioType",
     "SeedData",
+    "SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost",
+    "SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet",
     "SummaryDatapointSearch",
     "TestDataPointItem",
     "TestDataPointItemMetricValue",

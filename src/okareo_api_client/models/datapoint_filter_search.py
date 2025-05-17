@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,12 +20,20 @@ class DatapointFilterSearch:
         project_id (Union[Unset, str]): Project ID to search within
         offset (Union[Unset, int]): Offset for pagination
         limit (Union[Unset, int]): Limit for pagination
+        issues_only (Union[Unset, bool]): Only return issues
+        errors_only (Union[Unset, bool]): Only return errors
+        checks (Union[Unset, List[Any]]): List of checks to only flag issues for
+        filter_group_id (Union[Unset, str]): Filter group ID to search with
     """
 
     filters: List["FilterCondition"]
     project_id: Union[Unset, str] = UNSET
     offset: Union[Unset, int] = UNSET
     limit: Union[Unset, int] = UNSET
+    issues_only: Union[Unset, bool] = False
+    errors_only: Union[Unset, bool] = False
+    checks: Union[Unset, List[Any]] = UNSET
+    filter_group_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -38,6 +46,13 @@ class DatapointFilterSearch:
         project_id = self.project_id
         offset = self.offset
         limit = self.limit
+        issues_only = self.issues_only
+        errors_only = self.errors_only
+        checks: Union[Unset, List[Any]] = UNSET
+        if not isinstance(self.checks, Unset):
+            checks = self.checks
+
+        filter_group_id = self.filter_group_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -52,6 +67,14 @@ class DatapointFilterSearch:
             field_dict["offset"] = offset
         if limit is not UNSET:
             field_dict["limit"] = limit
+        if issues_only is not UNSET:
+            field_dict["issues_only"] = issues_only
+        if errors_only is not UNSET:
+            field_dict["errors_only"] = errors_only
+        if checks is not UNSET:
+            field_dict["checks"] = checks
+        if filter_group_id is not UNSET:
+            field_dict["filter_group_id"] = filter_group_id
 
         return field_dict
 
@@ -73,11 +96,23 @@ class DatapointFilterSearch:
 
         limit = d.pop("limit", UNSET)
 
+        issues_only = d.pop("issues_only", UNSET)
+
+        errors_only = d.pop("errors_only", UNSET)
+
+        checks = cast(List[Any], d.pop("checks", UNSET))
+
+        filter_group_id = d.pop("filter_group_id", UNSET)
+
         datapoint_filter_search = cls(
             filters=filters,
             project_id=project_id,
             offset=offset,
             limit=limit,
+            issues_only=issues_only,
+            errors_only=errors_only,
+            checks=checks,
+            filter_group_id=filter_group_id,
         )
 
         datapoint_filter_search.additional_properties = d
