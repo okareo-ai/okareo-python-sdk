@@ -97,13 +97,10 @@ def sync_detailed(
         api_key=api_key,
     )
 
-    print(f"calling wiht {kwargs}")
     response = client.get_httpx_client().request(
         **kwargs,
     )
-    print(f" \n\n\nresponse: {response}")
-    print(f" \n\n\nresponse.json: {response.json()}")
-    print(f" \n\n\nresponse.content: {response.content}")
+
     return _build_response(client=client, response=response)
 
 
@@ -169,9 +166,7 @@ async def asyncio_detailed(
         api_key=api_key,
     )
 
-    print(f"calling wiht {kwargs}")
     response = await client.get_async_httpx_client().request(**kwargs)
-    print(f" \n\n\nresponse: {response}")
 
     return _build_response(client=client, response=response)
 
