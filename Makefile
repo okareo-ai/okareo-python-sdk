@@ -12,7 +12,7 @@ spec/update:
 .PHONY: openapi/generate
 openapi/generate:
 	rm -rf src/okareo_api_client
-	openapi-python-client generate --path openapi.json
+	openapi-python-client generate --path openapi.json --meta poetry
 	mv -f okareo-api-client/okareo_api_client src
 	rm -rf okareo-api-client
 
