@@ -82,6 +82,7 @@ langchain = {version = "^0.0.321"}
 openai = {version = "^1.0.0"}
 litellm = {version = "^1.29.5"}
 ipykernel = "^6.25.2"
+setuptools = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
