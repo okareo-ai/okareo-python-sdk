@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,27 +15,33 @@ T = TypeVar("T", bound="FilterCondition")
 class FilterCondition:
     """
     Attributes:
-        field (DatapointField): An enumeration.
-        operator (ComparisonOperator): An enumeration.
+        field (DatapointField):
+        operator (ComparisonOperator):
         value (str): Value to compare against
-        field_key (Union[Unset, str]): Key of the User Metadata field to filter on. Ignored for other 'field' values
+        field_key (Union[None, Unset, str]): Key of the User Metadata field to filter on. Ignored for other 'field'
+            values
     """
 
     field: DatapointField
     operator: ComparisonOperator
     value: str
-    field_key: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    field_key: Union[None, Unset, str] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         field = self.field.value
 
         operator = self.operator.value
 
         value = self.value
-        field_key = self.field_key
 
-        field_dict: Dict[str, Any] = {}
+        field_key: Union[None, Unset, str]
+        if isinstance(self.field_key, Unset):
+            field_key = UNSET
+        else:
+            field_key = self.field_key
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -49,15 +56,22 @@ class FilterCondition:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
         field = DatapointField(d.pop("field"))
 
         operator = ComparisonOperator(d.pop("operator"))
 
         value = d.pop("value")
 
-        field_key = d.pop("field_key", UNSET)
+        def _parse_field_key(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        field_key = _parse_field_key(d.pop("field_key", UNSET))
 
         filter_condition = cls(
             field=field,
@@ -70,7 +84,7 @@ class FilterCondition:
         return filter_condition
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

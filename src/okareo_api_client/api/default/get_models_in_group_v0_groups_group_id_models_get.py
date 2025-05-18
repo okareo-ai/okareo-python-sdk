@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
+from uuid import UUID
 
 import httpx
 
@@ -11,26 +12,26 @@ from ...types import Response
 
 
 def _get_kwargs(
-    group_id: str,
+    group_id: UUID,
     *,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/v0/groups/{group_id}/models".format(
-            group_id=group_id,
-        ),
-        "headers": headers,
+        "url": f"/v0/groups/{group_id}/models",
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
-    if response.status_code == HTTPStatus.CREATED:
+) -> Optional[Union[ErrorResponse, list["ModelUnderTestResponse"]]]:
+    if response.status_code == 201:
         response_201 = []
         _response_201 = response.json()
         for response_201_item_data in _response_201:
@@ -39,19 +40,19 @@ def _parse_response(
             response_201.append(response_201_item)
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -63,7 +64,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
+) -> Response[Union[ErrorResponse, list["ModelUnderTestResponse"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,11 +74,11 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
+) -> Response[Union[ErrorResponse, list["ModelUnderTestResponse"]]]:
     """Get Models In Group
 
      Get all models in a specific group.
@@ -86,7 +87,7 @@ def sync_detailed(
         A list of models in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:
@@ -94,7 +95,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ModelUnderTestResponse']]]
+        Response[Union[ErrorResponse, list['ModelUnderTestResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -110,11 +111,11 @@ def sync_detailed(
 
 
 def sync(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
+) -> Optional[Union[ErrorResponse, list["ModelUnderTestResponse"]]]:
     """Get Models In Group
 
      Get all models in a specific group.
@@ -123,7 +124,7 @@ def sync(
         A list of models in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:
@@ -131,7 +132,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ModelUnderTestResponse']]
+        Union[ErrorResponse, list['ModelUnderTestResponse']]
     """
 
     return sync_detailed(
@@ -142,11 +143,11 @@ def sync(
 
 
 async def asyncio_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
+) -> Response[Union[ErrorResponse, list["ModelUnderTestResponse"]]]:
     """Get Models In Group
 
      Get all models in a specific group.
@@ -155,7 +156,7 @@ async def asyncio_detailed(
         A list of models in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:
@@ -163,7 +164,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ModelUnderTestResponse']]]
+        Response[Union[ErrorResponse, list['ModelUnderTestResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -177,11 +178,11 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
+) -> Optional[Union[ErrorResponse, list["ModelUnderTestResponse"]]]:
     """Get Models In Group
 
      Get all models in a specific group.
@@ -190,7 +191,7 @@ async def asyncio(
         A list of models in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:
@@ -198,7 +199,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ModelUnderTestResponse']]
+        Union[ErrorResponse, list['ModelUnderTestResponse']]
     """
 
     return (

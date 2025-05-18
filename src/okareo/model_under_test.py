@@ -370,7 +370,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         response = add_datapoint_v0_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=DatapointSchema.from_dict(body),
+            body=DatapointSchema.from_dict(body),
         )
         if not response:
             print("Empty response from API")
@@ -690,7 +690,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
                 api_key=self.api_key,
-                json_body=self._get_test_run_payload(
+                body=self._get_test_run_payload(
                     scenario_id,
                     name,
                     api_key,

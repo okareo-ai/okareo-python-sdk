@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,21 +13,31 @@ T = TypeVar("T", bound="ProjectSchema")
 class ProjectSchema:
     """
     Attributes:
-        name (Union[Unset, str]): Name of the project
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter projects in the Okareo app
+        name (Union[None, Unset, str]): Name of the project
+        tags (Union[None, Unset, list[str]]): Tags are strings that can be used to filter projects in the Okareo app
     """
 
-    name: Union[Unset, str] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    name: Union[None, Unset, str] = UNSET
+    tags: Union[None, Unset, list[str]] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        name = self.name
-        tags: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.tags, Unset):
+    def to_dict(self) -> dict[str, Any]:
+        name: Union[None, Unset, str]
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        tags: Union[None, Unset, list[str]]
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
             tags = self.tags
 
-        field_dict: Dict[str, Any] = {}
+        else:
+            tags = self.tags
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if name is not UNSET:
@@ -37,11 +48,34 @@ class ProjectSchema:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        name = d.pop("name", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        def _parse_name(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        name = _parse_name(d.pop("name", UNSET))
+
+        def _parse_tags(data: object) -> Union[None, Unset, list[str]]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union[None, Unset, list[str]], data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         project_schema = cls(
             name=name,
@@ -52,7 +86,7 @@ class ProjectSchema:
         return project_schema
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

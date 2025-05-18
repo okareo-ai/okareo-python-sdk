@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 import httpx
 
@@ -12,16 +12,17 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    lookback_start: Union[Unset, None, int] = 90,
-    lookback_end: Union[Unset, None, int] = 0,
-    get_baseline_metrics: Union[Unset, None, bool] = False,
-    timezone: Union[Unset, None, str] = "Etc/UTC",
+    lookback_start: Union[Unset, int] = 90,
+    lookback_end: Union[Unset, int] = 0,
+    get_baseline_metrics: Union[Unset, bool] = False,
+    timezone: Union[Unset, str] = "Etc/UTC",
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
+
     params["lookback_start"] = lookback_start
 
     params["lookback_end"] = lookback_end
@@ -32,18 +33,20 @@ def _get_kwargs(
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/filters",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["DatapointFilterItem"]]]:
-    if response.status_code == HTTPStatus.OK:
+) -> Optional[Union[ErrorResponse, list["DatapointFilterItem"]]]:
+    if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
@@ -52,19 +55,19 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -76,7 +79,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["DatapointFilterItem"]]]:
+) -> Response[Union[ErrorResponse, list["DatapointFilterItem"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -88,12 +91,12 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    lookback_start: Union[Unset, None, int] = 90,
-    lookback_end: Union[Unset, None, int] = 0,
-    get_baseline_metrics: Union[Unset, None, bool] = False,
-    timezone: Union[Unset, None, str] = "Etc/UTC",
+    lookback_start: Union[Unset, int] = 90,
+    lookback_end: Union[Unset, int] = 0,
+    get_baseline_metrics: Union[Unset, bool] = False,
+    timezone: Union[Unset, str] = "Etc/UTC",
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointFilterItem"]]]:
+) -> Response[Union[ErrorResponse, list["DatapointFilterItem"]]]:
     """Get Filters
 
      Get all datapoint filters for a project.
@@ -107,10 +110,10 @@ def sync_detailed(
         List of filter items for the project
 
     Args:
-        lookback_start (Union[Unset, None, int]):  Default: 90.
-        lookback_end (Union[Unset, None, int]):
-        get_baseline_metrics (Union[Unset, None, bool]):
-        timezone (Union[Unset, None, str]):  Default: 'Etc/UTC'.
+        lookback_start (Union[Unset, int]):  Default: 90.
+        lookback_end (Union[Unset, int]):  Default: 0.
+        get_baseline_metrics (Union[Unset, bool]):  Default: False.
+        timezone (Union[Unset, str]):  Default: 'Etc/UTC'.
         api_key (str):
 
     Raises:
@@ -118,7 +121,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointFilterItem']]]
+        Response[Union[ErrorResponse, list['DatapointFilterItem']]]
     """
 
     kwargs = _get_kwargs(
@@ -139,12 +142,12 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    lookback_start: Union[Unset, None, int] = 90,
-    lookback_end: Union[Unset, None, int] = 0,
-    get_baseline_metrics: Union[Unset, None, bool] = False,
-    timezone: Union[Unset, None, str] = "Etc/UTC",
+    lookback_start: Union[Unset, int] = 90,
+    lookback_end: Union[Unset, int] = 0,
+    get_baseline_metrics: Union[Unset, bool] = False,
+    timezone: Union[Unset, str] = "Etc/UTC",
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointFilterItem"]]]:
+) -> Optional[Union[ErrorResponse, list["DatapointFilterItem"]]]:
     """Get Filters
 
      Get all datapoint filters for a project.
@@ -158,10 +161,10 @@ def sync(
         List of filter items for the project
 
     Args:
-        lookback_start (Union[Unset, None, int]):  Default: 90.
-        lookback_end (Union[Unset, None, int]):
-        get_baseline_metrics (Union[Unset, None, bool]):
-        timezone (Union[Unset, None, str]):  Default: 'Etc/UTC'.
+        lookback_start (Union[Unset, int]):  Default: 90.
+        lookback_end (Union[Unset, int]):  Default: 0.
+        get_baseline_metrics (Union[Unset, bool]):  Default: False.
+        timezone (Union[Unset, str]):  Default: 'Etc/UTC'.
         api_key (str):
 
     Raises:
@@ -169,7 +172,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointFilterItem']]
+        Union[ErrorResponse, list['DatapointFilterItem']]
     """
 
     return sync_detailed(
@@ -185,12 +188,12 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    lookback_start: Union[Unset, None, int] = 90,
-    lookback_end: Union[Unset, None, int] = 0,
-    get_baseline_metrics: Union[Unset, None, bool] = False,
-    timezone: Union[Unset, None, str] = "Etc/UTC",
+    lookback_start: Union[Unset, int] = 90,
+    lookback_end: Union[Unset, int] = 0,
+    get_baseline_metrics: Union[Unset, bool] = False,
+    timezone: Union[Unset, str] = "Etc/UTC",
     api_key: str,
-) -> Response[Union[ErrorResponse, List["DatapointFilterItem"]]]:
+) -> Response[Union[ErrorResponse, list["DatapointFilterItem"]]]:
     """Get Filters
 
      Get all datapoint filters for a project.
@@ -204,10 +207,10 @@ async def asyncio_detailed(
         List of filter items for the project
 
     Args:
-        lookback_start (Union[Unset, None, int]):  Default: 90.
-        lookback_end (Union[Unset, None, int]):
-        get_baseline_metrics (Union[Unset, None, bool]):
-        timezone (Union[Unset, None, str]):  Default: 'Etc/UTC'.
+        lookback_start (Union[Unset, int]):  Default: 90.
+        lookback_end (Union[Unset, int]):  Default: 0.
+        get_baseline_metrics (Union[Unset, bool]):  Default: False.
+        timezone (Union[Unset, str]):  Default: 'Etc/UTC'.
         api_key (str):
 
     Raises:
@@ -215,7 +218,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['DatapointFilterItem']]]
+        Response[Union[ErrorResponse, list['DatapointFilterItem']]]
     """
 
     kwargs = _get_kwargs(
@@ -234,12 +237,12 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    lookback_start: Union[Unset, None, int] = 90,
-    lookback_end: Union[Unset, None, int] = 0,
-    get_baseline_metrics: Union[Unset, None, bool] = False,
-    timezone: Union[Unset, None, str] = "Etc/UTC",
+    lookback_start: Union[Unset, int] = 90,
+    lookback_end: Union[Unset, int] = 0,
+    get_baseline_metrics: Union[Unset, bool] = False,
+    timezone: Union[Unset, str] = "Etc/UTC",
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["DatapointFilterItem"]]]:
+) -> Optional[Union[ErrorResponse, list["DatapointFilterItem"]]]:
     """Get Filters
 
      Get all datapoint filters for a project.
@@ -253,10 +256,10 @@ async def asyncio(
         List of filter items for the project
 
     Args:
-        lookback_start (Union[Unset, None, int]):  Default: 90.
-        lookback_end (Union[Unset, None, int]):
-        get_baseline_metrics (Union[Unset, None, bool]):
-        timezone (Union[Unset, None, str]):  Default: 'Etc/UTC'.
+        lookback_start (Union[Unset, int]):  Default: 90.
+        lookback_end (Union[Unset, int]):  Default: 0.
+        get_baseline_metrics (Union[Unset, bool]):  Default: False.
+        timezone (Union[Unset, str]):  Default: 'Etc/UTC'.
         api_key (str):
 
     Raises:
@@ -264,7 +267,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['DatapointFilterItem']]
+        Union[ErrorResponse, list['DatapointFilterItem']]
     """
 
     return (

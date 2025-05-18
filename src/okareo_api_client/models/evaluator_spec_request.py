@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,35 +14,64 @@ T = TypeVar("T", bound="EvaluatorSpecRequest")
 class EvaluatorSpecRequest:
     """
     Attributes:
-        name (Union[Unset, str]): Name of the evaluator
-        description (Union[Unset, str]): Description for the evaluator.
+        name (Union[None, Unset, str]): Name of the evaluator
+        description (Union[None, Unset, str]): Description for the evaluator.
                         When this request is sent to generate an evaluator, this field will be used to generate it.
-        requires_scenario_input (Union[Unset, bool]): Whether the evaluator requires scenario input
-        requires_scenario_result (Union[Unset, bool]): Whether the evaluator requires scenario expected result
-        output_data_type (Union[Unset, str]): Evaluator output data type (i.e., bool, int, float)
-        project_id (Union[Unset, str]): ID for the project
-        check_type (Union[Unset, str]): model or code based check Default: 'code'.
+        requires_scenario_input (Union[Unset, bool]): Whether the evaluator requires scenario input Default: False.
+        requires_scenario_result (Union[Unset, bool]): Whether the evaluator requires scenario expected result Default:
+            False.
+        output_data_type (Union[None, Unset, str]): Evaluator output data type (i.e., bool, int, float)
+        project_id (Union[None, UUID, Unset]): ID for the project
+        check_type (Union[None, Unset, str]): model or code based check Default: 'code'.
     """
 
-    name: Union[Unset, str] = UNSET
-    description: Union[Unset, str] = UNSET
+    name: Union[None, Unset, str] = UNSET
+    description: Union[None, Unset, str] = UNSET
     requires_scenario_input: Union[Unset, bool] = False
     requires_scenario_result: Union[Unset, bool] = False
-    output_data_type: Union[Unset, str] = UNSET
-    project_id: Union[Unset, str] = UNSET
-    check_type: Union[Unset, str] = "code"
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    output_data_type: Union[None, Unset, str] = UNSET
+    project_id: Union[None, UUID, Unset] = UNSET
+    check_type: Union[None, Unset, str] = "code"
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        name = self.name
-        description = self.description
+    def to_dict(self) -> dict[str, Any]:
+        name: Union[None, Unset, str]
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        description: Union[None, Unset, str]
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
+
         requires_scenario_input = self.requires_scenario_input
-        requires_scenario_result = self.requires_scenario_result
-        output_data_type = self.output_data_type
-        project_id = self.project_id
-        check_type = self.check_type
 
-        field_dict: Dict[str, Any] = {}
+        requires_scenario_result = self.requires_scenario_result
+
+        output_data_type: Union[None, Unset, str]
+        if isinstance(self.output_data_type, Unset):
+            output_data_type = UNSET
+        else:
+            output_data_type = self.output_data_type
+
+        project_id: Union[None, Unset, str]
+        if isinstance(self.project_id, Unset):
+            project_id = UNSET
+        elif isinstance(self.project_id, UUID):
+            project_id = str(self.project_id)
+        else:
+            project_id = self.project_id
+
+        check_type: Union[None, Unset, str]
+        if isinstance(self.check_type, Unset):
+            check_type = UNSET
+        else:
+            check_type = self.check_type
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if name is not UNSET:
@@ -61,21 +92,65 @@ class EvaluatorSpecRequest:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        name = d.pop("name", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
 
-        description = d.pop("description", UNSET)
+        def _parse_name(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        name = _parse_name(d.pop("name", UNSET))
+
+        def _parse_description(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        description = _parse_description(d.pop("description", UNSET))
 
         requires_scenario_input = d.pop("requires_scenario_input", UNSET)
 
         requires_scenario_result = d.pop("requires_scenario_result", UNSET)
 
-        output_data_type = d.pop("output_data_type", UNSET)
+        def _parse_output_data_type(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        project_id = d.pop("project_id", UNSET)
+        output_data_type = _parse_output_data_type(d.pop("output_data_type", UNSET))
 
-        check_type = d.pop("check_type", UNSET)
+        def _parse_project_id(data: object) -> Union[None, UUID, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                project_id_type_0 = UUID(data)
+
+                return project_id_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union[None, UUID, Unset], data)
+
+        project_id = _parse_project_id(d.pop("project_id", UNSET))
+
+        def _parse_check_type(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
+
+        check_type = _parse_check_type(d.pop("check_type", UNSET))
 
         evaluator_spec_request = cls(
             name=name,
@@ -91,7 +166,7 @@ class EvaluatorSpecRequest:
         return evaluator_spec_request
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

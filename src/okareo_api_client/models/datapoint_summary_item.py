@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,53 +22,68 @@ class DatapointSummaryItem:
         datapoints (int): The total count of datapoints for the group.
         issues (int): The total count of issues for the group.
         errors (int): The total count of errors for the group.
-        feedback_ranges (Union[Unset, List['FeedbackRangeSummary']]): List of feedback range summaries for the date.
-        avg_latency (Union[Unset, float]): The average latency for the group.
-        sum_cost (Union[Unset, float]): The total cost for the group.
-        user_metadata (Union['DatapointSummaryItemUserMetadataType0', Any, Unset]): Number of distinct values found for
-            each key in user metadata for the group.
+        feedback_ranges (Union[None, Unset, list['FeedbackRangeSummary']]): List of feedback range summaries for the
+            date.
+        avg_latency (Union[None, Unset, float]): The average latency for the group.
+        sum_cost (Union[None, Unset, float]): The total cost for the group.
+        user_metadata (Union['DatapointSummaryItemUserMetadataType0', Any, None, Unset]): Number of distinct values
+            found for each key in user metadata for the group.
     """
 
     group: str
     datapoints: int
     issues: int
     errors: int
-    feedback_ranges: Union[Unset, List["FeedbackRangeSummary"]] = UNSET
-    avg_latency: Union[Unset, float] = UNSET
-    sum_cost: Union[Unset, float] = UNSET
-    user_metadata: Union["DatapointSummaryItemUserMetadataType0", Any, Unset] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    feedback_ranges: Union[None, Unset, list["FeedbackRangeSummary"]] = UNSET
+    avg_latency: Union[None, Unset, float] = UNSET
+    sum_cost: Union[None, Unset, float] = UNSET
+    user_metadata: Union["DatapointSummaryItemUserMetadataType0", Any, None, Unset] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         from ..models.datapoint_summary_item_user_metadata_type_0 import DatapointSummaryItemUserMetadataType0
 
         group = self.group
+
         datapoints = self.datapoints
+
         issues = self.issues
+
         errors = self.errors
-        feedback_ranges: Union[Unset, List[Dict[str, Any]]] = UNSET
-        if not isinstance(self.feedback_ranges, Unset):
+
+        feedback_ranges: Union[None, Unset, list[dict[str, Any]]]
+        if isinstance(self.feedback_ranges, Unset):
+            feedback_ranges = UNSET
+        elif isinstance(self.feedback_ranges, list):
             feedback_ranges = []
-            for feedback_ranges_item_data in self.feedback_ranges:
-                feedback_ranges_item = feedback_ranges_item_data.to_dict()
+            for feedback_ranges_type_0_item_data in self.feedback_ranges:
+                feedback_ranges_type_0_item = feedback_ranges_type_0_item_data.to_dict()
+                feedback_ranges.append(feedback_ranges_type_0_item)
 
-                feedback_ranges.append(feedback_ranges_item)
+        else:
+            feedback_ranges = self.feedback_ranges
 
-        avg_latency = self.avg_latency
-        sum_cost = self.sum_cost
-        user_metadata: Union[Any, Dict[str, Any], Unset]
+        avg_latency: Union[None, Unset, float]
+        if isinstance(self.avg_latency, Unset):
+            avg_latency = UNSET
+        else:
+            avg_latency = self.avg_latency
+
+        sum_cost: Union[None, Unset, float]
+        if isinstance(self.sum_cost, Unset):
+            sum_cost = UNSET
+        else:
+            sum_cost = self.sum_cost
+
+        user_metadata: Union[Any, None, Unset, dict[str, Any]]
         if isinstance(self.user_metadata, Unset):
             user_metadata = UNSET
-
         elif isinstance(self.user_metadata, DatapointSummaryItemUserMetadataType0):
-            user_metadata = UNSET
-            if not isinstance(self.user_metadata, Unset):
-                user_metadata = self.user_metadata.to_dict()
-
+            user_metadata = self.user_metadata.to_dict()
         else:
             user_metadata = self.user_metadata
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -89,11 +105,11 @@ class DatapointSummaryItem:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.datapoint_summary_item_user_metadata_type_0 import DatapointSummaryItemUserMetadataType0
         from ..models.feedback_range_summary import FeedbackRangeSummary
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         group = d.pop("group")
 
         datapoints = d.pop("datapoints")
@@ -102,34 +118,60 @@ class DatapointSummaryItem:
 
         errors = d.pop("errors")
 
-        feedback_ranges = []
-        _feedback_ranges = d.pop("feedback_ranges", UNSET)
-        for feedback_ranges_item_data in _feedback_ranges or []:
-            feedback_ranges_item = FeedbackRangeSummary.from_dict(feedback_ranges_item_data)
+        def _parse_feedback_ranges(data: object) -> Union[None, Unset, list["FeedbackRangeSummary"]]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                feedback_ranges_type_0 = []
+                _feedback_ranges_type_0 = data
+                for feedback_ranges_type_0_item_data in _feedback_ranges_type_0:
+                    feedback_ranges_type_0_item = FeedbackRangeSummary.from_dict(feedback_ranges_type_0_item_data)
 
-            feedback_ranges.append(feedback_ranges_item)
+                    feedback_ranges_type_0.append(feedback_ranges_type_0_item)
 
-        avg_latency = d.pop("avg_latency", UNSET)
+                return feedback_ranges_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union[None, Unset, list["FeedbackRangeSummary"]], data)
 
-        sum_cost = d.pop("sum_cost", UNSET)
+        feedback_ranges = _parse_feedback_ranges(d.pop("feedback_ranges", UNSET))
 
-        def _parse_user_metadata(data: object) -> Union["DatapointSummaryItemUserMetadataType0", Any, Unset]:
+        def _parse_avg_latency(data: object) -> Union[None, Unset, float]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, float], data)
+
+        avg_latency = _parse_avg_latency(d.pop("avg_latency", UNSET))
+
+        def _parse_sum_cost(data: object) -> Union[None, Unset, float]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, float], data)
+
+        sum_cost = _parse_sum_cost(d.pop("sum_cost", UNSET))
+
+        def _parse_user_metadata(data: object) -> Union["DatapointSummaryItemUserMetadataType0", Any, None, Unset]:
+            if data is None:
+                return data
             if isinstance(data, Unset):
                 return data
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _user_metadata_type_0 = data
-                user_metadata_type_0: Union[Unset, DatapointSummaryItemUserMetadataType0]
-                if isinstance(_user_metadata_type_0, Unset):
-                    user_metadata_type_0 = UNSET
-                else:
-                    user_metadata_type_0 = DatapointSummaryItemUserMetadataType0.from_dict(_user_metadata_type_0)
+                user_metadata_type_0 = DatapointSummaryItemUserMetadataType0.from_dict(data)
 
                 return user_metadata_type_0
             except:  # noqa: E722
                 pass
-            return cast(Union["DatapointSummaryItemUserMetadataType0", Any, Unset], data)
+            return cast(Union["DatapointSummaryItemUserMetadataType0", Any, None, Unset], data)
 
         user_metadata = _parse_user_metadata(d.pop("user_metadata", UNSET))
 
@@ -148,7 +190,7 @@ class DatapointSummaryItem:
         return datapoint_summary_item
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

@@ -148,7 +148,7 @@ class Okareo:
         response = create_project_v0_projects_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=ProjectSchema(name=name, tags=tags),
+            body=ProjectSchema(name=name, tags=tags),
         )
         self.validate_response(response)
         assert isinstance(response, ProjectResponse)
@@ -205,9 +205,9 @@ class Okareo:
             data, model_invoker = self._get_custom_model_invoker(data)
         if project_id is not None:
             data["project_id"] = project_id
-        json_body = ModelUnderTestSchema.from_dict(data)
+        body = ModelUnderTestSchema.from_dict(data)
         response = register_model_v0_register_model_post.sync(
-            client=self.client, api_key=self.api_key, json_body=json_body
+            client=self.client, api_key=self.api_key, body=body
         )
 
         self.validate_response(response)
@@ -231,7 +231,7 @@ class Okareo:
             raise ValueError("Non-empty seed data is required to create a scenario set")
 
         response = create_scenario_set_v0_scenario_sets_post.sync(
-            client=self.client, api_key=self.api_key, json_body=create_request
+            client=self.client, api_key=self.api_key, body=create_request
         )
 
         self.validate_response(response)
@@ -323,7 +323,7 @@ class Okareo:
         self, create_request: ScenarioSetGenerate
     ) -> ScenarioSetResponse:
         response = generate_scenario_set_v0_scenario_sets_generate_post.sync(
-            client=self.client, api_key=self.api_key, json_body=create_request
+            client=self.client, api_key=self.api_key, body=create_request
         )
 
         if self.validate_generate_scenario_response(response):
@@ -364,7 +364,7 @@ class Okareo:
         self, test_data_point_payload: FindTestDataPointPayload
     ) -> Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
         data = find_test_data_points_v0_find_test_data_points_post.sync(
-            client=self.client, api_key=self.api_key, json_body=test_data_point_payload
+            client=self.client, api_key=self.api_key, body=test_data_point_payload
         )
         if not data:
             return []
@@ -402,7 +402,7 @@ class Okareo:
         data = get_datapoints_v0_find_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=datapoint_search,
+            body=datapoint_search,
         )
         if not data:
             return []
@@ -418,7 +418,7 @@ class Okareo:
         self, create_check: EvaluatorSpecRequest
     ) -> EvaluatorGenerateResponse:
         response = check_generate_v0_check_generate_post.sync(
-            client=self.client, api_key=self.api_key, json_body=create_check
+            client=self.client, api_key=self.api_key, body=create_check
         )
         self.validate_response(response)
         assert isinstance(response, EvaluatorGenerateResponse)
@@ -476,7 +476,7 @@ class Okareo:
         response = check_create_or_update_v0_check_create_or_update_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=CheckCreateUpdateSchema(
+            body=CheckCreateUpdateSchema(
                 name=name, description=description, check_config=check_config
             ),
         )
@@ -491,12 +491,12 @@ class Okareo:
         tags: Union[List[str], None] = None,
         source: Union[dict, None] = None,
     ) -> Any:
-        json_body = CreateGroupV0GroupsPostSource()
+        body = CreateGroupV0GroupsPostSource()
         if source:
-            json_body.additional_properties.update(source)
+            body.additional_properties.update(source)
         response = create_group_v0_groups_post.sync_detailed(
             client=self.client,
-            json_body=json_body,
+            body=body,
             name=name,
             tags=tags,
             api_key=self.api_key,
@@ -580,7 +580,7 @@ class Okareo:
 
         response = evaluate_v0_evaluate_post.sync(
             client=self.client,
-            json_body=payload,
+            body=payload,
             api_key=self.api_key,
         )
         self.validate_response(response)

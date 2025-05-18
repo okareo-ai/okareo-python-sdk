@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Type, TypeVar
+from collections.abc import Mapping
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -10,25 +11,24 @@ T = TypeVar("T", bound="GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectDat
 class GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData:
     """ """
 
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        field_dict: Dict[str, Any] = {}
+    def to_dict(self) -> dict[str, Any]:
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
 
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
         generate_slack_auth_url_v0_generate_slack_auth_url_post_project_data = cls()
 
         generate_slack_auth_url_v0_generate_slack_auth_url_post_project_data.additional_properties = d
         return generate_slack_auth_url_v0_generate_slack_auth_url_post_project_data
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

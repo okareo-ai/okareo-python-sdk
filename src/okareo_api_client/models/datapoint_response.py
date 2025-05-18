@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,22 +14,36 @@ T = TypeVar("T", bound="DatapointResponse")
 class DatapointResponse:
     """
     Attributes:
-        id (str):
-        project_id (Union[Unset, str]):
-        mut_id (Union[Unset, str]):
+        id (UUID):
+        project_id (Union[None, UUID, Unset]):
+        mut_id (Union[None, UUID, Unset]):
     """
 
-    id: str
-    project_id: Union[Unset, str] = UNSET
-    mut_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    id: UUID
+    project_id: Union[None, UUID, Unset] = UNSET
+    mut_id: Union[None, UUID, Unset] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        project_id = self.project_id
-        mut_id = self.mut_id
+    def to_dict(self) -> dict[str, Any]:
+        id = str(self.id)
 
-        field_dict: Dict[str, Any] = {}
+        project_id: Union[None, Unset, str]
+        if isinstance(self.project_id, Unset):
+            project_id = UNSET
+        elif isinstance(self.project_id, UUID):
+            project_id = str(self.project_id)
+        else:
+            project_id = self.project_id
+
+        mut_id: Union[None, Unset, str]
+        if isinstance(self.mut_id, Unset):
+            mut_id = UNSET
+        elif isinstance(self.mut_id, UUID):
+            mut_id = str(self.mut_id)
+        else:
+            mut_id = self.mut_id
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -42,13 +58,43 @@ class DatapointResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        id = d.pop("id")
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
-        project_id = d.pop("project_id", UNSET)
+        def _parse_project_id(data: object) -> Union[None, UUID, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                project_id_type_0 = UUID(data)
 
-        mut_id = d.pop("mut_id", UNSET)
+                return project_id_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union[None, UUID, Unset], data)
+
+        project_id = _parse_project_id(d.pop("project_id", UNSET))
+
+        def _parse_mut_id(data: object) -> Union[None, UUID, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                mut_id_type_0 = UUID(data)
+
+                return mut_id_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union[None, UUID, Unset], data)
+
+        mut_id = _parse_mut_id(d.pop("mut_id", UNSET))
 
         datapoint_response = cls(
             id=id,
@@ -60,7 +106,7 @@ class DatapointResponse:
         return datapoint_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

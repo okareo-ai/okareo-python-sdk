@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -7,9 +9,9 @@ from ..models.test_run_type import TestRunType
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
+    from ..models.test_run_payload_v2_api_keys_type_0 import TestRunPayloadV2ApiKeysType0
     from ..models.test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
-    from ..models.test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
+    from ..models.test_run_payload_v2_model_results_type_0 import TestRunPayloadV2ModelResultsType0
 
 
 T = TypeVar("T", bound="TestRunPayloadV2")
@@ -19,61 +21,86 @@ T = TypeVar("T", bound="TestRunPayloadV2")
 class TestRunPayloadV2:
     """
     Attributes:
-        mut_id (str): ID of the model
-        scenario_id (str): ID of the scenario set
-        api_keys (Union[Unset, TestRunPayloadV2ApiKeys]): Dictionary that maps model type to the respective API keys
+        mut_id (UUID): ID of the model
+        scenario_id (UUID): ID of the scenario set
+        api_keys (Union['TestRunPayloadV2ApiKeysType0', None, Unset]): Dictionary that maps model type to the respective
+            API keys
         metrics_kwargs (Union[Unset, TestRunPayloadV2MetricsKwargs]): Dictionary of metrics to be measured
-        name (Union[Unset, str]): Name of the test run
-        type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
+        name (Union[None, Unset, str]): Name of the test run
+        type_ (Union[Unset, TestRunType]):
         calculate_metrics (Union[Unset, bool]): Boolean value indicating if metrics should be calculated for the test
             run Default: True.
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
-        model_results (Union[Unset, TestRunPayloadV2ModelResults]):
-        checks (Union[Unset, List[str]]): List of checks to include in the test run.
+        tags (Union[Unset, list[str]]): Tags are strings that can be used to filter test runs in the Okareo app
+        model_results (Union['TestRunPayloadV2ModelResultsType0', None, Unset]):
+        checks (Union[None, Unset, list[str]]): List of checks to include in the test run.
     """
 
-    mut_id: str
-    scenario_id: str
-    api_keys: Union[Unset, "TestRunPayloadV2ApiKeys"] = UNSET
+    mut_id: UUID
+    scenario_id: UUID
+    api_keys: Union["TestRunPayloadV2ApiKeysType0", None, Unset] = UNSET
     metrics_kwargs: Union[Unset, "TestRunPayloadV2MetricsKwargs"] = UNSET
-    name: Union[Unset, str] = UNSET
-    type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
+    name: Union[None, Unset, str] = UNSET
+    type_: Union[Unset, TestRunType] = UNSET
     calculate_metrics: Union[Unset, bool] = True
-    tags: Union[Unset, List[str]] = UNSET
-    model_results: Union[Unset, "TestRunPayloadV2ModelResults"] = UNSET
-    checks: Union[Unset, List[str]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    tags: Union[Unset, list[str]] = UNSET
+    model_results: Union["TestRunPayloadV2ModelResultsType0", None, Unset] = UNSET
+    checks: Union[None, Unset, list[str]] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        mut_id = self.mut_id
-        scenario_id = self.scenario_id
-        api_keys: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.api_keys, Unset):
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.test_run_payload_v2_api_keys_type_0 import TestRunPayloadV2ApiKeysType0
+        from ..models.test_run_payload_v2_model_results_type_0 import TestRunPayloadV2ModelResultsType0
+
+        mut_id = str(self.mut_id)
+
+        scenario_id = str(self.scenario_id)
+
+        api_keys: Union[None, Unset, dict[str, Any]]
+        if isinstance(self.api_keys, Unset):
+            api_keys = UNSET
+        elif isinstance(self.api_keys, TestRunPayloadV2ApiKeysType0):
             api_keys = self.api_keys.to_dict()
+        else:
+            api_keys = self.api_keys
 
-        metrics_kwargs: Union[Unset, Dict[str, Any]] = UNSET
+        metrics_kwargs: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.metrics_kwargs, Unset):
             metrics_kwargs = self.metrics_kwargs.to_dict()
 
-        name = self.name
-        type: Union[Unset, str] = UNSET
-        if not isinstance(self.type, Unset):
-            type = self.type.value
+        name: Union[None, Unset, str]
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        type_: Union[Unset, str] = UNSET
+        if not isinstance(self.type_, Unset):
+            type_ = self.type_.value
 
         calculate_metrics = self.calculate_metrics
-        tags: Union[Unset, List[str]] = UNSET
+
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        model_results: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.model_results, Unset):
+        model_results: Union[None, Unset, dict[str, Any]]
+        if isinstance(self.model_results, Unset):
+            model_results = UNSET
+        elif isinstance(self.model_results, TestRunPayloadV2ModelResultsType0):
             model_results = self.model_results.to_dict()
+        else:
+            model_results = self.model_results
 
-        checks: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.checks, Unset):
+        checks: Union[None, Unset, list[str]]
+        if isinstance(self.checks, Unset):
+            checks = UNSET
+        elif isinstance(self.checks, list):
             checks = self.checks
 
-        field_dict: Dict[str, Any] = {}
+        else:
+            checks = self.checks
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -87,8 +114,8 @@ class TestRunPayloadV2:
             field_dict["metrics_kwargs"] = metrics_kwargs
         if name is not UNSET:
             field_dict["name"] = name
-        if type is not UNSET:
-            field_dict["type"] = type
+        if type_ is not UNSET:
+            field_dict["type"] = type_
         if calculate_metrics is not UNSET:
             field_dict["calculate_metrics"] = calculate_metrics
         if tags is not UNSET:
@@ -101,22 +128,32 @@ class TestRunPayloadV2:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.test_run_payload_v2_api_keys_type_0 import TestRunPayloadV2ApiKeysType0
         from ..models.test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
-        from ..models.test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
+        from ..models.test_run_payload_v2_model_results_type_0 import TestRunPayloadV2ModelResultsType0
 
-        d = src_dict.copy()
-        mut_id = d.pop("mut_id")
+        d = dict(src_dict)
+        mut_id = UUID(d.pop("mut_id"))
 
-        scenario_id = d.pop("scenario_id")
+        scenario_id = UUID(d.pop("scenario_id"))
 
-        _api_keys = d.pop("api_keys", UNSET)
-        api_keys: Union[Unset, TestRunPayloadV2ApiKeys]
-        if isinstance(_api_keys, Unset):
-            api_keys = UNSET
-        else:
-            api_keys = TestRunPayloadV2ApiKeys.from_dict(_api_keys)
+        def _parse_api_keys(data: object) -> Union["TestRunPayloadV2ApiKeysType0", None, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                api_keys_type_0 = TestRunPayloadV2ApiKeysType0.from_dict(data)
+
+                return api_keys_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["TestRunPayloadV2ApiKeysType0", None, Unset], data)
+
+        api_keys = _parse_api_keys(d.pop("api_keys", UNSET))
 
         _metrics_kwargs = d.pop("metrics_kwargs", UNSET)
         metrics_kwargs: Union[Unset, TestRunPayloadV2MetricsKwargs]
@@ -125,27 +162,59 @@ class TestRunPayloadV2:
         else:
             metrics_kwargs = TestRunPayloadV2MetricsKwargs.from_dict(_metrics_kwargs)
 
-        name = d.pop("name", UNSET)
+        def _parse_name(data: object) -> Union[None, Unset, str]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Union[None, Unset, str], data)
 
-        _type = d.pop("type", UNSET)
-        type: Union[Unset, TestRunType]
-        if isinstance(_type, Unset):
-            type = UNSET
+        name = _parse_name(d.pop("name", UNSET))
+
+        _type_ = d.pop("type", UNSET)
+        type_: Union[Unset, TestRunType]
+        if isinstance(_type_, Unset):
+            type_ = UNSET
         else:
-            type = TestRunType(_type)
+            type_ = TestRunType(_type_)
 
         calculate_metrics = d.pop("calculate_metrics", UNSET)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
-        _model_results = d.pop("model_results", UNSET)
-        model_results: Union[Unset, TestRunPayloadV2ModelResults]
-        if isinstance(_model_results, Unset):
-            model_results = UNSET
-        else:
-            model_results = TestRunPayloadV2ModelResults.from_dict(_model_results)
+        def _parse_model_results(data: object) -> Union["TestRunPayloadV2ModelResultsType0", None, Unset]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                model_results_type_0 = TestRunPayloadV2ModelResultsType0.from_dict(data)
 
-        checks = cast(List[str], d.pop("checks", UNSET))
+                return model_results_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union["TestRunPayloadV2ModelResultsType0", None, Unset], data)
+
+        model_results = _parse_model_results(d.pop("model_results", UNSET))
+
+        def _parse_checks(data: object) -> Union[None, Unset, list[str]]:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                checks_type_0 = cast(list[str], data)
+
+                return checks_type_0
+            except:  # noqa: E722
+                pass
+            return cast(Union[None, Unset, list[str]], data)
+
+        checks = _parse_checks(d.pop("checks", UNSET))
 
         test_run_payload_v2 = cls(
             mut_id=mut_id,
@@ -153,7 +222,7 @@ class TestRunPayloadV2:
             api_keys=api_keys,
             metrics_kwargs=metrics_kwargs,
             name=name,
-            type=type,
+            type_=type_,
             calculate_metrics=calculate_metrics,
             tags=tags,
             model_results=model_results,
@@ -164,7 +233,7 @@ class TestRunPayloadV2:
         return test_run_payload_v2
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:
