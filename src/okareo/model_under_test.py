@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 import nats  # type: ignore
 from attrs import define as _attrs_define
 from nkeys import from_seed  # type: ignore
+from tqdm import tqdm
 
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
@@ -17,6 +18,7 @@ from okareo_api_client.api.default import (
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
     internal_custom_model_listener_v0_internal_custom_model_listener_get,
+    run_test_async_v0_test_run_async_post,
     run_test_v0_test_run_post,
 )
 from okareo_api_client.client import Client
@@ -26,6 +28,7 @@ from okareo_api_client.models import (
     DatapointSchema,
     ModelUnderTestResponse,
     ScenarioDataPoinResponse,
+    TestRunAsyncItem,
     TestRunItem,
     TestRunType,
 )
@@ -645,7 +648,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         if custom_model_thread:
             custom_model_thread.join(timeout=5)
 
-    def run_test(
+    def _run_test_internal(
         self,
         scenario: Union[ScenarioSetResponse, str],
         name: str,
@@ -655,8 +658,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
-    ) -> TestRunItem:
-        """Server-based version of test-run execution"""
+        run_test_method: Any = None,
+    ) -> Union[TestRunItem, TestRunAsyncItem]:
+        """Internal method to run a test. This method is used by both run_test and run_test_async."""
         self.custom_model_thread: Any = None
         self.custom_model_thread_stop_event: Any = None
 
@@ -687,7 +691,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             elif self._has_custom_model():
                 self._custom_exec(scenario_id, model_data)
 
-            response = run_test_v0_test_run_post.sync(
+            response = run_test_method(
                 client=self.client,
                 api_key=self.api_key,
                 json_body=self._get_test_run_payload(
@@ -718,6 +722,58 @@ class ModelUnderTest(AsyncProcessorMixin):
             self._internal_cleanup_custom_model(
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
+
+    def run_test_async(
+        self,
+        scenario: Union[ScenarioSetResponse, str],
+        name: str,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
+        calculate_metrics: bool = True,
+        checks: Optional[List[str]] = None,
+    ) -> TestRunAsyncItem:
+        """Asynchronous server-based version of test-run execution. For CustomModels, model
+        invocations are handled client-side then evaluated server-side asynchronously. For other models,
+        model invocations and evaluations handled server-side asynchronously."""
+        return self._run_test_internal(
+            scenario,
+            name,
+            api_key,
+            api_keys,
+            metrics_kwargs,
+            test_run_type,
+            calculate_metrics,
+            checks,
+            run_test_async_v0_test_run_async_post.sync,
+        )
+
+    def run_test(
+        self,
+        scenario: Union[ScenarioSetResponse, str],
+        name: str,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
+        calculate_metrics: bool = True,
+        checks: Optional[List[str]] = None,
+    ) -> TestRunItem:
+        """Server-based version of test-run execution. For CustomModels, model
+        invocations are handled client-side then evaluated server-side. For other models,
+        model invocations and evaluations handled server-side."""
+        return self._run_test_internal(
+            scenario,
+            name,
+            api_key,
+            api_keys,
+            metrics_kwargs,
+            test_run_type,
+            calculate_metrics,
+            checks,
+            run_test_v0_test_run_post.sync,
+        )
 
     def get_test_run(self, test_run_id: str) -> TestRunItem:
         try:
@@ -757,7 +813,9 @@ class ModelUnderTest(AsyncProcessorMixin):
 
         if not self._has_custom_batch_model():
             custom_model_invoker = self.models["custom"]["model_invoker"]
-            for scenario_data_point in scenario_data_points:
+            for scenario_data_point in tqdm(
+                scenario_data_points, desc="Generating", unit="datapoint"
+            ):
                 scenario_input = self._extract_input_from_scenario_data_point(
                     scenario_data_point
                 )
@@ -772,7 +830,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             # batch inputs to the custom model
             custom_model_invoker = self.models["custom_batch"]["model_invoker"]
             batch_size = self.models["custom_batch"]["batch_size"]
-            for index in range(0, datapoint_len, batch_size):
+            for index in tqdm(
+                range(0, datapoint_len, batch_size), desc="Generating", unit="batch"
+            ):
                 end_index = min(index + batch_size, datapoint_len)
                 scenario_data_points_batch = scenario_data_points[index:end_index]
                 scenario_inputs = [

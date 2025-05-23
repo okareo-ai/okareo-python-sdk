@@ -48,6 +48,7 @@ litellm = {version = "^1.29.5", optional = true}
 autogen-agentchat = { version = "^0.2.36", optional = true }
 protobuf = ">=2.6.1"
 opentelemetry-proto = ">=1.20.0"
+tqdm = "^4.67.1"
 
 [tool.poetry.extras]
 langchain = ["langchain", "openai", "litellm"]
