@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 import pytest
 import requests  # type:ignore
@@ -481,3 +482,128 @@ def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
     assert evaluation.name == f"Multi-turn Tools Demo Evaluation w/ Mock - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
+
+
+# Define 5 different custom models
+class SimpleRefusalModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        content = "I cannot assist with that request."
+        return ModelInvocation(content, messages, {"type": "refusal"})
+
+
+class EchoModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_message = messages[-1].get("content", "")
+        content = f"You said: {user_message}"
+        return ModelInvocation(content, messages, {"type": "echo"})
+
+
+class SentimentModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_message = messages[-1].get("content", "").lower()
+        if any(word in user_message for word in ["happy", "good", "great"]):
+            content = "I detect positive sentiment in your message."
+        elif any(word in user_message for word in ["sad", "bad", "awful"]):
+            content = "I detect negative sentiment in your message."
+        else:
+            content = "I detect neutral sentiment in your message."
+        return ModelInvocation(content, messages, {"type": "sentiment"})
+
+
+class CounterModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_msg_count = sum(1 for msg in messages if msg.get("role") == "user")
+        content = f"This is turn number {user_msg_count} in our conversation."
+        return ModelInvocation(content, messages, {"turn_count": user_msg_count})
+
+
+class QuestionDetectorModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_message = messages[-1].get("content", "")
+        if "?" in user_message:
+            content = "You asked a question. I'll try to help."
+        else:
+            content = "You didn't ask a question. Feel free to ask if you need help."
+        return ModelInvocation(
+            content, messages, {"contains_question": "?" in user_message}
+        )
+
+
+def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    # Create custom model instances
+    models = [
+        SimpleRefusalModel(name="refusal_model"),
+        EchoModel(name="echo_model"),
+        SentimentModel(name="sentiment_model"),
+        CounterModel(name="counter_model"),
+        QuestionDetectorModel(name="question_detector_model"),
+    ]
+
+    # Create a shared scenario for all models
+    seeds = [
+        SeedData(
+            input_="Hello, how are you today?",
+            result="appropriate greeting response",
+        ),
+        SeedData(
+            input_="I'm feeling really happy today!",
+            result="positive sentiment acknowledgment",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Multiple Custom Models Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    # Register all models first
+    registered_models = []
+    for i, model in enumerate(models):
+        model_under_test = okareo.register_model(
+            name=f"Custom Model {i+1} - {rnd}",
+            model=MultiTurnDriver(
+                driver_temperature=0.5 + (i * 0.1),  # Vary temperature
+                max_turns=3 + i,  # Vary max turns
+                repeats=1,
+                target=model,
+                stop_check={"check_name": "behavior_adherence", "stop_on": True},
+            ),
+            update=True,
+        )
+        registered_models.append((i, model_under_test))
+
+    # Function to run a single test
+    def run_single_test(index: Any, model: Any) -> Any:
+        evaluation = model.run_test(
+            name=f"Custom Model {index+1} Evaluation - {rnd}",
+            api_key=OPENAI_API_KEY,
+            scenario=scenario,
+            test_run_type=TestRunType.NL_GENERATION,
+            calculate_metrics=True,
+            checks=["behavior_adherence", "levenshtein_distance"],
+        )
+        return index, evaluation
+
+    # Run all tests concurrently
+    evaluations = {}
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        # Start all test runs concurrently
+        future_to_model = {
+            executor.submit(run_single_test, i, model): (i, model)
+            for i, model in registered_models
+        }
+
+        # Collect results as they complete
+        for future in as_completed(future_to_model):
+            idx, evaluation = future.result()
+            evaluations[idx] = evaluation
+
+    # Verify results
+    assert len(evaluations) == 5
+    for i in range(5):
+        evaluation = evaluations[i]
+        assert evaluation.name == f"Custom Model {i+1} Evaluation - {rnd}"
+        assert evaluation.model_metrics is not None
+        assert evaluation.app_link is not None
