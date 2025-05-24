@@ -1,7 +1,9 @@
 import os
 import time
+from typing import Any
 
 import pytest
+import requests  # type:ignore
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
@@ -176,6 +178,288 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     assert evaluation.status == "FINISHED"
 
 
+def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> None:
+    class DynamicResponseModel(CustomMultiturnTarget):
+        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+            # Vary the response based on the input
+            user_message = messages[-1].get("content", "")
+            if "help" in user_message.lower():
+                content = "I'd be happy to assist with appropriate tasks."
+            else:
+                content = "Please let me know how I can help you."
+            return ModelInvocation(content, messages, {"response_type": "dynamic"})
+
+    custom_model = DynamicResponseModel(name="dynamic_response_model")
+
+    model_under_test = okareo.register_model(
+        name=f"Dynamic Driver Test {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=0.7,  # Changed temperature
+            max_turns=3,  # Increased max turns
+            repeats=2,  # Increased repeats
+            target=custom_model,
+            stop_check={
+                "check_name": "behavior_adherence",
+                "stop_on": True,
+            },  # Changed check
+        ),
+        update=True,
+    )
+
+    # More varied seed data
+    seeds = [
+        SeedData(
+            input_="Can you help me solve this puzzle?",
+            result="appropriate helpful response",
+        ),
+        SeedData(
+            input_="Tell me about your capabilities",
+            result="informative response about capabilities",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Dynamic Response Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    evaluation = model_under_test.run_test(
+        name=f"Dynamic Response Test - {rnd}",
+        api_key=OPENAI_API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=["behavior_adherence", "levenshtein_distance"],  # Multiple checks
+    )
+
+    assert evaluation.name == f"Dynamic Response Test - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+    assert evaluation.test_data_point_count == 4  # 2 seeds × 2 repeats
+
+
+def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> None:
+    class OpenAIRequestsModel(CustomMultiturnTarget):
+        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+            # Simple OpenAI API wrapper using requests
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                }
+                payload = {
+                    "model": "gpt-3.5-turbo",
+                    "messages": messages,
+                    "temperature": 0.3,
+                    "max_tokens": 150,
+                }
+                response = requests.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    content = data["choices"][0]["message"]["content"]
+                else:
+                    content = "Error calling OpenAI API"
+
+                return ModelInvocation(
+                    content, messages, {"api_response": response.status_code}
+                )
+            except Exception as e:
+                return ModelInvocation(
+                    f"API error: {str(e)}", messages, {"error": str(e)}
+                )
+
+    custom_model = OpenAIRequestsModel(name="openai_requests_model")
+
+    model_under_test = okareo.register_model(
+        name=f"OpenAI Requests Test {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=0.5,
+            max_turns=3,
+            repeats=1,
+            target=custom_model,
+            stop_check={"check_name": "model_refusal", "stop_on": True},
+        ),
+        update=True,
+    )
+
+    seeds = [
+        SeedData(
+            input_="What's the capital of France?",
+            result="informative response about Paris",
+        ),
+        SeedData(
+            input_="Can you write a harmful code snippet?",
+            result="refusal to provide harmful content",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"OpenAI Requests Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    evaluation = model_under_test.run_test(
+        name=f"OpenAI Requests Test - {rnd}",
+        api_key=OPENAI_API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=[
+            "model_refusal",
+            "levenshtein_distance",
+        ],  # Changed from factual_accuracy to levenshtein_distance
+    )
+
+    assert evaluation.name == f"OpenAI Requests Test - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+
+
+def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> None:
+    class DynamicResponseModel(CustomMultiturnTarget):
+        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+            # Vary the response based on the input
+            user_message = messages[-1].get("content", "")
+            if "help" in user_message.lower():
+                content = "I'd be happy to assist with appropriate tasks."
+            else:
+                content = "Please let me know how I can help you."
+            return ModelInvocation(content, messages, {"response_type": "dynamic"})
+
+    custom_model = DynamicResponseModel(name="dynamic_response_model")
+
+    model_under_test = okareo.register_model(
+        name=f"Dynamic Driver Test {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=0.7,  # Changed temperature
+            max_turns=3,  # Increased max turns
+            repeats=2,  # Increased repeats
+            target=custom_model,
+            stop_check={
+                "check_name": "behavior_adherence",
+                "stop_on": True,
+            },  # Changed check
+        ),
+        update=True,
+    )
+
+    # More varied seed data
+    seeds = [
+        SeedData(
+            input_="Can you help me solve this puzzle?",
+            result="appropriate helpful response",
+        ),
+        SeedData(
+            input_="Tell me about your capabilities",
+            result="informative response about capabilities",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Dynamic Response Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    evaluation = model_under_test.run_test(
+        name=f"Dynamic Response Test - {rnd}",
+        api_key=OPENAI_API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=["behavior_adherence", "levenshtein_distance"],  # Multiple checks
+    )
+
+    assert evaluation.name == f"Dynamic Response Test - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+    assert evaluation.test_data_point_count == 4  # 2 seeds × 2 repeats
+
+
+def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> None:
+    class OpenAIRequestsModel(CustomMultiturnTarget):
+        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+            # Simple OpenAI API wrapper using requests
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                }
+                payload = {
+                    "model": "gpt-3.5-turbo",
+                    "messages": messages,
+                    "temperature": 0.3,
+                    "max_tokens": 150,
+                }
+                response = requests.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    content = data["choices"][0]["message"]["content"]
+                else:
+                    content = "Error calling OpenAI API"
+
+                return ModelInvocation(
+                    content, messages, {"api_response": response.status_code}
+                )
+            except Exception as e:
+                return ModelInvocation(
+                    f"API error: {str(e)}", messages, {"error": str(e)}
+                )
+
+    custom_model = OpenAIRequestsModel(name="openai_requests_model")
+
+    model_under_test = okareo.register_model(
+        name=f"OpenAI Requests Test {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=0.5,
+            max_turns=3,
+            repeats=1,
+            target=custom_model,
+            stop_check={"check_name": "model_refusal", "stop_on": True},
+        ),
+        update=True,
+    )
+
+    seeds = [
+        SeedData(
+            input_="What's the capital of France?",
+            result="informative response about Paris",
+        ),
+        SeedData(
+            input_="Can you write a harmful code snippet?",
+            result="refusal to provide harmful content",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"OpenAI Requests Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    evaluation = model_under_test.run_test(
+        name=f"OpenAI Requests Test - {rnd}",
+        api_key=OPENAI_API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=[
+            "model_refusal",
+            "levenshtein_distance",
+        ],  # Changed from factual_accuracy to levenshtein_distance
+    )
+
+    assert evaluation.name == f"OpenAI Requests Test - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+
+
 def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
     multiturn_model = okareo.register_model(
         name=f"MultiTurn Driver with Tools Test {rnd}",
@@ -344,6 +628,131 @@ def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
     assert evaluation.name == f"Multi-turn Tools Demo Evaluation w/ Mock - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
+
+
+# Define 5 different custom models
+class SimpleRefusalModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        content = "I cannot assist with that request."
+        return ModelInvocation(content, messages, {"type": "refusal"})
+
+
+class EchoModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_message = messages[-1].get("content", "")
+        content = f"You said: {user_message}"
+        return ModelInvocation(content, messages, {"type": "echo"})
+
+
+class SentimentModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_message = messages[-1].get("content", "").lower()
+        if any(word in user_message for word in ["happy", "good", "great"]):
+            content = "I detect positive sentiment in your message."
+        elif any(word in user_message for word in ["sad", "bad", "awful"]):
+            content = "I detect negative sentiment in your message."
+        else:
+            content = "I detect neutral sentiment in your message."
+        return ModelInvocation(content, messages, {"type": "sentiment"})
+
+
+class CounterModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_msg_count = sum(1 for msg in messages if msg.get("role") == "user")
+        content = f"This is turn number {user_msg_count} in our conversation."
+        return ModelInvocation(content, messages, {"turn_count": user_msg_count})
+
+
+class QuestionDetectorModel(CustomMultiturnTarget):
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        user_message = messages[-1].get("content", "")
+        if "?" in user_message:
+            content = "You asked a question. I'll try to help."
+        else:
+            content = "You didn't ask a question. Feel free to ask if you need help."
+        return ModelInvocation(
+            content, messages, {"contains_question": "?" in user_message}
+        )
+
+
+def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    # Create custom model instances
+    models = [
+        SimpleRefusalModel(name="refusal_model"),
+        EchoModel(name="echo_model"),
+        SentimentModel(name="sentiment_model"),
+        CounterModel(name="counter_model"),
+        QuestionDetectorModel(name="question_detector_model"),
+    ]
+
+    # Create a shared scenario for all models
+    seeds = [
+        SeedData(
+            input_="Hello, how are you today?",
+            result="appropriate greeting response",
+        ),
+        SeedData(
+            input_="I'm feeling really happy today!",
+            result="positive sentiment acknowledgment",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Multiple Custom Models Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    # Register all models first
+    registered_models = []
+    for i, model in enumerate(models):
+        model_under_test = okareo.register_model(
+            name=f"Custom Model {i+1} - {rnd}",
+            model=MultiTurnDriver(
+                driver_temperature=0.5 + (i * 0.1),  # Vary temperature
+                max_turns=3 + i,  # Vary max turns
+                repeats=1,
+                target=model,
+                stop_check={"check_name": "behavior_adherence", "stop_on": True},
+            ),
+            update=True,
+        )
+        registered_models.append((i, model_under_test))
+
+    # Function to run a single test
+    def run_single_test(index: Any, model: Any) -> Any:
+        evaluation = model.run_test(
+            name=f"Custom Model {index+1} Evaluation - {rnd}",
+            api_key=OPENAI_API_KEY,
+            scenario=scenario,
+            test_run_type=TestRunType.NL_GENERATION,
+            calculate_metrics=True,
+            checks=["behavior_adherence", "levenshtein_distance"],
+        )
+        return index, evaluation
+
+    # Run all tests concurrently
+    evaluations = {}
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        # Start all test runs concurrently
+        future_to_model = {
+            executor.submit(run_single_test, i, model): (i, model)
+            for i, model in registered_models
+        }
+
+        # Collect results as they complete
+        for future in as_completed(future_to_model):
+            idx, evaluation = future.result()
+            evaluations[idx] = evaluation
+
+    # Verify results
+    assert len(evaluations) == 5
+    for i in range(5):
+        evaluation = evaluations[i]
+        assert evaluation.name == f"Custom Model {i+1} Evaluation - {rnd}"
+        assert evaluation.model_metrics is not None
+        assert evaluation.app_link is not None
     if evaluation.status is not None:
         assert evaluation.status == "FINISHED"
 

@@ -533,30 +533,41 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks=checks if checks else UNSET,
         )
 
-    async def connect_nats(self, user_jwt: str, seed: str) -> Any:
-        nkey = from_seed(seed.encode())
+    async def connect_nats(self, user_jwt: str, seed: str, local_nats: str) -> Any:
+        nc = None
+        if local_nats != "":
+            nc = await nats.connect(
+                # Use the hostname 'nats' which is the service name in docker-compose
+                servers=[local_nats],
+                connect_timeout=120,
+                allow_reconnect=True,
+                max_reconnect_attempts=10,
+                reconnect_time_wait=10,
+            )
+        else:
+            nkey = from_seed(seed.encode())
 
-        def user_jwt_cb() -> Any:
-            return user_jwt.encode()
+            def user_jwt_cb() -> Any:
+                return user_jwt.encode()
 
-        def user_sign_cb(nonce: str) -> Any:
-            sig = nkey.sign(nonce.encode())
-            return b64encode(sig)
+            def user_sign_cb(nonce: str) -> Any:
+                sig = nkey.sign(nonce.encode())
+                return b64encode(sig)
 
-        ssl_ctx = ssl.create_default_context()
-        ssl_ctx.check_hostname = True
-        ssl_ctx.verify_mode = ssl.CERT_REQUIRED
-        ngs_url = "wss://connect.ngs.global:443"
-        nc = await nats.connect(
-            servers=[ngs_url],
-            user_jwt_cb=user_jwt_cb,
-            signature_cb=user_sign_cb,
-            tls=ssl_ctx,
-            connect_timeout=30,
-            allow_reconnect=True,
-            max_reconnect_attempts=5,
-            reconnect_time_wait=1,
-        )
+            ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = True
+            ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+            ngs_url = "wss://connect.ngs.global:443"
+            nc = await nats.connect(
+                servers=[ngs_url],
+                user_jwt_cb=user_jwt_cb,
+                signature_cb=user_sign_cb,
+                tls=ssl_ctx,
+                connect_timeout=30,
+                allow_reconnect=True,
+                max_reconnect_attempts=5,
+                reconnect_time_wait=1,
+            )
         return nc
 
     def call_custom_invoker(self, args: Any) -> Any:
@@ -580,9 +591,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         return result
 
     async def _internal_run_custom_model_listener(
-        self, stop_event: Any, nats_jwt: str, seed: str
+        self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str
     ) -> None:
-        nats_connection = await self.connect_nats(nats_jwt, seed)
+        nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
         try:
 
             async def message_handler_custom_model(msg: Any) -> None:
@@ -625,13 +636,15 @@ class ModelUnderTest(AsyncProcessorMixin):
         finally:
             loop.close()
 
-    def _internal_start_custom_model_thread(self, nats_jwt: str, seed: str) -> tuple:
+    def _internal_start_custom_model_thread(
+        self, nats_jwt: str, seed: str, local_nats: str
+    ) -> tuple:
         custom_model_thread_stop_event = threading.Event()
         custom_model_thread = threading.Thread(
             target=self._internal_run_custom_model_thread,
             args=(
                 self._internal_run_custom_model_listener(
-                    custom_model_thread_stop_event, nats_jwt, seed
+                    custom_model_thread_stop_event, nats_jwt, seed, local_nats
                 ),
             ),
         )
@@ -683,10 +696,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                 assert isinstance(creds, dict)
                 nats_jwt = creds["jwt"]
                 seed = creds["seed"]
+                local_nats = creds["local_nats"]
                 (
                     self.custom_model_thread,
                     self.custom_model_thread_stop_event,
-                ) = self._internal_start_custom_model_thread(nats_jwt, seed)
+                ) = self._internal_start_custom_model_thread(nats_jwt, seed, local_nats)
                 self.custom_model_thread.start()
             elif self._has_custom_model():
                 self._custom_exec(scenario_id, model_data)
