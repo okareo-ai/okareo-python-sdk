@@ -6,6 +6,7 @@ from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+from uuid import UUID
 
 import nats  # type: ignore
 from attrs import define as _attrs_define
@@ -370,7 +371,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         response = add_datapoint_v0_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=DatapointSchema.from_dict(body),
+            body=DatapointSchema.from_dict(body),
         )
         if not response:
             print("Empty response from API")
@@ -458,7 +459,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         return "custom_batch" in list(self.models.keys())
 
     def _get_scenario_data_points(
-        self, scenario_id: str
+        self, scenario_id: UUID
     ) -> List[ScenarioDataPoinResponse]:
         scenario_data_points = (
             get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
@@ -517,7 +518,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             ),
             scenario_id=scenario_id,
             name=name,
-            type=test_run_type,
+            type_=test_run_type,
             calculate_metrics=calculate_metrics,
             metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
                 metrics_kwargs or {}
@@ -665,7 +666,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             scenario_id = (
                 scenario.scenario_id
                 if isinstance(scenario, ScenarioSetResponse)
-                else scenario
+                else UUID(scenario)
             )
             run_api_keys = self._validate_run_test_params(
                 api_key, api_keys, test_run_type
@@ -674,7 +675,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_data: dict = {"model_data": {}}
             if self._has_custom_model() and "driver" in self.models:
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
-                    client=self.client, api_key=self.api_key, mut_id=self.mut_id
+                    client=self.client, api_key=self.api_key, mut_id=str(self.mut_id)
                 )
                 assert isinstance(creds, dict)
                 nats_jwt = creds["jwt"]
@@ -690,7 +691,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             response = run_test_v0_test_run_post.sync(
                 client=self.client,
                 api_key=self.api_key,
-                json_body=self._get_test_run_payload(
+                body=self._get_test_run_payload(
                     scenario_id,
                     name,
                     api_key,
@@ -722,7 +723,7 @@ class ModelUnderTest(AsyncProcessorMixin):
     def get_test_run(self, test_run_id: str) -> TestRunItem:
         try:
             response = get_test_run_v0_test_runs_test_run_id_get.sync(
-                client=self.client, api_key=self.api_key, test_run_id=test_run_id
+                client=self.client, api_key=self.api_key, test_run_id=UUID(test_run_id)
             )
             self.validate_response(response)
             assert isinstance(response, TestRunItem)
@@ -748,7 +749,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         scenario_input = scenario_data_point.input_
         return scenario_input
 
-    def _custom_exec(self, scenario_id: Any, model_data: Any) -> Any:
+    def _custom_exec(self, scenario_id: UUID, model_data: Any) -> Any:
         assert isinstance(self.models, dict)
 
         assert scenario_id
@@ -766,7 +767,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 self._add_model_invocation_for_scenario(
                     custom_model_return_value,
                     model_data,
-                    scenario_data_point.id,
+                    str(scenario_data_point.id),
                 )
         else:
             # batch inputs to the custom model

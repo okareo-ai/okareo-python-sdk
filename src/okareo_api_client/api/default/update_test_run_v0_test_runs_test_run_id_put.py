@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
+from uuid import UUID
 
 import httpx
 
@@ -12,46 +13,48 @@ from ...types import Response
 
 
 def _get_kwargs(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": "/v0/test_runs/{test_run_id}".format(
-            test_run_id=test_run_id,
-        ),
-        "json": json_json_body,
-        "headers": headers,
+        "url": f"/v0/test_runs/{test_run_id}",
     }
+
+    _body = body.to_dict()
+
+    _kwargs["json"] = _body
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
-    if response.status_code == HTTPStatus.CREATED:
+    if response.status_code == 201:
         response_201 = TestRunItem.from_dict(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -73,10 +76,10 @@ def _build_response(
 
 
 def sync_detailed(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -86,9 +89,9 @@ def sync_detailed(
         the updated Test Run
 
     Args:
-        test_run_id (str): The ID of the test run to modify
+        test_run_id (UUID): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -100,7 +103,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         test_run_id=test_run_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -112,10 +115,10 @@ def sync_detailed(
 
 
 def sync(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -125,9 +128,9 @@ def sync(
         the updated Test Run
 
     Args:
-        test_run_id (str): The ID of the test run to modify
+        test_run_id (UUID): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -140,16 +143,16 @@ def sync(
     return sync_detailed(
         test_run_id=test_run_id,
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Response[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -159,9 +162,9 @@ async def asyncio_detailed(
         the updated Test Run
 
     Args:
-        test_run_id (str): The ID of the test run to modify
+        test_run_id (UUID): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -173,7 +176,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         test_run_id=test_run_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -183,10 +186,10 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: TestRunPayload,
+    body: TestRunPayload,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, TestRunItem]]:
     """Update Test Run
@@ -196,9 +199,9 @@ async def asyncio(
         the updated Test Run
 
     Args:
-        test_run_id (str): The ID of the test run to modify
+        test_run_id (UUID): The ID of the test run to modify
         api_key (str):
-        json_body (TestRunPayload):
+        body (TestRunPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -212,7 +215,7 @@ async def asyncio(
         await asyncio_detailed(
             test_run_id=test_run_id,
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

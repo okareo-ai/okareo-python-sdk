@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,28 +14,38 @@ T = TypeVar("T", bound="FindTestDataPointPayload")
 class FindTestDataPointPayload:
     """
     Attributes:
-        id (Union[Unset, str]): ID of the datapoint
-        test_run_id (Union[Unset, str]): ID of the test run
-        scenario_data_point_id (Union[Unset, str]): ID of the scenario data point
+        id (Union[Unset, UUID]): ID of the datapoint
+        test_run_id (Union[Unset, UUID]): ID of the test run
+        scenario_data_point_id (Union[Unset, UUID]): ID of the scenario data point
         metric_type (Union[Unset, str]):
-        full_data_point (Union[Unset, bool]):
+        full_data_point (Union[Unset, bool]):  Default: False.
     """
 
-    id: Union[Unset, str] = UNSET
-    test_run_id: Union[Unset, str] = UNSET
-    scenario_data_point_id: Union[Unset, str] = UNSET
+    id: Union[Unset, UUID] = UNSET
+    test_run_id: Union[Unset, UUID] = UNSET
+    scenario_data_point_id: Union[Unset, UUID] = UNSET
     metric_type: Union[Unset, str] = UNSET
     full_data_point: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        test_run_id = self.test_run_id
-        scenario_data_point_id = self.scenario_data_point_id
+    def to_dict(self) -> dict[str, Any]:
+        id: Union[Unset, str] = UNSET
+        if not isinstance(self.id, Unset):
+            id = str(self.id)
+
+        test_run_id: Union[Unset, str] = UNSET
+        if not isinstance(self.test_run_id, Unset):
+            test_run_id = str(self.test_run_id)
+
+        scenario_data_point_id: Union[Unset, str] = UNSET
+        if not isinstance(self.scenario_data_point_id, Unset):
+            scenario_data_point_id = str(self.scenario_data_point_id)
+
         metric_type = self.metric_type
+
         full_data_point = self.full_data_point
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if id is not UNSET:
@@ -50,13 +62,28 @@ class FindTestDataPointPayload:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        id = d.pop("id", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        _id = d.pop("id", UNSET)
+        id: Union[Unset, UUID]
+        if isinstance(_id, Unset):
+            id = UNSET
+        else:
+            id = UUID(_id)
 
-        test_run_id = d.pop("test_run_id", UNSET)
+        _test_run_id = d.pop("test_run_id", UNSET)
+        test_run_id: Union[Unset, UUID]
+        if isinstance(_test_run_id, Unset):
+            test_run_id = UNSET
+        else:
+            test_run_id = UUID(_test_run_id)
 
-        scenario_data_point_id = d.pop("scenario_data_point_id", UNSET)
+        _scenario_data_point_id = d.pop("scenario_data_point_id", UNSET)
+        scenario_data_point_id: Union[Unset, UUID]
+        if isinstance(_scenario_data_point_id, Unset):
+            scenario_data_point_id = UNSET
+        else:
+            scenario_data_point_id = UUID(_scenario_data_point_id)
 
         metric_type = d.pop("metric_type", UNSET)
 
@@ -74,7 +101,7 @@ class FindTestDataPointPayload:
         return find_test_data_point_payload
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

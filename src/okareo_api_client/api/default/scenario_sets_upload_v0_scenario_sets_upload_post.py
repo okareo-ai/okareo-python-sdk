@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import httpx
 
@@ -15,42 +15,45 @@ from ...types import Response
 
 def _get_kwargs(
     *,
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    body: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    multipart_multipart_data = multipart_data.to_multipart()
-
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/scenario_sets_upload",
-        "files": multipart_multipart_data,
-        "headers": headers,
     }
+
+    _body = body.to_multipart()
+
+    _kwargs["files"] = _body
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    if response.status_code == HTTPStatus.OK:
+    if response.status_code == 200:
         response_200 = ScenarioSetResponse.from_dict(response.json())
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -74,7 +77,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    body: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     """Scenario Sets Upload
@@ -86,7 +89,7 @@ def sync_detailed(
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        body (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -97,7 +100,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        body=body,
         api_key=api_key,
     )
 
@@ -111,7 +114,7 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    body: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     """Scenario Sets Upload
@@ -123,7 +126,7 @@ def sync(
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        body (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -135,7 +138,7 @@ def sync(
 
     return sync_detailed(
         client=client,
-        multipart_data=multipart_data,
+        body=body,
         api_key=api_key,
     ).parsed
 
@@ -143,7 +146,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    body: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
     """Scenario Sets Upload
@@ -155,7 +158,7 @@ async def asyncio_detailed(
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        body (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -166,7 +169,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        multipart_data=multipart_data,
+        body=body,
         api_key=api_key,
     )
 
@@ -178,7 +181,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    multipart_data: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
+    body: BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
     api_key: str,
 ) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
     """Scenario Sets Upload
@@ -190,7 +193,7 @@ async def asyncio(
 
     Args:
         api_key (str):
-        multipart_data (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
+        body (BodyScenarioSetsUploadV0ScenarioSetsUploadPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -203,7 +206,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
-            multipart_data=multipart_data,
+            body=body,
             api_key=api_key,
         )
     ).parsed

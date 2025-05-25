@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from unittest import mock
+from uuid import UUID
 
 import litellm  # type: ignore
 from litellm import completion
@@ -15,8 +16,8 @@ from okareo_api_client.models.model_under_test_response import ModelUnderTestRes
 
 def get_mut_response() -> dict:
     return ModelUnderTestResponse(
-        "id",
-        "my-project",
+        UUID(int=0),
+        UUID(int=0),
         "langchain_test",
         ["ci-run"],
         datetime.now().isoformat(),

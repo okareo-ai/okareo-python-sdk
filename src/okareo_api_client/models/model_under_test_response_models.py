@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,26 +17,24 @@ T = TypeVar("T", bound="ModelUnderTestResponseModels")
 class ModelUnderTestResponseModels:
     """ """
 
-    additional_properties: Dict[str, "ModelUnderTestResponseModelsAdditionalProperty"] = _attrs_field(
+    additional_properties: dict[str, "ModelUnderTestResponseModelsAdditionalProperty"] = _attrs_field(
         init=False, factory=dict
     )
 
-    def to_dict(self) -> Dict[str, Any]:
-        field_dict: Dict[str, Any] = {}
+    def to_dict(self) -> dict[str, Any]:
+        field_dict: dict[str, Any] = {}
         for prop_name, prop in self.additional_properties.items():
             field_dict[prop_name] = prop.to_dict()
-
-        field_dict.update({})
 
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.model_under_test_response_models_additional_property import (
             ModelUnderTestResponseModelsAdditionalProperty,
         )
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         model_under_test_response_models = cls()
 
         additional_properties = {}
@@ -48,7 +47,7 @@ class ModelUnderTestResponseModels:
         return model_under_test_response_models
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> "ModelUnderTestResponseModelsAdditionalProperty":

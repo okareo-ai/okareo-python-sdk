@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,31 +14,34 @@ T = TypeVar("T", bound="ProjectResponse")
 class ProjectResponse:
     """
     Attributes:
-        id (str):
+        id (UUID):
         name (str):
         onboarding_status (str):
-        tags (Union[Unset, List[str]]):
+        tags (Union[Unset, list[str]]):
         num_evals (Union[Unset, int]):
     """
 
-    id: str
+    id: UUID
     name: str
     onboarding_status: str
-    tags: Union[Unset, List[str]] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
     num_evals: Union[Unset, int] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
+    def to_dict(self) -> dict[str, Any]:
+        id = str(self.id)
+
         name = self.name
+
         onboarding_status = self.onboarding_status
-        tags: Union[Unset, List[str]] = UNSET
+
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         num_evals = self.num_evals
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -53,15 +58,15 @@ class ProjectResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        id = d.pop("id")
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
         name = d.pop("name")
 
         onboarding_status = d.pop("onboarding_status")
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         num_evals = d.pop("num_evals", UNSET)
 
@@ -77,7 +82,7 @@ class ProjectResponse:
         return project_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

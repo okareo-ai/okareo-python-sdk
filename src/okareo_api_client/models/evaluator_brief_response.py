@@ -1,5 +1,7 @@
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,40 +20,46 @@ T = TypeVar("T", bound="EvaluatorBriefResponse")
 class EvaluatorBriefResponse:
     """
     Attributes:
-        id (Union[Unset, str]):
+        id (Union[Unset, UUID]):
         name (Union[Unset, str]):
         description (Union[Unset, str]):  Default: ''.
         output_data_type (Union[Unset, str]):  Default: ''.
         time_created (Union[Unset, datetime.datetime]):
         check_config (Union[Unset, EvaluatorBriefResponseCheckConfig]):
-        is_predefined (Union[Unset, bool]):
+        is_predefined (Union[Unset, bool]):  Default: False.
     """
 
-    id: Union[Unset, str] = UNSET
+    id: Union[Unset, UUID] = UNSET
     name: Union[Unset, str] = UNSET
     description: Union[Unset, str] = ""
     output_data_type: Union[Unset, str] = ""
     time_created: Union[Unset, datetime.datetime] = UNSET
     check_config: Union[Unset, "EvaluatorBriefResponseCheckConfig"] = UNSET
     is_predefined: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
+    def to_dict(self) -> dict[str, Any]:
+        id: Union[Unset, str] = UNSET
+        if not isinstance(self.id, Unset):
+            id = str(self.id)
+
         name = self.name
+
         description = self.description
+
         output_data_type = self.output_data_type
+
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
 
-        check_config: Union[Unset, Dict[str, Any]] = UNSET
+        check_config: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.check_config, Unset):
             check_config = self.check_config.to_dict()
 
         is_predefined = self.is_predefined
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if id is not UNSET:
@@ -72,11 +80,16 @@ class EvaluatorBriefResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
 
-        d = src_dict.copy()
-        id = d.pop("id", UNSET)
+        d = dict(src_dict)
+        _id = d.pop("id", UNSET)
+        id: Union[Unset, UUID]
+        if isinstance(_id, Unset):
+            id = UNSET
+        else:
+            id = UUID(_id)
 
         name = d.pop("name", UNSET)
 
@@ -114,7 +127,7 @@ class EvaluatorBriefResponse:
         return evaluator_brief_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

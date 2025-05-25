@@ -1,5 +1,7 @@
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,8 +20,8 @@ T = TypeVar("T", bound="EvaluatorDetailedResponse")
 class EvaluatorDetailedResponse:
     """
     Attributes:
-        id (Union[Unset, str]):
-        project_id (Union[Unset, str]):
+        id (Union[Unset, UUID]):
+        project_id (Union[Unset, UUID]):
         name (Union[Unset, str]):
         description (Union[Unset, str]):  Default: ''.
         requires_scenario_input (Union[Unset, bool]):
@@ -29,11 +31,11 @@ class EvaluatorDetailedResponse:
         time_created (Union[Unset, datetime.datetime]):
         warning (Union[Unset, str]):
         check_config (Union[Unset, EvaluatorDetailedResponseCheckConfig]):
-        is_predefined (Union[Unset, bool]):
+        is_predefined (Union[Unset, bool]):  Default: False.
     """
 
-    id: Union[Unset, str] = UNSET
-    project_id: Union[Unset, str] = UNSET
+    id: Union[Unset, UUID] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
     name: Union[Unset, str] = UNSET
     description: Union[Unset, str] = ""
     requires_scenario_input: Union[Unset, bool] = UNSET
@@ -44,29 +46,42 @@ class EvaluatorDetailedResponse:
     warning: Union[Unset, str] = UNSET
     check_config: Union[Unset, "EvaluatorDetailedResponseCheckConfig"] = UNSET
     is_predefined: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        project_id = self.project_id
+    def to_dict(self) -> dict[str, Any]:
+        id: Union[Unset, str] = UNSET
+        if not isinstance(self.id, Unset):
+            id = str(self.id)
+
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
         name = self.name
+
         description = self.description
+
         requires_scenario_input = self.requires_scenario_input
+
         requires_scenario_result = self.requires_scenario_result
+
         output_data_type = self.output_data_type
+
         code_contents = self.code_contents
+
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
 
         warning = self.warning
-        check_config: Union[Unset, Dict[str, Any]] = UNSET
+
+        check_config: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.check_config, Unset):
             check_config = self.check_config.to_dict()
 
         is_predefined = self.is_predefined
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if id is not UNSET:
@@ -97,13 +112,23 @@ class EvaluatorDetailedResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
 
-        d = src_dict.copy()
-        id = d.pop("id", UNSET)
+        d = dict(src_dict)
+        _id = d.pop("id", UNSET)
+        id: Union[Unset, UUID]
+        if isinstance(_id, Unset):
+            id = UNSET
+        else:
+            id = UUID(_id)
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         name = d.pop("name", UNSET)
 
@@ -154,7 +179,7 @@ class EvaluatorDetailedResponse:
         return evaluator_detailed_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

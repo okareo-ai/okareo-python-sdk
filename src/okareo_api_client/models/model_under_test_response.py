@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,10 +18,10 @@ T = TypeVar("T", bound="ModelUnderTestResponse")
 class ModelUnderTestResponse:
     """
     Attributes:
-        id (str):
-        project_id (str):
+        id (UUID):
+        project_id (UUID):
         name (str):
-        tags (List[str]):
+        tags (list[str]):
         time_created (str):
         models (Union[Unset, ModelUnderTestResponseModels]):
         datapoint_count (Union[Unset, int]):
@@ -27,33 +29,39 @@ class ModelUnderTestResponse:
         warning (Union[Unset, str]):
     """
 
-    id: str
-    project_id: str
+    id: UUID
+    project_id: UUID
     name: str
-    tags: List[str]
+    tags: list[str]
     time_created: str
     models: Union[Unset, "ModelUnderTestResponseModels"] = UNSET
     datapoint_count: Union[Unset, int] = UNSET
     app_link: Union[Unset, str] = ""
     warning: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        project_id = self.project_id
+    def to_dict(self) -> dict[str, Any]:
+        id = str(self.id)
+
+        project_id = str(self.project_id)
+
         name = self.name
+
         tags = self.tags
 
         time_created = self.time_created
-        models: Union[Unset, Dict[str, Any]] = UNSET
+
+        models: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.models, Unset):
             models = self.models.to_dict()
 
         datapoint_count = self.datapoint_count
+
         app_link = self.app_link
+
         warning = self.warning
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -76,17 +84,17 @@ class ModelUnderTestResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.model_under_test_response_models import ModelUnderTestResponseModels
 
-        d = src_dict.copy()
-        id = d.pop("id")
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
-        project_id = d.pop("project_id")
+        project_id = UUID(d.pop("project_id"))
 
         name = d.pop("name")
 
-        tags = cast(List[str], d.pop("tags"))
+        tags = cast(list[str], d.pop("tags"))
 
         time_created = d.pop("time_created")
 
@@ -119,7 +127,7 @@ class ModelUnderTestResponse:
         return model_under_test_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

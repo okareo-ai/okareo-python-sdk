@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
+from uuid import UUID
 
 import httpx
 
@@ -13,27 +14,28 @@ from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    group_id: str,
+    group_id: UUID,
     *,
     context_token: str,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
+
     params["context_token"] = context_token
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/groups/{group_id}/trace_eval".format(
-            group_id=group_id,
-        ),
+        "url": f"/v0/groups/{group_id}/trace_eval",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
@@ -41,7 +43,7 @@ def _parse_response(
 ) -> Optional[
     Union[CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost, ErrorResponse]
 ]:
-    if response.status_code == HTTPStatus.CREATED:
+    if response.status_code == 201:
         response_201 = (
             CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost.from_dict(
                 response.json()
@@ -49,19 +51,19 @@ def _parse_response(
         )
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -85,7 +87,7 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     context_token: str,
@@ -101,7 +103,7 @@ def sync_detailed(
         The created trace evaluation details
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         context_token (str): The context token for the trace
         api_key (str):
 
@@ -127,7 +129,7 @@ def sync_detailed(
 
 
 def sync(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     context_token: str,
@@ -143,7 +145,7 @@ def sync(
         The created trace evaluation details
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         context_token (str): The context token for the trace
         api_key (str):
 
@@ -164,7 +166,7 @@ def sync(
 
 
 async def asyncio_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     context_token: str,
@@ -180,7 +182,7 @@ async def asyncio_detailed(
         The created trace evaluation details
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         context_token (str): The context token for the trace
         api_key (str):
 
@@ -204,7 +206,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     context_token: str,
@@ -220,7 +222,7 @@ async def asyncio(
         The created trace evaluation details
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         context_token (str): The context token for the trace
         api_key (str):
 

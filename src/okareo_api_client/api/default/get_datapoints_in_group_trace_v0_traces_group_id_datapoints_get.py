@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
+from uuid import UUID
 
 import httpx
 
@@ -10,41 +11,41 @@ from ...types import Response
 
 
 def _get_kwargs(
-    group_id: str,
+    group_id: UUID,
     *,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/v0/traces/{group_id}/datapoints".format(
-            group_id=group_id,
-        ),
-        "headers": headers,
+        "url": f"/v0/traces/{group_id}/datapoints",
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.CREATED:
+    if response.status_code == 201:
         response_201 = response.json()
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -66,7 +67,7 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -79,7 +80,7 @@ def sync_detailed(
         A list of datapoints in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:
@@ -103,7 +104,7 @@ def sync_detailed(
 
 
 def sync(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -116,7 +117,7 @@ def sync(
         A list of datapoints in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:
@@ -135,7 +136,7 @@ def sync(
 
 
 async def asyncio_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -148,7 +149,7 @@ async def asyncio_detailed(
         A list of datapoints in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:
@@ -170,7 +171,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: str,
+    group_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -183,7 +184,7 @@ async def asyncio(
         A list of datapoints in the group
 
     Args:
-        group_id (str): The ID of the group
+        group_id (UUID): The ID of the group
         api_key (str):
 
     Raises:

@@ -1,5 +1,7 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,69 +16,86 @@ T = TypeVar("T", bound="DatapointSchema")
 class DatapointSchema:
     """
     Attributes:
-        mut_id (Union[Unset, str]): Model ID
+        mut_id (Union[Unset, UUID]): Model ID
         input_ (Union[Unset, str]): Inputted value into the model
         input_datetime (Union[Unset, datetime.datetime]): Datetime for the input
         result (Union[Unset, str]): Outputted value from the model based on the input
         result_datetime (Union[Unset, datetime.datetime]): Datetime for the result
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
+        tags (Union[Unset, list[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
         feedback (Union[Unset, float]): Feedback is a 0 to 1 float value that captures user feedback range for related
             datapoint results
         error_message (Union[Unset, str]):
         error_code (Union[Unset, str]):
         context_token (Union[Unset, str]): Context token is a unique token to link various datapoints which originate
             from the same context
-        test_run_id (Union[Unset, str]): ID of testrun
-        group_id (Union[Unset, str]): ID of the group
+        test_run_id (Union[Unset, UUID]): ID of testrun
+        group_id (Union[Unset, UUID]): ID of the group
         model_metadata (Union[Unset, str]): Additional metadata about the model used for this datapoint
         input_metadata (Union[Unset, str]): Metadata about the input
         result_metadata (Union[Unset, str]): Metadata about the result
     """
 
-    mut_id: Union[Unset, str] = UNSET
+    mut_id: Union[Unset, UUID] = UNSET
     input_: Union[Unset, str] = UNSET
     input_datetime: Union[Unset, datetime.datetime] = UNSET
     result: Union[Unset, str] = UNSET
     result_datetime: Union[Unset, datetime.datetime] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
     feedback: Union[Unset, float] = UNSET
     error_message: Union[Unset, str] = UNSET
     error_code: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET
-    test_run_id: Union[Unset, str] = UNSET
-    group_id: Union[Unset, str] = UNSET
+    test_run_id: Union[Unset, UUID] = UNSET
+    group_id: Union[Unset, UUID] = UNSET
     model_metadata: Union[Unset, str] = UNSET
     input_metadata: Union[Unset, str] = UNSET
     result_metadata: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        mut_id = self.mut_id
+    def to_dict(self) -> dict[str, Any]:
+        mut_id: Union[Unset, str] = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
+
         input_ = self.input_
+
         input_datetime: Union[Unset, str] = UNSET
         if not isinstance(self.input_datetime, Unset):
             input_datetime = self.input_datetime.isoformat()
 
         result = self.result
+
         result_datetime: Union[Unset, str] = UNSET
         if not isinstance(self.result_datetime, Unset):
             result_datetime = self.result_datetime.isoformat()
 
-        tags: Union[Unset, List[str]] = UNSET
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         feedback = self.feedback
+
         error_message = self.error_message
+
         error_code = self.error_code
+
         context_token = self.context_token
-        test_run_id = self.test_run_id
-        group_id = self.group_id
+
+        test_run_id: Union[Unset, str] = UNSET
+        if not isinstance(self.test_run_id, Unset):
+            test_run_id = str(self.test_run_id)
+
+        group_id: Union[Unset, str] = UNSET
+        if not isinstance(self.group_id, Unset):
+            group_id = str(self.group_id)
+
         model_metadata = self.model_metadata
+
         input_metadata = self.input_metadata
+
         result_metadata = self.result_metadata
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if mut_id is not UNSET:
@@ -113,9 +132,14 @@ class DatapointSchema:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        mut_id = d.pop("mut_id", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: Union[Unset, UUID]
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
         input_ = d.pop("input", UNSET)
 
@@ -135,7 +159,7 @@ class DatapointSchema:
         else:
             result_datetime = isoparse(_result_datetime)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         feedback = d.pop("feedback", UNSET)
 
@@ -145,9 +169,19 @@ class DatapointSchema:
 
         context_token = d.pop("context_token", UNSET)
 
-        test_run_id = d.pop("test_run_id", UNSET)
+        _test_run_id = d.pop("test_run_id", UNSET)
+        test_run_id: Union[Unset, UUID]
+        if isinstance(_test_run_id, Unset):
+            test_run_id = UNSET
+        else:
+            test_run_id = UUID(_test_run_id)
 
-        group_id = d.pop("group_id", UNSET)
+        _group_id = d.pop("group_id", UNSET)
+        group_id: Union[Unset, UUID]
+        if isinstance(_group_id, Unset):
+            group_id = UNSET
+        else:
+            group_id = UUID(_group_id)
 
         model_metadata = d.pop("model_metadata", UNSET)
 
@@ -177,7 +211,7 @@ class DatapointSchema:
         return datapoint_schema
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

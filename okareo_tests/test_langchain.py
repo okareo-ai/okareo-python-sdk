@@ -2,6 +2,7 @@ import random
 import string
 from datetime import datetime
 from unittest import mock
+from uuid import UUID
 
 from langchain.chains import LLMChain
 from langchain.llms.fake import FakeListLLM
@@ -27,8 +28,8 @@ MOCK_GLOBAL_RESPONSE = [
 
 def get_mut_response() -> dict:
     return ModelUnderTestResponse(
-        "id",
-        "my-project",
+        UUID(int=0),
+        UUID(int=0),
         "langchain_test",
         ["ci-run"],
         datetime.now().isoformat(),

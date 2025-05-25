@@ -1,5 +1,7 @@
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,18 +22,18 @@ T = TypeVar("T", bound="DatapointFilterItem")
 class DatapointFilterItem:
     """
     Attributes:
-        filters (List['FilterCondition']): List of filter conditions to apply
+        filters (list['FilterCondition']): List of filter conditions to apply
         name (Union[Unset, str]): Optional name describing this filter
         description (Union[Unset, str]): Optional description for this filter
-        checks (Union[Unset, List[str]]): Checks to apply to datapoints in the filter.
-        project_id (Union[Unset, str]): Project ID these filters belong to
-        filter_group_id (Union[Unset, str]): Group ID for filter
+        checks (Union[Unset, list[str]]): Checks to apply to datapoints in the filter.
+        project_id (Union[Unset, UUID]): Project ID these filters belong to
+        filter_group_id (Union[Unset, UUID]): Group ID for filter
         latest_test_run (Union['DatapointFilterItemLatestTestRunType0', Any, Unset]): Group ID for filter
         datapoint_count (Union[Any, Unset, int]): Group ID for filter
         issue_count (Union[Any, Unset, int]): Count of issues for this filter
         error_count (Union[Any, Unset, int]): Count of errors for this filter
         average_metrics (Union['DatapointFilterItemAverageMetricsType0', Any, Unset]): Metrics for checks in this filter
-        failed_checks (Union[Unset, Any]): Array of failed cheßck names
+        failed_checks (Union[Unset, Any]): Array of failed cheßck names Default: [].
         avg_latency (Union[Any, Unset, float]): Average latency for completions
         total_cost (Union[Any, Unset, float]): Total dollar cost of all completions
         avg_num_turns (Union[Any, Unset, float]): Average number of turns for completions
@@ -41,18 +43,18 @@ class DatapointFilterItem:
         time_updated (Union[Unset, datetime.datetime]): Last updated datetime for this filter group
     """
 
-    filters: List["FilterCondition"]
+    filters: list["FilterCondition"]
     name: Union[Unset, str] = UNSET
     description: Union[Unset, str] = UNSET
-    checks: Union[Unset, List[str]] = UNSET
-    project_id: Union[Unset, str] = UNSET
-    filter_group_id: Union[Unset, str] = UNSET
+    checks: Union[Unset, list[str]] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
+    filter_group_id: Union[Unset, UUID] = UNSET
     latest_test_run: Union["DatapointFilterItemLatestTestRunType0", Any, Unset] = UNSET
     datapoint_count: Union[Any, Unset, int] = UNSET
     issue_count: Union[Any, Unset, int] = UNSET
     error_count: Union[Any, Unset, int] = UNSET
     average_metrics: Union["DatapointFilterItemAverageMetricsType0", Any, Unset] = UNSET
-    failed_checks: Union[Unset, Any] = UNSET
+    failed_checks: Union[Unset, Any] = []
     avg_latency: Union[Any, Unset, float] = UNSET
     total_cost: Union[Any, Unset, float] = UNSET
     avg_num_turns: Union[Any, Unset, float] = UNSET
@@ -60,95 +62,91 @@ class DatapointFilterItem:
     email_enabled: Union[Unset, bool] = UNSET
     time_created: Union[Unset, datetime.datetime] = UNSET
     time_updated: Union[Unset, datetime.datetime] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         from ..models.datapoint_filter_item_average_metrics_type_0 import DatapointFilterItemAverageMetricsType0
         from ..models.datapoint_filter_item_latest_test_run_type_0 import DatapointFilterItemLatestTestRunType0
 
         filters = []
         for filters_item_data in self.filters:
             filters_item = filters_item_data.to_dict()
-
             filters.append(filters_item)
 
         name = self.name
+
         description = self.description
-        checks: Union[Unset, List[str]] = UNSET
+
+        checks: Union[Unset, list[str]] = UNSET
         if not isinstance(self.checks, Unset):
             checks = self.checks
 
-        project_id = self.project_id
-        filter_group_id = self.filter_group_id
-        latest_test_run: Union[Any, Dict[str, Any], Unset]
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
+        filter_group_id: Union[Unset, str] = UNSET
+        if not isinstance(self.filter_group_id, Unset):
+            filter_group_id = str(self.filter_group_id)
+
+        latest_test_run: Union[Any, Unset, dict[str, Any]]
         if isinstance(self.latest_test_run, Unset):
             latest_test_run = UNSET
-
         elif isinstance(self.latest_test_run, DatapointFilterItemLatestTestRunType0):
-            latest_test_run = UNSET
-            if not isinstance(self.latest_test_run, Unset):
-                latest_test_run = self.latest_test_run.to_dict()
-
+            latest_test_run = self.latest_test_run.to_dict()
         else:
             latest_test_run = self.latest_test_run
 
         datapoint_count: Union[Any, Unset, int]
         if isinstance(self.datapoint_count, Unset):
             datapoint_count = UNSET
-
         else:
             datapoint_count = self.datapoint_count
 
         issue_count: Union[Any, Unset, int]
         if isinstance(self.issue_count, Unset):
             issue_count = UNSET
-
         else:
             issue_count = self.issue_count
 
         error_count: Union[Any, Unset, int]
         if isinstance(self.error_count, Unset):
             error_count = UNSET
-
         else:
             error_count = self.error_count
 
-        average_metrics: Union[Any, Dict[str, Any], Unset]
+        average_metrics: Union[Any, Unset, dict[str, Any]]
         if isinstance(self.average_metrics, Unset):
             average_metrics = UNSET
-
         elif isinstance(self.average_metrics, DatapointFilterItemAverageMetricsType0):
-            average_metrics = UNSET
-            if not isinstance(self.average_metrics, Unset):
-                average_metrics = self.average_metrics.to_dict()
-
+            average_metrics = self.average_metrics.to_dict()
         else:
             average_metrics = self.average_metrics
 
         failed_checks = self.failed_checks
+
         avg_latency: Union[Any, Unset, float]
         if isinstance(self.avg_latency, Unset):
             avg_latency = UNSET
-
         else:
             avg_latency = self.avg_latency
 
         total_cost: Union[Any, Unset, float]
         if isinstance(self.total_cost, Unset):
             total_cost = UNSET
-
         else:
             total_cost = self.total_cost
 
         avg_num_turns: Union[Any, Unset, float]
         if isinstance(self.avg_num_turns, Unset):
             avg_num_turns = UNSET
-
         else:
             avg_num_turns = self.avg_num_turns
 
         slack_enabled = self.slack_enabled
+
         email_enabled = self.email_enabled
+
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
@@ -157,7 +155,7 @@ class DatapointFilterItem:
         if not isinstance(self.time_updated, Unset):
             time_updated = self.time_updated.isoformat()
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -204,12 +202,12 @@ class DatapointFilterItem:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.datapoint_filter_item_average_metrics_type_0 import DatapointFilterItemAverageMetricsType0
         from ..models.datapoint_filter_item_latest_test_run_type_0 import DatapointFilterItemLatestTestRunType0
         from ..models.filter_condition import FilterCondition
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         filters = []
         _filters = d.pop("filters")
         for filters_item_data in _filters:
@@ -221,11 +219,21 @@ class DatapointFilterItem:
 
         description = d.pop("description", UNSET)
 
-        checks = cast(List[str], d.pop("checks", UNSET))
+        checks = cast(list[str], d.pop("checks", UNSET))
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
-        filter_group_id = d.pop("filter_group_id", UNSET)
+        _filter_group_id = d.pop("filter_group_id", UNSET)
+        filter_group_id: Union[Unset, UUID]
+        if isinstance(_filter_group_id, Unset):
+            filter_group_id = UNSET
+        else:
+            filter_group_id = UUID(_filter_group_id)
 
         def _parse_latest_test_run(data: object) -> Union["DatapointFilterItemLatestTestRunType0", Any, Unset]:
             if isinstance(data, Unset):
@@ -233,12 +241,7 @@ class DatapointFilterItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _latest_test_run_type_0 = data
-                latest_test_run_type_0: Union[Unset, DatapointFilterItemLatestTestRunType0]
-                if isinstance(_latest_test_run_type_0, Unset):
-                    latest_test_run_type_0 = UNSET
-                else:
-                    latest_test_run_type_0 = DatapointFilterItemLatestTestRunType0.from_dict(_latest_test_run_type_0)
+                latest_test_run_type_0 = DatapointFilterItemLatestTestRunType0.from_dict(data)
 
                 return latest_test_run_type_0
             except:  # noqa: E722
@@ -274,12 +277,7 @@ class DatapointFilterItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _average_metrics_type_0 = data
-                average_metrics_type_0: Union[Unset, DatapointFilterItemAverageMetricsType0]
-                if isinstance(_average_metrics_type_0, Unset):
-                    average_metrics_type_0 = UNSET
-                else:
-                    average_metrics_type_0 = DatapointFilterItemAverageMetricsType0.from_dict(_average_metrics_type_0)
+                average_metrics_type_0 = DatapointFilterItemAverageMetricsType0.from_dict(data)
 
                 return average_metrics_type_0
             except:  # noqa: E722
@@ -355,7 +353,7 @@ class DatapointFilterItem:
         return datapoint_filter_item
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

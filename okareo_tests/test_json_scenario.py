@@ -51,7 +51,7 @@ def validate_scenario_set(
     assert uploaded_scenario_set.time_created
 
     scenario_dps = okareo_client.get_scenario_data_points(
-        uploaded_scenario_set.scenario_id
+        str(uploaded_scenario_set.scenario_id)
     )
     assert scenario_dps
     assert len(scenario_dps) == 3

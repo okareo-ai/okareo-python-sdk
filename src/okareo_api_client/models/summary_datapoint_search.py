@@ -1,5 +1,7 @@
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,37 +20,43 @@ T = TypeVar("T", bound="SummaryDatapointSearch")
 class SummaryDatapointSearch:
     """
     Attributes:
-        project_id (Union[Unset, str]): Project ID
-        mut_id (Union[Unset, str]): Model ID
+        project_id (Union[Unset, UUID]): Project ID
+        mut_id (Union[Unset, UUID]): Model ID
         from_date (Union[Unset, datetime.datetime]): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
         to_date (Union[Unset, datetime.datetime]): Latest date
-        filters (Union[Unset, List['FilterCondition']]): List of filter conditions to apply. Defaults to None (i.e., all
+        filters (Union[Unset, list['FilterCondition']]): List of filter conditions to apply. Defaults to None (i.e., all
             datapoints).
-        checks (Union[Unset, List[Any]]): List of checks to only flag issues for. Defaults to None (i.e., all checks).
+        checks (Union[Unset, list[Any]]): List of checks to only flag issues for. Defaults to None (i.e., all checks).
         timezone (Union[Unset, str]): IANA timezone to use for date filtering/aggregation (e.g., 'America/New_York').
             Defaults to None (i.e., UTC).
         precision (Union[Unset, str]): Time precision for the summary. Valid values include ['day', 'hour', 'minute'].
             Defaults to 'day'. Default: 'day'.
-        filter_group_id (Union[Unset, str]): Filter group ID to search with
+        filter_group_id (Union[Unset, UUID]): Filter group ID to search with
         group_column (Union[Unset, str]): Column to group by for the summary. Overwrites the default time-based grouping
             for the summary.
     """
 
-    project_id: Union[Unset, str] = UNSET
-    mut_id: Union[Unset, str] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
+    mut_id: Union[Unset, UUID] = UNSET
     from_date: Union[Unset, datetime.datetime] = isoparse("2022-12-31T23:59:59.999999")
     to_date: Union[Unset, datetime.datetime] = UNSET
-    filters: Union[Unset, List["FilterCondition"]] = UNSET
-    checks: Union[Unset, List[Any]] = UNSET
+    filters: Union[Unset, list["FilterCondition"]] = UNSET
+    checks: Union[Unset, list[Any]] = UNSET
     timezone: Union[Unset, str] = UNSET
     precision: Union[Unset, str] = "day"
-    filter_group_id: Union[Unset, str] = UNSET
+    filter_group_id: Union[Unset, UUID] = UNSET
     group_column: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        project_id = self.project_id
-        mut_id = self.mut_id
+    def to_dict(self) -> dict[str, Any]:
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
+        mut_id: Union[Unset, str] = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
+
         from_date: Union[Unset, str] = UNSET
         if not isinstance(self.from_date, Unset):
             from_date = self.from_date.isoformat()
@@ -57,24 +65,28 @@ class SummaryDatapointSearch:
         if not isinstance(self.to_date, Unset):
             to_date = self.to_date.isoformat()
 
-        filters: Union[Unset, List[Dict[str, Any]]] = UNSET
+        filters: Union[Unset, list[dict[str, Any]]] = UNSET
         if not isinstance(self.filters, Unset):
             filters = []
             for filters_item_data in self.filters:
                 filters_item = filters_item_data.to_dict()
-
                 filters.append(filters_item)
 
-        checks: Union[Unset, List[Any]] = UNSET
+        checks: Union[Unset, list[Any]] = UNSET
         if not isinstance(self.checks, Unset):
             checks = self.checks
 
         timezone = self.timezone
+
         precision = self.precision
-        filter_group_id = self.filter_group_id
+
+        filter_group_id: Union[Unset, str] = UNSET
+        if not isinstance(self.filter_group_id, Unset):
+            filter_group_id = str(self.filter_group_id)
+
         group_column = self.group_column
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if project_id is not UNSET:
@@ -101,13 +113,23 @@ class SummaryDatapointSearch:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.filter_condition import FilterCondition
 
-        d = src_dict.copy()
-        project_id = d.pop("project_id", UNSET)
+        d = dict(src_dict)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
-        mut_id = d.pop("mut_id", UNSET)
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: Union[Unset, UUID]
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
         _from_date = d.pop("from_date", UNSET)
         from_date: Union[Unset, datetime.datetime]
@@ -130,13 +152,18 @@ class SummaryDatapointSearch:
 
             filters.append(filters_item)
 
-        checks = cast(List[Any], d.pop("checks", UNSET))
+        checks = cast(list[Any], d.pop("checks", UNSET))
 
         timezone = d.pop("timezone", UNSET)
 
         precision = d.pop("precision", UNSET)
 
-        filter_group_id = d.pop("filter_group_id", UNSET)
+        _filter_group_id = d.pop("filter_group_id", UNSET)
+        filter_group_id: Union[Unset, UUID]
+        if isinstance(_filter_group_id, Unset):
+            filter_group_id = UNSET
+        else:
+            filter_group_id = UUID(_filter_group_id)
 
         group_column = d.pop("group_column", UNSET)
 
@@ -157,7 +184,7 @@ class SummaryDatapointSearch:
         return summary_datapoint_search
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

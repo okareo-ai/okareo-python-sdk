@@ -1,5 +1,7 @@
+from collections.abc import Mapping
 from io import BytesIO
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,23 +16,27 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
     """
     Attributes:
         name (str): Name of the Scenario Set
-        project_id (Union[Unset, str]): Project ID or None for default project
+        project_id (Union[Unset, UUID]): Project ID or None for default project
         file (Union[Unset, File]):
     """
 
     name: str
-    project_id: Union[Unset, str] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
     file: Union[Unset, File] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         name = self.name
-        project_id = self.project_id
+
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -44,21 +50,21 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
 
         return field_dict
 
-    def to_multipart(self) -> Dict[str, Any]:
-        name = self.name if isinstance(self.name, Unset) else (None, str(self.name).encode(), "text/plain")
-        project_id = (
-            self.project_id
-            if isinstance(self.project_id, Unset)
-            else (None, str(self.project_id).encode(), "text/plain")
-        )
+    def to_multipart(self) -> dict[str, Any]:
+        name = (None, str(self.name).encode(), "text/plain")
+
+        project_id: Union[Unset, bytes] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
 
-        field_dict: Dict[str, Any] = {}
-        field_dict.update(
-            {key: (None, str(value).encode(), "text/plain") for key, value in self.additional_properties.items()}
-        )
+        field_dict: dict[str, Any] = {}
+        for prop_name, prop in self.additional_properties.items():
+            field_dict[prop_name] = (None, str(prop).encode(), "text/plain")
+
         field_dict.update(
             {
                 "name": name,
@@ -72,11 +78,16 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
         name = d.pop("name")
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         _file = d.pop("file", UNSET)
         file: Union[Unset, File]
@@ -95,7 +106,7 @@ class BodyScenarioSetsUploadV0ScenarioSetsUploadPost:
         return body_scenario_sets_upload_v0_scenario_sets_upload_post
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

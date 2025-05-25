@@ -1,5 +1,7 @@
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,50 +20,63 @@ T = TypeVar("T", bound="TestRunItem")
 class TestRunItem:
     """
     Attributes:
-        id (str):
-        project_id (str):
-        mut_id (Union[Unset, str]):
-        scenario_set_id (Union[Unset, str]):
-        filter_group_id (Union[Unset, str]):
+        id (UUID):
+        project_id (UUID):
+        mut_id (Union[Unset, UUID]):
+        scenario_set_id (Union[Unset, UUID]):
+        filter_group_id (Union[Unset, UUID]):
         name (Union[Unset, str]):
-        tags (Union[Unset, List[str]]):
-        type (Union[Unset, str]):
+        tags (Union[Unset, list[str]]):
+        type_ (Union[Unset, str]):
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
         test_data_point_count (Union[Unset, int]):
         model_metrics (Union[Unset, TestRunItemModelMetrics]):
-        error_matrix (Union[Unset, List[Any]]):
+        error_matrix (Union[Unset, list[Any]]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this test run Default: ''.
     """
 
-    id: str
-    project_id: str
-    mut_id: Union[Unset, str] = UNSET
-    scenario_set_id: Union[Unset, str] = UNSET
-    filter_group_id: Union[Unset, str] = UNSET
+    id: UUID
+    project_id: UUID
+    mut_id: Union[Unset, UUID] = UNSET
+    scenario_set_id: Union[Unset, UUID] = UNSET
+    filter_group_id: Union[Unset, UUID] = UNSET
     name: Union[Unset, str] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
-    type: Union[Unset, str] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
+    type_: Union[Unset, str] = UNSET
     start_time: Union[Unset, datetime.datetime] = UNSET
     end_time: Union[Unset, datetime.datetime] = UNSET
     test_data_point_count: Union[Unset, int] = UNSET
     model_metrics: Union[Unset, "TestRunItemModelMetrics"] = UNSET
-    error_matrix: Union[Unset, List[Any]] = UNSET
+    error_matrix: Union[Unset, list[Any]] = UNSET
     app_link: Union[Unset, str] = ""
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        project_id = self.project_id
-        mut_id = self.mut_id
-        scenario_set_id = self.scenario_set_id
-        filter_group_id = self.filter_group_id
+    def to_dict(self) -> dict[str, Any]:
+        id = str(self.id)
+
+        project_id = str(self.project_id)
+
+        mut_id: Union[Unset, str] = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
+
+        scenario_set_id: Union[Unset, str] = UNSET
+        if not isinstance(self.scenario_set_id, Unset):
+            scenario_set_id = str(self.scenario_set_id)
+
+        filter_group_id: Union[Unset, str] = UNSET
+        if not isinstance(self.filter_group_id, Unset):
+            filter_group_id = str(self.filter_group_id)
+
         name = self.name
-        tags: Union[Unset, List[str]] = UNSET
+
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        type = self.type
+        type_ = self.type_
+
         start_time: Union[Unset, str] = UNSET
         if not isinstance(self.start_time, Unset):
             start_time = self.start_time.isoformat()
@@ -71,17 +86,18 @@ class TestRunItem:
             end_time = self.end_time.isoformat()
 
         test_data_point_count = self.test_data_point_count
-        model_metrics: Union[Unset, Dict[str, Any]] = UNSET
+
+        model_metrics: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.model_metrics, Unset):
             model_metrics = self.model_metrics.to_dict()
 
-        error_matrix: Union[Unset, List[Any]] = UNSET
+        error_matrix: Union[Unset, list[Any]] = UNSET
         if not isinstance(self.error_matrix, Unset):
             error_matrix = self.error_matrix
 
         app_link = self.app_link
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -99,8 +115,8 @@ class TestRunItem:
             field_dict["name"] = name
         if tags is not UNSET:
             field_dict["tags"] = tags
-        if type is not UNSET:
-            field_dict["type"] = type
+        if type_ is not UNSET:
+            field_dict["type"] = type_
         if start_time is not UNSET:
             field_dict["start_time"] = start_time
         if end_time is not UNSET:
@@ -117,25 +133,40 @@ class TestRunItem:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
 
-        d = src_dict.copy()
-        id = d.pop("id")
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
-        project_id = d.pop("project_id")
+        project_id = UUID(d.pop("project_id"))
 
-        mut_id = d.pop("mut_id", UNSET)
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: Union[Unset, UUID]
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
-        scenario_set_id = d.pop("scenario_set_id", UNSET)
+        _scenario_set_id = d.pop("scenario_set_id", UNSET)
+        scenario_set_id: Union[Unset, UUID]
+        if isinstance(_scenario_set_id, Unset):
+            scenario_set_id = UNSET
+        else:
+            scenario_set_id = UUID(_scenario_set_id)
 
-        filter_group_id = d.pop("filter_group_id", UNSET)
+        _filter_group_id = d.pop("filter_group_id", UNSET)
+        filter_group_id: Union[Unset, UUID]
+        if isinstance(_filter_group_id, Unset):
+            filter_group_id = UNSET
+        else:
+            filter_group_id = UUID(_filter_group_id)
 
         name = d.pop("name", UNSET)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
-        type = d.pop("type", UNSET)
+        type_ = d.pop("type", UNSET)
 
         _start_time = d.pop("start_time", UNSET)
         start_time: Union[Unset, datetime.datetime]
@@ -160,7 +191,7 @@ class TestRunItem:
         else:
             model_metrics = TestRunItemModelMetrics.from_dict(_model_metrics)
 
-        error_matrix = cast(List[Any], d.pop("error_matrix", UNSET))
+        error_matrix = cast(list[Any], d.pop("error_matrix", UNSET))
 
         app_link = d.pop("app_link", UNSET)
 
@@ -172,7 +203,7 @@ class TestRunItem:
             filter_group_id=filter_group_id,
             name=name,
             tags=tags,
-            type=type,
+            type_=type_,
             start_time=start_time,
             end_time=end_time,
             test_data_point_count=test_data_point_count,
@@ -185,7 +216,7 @@ class TestRunItem:
         return test_run_item
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:
