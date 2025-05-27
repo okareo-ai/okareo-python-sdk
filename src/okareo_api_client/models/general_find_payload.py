@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,39 +14,52 @@ T = TypeVar("T", bound="GeneralFindPayload")
 class GeneralFindPayload:
     """
     Attributes:
-        id (Union[Unset, str]): ID for the testrun
-        project_id (Union[Unset, str]): ID for the project
-        mut_id (Union[Unset, str]): ID of the model
-        scenario_set_id (Union[Unset, str]): ID of the scenario set
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
+        id (Union[Unset, UUID]): ID for the testrun
+        project_id (Union[Unset, UUID]): ID for the project
+        mut_id (Union[Unset, UUID]): ID of the model
+        scenario_set_id (Union[Unset, UUID]): ID of the scenario set
+        tags (Union[Unset, list[str]]): Tags are strings that can be used to filter test runs in the Okareo app
         return_model_metrics (Union[Unset, bool]): Boolean value indicating if model metrics should be returned. This
-            increases the response size.
+            increases the response size. Default: False.
         return_error_matrix (Union[Unset, bool]): Boolean value indicating if error matrix should be returned. This
-            increases the response size.
+            increases the response size. Default: False.
     """
 
-    id: Union[Unset, str] = UNSET
-    project_id: Union[Unset, str] = UNSET
-    mut_id: Union[Unset, str] = UNSET
-    scenario_set_id: Union[Unset, str] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
+    id: Union[Unset, UUID] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
+    mut_id: Union[Unset, UUID] = UNSET
+    scenario_set_id: Union[Unset, UUID] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
     return_model_metrics: Union[Unset, bool] = False
     return_error_matrix: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        project_id = self.project_id
-        mut_id = self.mut_id
-        scenario_set_id = self.scenario_set_id
-        tags: Union[Unset, List[str]] = UNSET
+    def to_dict(self) -> dict[str, Any]:
+        id: Union[Unset, str] = UNSET
+        if not isinstance(self.id, Unset):
+            id = str(self.id)
+
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
+        mut_id: Union[Unset, str] = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
+
+        scenario_set_id: Union[Unset, str] = UNSET
+        if not isinstance(self.scenario_set_id, Unset):
+            scenario_set_id = str(self.scenario_set_id)
+
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         return_model_metrics = self.return_model_metrics
+
         return_error_matrix = self.return_error_matrix
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if id is not UNSET:
@@ -65,17 +80,37 @@ class GeneralFindPayload:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        id = d.pop("id", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        _id = d.pop("id", UNSET)
+        id: Union[Unset, UUID]
+        if isinstance(_id, Unset):
+            id = UNSET
+        else:
+            id = UUID(_id)
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
-        mut_id = d.pop("mut_id", UNSET)
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: Union[Unset, UUID]
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
-        scenario_set_id = d.pop("scenario_set_id", UNSET)
+        _scenario_set_id = d.pop("scenario_set_id", UNSET)
+        scenario_set_id: Union[Unset, UUID]
+        if isinstance(_scenario_set_id, Unset):
+            scenario_set_id = UNSET
+        else:
+            scenario_set_id = UUID(_scenario_set_id)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         return_model_metrics = d.pop("return_model_metrics", UNSET)
 
@@ -95,7 +130,7 @@ class GeneralFindPayload:
         return general_find_payload
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

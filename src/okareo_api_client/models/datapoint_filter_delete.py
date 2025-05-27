@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar
+from collections.abc import Mapping
+from typing import Any, TypeVar
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -10,16 +12,16 @@ T = TypeVar("T", bound="DatapointFilterDelete")
 class DatapointFilterDelete:
     """
     Attributes:
-        filter_group_id (str): ID of the filter to delete
+        filter_group_id (UUID): ID of the filter to delete
     """
 
-    filter_group_id: str
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    filter_group_id: UUID
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        filter_group_id = self.filter_group_id
+    def to_dict(self) -> dict[str, Any]:
+        filter_group_id = str(self.filter_group_id)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -30,9 +32,9 @@ class DatapointFilterDelete:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        filter_group_id = d.pop("filter_group_id")
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        filter_group_id = UUID(d.pop("filter_group_id"))
 
         datapoint_filter_delete = cls(
             filter_group_id=filter_group_id,
@@ -42,7 +44,7 @@ class DatapointFilterDelete:
         return datapoint_filter_delete
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

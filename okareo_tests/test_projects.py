@@ -84,7 +84,7 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
             )
 
     mut = okareo_client.register_model(
-        project_id=project.id,
+        project_id=str(project.id),
         name=f"CI - from datetime import datetime {rnd}",
         model=ClassificationModel(name=f"CI - test_full_eval_in_new_project {rnd}"),
     )
@@ -101,14 +101,14 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
     )
 
     assert_valid_test_run(
-        test_run_item, project.id
+        test_run_item, str(project.id)
     )  # test_run inherits project_id from model
 
     test_run_get = mut.get_test_run(
-        test_run_item.id
+        str(test_run_item.id)
     )  # validate roudtrip to retrieve test run
 
-    assert_valid_test_run(test_run_get, project.id)
+    assert_valid_test_run(test_run_get, str(project.id))
 
 
 def assert_valid_test_run(test_run_item: TestRunItem, project_id: str) -> None:

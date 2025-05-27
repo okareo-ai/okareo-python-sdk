@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,45 +18,53 @@ T = TypeVar("T", bound="DatapointFilterSearch")
 class DatapointFilterSearch:
     """
     Attributes:
-        filters (List['FilterCondition']): List of filter conditions to apply
-        project_id (Union[Unset, str]): Project ID to search within
+        filters (list['FilterCondition']): List of filter conditions to apply
+        project_id (Union[Unset, UUID]): Project ID to search within
         offset (Union[Unset, int]): Offset for pagination
         limit (Union[Unset, int]): Limit for pagination
-        issues_only (Union[Unset, bool]): Only return issues
-        errors_only (Union[Unset, bool]): Only return errors
-        checks (Union[Unset, List[Any]]): List of checks to only flag issues for
-        filter_group_id (Union[Unset, str]): Filter group ID to search with
+        issues_only (Union[Unset, bool]): Only return issues Default: False.
+        errors_only (Union[Unset, bool]): Only return errors Default: False.
+        checks (Union[Unset, list[Any]]): List of checks to only flag issues for
+        filter_group_id (Union[Unset, UUID]): Filter group ID to search with
     """
 
-    filters: List["FilterCondition"]
-    project_id: Union[Unset, str] = UNSET
+    filters: list["FilterCondition"]
+    project_id: Union[Unset, UUID] = UNSET
     offset: Union[Unset, int] = UNSET
     limit: Union[Unset, int] = UNSET
     issues_only: Union[Unset, bool] = False
     errors_only: Union[Unset, bool] = False
-    checks: Union[Unset, List[Any]] = UNSET
-    filter_group_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    checks: Union[Unset, list[Any]] = UNSET
+    filter_group_id: Union[Unset, UUID] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         filters = []
         for filters_item_data in self.filters:
             filters_item = filters_item_data.to_dict()
-
             filters.append(filters_item)
 
-        project_id = self.project_id
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
         offset = self.offset
+
         limit = self.limit
+
         issues_only = self.issues_only
+
         errors_only = self.errors_only
-        checks: Union[Unset, List[Any]] = UNSET
+
+        checks: Union[Unset, list[Any]] = UNSET
         if not isinstance(self.checks, Unset):
             checks = self.checks
 
-        filter_group_id = self.filter_group_id
+        filter_group_id: Union[Unset, str] = UNSET
+        if not isinstance(self.filter_group_id, Unset):
+            filter_group_id = str(self.filter_group_id)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -79,10 +89,10 @@ class DatapointFilterSearch:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.filter_condition import FilterCondition
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         filters = []
         _filters = d.pop("filters")
         for filters_item_data in _filters:
@@ -90,7 +100,12 @@ class DatapointFilterSearch:
 
             filters.append(filters_item)
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         offset = d.pop("offset", UNSET)
 
@@ -100,9 +115,14 @@ class DatapointFilterSearch:
 
         errors_only = d.pop("errors_only", UNSET)
 
-        checks = cast(List[Any], d.pop("checks", UNSET))
+        checks = cast(list[Any], d.pop("checks", UNSET))
 
-        filter_group_id = d.pop("filter_group_id", UNSET)
+        _filter_group_id = d.pop("filter_group_id", UNSET)
+        filter_group_id: Union[Unset, UUID]
+        if isinstance(_filter_group_id, Unset):
+            filter_group_id = UNSET
+        else:
+            filter_group_id = UUID(_filter_group_id)
 
         datapoint_filter_search = cls(
             filters=filters,
@@ -119,7 +139,7 @@ class DatapointFilterSearch:
         return datapoint_filter_search
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

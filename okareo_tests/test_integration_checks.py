@@ -189,7 +189,7 @@ def test_run_model_based_custom_checks(
     for check in checks:
         assert check.id
         assert check.name
-        okareo.delete_check(check.id, check.name)
+        okareo.delete_check(str(check.id), check.name)
 
 
 def test_run_code_based_custom_checks(
@@ -222,7 +222,7 @@ def test_run_code_based_custom_checks(
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
     assert_metrics(run_resp, [check_sample_code.name], num_rows=3)
 
-    okareo.delete_check(check_sample_code.id, check_sample_code.name)
+    okareo.delete_check(str(check_sample_code.id), check_sample_code.name)
 
 
 @pytest.fixture(scope="module")

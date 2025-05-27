@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,55 +19,67 @@ T = TypeVar("T", bound="EvaluationPayload")
 class EvaluationPayload:
     """
     Attributes:
-        scenario_id (Union[Unset, str]): ID of the scenario set to evaluate
-        datapoint_ids (Union[Unset, List[str]]): List of datapoint IDs to filter by
+        scenario_id (Union[Unset, UUID]): ID of the scenario set to evaluate
+        datapoint_ids (Union[Unset, list[UUID]]): List of datapoint IDs to filter by
         metrics_kwargs (Union[Unset, EvaluationPayloadMetricsKwargs]): Dictionary of metrics to be measured
-        filter_group_id (Union[Unset, str]): ID of the datapoint filter group to apply
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
-        checks (Union[Unset, List[str]]): List of checks to include in the test run.
-        type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
+        filter_group_id (Union[Unset, UUID]): ID of the datapoint filter group to apply
+        tags (Union[Unset, list[str]]): Tags are strings that can be used to filter test runs in the Okareo app
+        checks (Union[Unset, list[str]]): List of checks to include in the test run.
+        type_ (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
         name (Union[Unset, str]): Name of the test run
-        project_id (Union[Unset, str]): Project ID
+        project_id (Union[Unset, UUID]): Project ID
     """
 
-    scenario_id: Union[Unset, str] = UNSET
-    datapoint_ids: Union[Unset, List[str]] = UNSET
+    scenario_id: Union[Unset, UUID] = UNSET
+    datapoint_ids: Union[Unset, list[UUID]] = UNSET
     metrics_kwargs: Union[Unset, "EvaluationPayloadMetricsKwargs"] = UNSET
-    filter_group_id: Union[Unset, str] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
-    checks: Union[Unset, List[str]] = UNSET
-    type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
+    filter_group_id: Union[Unset, UUID] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
+    checks: Union[Unset, list[str]] = UNSET
+    type_: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
     name: Union[Unset, str] = UNSET
-    project_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    project_id: Union[Unset, UUID] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        scenario_id = self.scenario_id
-        datapoint_ids: Union[Unset, List[str]] = UNSET
+    def to_dict(self) -> dict[str, Any]:
+        scenario_id: Union[Unset, str] = UNSET
+        if not isinstance(self.scenario_id, Unset):
+            scenario_id = str(self.scenario_id)
+
+        datapoint_ids: Union[Unset, list[str]] = UNSET
         if not isinstance(self.datapoint_ids, Unset):
-            datapoint_ids = self.datapoint_ids
+            datapoint_ids = []
+            for datapoint_ids_item_data in self.datapoint_ids:
+                datapoint_ids_item = str(datapoint_ids_item_data)
+                datapoint_ids.append(datapoint_ids_item)
 
-        metrics_kwargs: Union[Unset, Dict[str, Any]] = UNSET
+        metrics_kwargs: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.metrics_kwargs, Unset):
             metrics_kwargs = self.metrics_kwargs.to_dict()
 
-        filter_group_id = self.filter_group_id
-        tags: Union[Unset, List[str]] = UNSET
+        filter_group_id: Union[Unset, str] = UNSET
+        if not isinstance(self.filter_group_id, Unset):
+            filter_group_id = str(self.filter_group_id)
+
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        checks: Union[Unset, List[str]] = UNSET
+        checks: Union[Unset, list[str]] = UNSET
         if not isinstance(self.checks, Unset):
             checks = self.checks
 
-        type: Union[Unset, str] = UNSET
-        if not isinstance(self.type, Unset):
-            type = self.type.value
+        type_: Union[Unset, str] = UNSET
+        if not isinstance(self.type_, Unset):
+            type_ = self.type_.value
 
         name = self.name
-        project_id = self.project_id
 
-        field_dict: Dict[str, Any] = {}
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if scenario_id is not UNSET:
@@ -80,8 +94,8 @@ class EvaluationPayload:
             field_dict["tags"] = tags
         if checks is not UNSET:
             field_dict["checks"] = checks
-        if type is not UNSET:
-            field_dict["type"] = type
+        if type_ is not UNSET:
+            field_dict["type"] = type_
         if name is not UNSET:
             field_dict["name"] = name
         if project_id is not UNSET:
@@ -90,13 +104,23 @@ class EvaluationPayload:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.evaluation_payload_metrics_kwargs import EvaluationPayloadMetricsKwargs
 
-        d = src_dict.copy()
-        scenario_id = d.pop("scenario_id", UNSET)
+        d = dict(src_dict)
+        _scenario_id = d.pop("scenario_id", UNSET)
+        scenario_id: Union[Unset, UUID]
+        if isinstance(_scenario_id, Unset):
+            scenario_id = UNSET
+        else:
+            scenario_id = UUID(_scenario_id)
 
-        datapoint_ids = cast(List[str], d.pop("datapoint_ids", UNSET))
+        datapoint_ids = []
+        _datapoint_ids = d.pop("datapoint_ids", UNSET)
+        for datapoint_ids_item_data in _datapoint_ids or []:
+            datapoint_ids_item = UUID(datapoint_ids_item_data)
+
+            datapoint_ids.append(datapoint_ids_item)
 
         _metrics_kwargs = d.pop("metrics_kwargs", UNSET)
         metrics_kwargs: Union[Unset, EvaluationPayloadMetricsKwargs]
@@ -105,22 +129,32 @@ class EvaluationPayload:
         else:
             metrics_kwargs = EvaluationPayloadMetricsKwargs.from_dict(_metrics_kwargs)
 
-        filter_group_id = d.pop("filter_group_id", UNSET)
-
-        tags = cast(List[str], d.pop("tags", UNSET))
-
-        checks = cast(List[str], d.pop("checks", UNSET))
-
-        _type = d.pop("type", UNSET)
-        type: Union[Unset, TestRunType]
-        if isinstance(_type, Unset):
-            type = UNSET
+        _filter_group_id = d.pop("filter_group_id", UNSET)
+        filter_group_id: Union[Unset, UUID]
+        if isinstance(_filter_group_id, Unset):
+            filter_group_id = UNSET
         else:
-            type = TestRunType(_type)
+            filter_group_id = UUID(_filter_group_id)
+
+        tags = cast(list[str], d.pop("tags", UNSET))
+
+        checks = cast(list[str], d.pop("checks", UNSET))
+
+        _type_ = d.pop("type", UNSET)
+        type_: Union[Unset, TestRunType]
+        if isinstance(_type_, Unset):
+            type_ = UNSET
+        else:
+            type_ = TestRunType(_type_)
 
         name = d.pop("name", UNSET)
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         evaluation_payload = cls(
             scenario_id=scenario_id,
@@ -129,7 +163,7 @@ class EvaluationPayload:
             filter_group_id=filter_group_id,
             tags=tags,
             checks=checks,
-            type=type,
+            type_=type_,
             name=name,
             project_id=project_id,
         )
@@ -138,7 +172,7 @@ class EvaluationPayload:
         return evaluation_payload
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

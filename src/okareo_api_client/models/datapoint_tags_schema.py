@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,22 +13,22 @@ T = TypeVar("T", bound="DatapointTagsSchema")
 class DatapointTagsSchema:
     """
     Attributes:
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
+        tags (Union[Unset, list[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
         resolved (Union[Unset, bool]): If the datapoint is resolved or not
     """
 
-    tags: Union[Unset, List[str]] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
     resolved: Union[Unset, bool] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        tags: Union[Unset, List[str]] = UNSET
+    def to_dict(self) -> dict[str, Any]:
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         resolved = self.resolved
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if tags is not UNSET:
@@ -38,9 +39,9 @@ class DatapointTagsSchema:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        tags = cast(List[str], d.pop("tags", UNSET))
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         resolved = d.pop("resolved", UNSET)
 
@@ -53,7 +54,7 @@ class DatapointTagsSchema:
         return datapoint_tags_schema
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

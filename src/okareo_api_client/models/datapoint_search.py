@@ -1,5 +1,7 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,7 +16,7 @@ T = TypeVar("T", bound="DatapointSearch")
 class DatapointSearch:
     """
     Attributes:
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
+        tags (Union[Unset, list[str]]): Tags are strings that can be used to filter datapoints in the Okareo app
         from_date (Union[Unset, datetime.datetime]): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
         to_date (Union[Unset, datetime.datetime]): Latest date
         feedback (Union[Unset, float]): Feedback is a 0 to 1 float value that captures user feedback range for related
@@ -23,32 +25,32 @@ class DatapointSearch:
         context_token (Union[Unset, str]): Context token is a unique token to link various datapoints which originate
             from the same context
         project_id (Union[Unset, str]): Project ID
-        mut_id (Union[Unset, str]): Model ID
-        test_run_id (Union[Unset, str]): Test run ID
+        mut_id (Union[Unset, UUID]): Model ID
+        test_run_id (Union[Unset, UUID]): Test run ID
         search_value (Union[Unset, str]): Search substring that is matched against input, result, context_token, tags,
             or time_created fields
         offset (Union[Unset, int]): Offset for pagination
         limit (Union[Unset, int]): Limit for pagination
-        datapoint_ids (Union[Unset, List[str]]): List of datapoint IDs to filter by
+        datapoint_ids (Union[Unset, list[UUID]]): List of datapoint IDs to filter by
     """
 
-    tags: Union[Unset, List[str]] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
     from_date: Union[Unset, datetime.datetime] = isoparse("2022-12-31T23:59:59.999999")
     to_date: Union[Unset, datetime.datetime] = UNSET
     feedback: Union[Unset, float] = UNSET
     error_code: Union[Unset, str] = UNSET
     context_token: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
-    mut_id: Union[Unset, str] = UNSET
-    test_run_id: Union[Unset, str] = UNSET
+    mut_id: Union[Unset, UUID] = UNSET
+    test_run_id: Union[Unset, UUID] = UNSET
     search_value: Union[Unset, str] = UNSET
     offset: Union[Unset, int] = UNSET
     limit: Union[Unset, int] = UNSET
-    datapoint_ids: Union[Unset, List[str]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    datapoint_ids: Union[Unset, list[UUID]] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        tags: Union[Unset, List[str]] = UNSET
+    def to_dict(self) -> dict[str, Any]:
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
@@ -61,19 +63,35 @@ class DatapointSearch:
             to_date = self.to_date.isoformat()
 
         feedback = self.feedback
-        error_code = self.error_code
-        context_token = self.context_token
-        project_id = self.project_id
-        mut_id = self.mut_id
-        test_run_id = self.test_run_id
-        search_value = self.search_value
-        offset = self.offset
-        limit = self.limit
-        datapoint_ids: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.datapoint_ids, Unset):
-            datapoint_ids = self.datapoint_ids
 
-        field_dict: Dict[str, Any] = {}
+        error_code = self.error_code
+
+        context_token = self.context_token
+
+        project_id = self.project_id
+
+        mut_id: Union[Unset, str] = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
+
+        test_run_id: Union[Unset, str] = UNSET
+        if not isinstance(self.test_run_id, Unset):
+            test_run_id = str(self.test_run_id)
+
+        search_value = self.search_value
+
+        offset = self.offset
+
+        limit = self.limit
+
+        datapoint_ids: Union[Unset, list[str]] = UNSET
+        if not isinstance(self.datapoint_ids, Unset):
+            datapoint_ids = []
+            for datapoint_ids_item_data in self.datapoint_ids:
+                datapoint_ids_item = str(datapoint_ids_item_data)
+                datapoint_ids.append(datapoint_ids_item)
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if tags is not UNSET:
@@ -106,9 +124,9 @@ class DatapointSearch:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        tags = cast(List[str], d.pop("tags", UNSET))
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         _from_date = d.pop("from_date", UNSET)
         from_date: Union[Unset, datetime.datetime]
@@ -132,9 +150,19 @@ class DatapointSearch:
 
         project_id = d.pop("project_id", UNSET)
 
-        mut_id = d.pop("mut_id", UNSET)
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: Union[Unset, UUID]
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
-        test_run_id = d.pop("test_run_id", UNSET)
+        _test_run_id = d.pop("test_run_id", UNSET)
+        test_run_id: Union[Unset, UUID]
+        if isinstance(_test_run_id, Unset):
+            test_run_id = UNSET
+        else:
+            test_run_id = UUID(_test_run_id)
 
         search_value = d.pop("search_value", UNSET)
 
@@ -142,7 +170,12 @@ class DatapointSearch:
 
         limit = d.pop("limit", UNSET)
 
-        datapoint_ids = cast(List[str], d.pop("datapoint_ids", UNSET))
+        datapoint_ids = []
+        _datapoint_ids = d.pop("datapoint_ids", UNSET)
+        for datapoint_ids_item_data in _datapoint_ids or []:
+            datapoint_ids_item = UUID(datapoint_ids_item_data)
+
+            datapoint_ids.append(datapoint_ids_item)
 
         datapoint_search = cls(
             tags=tags,
@@ -164,7 +197,7 @@ class DatapointSearch:
         return datapoint_search
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

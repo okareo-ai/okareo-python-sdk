@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,38 +18,42 @@ T = TypeVar("T", bound="TestDataPointItem")
 class TestDataPointItem:
     """
     Attributes:
-        id (str):
-        scenario_data_point_id (str):
-        test_run_id (str):
+        id (UUID):
+        scenario_data_point_id (UUID):
+        test_run_id (UUID):
         metric_type (str):
         metric_value (TestDataPointItemMetricValue):
-        tags (Union[Unset, List[str]]):
+        tags (Union[Unset, list[str]]):
         checks (Union[Unset, Any]):
     """
 
-    id: str
-    scenario_data_point_id: str
-    test_run_id: str
+    id: UUID
+    scenario_data_point_id: UUID
+    test_run_id: UUID
     metric_type: str
     metric_value: "TestDataPointItemMetricValue"
-    tags: Union[Unset, List[str]] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
     checks: Union[Unset, Any] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        scenario_data_point_id = self.scenario_data_point_id
-        test_run_id = self.test_run_id
+    def to_dict(self) -> dict[str, Any]:
+        id = str(self.id)
+
+        scenario_data_point_id = str(self.scenario_data_point_id)
+
+        test_run_id = str(self.test_run_id)
+
         metric_type = self.metric_type
+
         metric_value = self.metric_value.to_dict()
 
-        tags: Union[Unset, List[str]] = UNSET
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         checks = self.checks
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -66,21 +72,21 @@ class TestDataPointItem:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.test_data_point_item_metric_value import TestDataPointItemMetricValue
 
-        d = src_dict.copy()
-        id = d.pop("id")
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
-        scenario_data_point_id = d.pop("scenario_data_point_id")
+        scenario_data_point_id = UUID(d.pop("scenario_data_point_id"))
 
-        test_run_id = d.pop("test_run_id")
+        test_run_id = UUID(d.pop("test_run_id"))
 
         metric_type = d.pop("metric_type")
 
         metric_value = TestDataPointItemMetricValue.from_dict(d.pop("metric_value"))
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         checks = d.pop("checks", UNSET)
 
@@ -98,7 +104,7 @@ class TestDataPointItem:
         return test_data_point_item
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

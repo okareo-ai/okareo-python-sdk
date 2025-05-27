@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
+from uuid import UUID
 
 import httpx
 
@@ -12,29 +13,33 @@ from ...types import UNSET, Response
 
 def _get_kwargs(
     *,
-    project_id: str,
+    project_id: UUID,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["project_id"] = project_id
+    params: dict[str, Any] = {}
+
+    json_project_id = str(project_id)
+    params["project_id"] = json_project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/groups",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["GetGroupsV0GroupsGetResponse200Item"]]]:
-    if response.status_code == HTTPStatus.OK:
+) -> Optional[Union[ErrorResponse, list["GetGroupsV0GroupsGetResponse200Item"]]]:
+    if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
@@ -43,19 +48,19 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -67,7 +72,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["GetGroupsV0GroupsGetResponse200Item"]]]:
+) -> Response[Union[ErrorResponse, list["GetGroupsV0GroupsGetResponse200Item"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -79,9 +84,9 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
+    project_id: UUID,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["GetGroupsV0GroupsGetResponse200Item"]]]:
+) -> Response[Union[ErrorResponse, list["GetGroupsV0GroupsGetResponse200Item"]]]:
     """Get Groups
 
      Get all groups for the current organization and project.
@@ -90,7 +95,7 @@ def sync_detailed(
         A list of groups
 
     Args:
-        project_id (str): The ID of the project
+        project_id (UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -98,7 +103,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['GetGroupsV0GroupsGetResponse200Item']]]
+        Response[Union[ErrorResponse, list['GetGroupsV0GroupsGetResponse200Item']]]
     """
 
     kwargs = _get_kwargs(
@@ -116,9 +121,9 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
+    project_id: UUID,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["GetGroupsV0GroupsGetResponse200Item"]]]:
+) -> Optional[Union[ErrorResponse, list["GetGroupsV0GroupsGetResponse200Item"]]]:
     """Get Groups
 
      Get all groups for the current organization and project.
@@ -127,7 +132,7 @@ def sync(
         A list of groups
 
     Args:
-        project_id (str): The ID of the project
+        project_id (UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -135,7 +140,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['GetGroupsV0GroupsGetResponse200Item']]
+        Union[ErrorResponse, list['GetGroupsV0GroupsGetResponse200Item']]
     """
 
     return sync_detailed(
@@ -148,9 +153,9 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
+    project_id: UUID,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["GetGroupsV0GroupsGetResponse200Item"]]]:
+) -> Response[Union[ErrorResponse, list["GetGroupsV0GroupsGetResponse200Item"]]]:
     """Get Groups
 
      Get all groups for the current organization and project.
@@ -159,7 +164,7 @@ async def asyncio_detailed(
         A list of groups
 
     Args:
-        project_id (str): The ID of the project
+        project_id (UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -167,7 +172,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['GetGroupsV0GroupsGetResponse200Item']]]
+        Response[Union[ErrorResponse, list['GetGroupsV0GroupsGetResponse200Item']]]
     """
 
     kwargs = _get_kwargs(
@@ -183,9 +188,9 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
+    project_id: UUID,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["GetGroupsV0GroupsGetResponse200Item"]]]:
+) -> Optional[Union[ErrorResponse, list["GetGroupsV0GroupsGetResponse200Item"]]]:
     """Get Groups
 
      Get all groups for the current organization and project.
@@ -194,7 +199,7 @@ async def asyncio(
         A list of groups
 
     Args:
-        project_id (str): The ID of the project
+        project_id (UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -202,7 +207,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['GetGroupsV0GroupsGetResponse200Item']]
+        Union[ErrorResponse, list['GetGroupsV0GroupsGetResponse200Item']]
     """
 
     return (

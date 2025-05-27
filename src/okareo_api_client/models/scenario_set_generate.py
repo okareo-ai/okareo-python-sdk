@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,12 +23,12 @@ class ScenarioSetGenerate:
     Attributes:
         name (str): Name of the generated scenario set
         number_examples (int): Number of examples to be generated for the scenario set
-        project_id (Union[Unset, str]): ID for the project
-        source_scenario_id (Union[Unset, str]): ID for the scenario set that the generated scenario set will use as a
+        project_id (Union[Unset, UUID]): ID for the project
+        source_scenario_id (Union[Unset, UUID]): ID for the scenario set that the generated scenario set will use as a
             source. Will throw an exception if 'source_scenario_rows' is also provided.
-        source_scenario_rows (Union[Unset, List['ScenarioDataPoinResponse']]): Rows for the scenario set that the
+        source_scenario_rows (Union[Unset, list['ScenarioDataPoinResponse']]): Rows for the scenario set that the
             generated scenario set will use as a source. Will throw an exception if 'source_scenario_id' is also provided.
-        synonym_sets (Union[Unset, List[List[str]]]): 2D list used by the generator to determine synonyms. Used with the
+        synonym_sets (Union[Unset, list[list[str]]]): 2D list used by the generator to determine synonyms. Used with the
             SYNONYMS generation type.
         save_generated_scenario (Union[Unset, bool]): Whether to save the generated scenarios. Defaults to True.
             Default: True.
@@ -37,17 +39,17 @@ class ScenarioSetGenerate:
         pre_template (Union[Unset, str]): Template for pre-processing scenario before sending it to generator
         post_template (Union[Unset, str]): Template for post-processing scenario after generator before it's saved
         lock_result (Union[Unset, bool]): Whether to lock the result of the generated scenario. Used in the Custom
-            Generator type.
-        checks (Union[Unset, List[Union['ScenarioSetGenerateChecksItemType1', str]]]): List of check names or check
+            Generator type. Default: False.
+        checks (Union[Unset, list[Union['ScenarioSetGenerateChecksItemType1', str]]]): List of check names or check
             configs to run on the generated scenarios
     """
 
     name: str
     number_examples: int
-    project_id: Union[Unset, str] = UNSET
-    source_scenario_id: Union[Unset, str] = UNSET
-    source_scenario_rows: Union[Unset, List["ScenarioDataPoinResponse"]] = UNSET
-    synonym_sets: Union[Unset, List[List[str]]] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
+    source_scenario_id: Union[Unset, UUID] = UNSET
+    source_scenario_rows: Union[Unset, list["ScenarioDataPoinResponse"]] = UNSET
+    synonym_sets: Union[Unset, list[list[str]]] = UNSET
     save_generated_scenario: Union[Unset, bool] = True
     generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT
     generation_tone: Union[Unset, GenerationTone] = GenerationTone.NEUTRAL
@@ -55,25 +57,32 @@ class ScenarioSetGenerate:
     pre_template: Union[Unset, str] = UNSET
     post_template: Union[Unset, str] = UNSET
     lock_result: Union[Unset, bool] = False
-    checks: Union[Unset, List[Union["ScenarioSetGenerateChecksItemType1", str]]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    checks: Union[Unset, list[Union["ScenarioSetGenerateChecksItemType1", str]]] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
 
         name = self.name
+
         number_examples = self.number_examples
-        project_id = self.project_id
-        source_scenario_id = self.source_scenario_id
-        source_scenario_rows: Union[Unset, List[Dict[str, Any]]] = UNSET
+
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
+        source_scenario_id: Union[Unset, str] = UNSET
+        if not isinstance(self.source_scenario_id, Unset):
+            source_scenario_id = str(self.source_scenario_id)
+
+        source_scenario_rows: Union[Unset, list[dict[str, Any]]] = UNSET
         if not isinstance(self.source_scenario_rows, Unset):
             source_scenario_rows = []
             for source_scenario_rows_item_data in self.source_scenario_rows:
                 source_scenario_rows_item = source_scenario_rows_item_data.to_dict()
-
                 source_scenario_rows.append(source_scenario_rows_item)
 
-        synonym_sets: Union[Unset, List[List[str]]] = UNSET
+        synonym_sets: Union[Unset, list[list[str]]] = UNSET
         if not isinstance(self.synonym_sets, Unset):
             synonym_sets = []
             for synonym_sets_item_data in self.synonym_sets:
@@ -82,6 +91,7 @@ class ScenarioSetGenerate:
                 synonym_sets.append(synonym_sets_item)
 
         save_generated_scenario = self.save_generated_scenario
+
         generation_type: Union[Unset, str] = UNSET
         if not isinstance(self.generation_type, Unset):
             generation_type = self.generation_type.value
@@ -91,24 +101,25 @@ class ScenarioSetGenerate:
             generation_tone = self.generation_tone.value
 
         generation_prompt = self.generation_prompt
+
         pre_template = self.pre_template
+
         post_template = self.post_template
+
         lock_result = self.lock_result
-        checks: Union[Unset, List[Union[Dict[str, Any], str]]] = UNSET
+
+        checks: Union[Unset, list[Union[dict[str, Any], str]]] = UNSET
         if not isinstance(self.checks, Unset):
             checks = []
             for checks_item_data in self.checks:
-                checks_item: Union[Dict[str, Any], str]
-
+                checks_item: Union[dict[str, Any], str]
                 if isinstance(checks_item_data, ScenarioSetGenerateChecksItemType1):
                     checks_item = checks_item_data.to_dict()
-
                 else:
                     checks_item = checks_item_data
-
                 checks.append(checks_item)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -144,18 +155,28 @@ class ScenarioSetGenerate:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
         from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         name = d.pop("name")
 
         number_examples = d.pop("number_examples")
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
-        source_scenario_id = d.pop("source_scenario_id", UNSET)
+        _source_scenario_id = d.pop("source_scenario_id", UNSET)
+        source_scenario_id: Union[Unset, UUID]
+        if isinstance(_source_scenario_id, Unset):
+            source_scenario_id = UNSET
+        else:
+            source_scenario_id = UUID(_source_scenario_id)
 
         source_scenario_rows = []
         _source_scenario_rows = d.pop("source_scenario_rows", UNSET)
@@ -167,7 +188,7 @@ class ScenarioSetGenerate:
         synonym_sets = []
         _synonym_sets = d.pop("synonym_sets", UNSET)
         for synonym_sets_item_data in _synonym_sets or []:
-            synonym_sets_item = cast(List[str], synonym_sets_item_data)
+            synonym_sets_item = cast(list[str], synonym_sets_item_data)
 
             synonym_sets.append(synonym_sets_item)
 
@@ -235,7 +256,7 @@ class ScenarioSetGenerate:
         return scenario_set_generate
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

@@ -42,4 +42,4 @@ def test_generate_and_create_check(okareo_client: Okareo) -> None:
     assert uploaded_check.id
     assert uploaded_check.name
     assert uploaded_check.is_predefined is False
-    okareo_client.delete_check(uploaded_check.id, uploaded_check.name)
+    okareo_client.delete_check(str(uploaded_check.id), uploaded_check.name)

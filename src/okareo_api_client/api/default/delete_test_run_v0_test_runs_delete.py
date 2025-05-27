@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
+from uuid import UUID
 
 import httpx
 
@@ -11,46 +12,52 @@ from ...types import UNSET, Response
 
 def _get_kwargs(
     *,
-    test_run_ids: List[str],
+    test_run_ids: list[UUID],
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    json_test_run_ids = test_run_ids
+    params: dict[str, Any] = {}
+
+    json_test_run_ids = []
+    for test_run_ids_item_data in test_run_ids:
+        test_run_ids_item = str(test_run_ids_item_data)
+        json_test_run_ids.append(test_run_ids_item)
 
     params["test_run_ids"] = json_test_run_ids
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "delete",
         "url": "/v0/test_runs",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.NO_CONTENT:
+    if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -74,7 +81,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    test_run_ids: List[str],
+    test_run_ids: list[UUID],
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Test Run
@@ -93,7 +100,7 @@ def sync_detailed(
     Returns: 204 status code on successful deletion
 
     Args:
-        test_run_ids (List[str]): List of Test Run IDs to delete
+        test_run_ids (list[UUID]): List of Test Run IDs to delete
         api_key (str):
 
     Raises:
@@ -119,7 +126,7 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    test_run_ids: List[str],
+    test_run_ids: list[UUID],
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Test Run
@@ -138,7 +145,7 @@ def sync(
     Returns: 204 status code on successful deletion
 
     Args:
-        test_run_ids (List[str]): List of Test Run IDs to delete
+        test_run_ids (list[UUID]): List of Test Run IDs to delete
         api_key (str):
 
     Raises:
@@ -159,7 +166,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    test_run_ids: List[str],
+    test_run_ids: list[UUID],
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Test Run
@@ -178,7 +185,7 @@ async def asyncio_detailed(
     Returns: 204 status code on successful deletion
 
     Args:
-        test_run_ids (List[str]): List of Test Run IDs to delete
+        test_run_ids (list[UUID]): List of Test Run IDs to delete
         api_key (str):
 
     Raises:
@@ -202,7 +209,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    test_run_ids: List[str],
+    test_run_ids: list[UUID],
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Test Run
@@ -221,7 +228,7 @@ async def asyncio(
     Returns: 204 status code on successful deletion
 
     Args:
-        test_run_ids (List[str]): List of Test Run IDs to delete
+        test_run_ids (list[UUID]): List of Test Run IDs to delete
         api_key (str):
 
     Raises:

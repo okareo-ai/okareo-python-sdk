@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Optional, Union, cast
+from uuid import UUID
 
 import httpx
 
@@ -10,48 +11,49 @@ from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    scenario_id: str,
+    scenario_id: UUID,
     *,
     name: str,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
+
     params["name"] = name
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": "/v0/scenario_sets/{scenario_id}".format(
-            scenario_id=scenario_id,
-        ),
+        "url": f"/v0/scenario_sets/{scenario_id}",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.NO_CONTENT:
+    if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -73,7 +75,7 @@ def _build_response(
 
 
 def sync_detailed(
-    scenario_id: str,
+    scenario_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     name: str,
@@ -92,7 +94,7 @@ def sync_detailed(
     Returns: 204 status code on successful deletion
 
     Args:
-        scenario_id (str): The ID of the Scenario Set to delete
+        scenario_id (UUID): The ID of the Scenario Set to delete
         name (str): Name of the Scenario Set to delete
         api_key (str):
 
@@ -118,7 +120,7 @@ def sync_detailed(
 
 
 def sync(
-    scenario_id: str,
+    scenario_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     name: str,
@@ -137,7 +139,7 @@ def sync(
     Returns: 204 status code on successful deletion
 
     Args:
-        scenario_id (str): The ID of the Scenario Set to delete
+        scenario_id (UUID): The ID of the Scenario Set to delete
         name (str): Name of the Scenario Set to delete
         api_key (str):
 
@@ -158,7 +160,7 @@ def sync(
 
 
 async def asyncio_detailed(
-    scenario_id: str,
+    scenario_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     name: str,
@@ -177,7 +179,7 @@ async def asyncio_detailed(
     Returns: 204 status code on successful deletion
 
     Args:
-        scenario_id (str): The ID of the Scenario Set to delete
+        scenario_id (UUID): The ID of the Scenario Set to delete
         name (str): Name of the Scenario Set to delete
         api_key (str):
 
@@ -201,7 +203,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    scenario_id: str,
+    scenario_id: UUID,
     *,
     client: Union[AuthenticatedClient, Client],
     name: str,
@@ -220,7 +222,7 @@ async def asyncio(
     Returns: 204 status code on successful deletion
 
     Args:
-        scenario_id (str): The ID of the Scenario Set to delete
+        scenario_id (UUID): The ID of the Scenario Set to delete
         name (str): Name of the Scenario Set to delete
         api_key (str):
 

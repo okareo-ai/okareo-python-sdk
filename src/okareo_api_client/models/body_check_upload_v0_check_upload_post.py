@@ -1,5 +1,7 @@
+from collections.abc import Mapping
 from io import BytesIO
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,9 +20,9 @@ class BodyCheckUploadV0CheckUploadPost:
         requires_scenario_result (bool): Whether the check requires scenario expected result
         description (Union[Unset, str]): Description of the Check Default: 'No description provided'.
         output_data_type (Union[Unset, str]): Check output data type (i.e., bool, int, float)
-        project_id (Union[Unset, str]): ID for the project
+        project_id (Union[Unset, UUID]): ID for the project
         file (Union[Unset, File]):
-        update (Union[Unset, bool]): Update the check
+        update (Union[Unset, bool]): Update the check Default: False.
     """
 
     name: str
@@ -28,25 +30,33 @@ class BodyCheckUploadV0CheckUploadPost:
     requires_scenario_result: bool
     description: Union[Unset, str] = "No description provided"
     output_data_type: Union[Unset, str] = UNSET
-    project_id: Union[Unset, str] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
     file: Union[Unset, File] = UNSET
     update: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         name = self.name
+
         requires_scenario_input = self.requires_scenario_input
+
         requires_scenario_result = self.requires_scenario_result
+
         description = self.description
+
         output_data_type = self.output_data_type
-        project_id = self.project_id
+
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
 
         update = self.update
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -68,43 +78,39 @@ class BodyCheckUploadV0CheckUploadPost:
 
         return field_dict
 
-    def to_multipart(self) -> Dict[str, Any]:
-        name = self.name if isinstance(self.name, Unset) else (None, str(self.name).encode(), "text/plain")
-        requires_scenario_input = (
-            self.requires_scenario_input
-            if isinstance(self.requires_scenario_input, Unset)
-            else (None, str(self.requires_scenario_input).encode(), "text/plain")
-        )
-        requires_scenario_result = (
-            self.requires_scenario_result
-            if isinstance(self.requires_scenario_result, Unset)
-            else (None, str(self.requires_scenario_result).encode(), "text/plain")
-        )
+    def to_multipart(self) -> dict[str, Any]:
+        name = (None, str(self.name).encode(), "text/plain")
+
+        requires_scenario_input = (None, str(self.requires_scenario_input).encode(), "text/plain")
+
+        requires_scenario_result = (None, str(self.requires_scenario_result).encode(), "text/plain")
+
         description = (
             self.description
             if isinstance(self.description, Unset)
             else (None, str(self.description).encode(), "text/plain")
         )
+
         output_data_type = (
             self.output_data_type
             if isinstance(self.output_data_type, Unset)
             else (None, str(self.output_data_type).encode(), "text/plain")
         )
-        project_id = (
-            self.project_id
-            if isinstance(self.project_id, Unset)
-            else (None, str(self.project_id).encode(), "text/plain")
-        )
+
+        project_id: Union[Unset, bytes] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
         file: Union[Unset, FileJsonType] = UNSET
         if not isinstance(self.file, Unset):
             file = self.file.to_tuple()
 
         update = self.update if isinstance(self.update, Unset) else (None, str(self.update).encode(), "text/plain")
 
-        field_dict: Dict[str, Any] = {}
-        field_dict.update(
-            {key: (None, str(value).encode(), "text/plain") for key, value in self.additional_properties.items()}
-        )
+        field_dict: dict[str, Any] = {}
+        for prop_name, prop in self.additional_properties.items():
+            field_dict[prop_name] = (None, str(prop).encode(), "text/plain")
+
         field_dict.update(
             {
                 "name": name,
@@ -126,8 +132,8 @@ class BodyCheckUploadV0CheckUploadPost:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
         name = d.pop("name")
 
         requires_scenario_input = d.pop("requires_scenario_input")
@@ -138,7 +144,12 @@ class BodyCheckUploadV0CheckUploadPost:
 
         output_data_type = d.pop("output_data_type", UNSET)
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         _file = d.pop("file", UNSET)
         file: Union[Unset, File]
@@ -164,7 +175,7 @@ class BodyCheckUploadV0CheckUploadPost:
         return body_check_upload_v0_check_upload_post
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

@@ -1,6 +1,6 @@
 import os
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 import pytest
 from okareo_tests.common import API_KEY, OkareoAPIhost, integration
@@ -65,7 +65,7 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     scenario_request = ScenarioSetCreate(
         name="test_scenario",
         seed_data=[SeedData(input_="foo", result="bar")],
-        project_id="project_id" if okareo_api.is_mock else UNSET,
+        project_id=UUID(int=0) if okareo_api.is_mock else UNSET,
     )
     scenario_response = okareo.create_scenario_set(scenario_request)
 
@@ -73,7 +73,6 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
         assert scenario_response.scenario_id == "scenario_id"
     else:
         assert scenario_response.scenario_id
-        uuid.UUID(scenario_response.scenario_id)
     assert scenario_response.name == "test_scenario"
 
 
@@ -138,7 +137,7 @@ def test_generate_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> 
 
     okareo_client.generate_scenario_set(
         ScenarioSetGenerate(
-            source_scenario_id="just-a-random-scenario-id",
+            source_scenario_id=UUID(int=0),
             name="my generation foo",
             number_examples=22,
         )

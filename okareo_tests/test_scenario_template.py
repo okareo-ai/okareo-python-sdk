@@ -89,7 +89,7 @@ def test_generate_scenarios(
     assert generate_scenarios.time_created
 
     scenario_dps = okareo_client.get_scenario_data_points(
-        generate_scenarios.scenario_id
+        str(generate_scenarios.scenario_id)
     )
     assert scenario_dps
     assert len(scenario_dps) == 6  # 3 documents * 2 questions each

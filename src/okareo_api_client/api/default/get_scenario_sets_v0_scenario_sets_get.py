@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
+from uuid import UUID
 
 import httpx
 
@@ -12,32 +13,41 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, UUID] = UNSET,
+    project_id: Union[Unset, UUID] = UNSET,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["scenario_id"] = scenario_id
+    params: dict[str, Any] = {}
 
-    params["project_id"] = project_id
+    json_scenario_id: Union[Unset, str] = UNSET
+    if not isinstance(scenario_id, Unset):
+        json_scenario_id = str(scenario_id)
+    params["scenario_id"] = json_scenario_id
+
+    json_project_id: Union[Unset, str] = UNSET
+    if not isinstance(project_id, Unset):
+        json_project_id = str(project_id)
+    params["project_id"] = json_project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/scenario_sets",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
-    if response.status_code == HTTPStatus.OK:
+) -> Optional[Union[ErrorResponse, list["ScenarioSetResponse"]]]:
+    if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
@@ -46,19 +56,19 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
@@ -70,7 +80,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+) -> Response[Union[ErrorResponse, list["ScenarioSetResponse"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -82,10 +92,10 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, UUID] = UNSET,
+    project_id: Union[Unset, UUID] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+) -> Response[Union[ErrorResponse, list["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
      Find all scenario sets based on either the project id or the scenario id
@@ -94,8 +104,8 @@ def sync_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, UUID]): The ID of the scenario set
+        project_id (Union[Unset, UUID]): The ID of the project
         api_key (str):
 
     Raises:
@@ -103,7 +113,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ScenarioSetResponse']]]
+        Response[Union[ErrorResponse, list['ScenarioSetResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -122,10 +132,10 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, UUID] = UNSET,
+    project_id: Union[Unset, UUID] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+) -> Optional[Union[ErrorResponse, list["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
      Find all scenario sets based on either the project id or the scenario id
@@ -134,8 +144,8 @@ def sync(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, UUID]): The ID of the scenario set
+        project_id (Union[Unset, UUID]): The ID of the project
         api_key (str):
 
     Raises:
@@ -143,7 +153,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ScenarioSetResponse']]
+        Union[ErrorResponse, list['ScenarioSetResponse']]
     """
 
     return sync_detailed(
@@ -157,10 +167,10 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, UUID] = UNSET,
+    project_id: Union[Unset, UUID] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+) -> Response[Union[ErrorResponse, list["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
      Find all scenario sets based on either the project id or the scenario id
@@ -169,8 +179,8 @@ async def asyncio_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, UUID]): The ID of the scenario set
+        project_id (Union[Unset, UUID]): The ID of the project
         api_key (str):
 
     Raises:
@@ -178,7 +188,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List['ScenarioSetResponse']]]
+        Response[Union[ErrorResponse, list['ScenarioSetResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -195,10 +205,10 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    scenario_id: Union[Unset, None, str] = UNSET,
-    project_id: Union[Unset, None, str] = UNSET,
+    scenario_id: Union[Unset, UUID] = UNSET,
+    project_id: Union[Unset, UUID] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List["ScenarioSetResponse"]]]:
+) -> Optional[Union[ErrorResponse, list["ScenarioSetResponse"]]]:
     """Get Scenario Sets
 
      Find all scenario sets based on either the project id or the scenario id
@@ -207,8 +217,8 @@ async def asyncio(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (Union[Unset, None, str]): The ID of the scenario set
-        project_id (Union[Unset, None, str]): The ID of the project
+        scenario_id (Union[Unset, UUID]): The ID of the scenario set
+        project_id (Union[Unset, UUID]): The ID of the project
         api_key (str):
 
     Raises:
@@ -216,7 +226,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List['ScenarioSetResponse']]
+        Union[ErrorResponse, list['ScenarioSetResponse']]
     """
 
     return (

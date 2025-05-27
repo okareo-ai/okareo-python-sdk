@@ -1,5 +1,7 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -15,37 +17,45 @@ T = TypeVar("T", bound="TestRunPayload")
 class TestRunPayload:
     """
     Attributes:
-        mut_id (Union[Unset, str]): ID of model
-        scenario_set_id (Union[Unset, str]): ID of scenario set
+        mut_id (Union[Unset, UUID]): ID of model
+        scenario_set_id (Union[Unset, UUID]): ID of scenario set
         name (Union[Unset, str]): Name of test run
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
-        type (Union[Unset, TestRunType]): An enumeration.
+        tags (Union[Unset, list[str]]): Tags are strings that can be used to filter test runs in the Okareo app
+        type_ (Union[Unset, TestRunType]): An enumeration.
         start_time (Union[Unset, datetime.datetime]):
         end_time (Union[Unset, datetime.datetime]):
         calculate_model_metrics (Union[Unset, bool]): Boolean value indicating if model metrics should be calculated
+            Default: False.
     """
 
-    mut_id: Union[Unset, str] = UNSET
-    scenario_set_id: Union[Unset, str] = UNSET
+    mut_id: Union[Unset, UUID] = UNSET
+    scenario_set_id: Union[Unset, UUID] = UNSET
     name: Union[Unset, str] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
-    type: Union[Unset, TestRunType] = UNSET
+    tags: Union[Unset, list[str]] = UNSET
+    type_: Union[Unset, TestRunType] = UNSET
     start_time: Union[Unset, datetime.datetime] = UNSET
     end_time: Union[Unset, datetime.datetime] = UNSET
     calculate_model_metrics: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        mut_id = self.mut_id
-        scenario_set_id = self.scenario_set_id
+    def to_dict(self) -> dict[str, Any]:
+        mut_id: Union[Unset, str] = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
+
+        scenario_set_id: Union[Unset, str] = UNSET
+        if not isinstance(self.scenario_set_id, Unset):
+            scenario_set_id = str(self.scenario_set_id)
+
         name = self.name
-        tags: Union[Unset, List[str]] = UNSET
+
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        type: Union[Unset, str] = UNSET
-        if not isinstance(self.type, Unset):
-            type = self.type.value
+        type_: Union[Unset, str] = UNSET
+        if not isinstance(self.type_, Unset):
+            type_ = self.type_.value
 
         start_time: Union[Unset, str] = UNSET
         if not isinstance(self.start_time, Unset):
@@ -57,7 +67,7 @@ class TestRunPayload:
 
         calculate_model_metrics = self.calculate_model_metrics
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if mut_id is not UNSET:
@@ -68,8 +78,8 @@ class TestRunPayload:
             field_dict["name"] = name
         if tags is not UNSET:
             field_dict["tags"] = tags
-        if type is not UNSET:
-            field_dict["type"] = type
+        if type_ is not UNSET:
+            field_dict["type"] = type_
         if start_time is not UNSET:
             field_dict["start_time"] = start_time
         if end_time is not UNSET:
@@ -80,22 +90,32 @@ class TestRunPayload:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        mut_id = d.pop("mut_id", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: Union[Unset, UUID]
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
-        scenario_set_id = d.pop("scenario_set_id", UNSET)
+        _scenario_set_id = d.pop("scenario_set_id", UNSET)
+        scenario_set_id: Union[Unset, UUID]
+        if isinstance(_scenario_set_id, Unset):
+            scenario_set_id = UNSET
+        else:
+            scenario_set_id = UUID(_scenario_set_id)
 
         name = d.pop("name", UNSET)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
-        _type = d.pop("type", UNSET)
-        type: Union[Unset, TestRunType]
-        if isinstance(_type, Unset):
-            type = UNSET
+        _type_ = d.pop("type", UNSET)
+        type_: Union[Unset, TestRunType]
+        if isinstance(_type_, Unset):
+            type_ = UNSET
         else:
-            type = TestRunType(_type)
+            type_ = TestRunType(_type_)
 
         _start_time = d.pop("start_time", UNSET)
         start_time: Union[Unset, datetime.datetime]
@@ -118,7 +138,7 @@ class TestRunPayload:
             scenario_set_id=scenario_set_id,
             name=name,
             tags=tags,
-            type=type,
+            type_=type_,
             start_time=start_time,
             end_time=end_time,
             calculate_model_metrics=calculate_model_metrics,
@@ -128,7 +148,7 @@ class TestRunPayload:
         return test_run_payload
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

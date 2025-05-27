@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,25 +21,29 @@ class CheckCreateUpdateSchema:
         name (Union[Unset, str]):
         description (Union[Unset, str]):
         check_config (Union[Unset, CheckCreateUpdateSchemaCheckConfig]):
-        project_id (Union[Unset, str]): ID of the project
+        project_id (Union[Unset, UUID]): ID of the project
     """
 
     name: Union[Unset, str] = UNSET
     description: Union[Unset, str] = UNSET
     check_config: Union[Unset, "CheckCreateUpdateSchemaCheckConfig"] = UNSET
-    project_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    project_id: Union[Unset, UUID] = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         name = self.name
+
         description = self.description
-        check_config: Union[Unset, Dict[str, Any]] = UNSET
+
+        check_config: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.check_config, Unset):
             check_config = self.check_config.to_dict()
 
-        project_id = self.project_id
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if name is not UNSET:
@@ -52,10 +58,10 @@ class CheckCreateUpdateSchema:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.check_create_update_schema_check_config import CheckCreateUpdateSchemaCheckConfig
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         name = d.pop("name", UNSET)
 
         description = d.pop("description", UNSET)
@@ -67,7 +73,12 @@ class CheckCreateUpdateSchema:
         else:
             check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(_check_config)
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         check_create_update_schema = cls(
             name=name,
@@ -80,7 +91,7 @@ class CheckCreateUpdateSchema:
         return check_create_update_schema
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

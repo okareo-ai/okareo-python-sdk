@@ -1,5 +1,7 @@
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -24,8 +26,8 @@ T = TypeVar("T", bound="DatapointListItem")
 class DatapointListItem:
     """
     Attributes:
-        id (str):
-        tags (Union[Unset, List[str]]):
+        id (UUID):
+        tags (Union[Unset, list[str]]):
         input_ (Union[Unset, Any]):
         input_datetime (Union[Unset, datetime.datetime]):
         result (Union[Unset, Any]):
@@ -37,19 +39,19 @@ class DatapointListItem:
         context_token (Union[Unset, str]):
         time_created (Union[Unset, datetime.datetime]):
         model_metadata (Union['DatapointListItemModelMetadataType0', Any, Unset]):
-        project_id (Union[Unset, str]):
-        mut_id (Union[Unset, str]):
-        test_run_id (Union[Unset, str]):
-        group_id (Union[Unset, str]):
-        scenario_data_point_id (Union[Unset, str]):
+        project_id (Union[Unset, UUID]):
+        mut_id (Union[Unset, UUID]):
+        test_run_id (Union[Unset, UUID]):
+        group_id (Union[Unset, UUID]):
+        scenario_data_point_id (Union[Unset, UUID]):
         latency (Union[Unset, int]):
         input_tokens (Union[Unset, int]):
         output_tokens (Union[Unset, int]):
         source (Union[Unset, str]):
         temperature (Union[Unset, str]):
-        input_tools (Union[Unset, List['DatapointListItemInputToolsItem']]):
-        result_tool_calls (Union[Unset, List['DatapointListItemResultToolCallsItem']]):
-        result_embeddings (Union[Unset, List['DatapointListItemResultEmbeddingsItem']]):
+        input_tools (Union[Unset, list['DatapointListItemInputToolsItem']]):
+        result_tool_calls (Union[Unset, list['DatapointListItemResultToolCallsItem']]):
+        result_embeddings (Union[Unset, list['DatapointListItemResultEmbeddingsItem']]):
         checks (Union[Unset, DatapointListItemChecks]):
         agent_metadata (Union['DatapointListItemAgentMetadataType0', Any, Unset]):
         provider (Union[Unset, str]):
@@ -59,14 +61,14 @@ class DatapointListItem:
         response_model_name (Union[Unset, str]):
         cost (Union[Unset, float]):
         status (Union[Unset, str]):  Default: ''.
-        failed_checks (Union[Unset, List[str]]): Array of failed check names
-        resolved (Union[Unset, bool]): Manual marking from user on resolved status
+        failed_checks (Union[Unset, list[str]]): Array of failed check names
+        resolved (Union[Unset, bool]): Manual marking from user on resolved status Default: False.
         user_metadata (Union['DatapointListItemUserMetadataType0', Any, Unset]): User-provided metadata provided as
             context to the completion call.
     """
 
-    id: str
-    tags: Union[Unset, List[str]] = UNSET
+    id: UUID
+    tags: Union[Unset, list[str]] = UNSET
     input_: Union[Unset, Any] = UNSET
     input_datetime: Union[Unset, datetime.datetime] = UNSET
     result: Union[Unset, Any] = UNSET
@@ -78,19 +80,19 @@ class DatapointListItem:
     context_token: Union[Unset, str] = UNSET
     time_created: Union[Unset, datetime.datetime] = UNSET
     model_metadata: Union["DatapointListItemModelMetadataType0", Any, Unset] = UNSET
-    project_id: Union[Unset, str] = UNSET
-    mut_id: Union[Unset, str] = UNSET
-    test_run_id: Union[Unset, str] = UNSET
-    group_id: Union[Unset, str] = UNSET
-    scenario_data_point_id: Union[Unset, str] = UNSET
+    project_id: Union[Unset, UUID] = UNSET
+    mut_id: Union[Unset, UUID] = UNSET
+    test_run_id: Union[Unset, UUID] = UNSET
+    group_id: Union[Unset, UUID] = UNSET
+    scenario_data_point_id: Union[Unset, UUID] = UNSET
     latency: Union[Unset, int] = UNSET
     input_tokens: Union[Unset, int] = UNSET
     output_tokens: Union[Unset, int] = UNSET
     source: Union[Unset, str] = UNSET
     temperature: Union[Unset, str] = UNSET
-    input_tools: Union[Unset, List["DatapointListItemInputToolsItem"]] = UNSET
-    result_tool_calls: Union[Unset, List["DatapointListItemResultToolCallsItem"]] = UNSET
-    result_embeddings: Union[Unset, List["DatapointListItemResultEmbeddingsItem"]] = UNSET
+    input_tools: Union[Unset, list["DatapointListItemInputToolsItem"]] = UNSET
+    result_tool_calls: Union[Unset, list["DatapointListItemResultToolCallsItem"]] = UNSET
+    result_embeddings: Union[Unset, list["DatapointListItemResultEmbeddingsItem"]] = UNSET
     checks: Union[Unset, "DatapointListItemChecks"] = UNSET
     agent_metadata: Union["DatapointListItemAgentMetadataType0", Any, Unset] = UNSET
     provider: Union[Unset, str] = UNSET
@@ -100,127 +102,148 @@ class DatapointListItem:
     response_model_name: Union[Unset, str] = UNSET
     cost: Union[Unset, float] = UNSET
     status: Union[Unset, str] = ""
-    failed_checks: Union[Unset, List[str]] = UNSET
+    failed_checks: Union[Unset, list[str]] = UNSET
     resolved: Union[Unset, bool] = False
     user_metadata: Union["DatapointListItemUserMetadataType0", Any, Unset] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
         from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
         from ..models.datapoint_list_item_user_metadata_type_0 import DatapointListItemUserMetadataType0
 
-        id = self.id
-        tags: Union[Unset, List[str]] = UNSET
+        id = str(self.id)
+
+        tags: Union[Unset, list[str]] = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
         input_ = self.input_
+
         input_datetime: Union[Unset, str] = UNSET
         if not isinstance(self.input_datetime, Unset):
             input_datetime = self.input_datetime.isoformat()
 
         result = self.result
+
         result_datetime: Union[Unset, str] = UNSET
         if not isinstance(self.result_datetime, Unset):
             result_datetime = self.result_datetime.isoformat()
 
         feedback = self.feedback
+
         error_message = self.error_message
+
         error_code = self.error_code
+
         error_type = self.error_type
+
         context_token = self.context_token
+
         time_created: Union[Unset, str] = UNSET
         if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
 
-        model_metadata: Union[Any, Dict[str, Any], Unset]
+        model_metadata: Union[Any, Unset, dict[str, Any]]
         if isinstance(self.model_metadata, Unset):
             model_metadata = UNSET
-
         elif isinstance(self.model_metadata, DatapointListItemModelMetadataType0):
-            model_metadata = UNSET
-            if not isinstance(self.model_metadata, Unset):
-                model_metadata = self.model_metadata.to_dict()
-
+            model_metadata = self.model_metadata.to_dict()
         else:
             model_metadata = self.model_metadata
 
-        project_id = self.project_id
-        mut_id = self.mut_id
-        test_run_id = self.test_run_id
-        group_id = self.group_id
-        scenario_data_point_id = self.scenario_data_point_id
+        project_id: Union[Unset, str] = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
+        mut_id: Union[Unset, str] = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
+
+        test_run_id: Union[Unset, str] = UNSET
+        if not isinstance(self.test_run_id, Unset):
+            test_run_id = str(self.test_run_id)
+
+        group_id: Union[Unset, str] = UNSET
+        if not isinstance(self.group_id, Unset):
+            group_id = str(self.group_id)
+
+        scenario_data_point_id: Union[Unset, str] = UNSET
+        if not isinstance(self.scenario_data_point_id, Unset):
+            scenario_data_point_id = str(self.scenario_data_point_id)
+
         latency = self.latency
+
         input_tokens = self.input_tokens
+
         output_tokens = self.output_tokens
+
         source = self.source
+
         temperature = self.temperature
-        input_tools: Union[Unset, List[Dict[str, Any]]] = UNSET
+
+        input_tools: Union[Unset, list[dict[str, Any]]] = UNSET
         if not isinstance(self.input_tools, Unset):
             input_tools = []
             for input_tools_item_data in self.input_tools:
                 input_tools_item = input_tools_item_data.to_dict()
-
                 input_tools.append(input_tools_item)
 
-        result_tool_calls: Union[Unset, List[Dict[str, Any]]] = UNSET
+        result_tool_calls: Union[Unset, list[dict[str, Any]]] = UNSET
         if not isinstance(self.result_tool_calls, Unset):
             result_tool_calls = []
             for result_tool_calls_item_data in self.result_tool_calls:
                 result_tool_calls_item = result_tool_calls_item_data.to_dict()
-
                 result_tool_calls.append(result_tool_calls_item)
 
-        result_embeddings: Union[Unset, List[Dict[str, Any]]] = UNSET
+        result_embeddings: Union[Unset, list[dict[str, Any]]] = UNSET
         if not isinstance(self.result_embeddings, Unset):
             result_embeddings = []
             for result_embeddings_item_data in self.result_embeddings:
                 result_embeddings_item = result_embeddings_item_data.to_dict()
-
                 result_embeddings.append(result_embeddings_item)
 
-        checks: Union[Unset, Dict[str, Any]] = UNSET
+        checks: Union[Unset, dict[str, Any]] = UNSET
         if not isinstance(self.checks, Unset):
             checks = self.checks.to_dict()
 
-        agent_metadata: Union[Any, Dict[str, Any], Unset]
+        agent_metadata: Union[Any, Unset, dict[str, Any]]
         if isinstance(self.agent_metadata, Unset):
             agent_metadata = UNSET
-
         elif isinstance(self.agent_metadata, DatapointListItemAgentMetadataType0):
-            agent_metadata = UNSET
-            if not isinstance(self.agent_metadata, Unset):
-                agent_metadata = self.agent_metadata.to_dict()
-
+            agent_metadata = self.agent_metadata.to_dict()
         else:
             agent_metadata = self.agent_metadata
 
         provider = self.provider
+
         total_search_count = self.total_search_count
+
         total_datapoint_count = self.total_datapoint_count
+
         request_model_name = self.request_model_name
+
         response_model_name = self.response_model_name
+
         cost = self.cost
+
         status = self.status
-        failed_checks: Union[Unset, List[str]] = UNSET
+
+        failed_checks: Union[Unset, list[str]] = UNSET
         if not isinstance(self.failed_checks, Unset):
             failed_checks = self.failed_checks
 
         resolved = self.resolved
-        user_metadata: Union[Any, Dict[str, Any], Unset]
+
+        user_metadata: Union[Any, Unset, dict[str, Any]]
         if isinstance(self.user_metadata, Unset):
             user_metadata = UNSET
-
         elif isinstance(self.user_metadata, DatapointListItemUserMetadataType0):
-            user_metadata = UNSET
-            if not isinstance(self.user_metadata, Unset):
-                user_metadata = self.user_metadata.to_dict()
-
+            user_metadata = self.user_metadata.to_dict()
         else:
             user_metadata = self.user_metadata
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -305,7 +328,7 @@ class DatapointListItem:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
         from ..models.datapoint_list_item_checks import DatapointListItemChecks
         from ..models.datapoint_list_item_input_tools_item import DatapointListItemInputToolsItem
@@ -314,10 +337,10 @@ class DatapointListItem:
         from ..models.datapoint_list_item_result_tool_calls_item import DatapointListItemResultToolCallsItem
         from ..models.datapoint_list_item_user_metadata_type_0 import DatapointListItemUserMetadataType0
 
-        d = src_dict.copy()
-        id = d.pop("id")
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         input_ = d.pop("input", UNSET)
 
@@ -360,12 +383,7 @@ class DatapointListItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _model_metadata_type_0 = data
-                model_metadata_type_0: Union[Unset, DatapointListItemModelMetadataType0]
-                if isinstance(_model_metadata_type_0, Unset):
-                    model_metadata_type_0 = UNSET
-                else:
-                    model_metadata_type_0 = DatapointListItemModelMetadataType0.from_dict(_model_metadata_type_0)
+                model_metadata_type_0 = DatapointListItemModelMetadataType0.from_dict(data)
 
                 return model_metadata_type_0
             except:  # noqa: E722
@@ -374,15 +392,40 @@ class DatapointListItem:
 
         model_metadata = _parse_model_metadata(d.pop("model_metadata", UNSET))
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: Union[Unset, UUID]
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
-        mut_id = d.pop("mut_id", UNSET)
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: Union[Unset, UUID]
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
-        test_run_id = d.pop("test_run_id", UNSET)
+        _test_run_id = d.pop("test_run_id", UNSET)
+        test_run_id: Union[Unset, UUID]
+        if isinstance(_test_run_id, Unset):
+            test_run_id = UNSET
+        else:
+            test_run_id = UUID(_test_run_id)
 
-        group_id = d.pop("group_id", UNSET)
+        _group_id = d.pop("group_id", UNSET)
+        group_id: Union[Unset, UUID]
+        if isinstance(_group_id, Unset):
+            group_id = UNSET
+        else:
+            group_id = UUID(_group_id)
 
-        scenario_data_point_id = d.pop("scenario_data_point_id", UNSET)
+        _scenario_data_point_id = d.pop("scenario_data_point_id", UNSET)
+        scenario_data_point_id: Union[Unset, UUID]
+        if isinstance(_scenario_data_point_id, Unset):
+            scenario_data_point_id = UNSET
+        else:
+            scenario_data_point_id = UUID(_scenario_data_point_id)
 
         latency = d.pop("latency", UNSET)
 
@@ -428,12 +471,7 @@ class DatapointListItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _agent_metadata_type_0 = data
-                agent_metadata_type_0: Union[Unset, DatapointListItemAgentMetadataType0]
-                if isinstance(_agent_metadata_type_0, Unset):
-                    agent_metadata_type_0 = UNSET
-                else:
-                    agent_metadata_type_0 = DatapointListItemAgentMetadataType0.from_dict(_agent_metadata_type_0)
+                agent_metadata_type_0 = DatapointListItemAgentMetadataType0.from_dict(data)
 
                 return agent_metadata_type_0
             except:  # noqa: E722
@@ -456,7 +494,7 @@ class DatapointListItem:
 
         status = d.pop("status", UNSET)
 
-        failed_checks = cast(List[str], d.pop("failed_checks", UNSET))
+        failed_checks = cast(list[str], d.pop("failed_checks", UNSET))
 
         resolved = d.pop("resolved", UNSET)
 
@@ -466,12 +504,7 @@ class DatapointListItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                _user_metadata_type_0 = data
-                user_metadata_type_0: Union[Unset, DatapointListItemUserMetadataType0]
-                if isinstance(_user_metadata_type_0, Unset):
-                    user_metadata_type_0 = UNSET
-                else:
-                    user_metadata_type_0 = DatapointListItemUserMetadataType0.from_dict(_user_metadata_type_0)
+                user_metadata_type_0 = DatapointListItemUserMetadataType0.from_dict(data)
 
                 return user_metadata_type_0
             except:  # noqa: E722
@@ -525,7 +558,7 @@ class DatapointListItem:
         return datapoint_list_item
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

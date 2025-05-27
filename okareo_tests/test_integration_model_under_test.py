@@ -127,7 +127,6 @@ def test_run_test_openai(
         scenario=single_line_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
     assert_metrics(run_resp, num_rows=1)
@@ -151,7 +150,6 @@ def test_run_test_openai_2prompts(
         scenario=single_line_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        calculate_metrics=True,
         checks=["fluency_summary"],
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
@@ -204,7 +202,6 @@ def test_run_test_openai_with_tool_calls(
         scenario=single_line_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        calculate_metrics=True,
         checks=["tool_call_check"],
     )
     assert run_resp.name == f"openai-tool-calls-run-{rnd}"
@@ -230,7 +227,6 @@ def test_run_test_openai_assistant(
         scenario=single_line_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        calculate_metrics=True,
     )
     assert run_resp.name == f"openai-assistant-run-{rnd}"
     assert_metrics(run_resp, num_rows=1)
@@ -266,7 +262,6 @@ def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
         name=f"cohere-classification-run-{rnd}",
         scenario=scenario,
         api_key=os.environ["COHERE_API_KEY"],
-        calculate_metrics=True,
     )
     assert run_resp.name == f"cohere-classification-run-{rnd}"
 
@@ -306,7 +301,6 @@ def test_run_test_cohere_pinecone_ir(
     run_resp = mut.run_test(
         name=f"ci-pinecone-cohere-embed-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         api_keys={
             "cohere": os.environ["COHERE_API_KEY"],
@@ -343,7 +337,6 @@ def test_run_test_cohere_pinecone_ir_tags(
     run_resp = mut.run_test(
         name=f"ci-pinecone-cohere-embed-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         api_keys={
             "cohere": os.environ["COHERE_API_KEY"],
@@ -356,7 +349,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -364,7 +357,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     assert isinstance(test_data_points, list)
     update_test_data_point_v0_update_test_data_point_post.sync(
         client=okareo.client,
-        json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+        body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
             tags=[["ci-testing"]],
             ids=[test_data_points[0].id],
         ),
@@ -373,7 +366,6 @@ def test_run_test_cohere_pinecone_ir_tags(
     run_resp = mut.run_test(
         name=f"ci-pinecone-cohere-embed-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         api_keys={
             "cohere": os.environ["COHERE_API_KEY"],
@@ -386,7 +378,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     new_test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -415,7 +407,6 @@ def test_run_test_cohere_pinecone_ir_tags(
     run_resp = mut.run_test(
         name=f"ci-pinecone-cohere-embed-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         api_keys={
             "cohere": os.environ["COHERE_API_KEY"],
@@ -428,7 +419,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     new_test_data_points_no_tag = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -503,7 +494,6 @@ def test_run_test_custom_ir_tags(
     run_resp = mut.run_test(
         name=f"ci-custom-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         metrics_kwargs={
             "mrr_at_k": [2, 4, 8],
@@ -512,7 +502,7 @@ def test_run_test_custom_ir_tags(
     )
     test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -520,7 +510,7 @@ def test_run_test_custom_ir_tags(
     assert isinstance(test_data_points, list)
     update_test_data_point_v0_update_test_data_point_post.sync(
         client=okareo.client,
-        json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+        body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
             tags=[["ci-testing"]],
             ids=[test_data_points[0].id],
         ),
@@ -529,7 +519,6 @@ def test_run_test_custom_ir_tags(
     run_resp = mut.run_test(
         name=f"ci-custom-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         metrics_kwargs={
             "mrr_at_k": [2, 4, 8],
@@ -538,7 +527,7 @@ def test_run_test_custom_ir_tags(
     )
     new_test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -596,7 +585,6 @@ def test_run_test_custom_ir_tags(
     run_resp = mut.run_test(
         name=f"ci-custom-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         metrics_kwargs={
             "mrr_at_k": [2, 4, 8],
@@ -605,7 +593,7 @@ def test_run_test_custom_ir_tags(
     )
     new_test_data_points_no_tag = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -742,7 +730,6 @@ def test_run_test_cohere_qdrant_ir(
     run_resp = mut.run_test(
         name=f"ci-qdrant-cohere-embed-{rnd}",
         scenario=question_scenario_set,
-        calculate_metrics=True,
         test_run_type=TestRunType.INFORMATION_RETRIEVAL,
         api_keys={
             "cohere": os.environ["COHERE_API_KEY"],
