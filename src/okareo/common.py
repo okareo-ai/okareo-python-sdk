@@ -1,7 +1,9 @@
 import os
 
 DEFAULT_BASE_URL = "https://api.okareo.com"
-BASE_URL = os.environ.get("BASE_URL", DEFAULT_BASE_URL)
+BASE_URL = os.environ.get("OKAREO_BASE_URL") or os.environ.get(
+    "BASE_URL", DEFAULT_BASE_URL
+)
 
 DEFAULT_HTTPX_TIME_OUT = 30
 # being generous to support the longer generations
