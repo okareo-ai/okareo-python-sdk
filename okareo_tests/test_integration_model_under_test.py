@@ -130,6 +130,8 @@ def test_run_test_openai(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, num_rows=1)
 
 
@@ -155,6 +157,8 @@ def test_run_test_openai_2prompts(
         checks=["fluency_summary"],
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, ["fluency_summary"], num_rows=1)
 
 
@@ -208,6 +212,8 @@ def test_run_test_openai_with_tool_calls(
         checks=["tool_call_check"],
     )
     assert run_resp.name == f"openai-tool-calls-run-{rnd}"
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, ["tool_call_check"], num_rows=1)
 
 
@@ -233,6 +239,8 @@ def test_run_test_openai_assistant(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-assistant-run-{rnd}"
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, num_rows=1)
 
 
@@ -269,6 +277,8 @@ def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
         calculate_metrics=True,
     )
     assert run_resp.name == f"cohere-classification-run-{rnd}"
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
 
 
 @pytest.fixture(scope="module")
@@ -318,6 +328,8 @@ def test_run_test_cohere_pinecone_ir(
         },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
 
 
 def test_run_test_cohere_pinecone_ir_tags(
@@ -435,6 +447,8 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     assert isinstance(new_test_data_points_no_tag, list)
     assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
 
 
 def test_run_test_custom_ir_tags(
@@ -649,6 +663,7 @@ def test_run_batch_model_classification(
     )
     assert isinstance(run_resp, TestRunItem)
     assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
+    assert run_resp.status == "FINISHED"
     clf_avg_results = run_resp.model_metrics.additional_properties["weighted_average"]
 
     class BatchClassificationModel(CustomBatchModel):
@@ -682,6 +697,8 @@ def test_run_batch_model_classification(
     )
     assert isinstance(batch_run_resp, TestRunItem)
     assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
+    if batch_run_resp.status is not None:
+        assert batch_run_resp.status == "FINISHED"
     clf_batch_avg_results = batch_run_resp.model_metrics.additional_properties[
         "weighted_average"
     ]
@@ -754,6 +771,8 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
+    if run_resp.status is not None:
+        assert run_resp.status == "FINISHED"
 
 
 def test_delete_eval_with_checks(

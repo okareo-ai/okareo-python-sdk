@@ -82,10 +82,11 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
         scenario=response,
         api_key=OPENAI_API_KEY,
         name="CI run test",
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
     )
     assert test_run_item.name == "CI run test"
+    assert test_run_item.status == "FINISHED"
 
 
 def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> None:
@@ -122,12 +123,13 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
         scenario=response,
         api_keys={"openai": OPENAI_API_KEY},
         name="CI run test",
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
         checks=["corpus_BLEU", "levenshtein_distance"],
     )
     assert test_run_item.name == "CI run test"
     assert test_run_item.test_data_point_count == 2
+    assert test_run_item.status == "FINISHED"
 
 
 class CustomMultiturnModel(CustomMultiturnTarget):
@@ -165,13 +167,14 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
         name=f"Competitor Mentions - {rnd}",
         api_key=OPENAI_API_KEY,
         scenario=scenario,
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
         checks=["model_refusal"],
     )
     assert evaluation.name == f"Competitor Mentions - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
+    assert evaluation.status == "FINISHED"
 
 
 def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> None:
@@ -223,7 +226,7 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
         name=f"Dynamic Response Test - {rnd}",
         api_key=OPENAI_API_KEY,
         scenario=scenario,
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
         checks=["behavior_adherence", "levenshtein_distance"],  # Multiple checks
     )
@@ -302,7 +305,7 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
         name=f"OpenAI Requests Test - {rnd}",
         api_key=OPENAI_API_KEY,
         scenario=scenario,
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
         checks=[
             "model_refusal",
@@ -384,7 +387,7 @@ def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
         name=f"Multi-turn Tools Demo Evaluation - {rnd}",
         api_key=os.environ["COHERE_API_KEY"],
         scenario=scenario,
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
         checks=["function_call_validator"],
     )
@@ -392,6 +395,7 @@ def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
     assert evaluation.name == f"Multi-turn Tools Demo Evaluation - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
+    assert evaluation.status == "FINISHED"
 
 
 def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
@@ -474,7 +478,7 @@ def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
         name=f"Multi-turn Tools Demo Evaluation w/ Mock - {rnd}",
         api_key=os.environ["COHERE_API_KEY"],
         scenario=scenario,
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
         checks=["task_completion_travel_short_prompt"],
     )
@@ -580,7 +584,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
             name=f"Custom Model {index+1} Evaluation - {rnd}",
             api_key=OPENAI_API_KEY,
             scenario=scenario,
-            test_run_type=TestRunType.NL_GENERATION,
+            test_run_type=TestRunType.MULTI_TURN,
             calculate_metrics=True,
             checks=["behavior_adherence", "levenshtein_distance"],
         )
@@ -607,3 +611,5 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
         assert evaluation.name == f"Custom Model {i+1} Evaluation - {rnd}"
         assert evaluation.model_metrics is not None
         assert evaluation.app_link is not None
+    if evaluation.status is not None:
+        assert evaluation.status == "FINISHED"
