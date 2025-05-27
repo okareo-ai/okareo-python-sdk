@@ -19,7 +19,7 @@ class OkareoAPIhost:
 def integration(func: Callable) -> Any:
     params = [
         OkareoAPIhost("http://mocked.com", True),
-        OkareoAPIhost(BASE_URL, False),
+        OkareoAPIhost(BASE_URL, False),  # type: ignore
     ]
     return pytest.mark.parametrize("okareo_api", params)(func)
 

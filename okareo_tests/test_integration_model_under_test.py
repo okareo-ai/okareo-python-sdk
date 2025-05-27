@@ -18,6 +18,7 @@ from okareo.model_under_test import (
     QdrantDB,
 )
 from okareo_api_client.api.default import (
+    delete_test_run_v0_test_runs_delete,
     find_test_data_points_v0_find_test_data_points_post,
     update_test_data_point_v0_update_test_data_point_post,
 )
@@ -772,3 +773,38 @@ def test_run_test_cohere_qdrant_ir(
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
     if run_resp.status is not None:
         assert run_resp.status == "FINISHED"
+
+
+def test_delete_eval_with_checks(
+    rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"openai-ci-run-{rnd}",
+        model=OpenAIModel(
+            model_id="gpt-4.1-mini",
+            temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
+        ),
+    )
+
+    run_resp = mut.run_test(
+        name=f"openai-chat-run-{rnd}",
+        scenario=single_line_scenario_set,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=[
+            "fluency_summary",
+            "consistency_summary",
+            "relevance_summary",
+            "coherence_summary",
+        ],  # these are added by default if not specified
+    )
+    assert run_resp.name == f"openai-chat-run-{rnd}"
+    assert_metrics(run_resp, num_rows=1)
+
+    delete_test_run_v0_test_runs_delete.sync(
+        client=okareo.client,
+        test_run_ids=[run_resp.id],
+        api_key=API_KEY,
+    )
