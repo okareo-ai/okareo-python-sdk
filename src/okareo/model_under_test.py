@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 import nats  # type: ignore
 from attrs import define as _attrs_define
 from nkeys import from_seed  # type: ignore
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
@@ -18,7 +18,6 @@ from okareo_api_client.api.default import (
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
     internal_custom_model_listener_v0_internal_custom_model_listener_get,
-    run_test_async_v0_test_run_async_post,
     run_test_v0_test_run_post,
 )
 from okareo_api_client.client import Client
@@ -28,7 +27,6 @@ from okareo_api_client.models import (
     DatapointSchema,
     ModelUnderTestResponse,
     ScenarioDataPoinResponse,
-    TestRunAsyncItem,
     TestRunItem,
     TestRunType,
 )
@@ -672,7 +670,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         run_test_method: Any = None,
-    ) -> Union[TestRunItem, TestRunAsyncItem]:
+    ) -> Union[TestRunItem, Any]:
         """Internal method to run a test. This method is used by both run_test and run_test_async."""
         self.custom_model_thread: Any = None
         self.custom_model_thread_stop_event: Any = None
@@ -736,32 +734,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             self._internal_cleanup_custom_model(
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
-
-    def run_test_async(
-        self,
-        scenario: Union[ScenarioSetResponse, str],
-        name: str,
-        api_key: Optional[str] = None,
-        api_keys: Optional[dict] = None,
-        metrics_kwargs: Optional[dict] = None,
-        test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
-        calculate_metrics: bool = True,
-        checks: Optional[List[str]] = None,
-    ) -> TestRunAsyncItem:
-        """Asynchronous server-based version of test-run execution. For CustomModels, model
-        invocations are handled client-side then evaluated server-side asynchronously. For other models,
-        model invocations and evaluations handled server-side asynchronously."""
-        return self._run_test_internal(
-            scenario,
-            name,
-            api_key,
-            api_keys,
-            metrics_kwargs,
-            test_run_type,
-            calculate_metrics,
-            checks,
-            run_test_async_v0_test_run_async_post.sync,
-        )
 
     def run_test(
         self,
