@@ -671,13 +671,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         run_test_method: Any = None,
-<<<<<<< HEAD
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
-=======
-    ) -> Union[TestRunItem, Any]:
-        """Internal method to run a test. This method is used by both run_test and run_test_async."""
->>>>>>> origin/main
         self.custom_model_thread: Any = None
         self.custom_model_thread_stop_event: Any = None
 
@@ -741,7 +736,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
 
-<<<<<<< HEAD
     def submit_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
@@ -779,8 +773,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             endpoint,
         )
 
-=======
->>>>>>> origin/main
     def run_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
