@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 import nats  # type: ignore
 from attrs import define as _attrs_define
 from nkeys import from_seed  # type: ignore
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 from okareo.error import MissingApiKeyError, MissingVectorDbError
 from okareo_api_client.api.default import (
@@ -671,8 +671,13 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         run_test_method: Any = None,
+<<<<<<< HEAD
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
+=======
+    ) -> Union[TestRunItem, Any]:
+        """Internal method to run a test. This method is used by both run_test and run_test_async."""
+>>>>>>> origin/main
         self.custom_model_thread: Any = None
         self.custom_model_thread_stop_event: Any = None
 
@@ -736,6 +741,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
 
+<<<<<<< HEAD
     def submit_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
@@ -773,6 +779,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             endpoint,
         )
 
+=======
+>>>>>>> origin/main
     def run_test(
         self,
         scenario: Union[ScenarioSetResponse, str],

@@ -106,7 +106,7 @@ class Okareo:
     """A class for interacting with Okareo API"""
 
     def __init__(
-        self, api_key: str, base_path: str = BASE_URL, timeout: float = HTTPX_TIME_OUT
+        self, api_key: str, base_path: str = BASE_URL, timeout: float = HTTPX_TIME_OUT  # type: ignore
     ):
         self.api_key = api_key
         self.client = Client(
