@@ -545,7 +545,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
         QuestionDetectorModel(name="question_detector_model"),
     ]
 
-    # Create a shared scenario for all models
+    # Create a shared scenario of 2 rows for all models
     seeds = [
         SeedData(
             input_="Hello, how are you today?",
