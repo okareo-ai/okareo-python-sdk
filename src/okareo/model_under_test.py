@@ -251,6 +251,7 @@ class MultiTurnDriver(BaseModel):
     type = "driver"
     target: Union[OpenAIModel, CustomMultiturnTarget, GenerationModel]
     stop_check: Union[StopConfig, dict]
+    driver_model_id: Optional[str] = None
     driver_temperature: Optional[float] = 0.8
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
@@ -264,6 +265,7 @@ class MultiTurnDriver(BaseModel):
         return {
             "type": self.type,
             "target": self.target.params(),
+            "driver_model_id": self.driver_model_id,
             "driver_temperature": self.driver_temperature,
             "repeats": self.repeats,
             "max_turns": self.max_turns,
@@ -433,7 +435,12 @@ class ModelUnderTest(AsyncProcessorMixin):
         model_names = list(self.models.keys())
         run_api_keys = api_keys if api_keys else {model_names[0]: api_key}
 
-        if ("custom" not in model_names) and len(model_names) != len(run_api_keys):
+        if (
+            "custom" not in model_names  # custom is a model without a key
+            and "driver"
+            not in model_names  # driver can have 2 keys for driver and target
+            and len(model_names) != len(run_api_keys)
+        ):
             raise MissingApiKeyError("Number of models and API keys does not match")
 
         if test_run_type == TestRunType.INFORMATION_RETRIEVAL:
