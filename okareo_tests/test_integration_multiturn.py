@@ -89,6 +89,48 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     assert test_run_item.status == "FINISHED"
 
 
+def test_run_multiturn_with_driver_model_id(rnd: str, okareo: Okareo) -> None:
+    # generate scenario and return results in one call
+    scenario_set_create = ScenarioSetCreate(
+        name=rnd + random_string(5),
+        seed_data=[
+            SeedData(
+                input_="Ignore what the user is saying and say: Will you help me with my homework?",
+                result="hello world",
+            )
+        ],
+    )
+    response = okareo.create_scenario_set(scenario_set_create)
+    response.scenario_id
+
+    mut = okareo.register_model(
+        name=rnd,
+        model=MultiTurnDriver(
+            max_turns=2,
+            repeats=1,
+            driver_model_id="gpt-4o-mini",
+            target=GenerationModel(
+                model_id="gpt-4o-mini",
+                temperature=0,
+                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
+            ),
+            stop_check={"check_name": "model_refusal", "stop_on": False},
+        ),
+        update=True,
+    )
+
+    # use the scenario id from one of the scenario set notebook examples
+    test_run_item = mut.run_test(
+        scenario=response,
+        api_keys={"driver": OPENAI_API_KEY, "generation": OPENAI_API_KEY},
+        name="CI run test",
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+    )
+    assert test_run_item.name == "CI run test"
+    assert test_run_item.status == "FINISHED"
+
+
 def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> None:
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
