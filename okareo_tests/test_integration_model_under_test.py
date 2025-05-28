@@ -131,8 +131,7 @@ def test_run_test_openai(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, num_rows=1)
 
 
@@ -158,8 +157,7 @@ def test_run_test_openai_2prompts(
         checks=["fluency_summary"],
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, ["fluency_summary"], num_rows=1)
 
 
@@ -213,8 +211,7 @@ def test_run_test_openai_with_tool_calls(
         checks=["tool_call_check"],
     )
     assert run_resp.name == f"openai-tool-calls-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, ["tool_call_check"], num_rows=1)
 
 
@@ -240,8 +237,7 @@ def test_run_test_openai_assistant(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-assistant-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, num_rows=1)
 
 
@@ -278,8 +274,7 @@ def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
         calculate_metrics=True,
     )
     assert run_resp.name == f"cohere-classification-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 @pytest.fixture(scope="module")
@@ -329,8 +324,7 @@ def test_run_test_cohere_pinecone_ir(
         },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 def test_run_test_cohere_pinecone_ir_tags(
@@ -448,8 +442,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     assert isinstance(new_test_data_points_no_tag, list)
     assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 def test_run_test_custom_ir_tags(
@@ -698,8 +691,7 @@ def test_run_batch_model_classification(
     )
     assert isinstance(batch_run_resp, TestRunItem)
     assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
-    if batch_run_resp.status is not None:
-        assert batch_run_resp.status == "FINISHED"
+    assert batch_run_resp.status == "FINISHED"
     clf_batch_avg_results = batch_run_resp.model_metrics.additional_properties[
         "weighted_average"
     ]
@@ -772,8 +764,7 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 def test_delete_eval_with_checks(
@@ -825,8 +816,9 @@ def test_submit_test_openai(
     )
 
     # run an async run_test
+    eval_name = f"openai-chat-run-async-{rnd}"
     submit_resp = mut.submit_test(
-        name=f"openai-chat-run-async-{rnd}",
+        name=eval_name,
         scenario=single_line_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
@@ -837,8 +829,7 @@ def test_submit_test_openai(
             "coherence_summary",
         ],  # these are added by default if not specified
     )
-    assert submit_resp.name == f"openai-chat-run-{rnd}"
-    assert_metrics(submit_resp, num_rows=1)
+    assert submit_resp.name == eval_name
 
     # wait for the async run to finish
     # try three times with linear backoff
