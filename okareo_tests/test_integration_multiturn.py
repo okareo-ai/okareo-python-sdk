@@ -546,7 +546,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
     ]
 
     # Create a shared scenario for all models
-    seeds = [
+    seeds = [ 
         SeedData(
             input_="Hello, how are you today?",
             result="appropriate greeting response",
