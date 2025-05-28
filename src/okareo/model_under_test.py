@@ -704,7 +704,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             elif self._has_custom_model():
                 self._custom_exec(scenario_id, model_data)
 
-            response = run_test_method(
+            response: TestRunItem = run_test_method(
                 client=self.client,
                 api_key=self.api_key,
                 json_body=self._get_test_run_payload(
@@ -736,6 +736,21 @@ class ModelUnderTest(AsyncProcessorMixin):
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
 
+    def _check_multiturn_submit_safe(self, test_run_type: TestRunType) -> bool:
+        """Check if the test_run_type is MULTI_TURN and if the model is a CustomMultiturnTarget.
+        If so, return False to indicate that submit_test should not be used."""
+        if (
+            test_run_type == TestRunType.MULTI_TURN
+            and self.models is not None
+            and isinstance(self.models, dict)
+            and "driver" in self.models
+            and "target" in self.models["driver"]
+            and "type" in self.models["driver"]["target"]
+            and self.models["driver"]["target"]["type"] == "custom_target"
+        ):
+            return False
+        return True
+
     def submit_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
@@ -751,16 +766,12 @@ class ModelUnderTest(AsyncProcessorMixin):
         invocations are handled client-side then evaluated server-side asynchronously. For other models,
         model invocations and evaluations handled server-side asynchronously."""
         endpoint = submit_test_v0_test_run_submit_post.sync
-        # check if the test_run_type is MULTI_TURN and if the model is a CustomMultiturnTarget
-        if (
-            test_run_type == TestRunType.MULTI_TURN
-            and "driver" in self.models
-            and self.models["driver"]["target"]["type"] == "custom_target"
-        ):
-            endpoint = run_test_v0_test_run_post.sync
+        if not self._check_multiturn_submit_safe(test_run_type):
             print(
-                "WARNING: CustomMultiturnTarget models are not supported in submit_test. Falling back to run_test instead."
+                "WARNING: CustomMultiturnTarget models are not supported in submit_test. "
+                + "Falling back to run_test instead."
             )
+            endpoint = run_test_v0_test_run_post.sync
         return self._run_test_internal(
             scenario,
             name,

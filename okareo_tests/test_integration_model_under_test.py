@@ -775,6 +775,7 @@ def test_run_test_cohere_qdrant_ir(
     if run_resp.status is not None:
         assert run_resp.status == "FINISHED"
 
+
 def test_delete_eval_with_checks(
     rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
 ) -> None:
@@ -808,6 +809,7 @@ def test_delete_eval_with_checks(
         test_run_ids=[run_resp.id],
         api_key=API_KEY,
     )
+
 
 def test_submit_test_openai(
     rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
