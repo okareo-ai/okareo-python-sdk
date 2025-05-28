@@ -6,38 +6,36 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_get import (
-    SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
-)
-from ...types import UNSET, Response
+from ...models.test_run_item import TestRunItem
+from ...models.test_run_payload_v2 import TestRunPayloadV2
+from ...types import Response
 
 
 def _get_kwargs(
     *,
-    code: str,
-    state: str,
+    json_body: TestRunPayloadV2,
+    api_key: str,
 ) -> Dict[str, Any]:
-    params: Dict[str, Any] = {}
-    params["code"] = code
+    headers = {}
+    headers["api-key"] = api_key
 
-    params["state"] = state
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+    json_json_body = json_body.to_dict()
 
     return {
-        "method": "get",
-        "url": "/v0/slack",
-        "params": params,
+        "method": "post",
+        "url": "/v0/test_run/submit",
+        "json": json_json_body,
+        "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet.from_dict(response.json())
+) -> Optional[Union[ErrorResponse, TestRunItem]]:
+    if response.status_code == HTTPStatus.CREATED:
+        response_201 = TestRunItem.from_dict(response.json())
 
-        return response_200
+        return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -62,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
+) -> Response[Union[ErrorResponse, TestRunItem]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -74,26 +72,26 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+    json_body: TestRunPayloadV2,
+    api_key: str,
+) -> Response[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
-        code (str):
-        state (str):
+        api_key (str):
+        json_body (TestRunPayloadV2):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]
+        Response[Union[ErrorResponse, TestRunItem]]
     """
 
     kwargs = _get_kwargs(
-        code=code,
-        state=state,
+        json_body=json_body,
+        api_key=api_key,
     )
 
     response = client.get_httpx_client().request(
@@ -106,53 +104,53 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+    json_body: TestRunPayloadV2,
+    api_key: str,
+) -> Optional[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
-        code (str):
-        state (str):
+        api_key (str):
+        json_body (TestRunPayloadV2):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]
+        Union[ErrorResponse, TestRunItem]
     """
 
     return sync_detailed(
         client=client,
-        code=code,
-        state=state,
+        json_body=json_body,
+        api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+    json_body: TestRunPayloadV2,
+    api_key: str,
+) -> Response[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
-        code (str):
-        state (str):
+        api_key (str):
+        json_body (TestRunPayloadV2):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]
+        Response[Union[ErrorResponse, TestRunItem]]
     """
 
     kwargs = _get_kwargs(
-        code=code,
-        state=state,
+        json_body=json_body,
+        api_key=api_key,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -163,27 +161,27 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+    json_body: TestRunPayloadV2,
+    api_key: str,
+) -> Optional[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
-        code (str):
-        state (str):
+        api_key (str):
+        json_body (TestRunPayloadV2):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]
+        Union[ErrorResponse, TestRunItem]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            code=code,
-            state=state,
+            json_body=json_body,
+            api_key=api_key,
         )
     ).parsed

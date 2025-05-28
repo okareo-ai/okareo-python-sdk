@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Any, Generator, Union
 
 import pytest
@@ -130,8 +131,7 @@ def test_run_test_openai(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, num_rows=1)
 
 
@@ -157,8 +157,7 @@ def test_run_test_openai_2prompts(
         checks=["fluency_summary"],
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, ["fluency_summary"], num_rows=1)
 
 
@@ -212,8 +211,7 @@ def test_run_test_openai_with_tool_calls(
         checks=["tool_call_check"],
     )
     assert run_resp.name == f"openai-tool-calls-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, ["tool_call_check"], num_rows=1)
 
 
@@ -239,8 +237,7 @@ def test_run_test_openai_assistant(
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-assistant-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, num_rows=1)
 
 
@@ -277,8 +274,7 @@ def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
         calculate_metrics=True,
     )
     assert run_resp.name == f"cohere-classification-run-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 @pytest.fixture(scope="module")
@@ -328,8 +324,7 @@ def test_run_test_cohere_pinecone_ir(
         },
     )
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 def test_run_test_cohere_pinecone_ir_tags(
@@ -447,8 +442,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     assert isinstance(new_test_data_points_no_tag, list)
     assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 def test_run_test_custom_ir_tags(
@@ -697,8 +691,7 @@ def test_run_batch_model_classification(
     )
     assert isinstance(batch_run_resp, TestRunItem)
     assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
-    if batch_run_resp.status is not None:
-        assert batch_run_resp.status == "FINISHED"
+    assert batch_run_resp.status == "FINISHED"
     clf_batch_avg_results = batch_run_resp.model_metrics.additional_properties[
         "weighted_average"
     ]
@@ -771,8 +764,7 @@ def test_run_test_cohere_qdrant_ir(
         },
     )
     assert run_resp.name == f"ci-qdrant-cohere-embed-{rnd}"
-    if run_resp.status is not None:
-        assert run_resp.status == "FINISHED"
+    assert run_resp.status == "FINISHED"
 
 
 def test_delete_eval_with_checks(
@@ -808,3 +800,87 @@ def test_delete_eval_with_checks(
         test_run_ids=[run_resp.id],
         api_key=API_KEY,
     )
+
+
+def test_submit_test_openai(
+    rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"openai-ci-run-{rnd}",
+        model=OpenAIModel(
+            model_id="gpt-4.1-mini",
+            temperature=0,
+            system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
+            user_prompt_template=None,
+        ),
+    )
+
+    # run an async run_test
+    eval_name = f"openai-chat-run-async-{rnd}"
+    submit_resp = mut.submit_test(
+        name=eval_name,
+        scenario=single_line_scenario_set,
+        api_key=os.environ["OPENAI_API_KEY"],
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=[
+            "fluency_summary",
+            "consistency_summary",
+            "relevance_summary",
+            "coherence_summary",
+        ],  # these are added by default if not specified
+    )
+    assert submit_resp.name == eval_name
+
+    # wait for the async run to finish
+    # try three times with linear backoff
+    for i in range(1, 4):
+        time.sleep(3 * i)
+
+        # get the test run item
+        test_run = mut.get_test_run(submit_resp.id)
+        if test_run.status == "FINISHED":
+            break
+        assert test_run.status == "RUNNING"
+    assert_metrics(test_run, num_rows=1)
+
+
+def test_submit_batch_model_generation(
+    rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
+) -> None:
+    def generation_rules(model_input: str) -> str:
+        # simple generation rules to ensure consistent model outputs
+        out = [s.split(" ")[0] for s in model_input.split(". ")]
+        return " ".join(out)
+
+    class GenerationModel(CustomModel):
+        def invoke(self, input_value: Any) -> ModelInvocation:
+            return ModelInvocation(
+                model_prediction=generation_rules(input_value),
+                model_input=input_value,
+                model_output_metadata={"model_data": input_value},
+                tool_calls=[{"function": "function"}],
+            )
+
+    mut = okareo.register_model(
+        name=f"ci-custom-nlg-batch-{rnd}",
+        model=GenerationModel(name="test_run_batch_model_generation - GenerationModel"),
+        update=True,
+    )
+    run_async_resp = mut.submit_test(
+        name=f"ci-custom-nlg-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=["latency"],
+    )
+
+    # wait for the async run to finish
+    # try three times with linear backoff
+    for i in range(1, 4):
+        time.sleep(3 * i)
+
+        # get the test run item
+        test_run = mut.get_test_run(run_async_resp.id)
+        if test_run.status == "FINISHED":
+            break
+        assert test_run.status == "RUNNING"
+    assert_metrics(test_run, num_rows=3, custom_dimensions=["latency"])
