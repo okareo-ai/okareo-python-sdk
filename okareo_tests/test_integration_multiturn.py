@@ -757,9 +757,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
         assert evaluation.status == "FINISHED"
 
 
-def test_run_multiturn_run_test_async_generation_model(
-    rnd: str, okareo: Okareo
-) -> None:
+def test_submit_multiturn_test_generation_model(rnd: str, okareo: Okareo) -> None:
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
         name=rnd + random_string(5),
@@ -789,7 +787,7 @@ def test_run_multiturn_run_test_async_generation_model(
     )
 
     # use the scenario id from one of the scenario set notebook examples
-    test_run_item = mut.run_test_async(
+    test_run_item = mut.submit_test(
         scenario=response,
         api_key=OPENAI_API_KEY,
         name="CI run test",

@@ -6,7 +6,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.test_run_async_item import TestRunAsyncItem
+from ...models.test_run_item import TestRunItem
 from ...models.test_run_payload_v2 import TestRunPayloadV2
 from ...types import Response
 
@@ -23,7 +23,7 @@ def _get_kwargs(
 
     return {
         "method": "post",
-        "url": "/v0/test_run_async",
+        "url": "/v0/test_run/submit",
         "json": json_json_body,
         "headers": headers,
     }
@@ -31,9 +31,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, TestRunAsyncItem]]:
+) -> Optional[Union[ErrorResponse, TestRunItem]]:
     if response.status_code == HTTPStatus.CREATED:
-        response_201 = TestRunAsyncItem.from_dict(response.json())
+        response_201 = TestRunItem.from_dict(response.json())
 
         return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
@@ -60,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, TestRunAsyncItem]]:
+) -> Response[Union[ErrorResponse, TestRunItem]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -74,8 +74,8 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayloadV2,
     api_key: str,
-) -> Response[Union[ErrorResponse, TestRunAsyncItem]]:
-    """Run Test Async
+) -> Response[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
         api_key (str):
@@ -86,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, TestRunAsyncItem]]
+        Response[Union[ErrorResponse, TestRunItem]]
     """
 
     kwargs = _get_kwargs(
@@ -106,8 +106,8 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayloadV2,
     api_key: str,
-) -> Optional[Union[ErrorResponse, TestRunAsyncItem]]:
-    """Run Test Async
+) -> Optional[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
         api_key (str):
@@ -118,7 +118,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, TestRunAsyncItem]
+        Union[ErrorResponse, TestRunItem]
     """
 
     return sync_detailed(
@@ -133,8 +133,8 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayloadV2,
     api_key: str,
-) -> Response[Union[ErrorResponse, TestRunAsyncItem]]:
-    """Run Test Async
+) -> Response[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
         api_key (str):
@@ -145,7 +145,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, TestRunAsyncItem]]
+        Response[Union[ErrorResponse, TestRunItem]]
     """
 
     kwargs = _get_kwargs(
@@ -163,8 +163,8 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: TestRunPayloadV2,
     api_key: str,
-) -> Optional[Union[ErrorResponse, TestRunAsyncItem]]:
-    """Run Test Async
+) -> Optional[Union[ErrorResponse, TestRunItem]]:
+    """Submit Test
 
     Args:
         api_key (str):
@@ -175,7 +175,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, TestRunAsyncItem]
+        Union[ErrorResponse, TestRunItem]
     """
 
     return (

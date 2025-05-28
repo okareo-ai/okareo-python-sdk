@@ -18,8 +18,8 @@ from okareo_api_client.api.default import (
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_test_run_v0_test_runs_test_run_id_get,
     internal_custom_model_listener_v0_internal_custom_model_listener_get,
-    run_test_async_v0_test_run_async_post,
     run_test_v0_test_run_post,
+    submit_test_v0_test_run_submit_post,
 )
 from okareo_api_client.client import Client
 from okareo_api_client.errors import UnexpectedStatus
@@ -28,7 +28,6 @@ from okareo_api_client.models import (
     DatapointSchema,
     ModelUnderTestResponse,
     ScenarioDataPoinResponse,
-    TestRunAsyncItem,
     TestRunItem,
     TestRunType,
 )
@@ -672,8 +671,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         run_test_method: Any = None,
-    ) -> Union[TestRunItem, TestRunAsyncItem]:
-        """Internal method to run a test. This method is used by both run_test and run_test_async."""
+    ) -> TestRunItem:
+        """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
         self.custom_model_thread_stop_event: Any = None
 
@@ -737,7 +736,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
 
-    def run_test_async(
+    def submit_test(
         self,
         scenario: Union[ScenarioSetResponse, str],
         name: str,
@@ -747,10 +746,21 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
-    ) -> TestRunAsyncItem:
+    ) -> TestRunItem:
         """Asynchronous server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side asynchronously. For other models,
         model invocations and evaluations handled server-side asynchronously."""
+        endpoint = submit_test_v0_test_run_submit_post.sync
+        # check if the test_run_type is MULTI_TURN and if the model is a CustomMultiturnTarget
+        if (
+            test_run_type == TestRunType.MULTI_TURN
+            and "driver" in self.models
+            and self.models["driver"]["target"]["type"] == "custom_target"
+        ):
+            endpoint = run_test_v0_test_run_post.sync
+            print(
+                "WARNING: CustomMultiturnTarget models are not supported in submit_test. Falling back to run_test instead."
+            )
         return self._run_test_internal(
             scenario,
             name,
@@ -760,7 +770,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             test_run_type,
             calculate_metrics,
             checks,
-            run_test_async_v0_test_run_async_post.sync,
+            endpoint,
         )
 
     def run_test(

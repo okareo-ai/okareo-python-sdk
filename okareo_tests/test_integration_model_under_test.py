@@ -775,7 +775,7 @@ def test_run_test_cohere_qdrant_ir(
         assert run_resp.status == "FINISHED"
 
 
-def test_run_test_async_openai(
+def test_submit_test_openai(
     rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
 ) -> None:
     mut = okareo.register_model(
@@ -789,7 +789,7 @@ def test_run_test_async_openai(
     )
 
     # run an async run_test
-    run_async_resp = mut.run_test_async(
+    run_async_resp = mut.submit_test(
         name=f"openai-chat-run-async-{rnd}",
         scenario=single_line_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
@@ -813,7 +813,7 @@ def test_run_test_async_openai(
     assert_metrics(test_run, num_rows=1)
 
 
-def test_run_batch_model_generation_async(
+def test_submit_batch_model_generation(
     rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
 ) -> None:
     def generation_rules(model_input: str) -> str:
@@ -835,7 +835,7 @@ def test_run_batch_model_generation_async(
         model=GenerationModel(name="test_run_batch_model_generation - GenerationModel"),
         update=True,
     )
-    run_async_resp = mut.run_test_async(
+    run_async_resp = mut.submit_test(
         name=f"ci-custom-nlg-{rnd}",
         scenario=article_clf_scenario_set,
         test_run_type=TestRunType.NL_GENERATION,
