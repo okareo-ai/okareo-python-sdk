@@ -313,7 +313,7 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
         checks=[
             "model_refusal",
             "levenshtein_distance",
-        ],  # Changed from factual_accuracy to levenshtein_distance
+        ],
     )
 
     assert evaluation.name == f"OpenAI Requests Test - {rnd}"
