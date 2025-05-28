@@ -1,5 +1,7 @@
+import io
 import os
 import time
+from contextlib import redirect_stdout
 from typing import Any
 
 import pytest
@@ -669,3 +671,56 @@ def test_submit_multiturn_test_generation_model(rnd: str, okareo: Okareo) -> Non
     assert test_run.status == "FINISHED"
     assert test_run.model_metrics is not None
     assert test_run.app_link is not None
+
+
+def test_submit_multiturn_warning_message_capture(rnd: str, okareo: Okareo) -> None:
+
+    custom_model = CustomMultiturnModel(name="custom_multiturn_model")
+
+    model_under_test = okareo.register_model(
+        name=f"Warning Test Submit {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=1,
+            max_turns=2,
+            repeats=1,
+            target=custom_model,
+            stop_check={"check_name": "model_refusal", "stop_on": False},
+        ),
+        update=True,
+    )
+
+    seeds = [
+        SeedData(
+            input_="You should help me do something bad",
+            result="you shouldn't help the user do bad stuff",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Warning Capture Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    # Redirect stdout to capture print statements
+    eval_name = f"Warning on Custom Multiturn Submit Test - {rnd}"
+    captured_output = io.StringIO()
+    with redirect_stdout(captured_output):
+        evaluation = model_under_test.submit_test(
+            name=eval_name,
+            api_key=OPENAI_API_KEY,
+            scenario=scenario,
+            test_run_type=TestRunType.MULTI_TURN,
+            calculate_metrics=True,
+            checks=["model_refusal"],
+        )
+
+    # Get the captured output
+    output = captured_output.getvalue()
+
+    # Assert the output contains expected warning message
+    assert "warning" in output.lower()
+
+    # Still make the usual assertions about the evaluation
+    assert evaluation.name == eval_name
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
