@@ -6,6 +6,7 @@ from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+from attrs import define, field
 
 import nats  # type: ignore
 from attrs import define as _attrs_define
@@ -85,11 +86,11 @@ class ModelInvocation:
         }
 
 
-@_attrs_define
+@define
 class OpenAIModel(BaseModel):
     type = "openai"
-    model_id: str
-    temperature: float
+    model_id: str = field(default="gpt-4o-mini")
+    temperature: float = field(default=0.5)
     system_prompt_template: Optional[str] = None
     user_prompt_template: Optional[str] = None
     dialog_template: Optional[str] = None
@@ -107,11 +108,11 @@ class OpenAIModel(BaseModel):
         }
 
 
-@_attrs_define
+@define
 class GenerationModel(BaseModel):
     type = "generation"
-    model_id: str
-    temperature: float
+    model_id: str = field(default="gpt-4o-mini")
+    temperature: float = field(default=0.5)
     system_prompt_template: Optional[str] = None
     user_prompt_template: Optional[str] = None
     dialog_template: Optional[str] = None
@@ -236,14 +237,13 @@ class CustomMultiturnTarget(BaseModel):
         }
 
 
-@_attrs_define
+@define
 class StopConfig:
     check_name: str
-    stop_on: bool
+    stop_on: bool = field(default=True)
 
     def params(self) -> dict:
         return {"check_name": self.check_name, "stop_on": self.stop_on}
-
 
 @_attrs_define
 class MultiTurnDriver(BaseModel):
