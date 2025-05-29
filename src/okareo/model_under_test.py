@@ -6,10 +6,11 @@ from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from attrs import define, field
 
 import nats  # type: ignore
+from attrs import define
 from attrs import define as _attrs_define
+from attrs import field
 from nkeys import from_seed  # type: ignore
 from tqdm import tqdm  # type: ignore
 
@@ -244,6 +245,7 @@ class StopConfig:
 
     def params(self) -> dict:
         return {"check_name": self.check_name, "stop_on": self.stop_on}
+
 
 @_attrs_define
 class MultiTurnDriver(BaseModel):
