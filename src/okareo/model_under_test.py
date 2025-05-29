@@ -239,6 +239,22 @@ class CustomMultiturnTarget(BaseModel):
         }
 
 
+@_attrs_define
+class CustomEndpointTarget(BaseModel):
+    type = "custom_endpoint"
+    name: str
+    start_session_params: dict[str, Any]
+    next_message_params: dict[str, Any]
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "start_session_params": self.start_session_params,
+            "next_message_params": self.next_message_params,
+        }
+
+
 @define
 class StopConfig:
     check_name: str
