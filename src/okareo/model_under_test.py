@@ -92,7 +92,7 @@ class ModelInvocation:
 class OpenAIModel(BaseModel):
     type = "openai"
     model_id: str = field(default="gpt-4o-mini")
-    temperature: float = field(default=0.5)
+    temperature: float = field(default=0)
     system_prompt_template: Optional[str] = None
     user_prompt_template: Optional[str] = None
     dialog_template: Optional[str] = None
@@ -114,7 +114,7 @@ class OpenAIModel(BaseModel):
 class GenerationModel(BaseModel):
     type = "generation"
     model_id: str = field(default="gpt-4o-mini")
-    temperature: float = field(default=0.5)
+    temperature: float = field(default=0)
     system_prompt_template: Optional[str] = None
     user_prompt_template: Optional[str] = None
     dialog_template: Optional[str] = None
