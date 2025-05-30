@@ -321,10 +321,15 @@ class CustomEndpointTarget:
         self.next_turn = next_turn
 
     def params(self):
+        print({
+            "type": self.type,
+            "start_session_params": self.start_session.to_dict(),
+            "next_message_params": self.next_turn.to_dict(),
+        })
         return {
             "type": self.type,
             "start_session_params": self.start_session.to_dict(),
-            "next_turn_params": self.next_turn.to_dict(),
+            "next_message_params": self.next_turn.to_dict(),
         }
 
 
