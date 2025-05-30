@@ -253,8 +253,8 @@ class SessionConfig:
         self,
         url: str,
         method: str = "POST",
-        headers: Optional[str | dict] = None,
-        body: str | dict = "{}",
+        headers: Optional[Union[str, dict]] = None,
+        body: Union[str, dict] = "{}",
         status_code: int = 201,
         response_session_id_path: str = "",
     ) -> None:
