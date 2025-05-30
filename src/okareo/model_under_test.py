@@ -251,13 +251,13 @@ class StopConfig:
 class SessionConfig:
     def __init__(
         self,
-        url,
-        method="POST",
-        headers=None,
-        body="{}",
-        status_code=201,
-        response_session_id_path="",
-    ):
+        url: str,
+        method: str = "POST",
+        headers: Optional[str] = None,
+        body: str = "{}",
+        status_code: int = 201,
+        response_session_id_path: str = "",
+    ) -> None:
         self.url = url
         self.method = method
         self.headers = headers or json.dumps({})
@@ -265,7 +265,7 @@ class SessionConfig:
         self.status_code = status_code
         self.response_session_id_path = response_session_id_path
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "url": self.url,
             "method": self.method,
@@ -279,14 +279,14 @@ class SessionConfig:
 class TurnConfig:
     def __init__(
         self,
-        url,
-        method="POST",
-        headers=None,
-        body="{}",
-        status_code=200,
-        response_message_path="",
-        response_tool_calls_path="",
-    ):
+        url: str,
+        method: str = "POST",
+        headers: Optional[str] = None,
+        body: str = "{}",
+        status_code: int = 200,
+        response_message_path: str = "",
+        response_tool_calls_path: str = "",
+    ) -> None:
         self.url = url
         self.method = method
         self.headers = headers or json.dumps({})
@@ -295,7 +295,7 @@ class TurnConfig:
         self.response_message_path = response_message_path
         self.response_tool_calls_path = response_tool_calls_path
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "url": self.url,
             "method": self.method,
@@ -310,16 +310,11 @@ class TurnConfig:
 class CustomEndpointTarget:
     type = "custom_endpoint"
 
-    def __init__(self, start_session, next_turn):
+    def __init__(self, start_session: SessionConfig, next_turn: TurnConfig) -> None:
         self.start_session = start_session
         self.next_turn = next_turn
 
-    def params(self):
-        print({
-            "type": self.type,
-            "start_session_params": self.start_session.to_dict(),
-            "next_message_params": self.next_turn.to_dict(),
-        })
+    def params(self) -> dict:
         return {
             "type": self.type,
             "start_session_params": self.start_session.to_dict(),

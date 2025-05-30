@@ -793,10 +793,7 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
         url=f"{base_url}/v0/custom_endpoint_stub/message",
         method="POST",
         headers=api_headers,
-        body=json.dumps({
-            "thread_id": "{session_id}",
-            "message": "{latest_message}"
-        }),
+        body=json.dumps({"thread_id": "{session_id}", "message": "{latest_message}"}),
         status_code=200,
         response_message_path="response.assistant_response",
     )
@@ -848,7 +845,10 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
-def test_multiturn_driver_with_custom_endpoint_same_message(rnd: str, okareo: Okareo) -> None:
+
+def test_multiturn_driver_with_custom_endpoint_same_message(
+    rnd: str, okareo: Okareo
+) -> None:
     # Get base URL from environment or use default
     base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
 
@@ -869,10 +869,9 @@ def test_multiturn_driver_with_custom_endpoint_same_message(rnd: str, okareo: Ok
         url=f"{base_url}/v0/custom_endpoint_stub/message",
         method="POST",
         headers=api_headers,
-        body=json.dumps({
-            "thread_id": "{session_id}",
-            "message": "{message_history[0]}"
-        }),
+        body=json.dumps(
+            {"thread_id": "{session_id}", "message": "{message_history[0]}"}
+        ),
         status_code=200,
         response_message_path="response.assistant_response",
     )
