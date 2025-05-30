@@ -12,9 +12,9 @@ from okareo.model_under_test import (
     CohereModel,
     CustomBatchModel,
     CustomModel,
+    GenerationModel,
     ModelInvocation,
     OpenAIAssistantModel,
-    OpenAIModel,
     PineconeDb,
     QdrantDB,
 )
@@ -115,8 +115,8 @@ def test_run_test_openai(
 ) -> None:
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=None,
@@ -140,8 +140,8 @@ def test_run_test_openai_2prompts(
 ) -> None:
     mut2 = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=TEST_SUMMARIZE_TEMPLATE,
@@ -171,8 +171,8 @@ def test_run_test_openai_with_tool_calls(
     )
     mut = okareo.register_model(
         name=f"openai-tool-calls-ci-run-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template="You are a helpful assistant that can get weather information.",
             user_prompt_template="Find the weather of sf ca",
@@ -772,7 +772,7 @@ def test_delete_eval_with_checks(
 ) -> None:
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
-        model=OpenAIModel(
+        model=GenerationModel(
             model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
@@ -807,7 +807,7 @@ def test_submit_test_openai(
 ) -> None:
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
-        model=OpenAIModel(
+        model=GenerationModel(
             model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,

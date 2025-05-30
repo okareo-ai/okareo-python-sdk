@@ -5,7 +5,7 @@ import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import OpenAIModel
+from okareo.model_under_test import GenerationModel
 from okareo_api_client.models import ScenarioSetResponse, TestRunType
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
@@ -92,8 +92,8 @@ def test_dialog_input(
 
     mut = okareo_client.register_model(
         name=test_run_name,
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             dialog_template="{scenario_input}",
         ),
@@ -134,8 +134,8 @@ def test_dialog_template(
 
     mut = okareo_client.register_model(
         name=test_run_name,
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             dialog_template=DAILOG_TEMPLATE,
         ),

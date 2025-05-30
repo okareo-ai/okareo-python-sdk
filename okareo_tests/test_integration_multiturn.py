@@ -292,7 +292,7 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
                     "Authorization": f"Bearer {OPENAI_API_KEY}",
                 }
                 payload = {
-                    "model": "gpt-3.5-turbo",
+                    "model": "gpt-4.1-mini",
                     "messages": messages,
                     "temperature": 0.3,
                     "max_tokens": 150,

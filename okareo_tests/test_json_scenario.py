@@ -10,8 +10,8 @@ from okareo import Okareo
 from okareo.model_under_test import (
     CohereModel,
     CustomModel,
+    GenerationModel,
     ModelInvocation,
-    OpenAIModel,
 )
 from okareo_api_client.models import ScenarioSetResponse, ScenarioType, TestRunType
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
@@ -195,8 +195,8 @@ def test_classification_openai(okareo_client: Okareo) -> None:
 
     mut = okareo_client.register_model(
         name=test_run_name,
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template="Classify this by label equal to one of (red,blue,green): {scenario_input} label:\n",
             user_prompt_template=None,
@@ -262,8 +262,8 @@ def test_generation_openai(
 
     mut = okareo_client.register_model(
         name=test_run_name,
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template="Do system stuff with JSON: {scenario_input.query} and {scenario_input.meta} \n",
             user_prompt_template="Do user stuff with JSON: {scenario_input.user_id} \n",
