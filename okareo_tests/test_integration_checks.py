@@ -8,7 +8,7 @@ from okareo_tests.utils import assert_metrics
 
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
-from okareo.model_under_test import CustomModel, ModelInvocation, OpenAIModel
+from okareo.model_under_test import CustomModel, GenerationModel, ModelInvocation
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.test_run_type import TestRunType
@@ -90,8 +90,8 @@ def test_run_code_based_predefined_checks(
 ) -> None:
     mut = okareo.register_model(
         name=f"openai-ci-run-levenshtein-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=None,
@@ -125,8 +125,8 @@ def test_run_model_based_predefined_checks(
 ) -> None:
     mut = okareo.register_model(
         name=f"openai-ci-run-levenshtein-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=None,
@@ -169,8 +169,8 @@ def test_run_model_based_custom_checks(
     check_names = [check.name or "" for check in checks]
     mut = okareo.register_model(
         name=f"openai-ci-run-levenshtein-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=None,
@@ -204,8 +204,8 @@ def test_run_code_based_custom_checks(
     assert check_sample_code.name
     mut = okareo.register_model(
         name=f"openai-ci-run-levenshtein-{rnd}",
-        model=OpenAIModel(
-            model_id="gpt-3.5-turbo",
+        model=GenerationModel(
+            model_id="gpt-4.1-mini",
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=None,
