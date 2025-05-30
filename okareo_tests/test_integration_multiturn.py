@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import time
 from contextlib import redirect_stdout
@@ -11,12 +12,15 @@ from okareo_tests.common import API_KEY, random_string
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import (
+    CustomEndpointTarget,
     CustomMultiturnTarget,
     GenerationModel,
     ModelInvocation,
     MultiTurnDriver,
     OpenAIModel,
+    SessionConfig,
     StopConfig,
+    TurnConfig,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
@@ -766,3 +770,76 @@ def test_submit_multiturn_warning_message_capture(rnd: str, okareo: Okareo) -> N
     assert evaluation.name == eval_name
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
+
+
+def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None:
+    # Get base URL from environment or use default
+    base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
+
+    # Define API headers
+    api_headers = json.dumps({"api-key": API_KEY, "Content-Type": "application/json"})
+
+    # Create start session config
+    start_config = SessionConfig(
+        url=f"{base_url}/v0/assistant/create",
+        method="POST",
+        headers=api_headers,
+        body="{}",
+        status_code=201,
+        response_session_id_path="thread_id",
+    )
+
+    # Create next turn config
+    next_config = TurnConfig(
+        url=f"{base_url}/v0/assistant/message",
+        method="POST",
+        headers=api_headers,
+        body=json.dumps(
+            {"thread_id": "{{session_id}}", "message": "{{messages[-1].content}}"}
+        ),
+        status_code=201,
+        response_message_path="response[assistant_response]",
+    )
+
+    # Create the model with the configs
+    assistant_model = MultiTurnDriver(
+        target=CustomEndpointTarget(start_config, next_config),
+        stop_check=StopConfig(check_name="task_completed"),
+        max_turns=5,
+        driver_temperature=0.7,
+    )
+
+    model_name = f"Custom Endpoint Test {rnd}"
+    multiturn_model = okareo.register_model(
+        name=model_name,
+        model=assistant_model,
+        update=True,
+    )
+
+    # Create test scenario
+    seeds = [
+        SeedData(
+            input_="Tell me about Okareo",
+            result="Information about Okareo",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Custom Endpoint Test Scenario - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    # Run the test
+    evaluation = multiturn_model.run_test(
+        name=f"Custom Endpoint Test - {rnd}",
+        api_key=API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+        checks=["task_completed"],
+    )
+
+    assert evaluation.name == f"Custom Endpoint Test - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+    assert evaluation.status == "FINISHED"
