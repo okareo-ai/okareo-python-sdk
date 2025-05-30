@@ -256,8 +256,6 @@ class SessionConfig:
         headers=None,
         body="{}",
         status_code=201,
-        response_message_path="",
-        response_tool_calls_path="",
         response_session_id_path="",
     ):
         self.url = url
@@ -265,8 +263,6 @@ class SessionConfig:
         self.headers = headers or json.dumps({})
         self.body = body
         self.status_code = status_code
-        self.response_message_path = response_message_path
-        self.response_tool_calls_path = response_tool_calls_path
         self.response_session_id_path = response_session_id_path
 
     def to_dict(self):
@@ -276,8 +272,6 @@ class SessionConfig:
             "headers": self.headers,
             "body": self.body,
             "status_code": self.status_code,
-            "response_message_path": self.response_message_path,
-            "response_tool_calls_path": self.response_tool_calls_path,
             "response_session_id_path": self.response_session_id_path,
         }
 
