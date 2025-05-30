@@ -694,7 +694,7 @@ def test_submit_multiturn_test_generation_model(rnd: str, okareo: Okareo) -> Non
         scenario=response,
         api_key=OPENAI_API_KEY,
         name="CI run test",
-        test_run_type=TestRunType.NL_GENERATION,
+        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
     )
     assert test_run_item.name == "CI run test"
