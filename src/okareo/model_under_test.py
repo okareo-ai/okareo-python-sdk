@@ -248,10 +248,86 @@ class StopConfig:
         return {"check_name": self.check_name, "stop_on": self.stop_on}
 
 
+class SessionConfig:
+    def __init__(
+        self,
+        url: str,
+        method: str = "POST",
+        headers: Optional[Union[str, dict]] = None,
+        body: Union[str, dict] = "{}",
+        status_code: Optional[int] = None,
+        response_session_id_path: str = "",
+    ) -> None:
+        self.url = url
+        self.method = method
+        self.headers = headers or json.dumps({})
+        self.body = body
+        self.status_code = status_code
+        self.response_session_id_path = response_session_id_path
+
+    def to_dict(self) -> dict:
+        return {
+            "url": self.url,
+            "method": self.method,
+            "headers": self.headers,
+            "body": self.body,
+            "status_code": self.status_code,
+            "response_session_id_path": self.response_session_id_path,
+        }
+
+
+class TurnConfig:
+    def __init__(
+        self,
+        url: str,
+        method: str = "POST",
+        headers: Optional[Union[str, dict]] = None,
+        body: Union[str, dict] = "{}",
+        status_code: Optional[int] = None,
+        response_message_path: str = "",
+        response_tool_calls_path: str = "",
+    ) -> None:
+        self.url = url
+        self.method = method
+        self.headers = headers or json.dumps({})
+        self.body = body
+        self.status_code = status_code
+        self.response_message_path = response_message_path
+        self.response_tool_calls_path = response_tool_calls_path
+
+    def to_dict(self) -> dict:
+        return {
+            "url": self.url,
+            "method": self.method,
+            "headers": self.headers,
+            "body": self.body,
+            "status_code": self.status_code,
+            "response_message_path": self.response_message_path,
+            "response_tool_calls_path": self.response_tool_calls_path,
+        }
+
+
+class CustomEndpointTarget:
+    type = "custom_endpoint"
+
+    def __init__(self, start_session: SessionConfig, next_turn: TurnConfig) -> None:
+        self.start_session = start_session
+        self.next_turn = next_turn
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "start_session_params": self.start_session.to_dict(),
+            "next_message_params": self.next_turn.to_dict(),
+        }
+
+
 @_attrs_define
 class MultiTurnDriver(BaseModel):
     type = "driver"
-    target: Union[OpenAIModel, CustomMultiturnTarget, GenerationModel]
+    target: Union[
+        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
+    ]
     stop_check: Union[StopConfig, dict]
     driver_model_id: Optional[str] = None
     driver_temperature: Optional[float] = 0.8

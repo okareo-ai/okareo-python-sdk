@@ -87,19 +87,18 @@ JSON_SEED = Okareo.seed_data_from_list(
 )
 
 
-def test_create_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
+def test_create_scenario_set(okareo_client: Okareo) -> None:
     scenario_set_create = ScenarioSetCreate(
         name=create_scenario_name,
         seed_data=JSON_SEED,
     )
     scenario = okareo_client.create_scenario_set(scenario_set_create)
     validate_scenario_set(scenario, create_scenario_name, okareo_client)
-    return scenario
 
 
 def test_download_scenario_set(
     uploaded_scenario_set: ScenarioSetResponse, okareo_client: Okareo
-) -> ScenarioSetResponse:
+) -> None:
     response_file = okareo_client.download_scenario_set(
         uploaded_scenario_set, upload_scenario_name
     )
@@ -110,8 +109,6 @@ def test_download_scenario_set(
             assert json.loads(line)["input"]["meta"] != ""
             assert json.loads(line)["result"] != ""
     os.remove(upload_scenario_name)
-
-    return uploaded_scenario_set
 
 
 @pytest.fixture(scope="module")
