@@ -255,7 +255,7 @@ class SessionConfig:
         method: str = "POST",
         headers: Optional[Union[str, dict]] = None,
         body: Union[str, dict] = "{}",
-        status_code: int = 201,
+        status_code: Optional[int] = None,
         response_session_id_path: str = "",
     ) -> None:
         self.url = url
@@ -283,7 +283,7 @@ class TurnConfig:
         method: str = "POST",
         headers: Optional[Union[str, dict]] = None,
         body: Union[str, dict] = "{}",
-        status_code: int = 200,
+        status_code: Optional[int] = None,
         response_message_path: str = "",
         response_tool_calls_path: str = "",
     ) -> None:

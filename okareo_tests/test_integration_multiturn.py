@@ -793,7 +793,9 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
         url=f"{base_url}/v0/custom_endpoint_stub/message",
         method="POST",
         headers=api_headers,
-        body=json.dumps({"thread_id": "{session_id}", "message": "{latest_message}"}),
+        body=json.dumps(
+            {"thread_id": "{session_id}", "message": "{message_history.-1.content}"}
+        ),
         status_code=200,
         response_message_path="response.assistant_response",
     )
@@ -856,7 +858,6 @@ def test_multiturn_driver_with_custom_endpoint_same_message(
         url=f"{base_url}/v0/custom_endpoint_stub/create",
         method="POST",
         headers=api_headers,
-        status_code=201,
         response_session_id_path="response.thread_id",
     )
 
@@ -866,7 +867,6 @@ def test_multiturn_driver_with_custom_endpoint_same_message(
         method="POST",
         headers=api_headers,
         body={"thread_id": "{session_id}", "message": "{message_history.0.content}"},
-        status_code=200,
         response_message_path="response.assistant_response",
     )
 
