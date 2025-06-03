@@ -27,6 +27,7 @@ from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "NOT SET")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "NOT SET")
 
 
 @pytest.fixture(scope="module")
@@ -115,7 +116,7 @@ def test_run_multiturn_with_driver_model_id(rnd: str, okareo: Okareo) -> None:
         model=MultiTurnDriver(
             max_turns=2,
             repeats=1,
-            driver_model_id="gpt-4o-mini",
+            driver_model_id="gemini/gemini-2.5-flash-preview-05-20",
             target=GenerationModel(
                 model_id="gpt-4o-mini",
                 temperature=0,
@@ -129,7 +130,7 @@ def test_run_multiturn_with_driver_model_id(rnd: str, okareo: Okareo) -> None:
     # use the scenario id from one of the scenario set notebook examples
     test_run_item = mut.run_test(
         scenario=response,
-        api_keys={"driver": OPENAI_API_KEY, "generation": OPENAI_API_KEY},
+        api_keys={"driver": GEMINI_API_KEY, "generation": OPENAI_API_KEY},
         name="CI run test",
         test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
