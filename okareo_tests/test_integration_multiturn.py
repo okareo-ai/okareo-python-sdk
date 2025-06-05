@@ -97,8 +97,10 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     assert test_run_item.status == "FINISHED"
 
 
-def test_run_multiturn_with_driver_model_id(rnd: str, okareo: Okareo) -> None:
-    # generate scenario and return results in one call
+@pytest.mark.parametrize("first_turn", ["driver", "target"])
+def test_run_multiturn_with_driver_model_id(
+    rnd: str, okareo: Okareo, first_turn: str
+) -> None:
     scenario_set_create = ScenarioSetCreate(
         name=rnd + random_string(5),
         seed_data=[
@@ -109,10 +111,9 @@ def test_run_multiturn_with_driver_model_id(rnd: str, okareo: Okareo) -> None:
         ],
     )
     response = okareo.create_scenario_set(scenario_set_create)
-    response.scenario_id
 
     mut = okareo.register_model(
-        name=rnd,
+        name=f"{rnd}_{first_turn}",
         model=MultiTurnDriver(
             max_turns=2,
             repeats=1,
@@ -123,19 +124,19 @@ def test_run_multiturn_with_driver_model_id(rnd: str, okareo: Okareo) -> None:
                 system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
             ),
             stop_check={"check_name": "model_refusal", "stop_on": False},
+            first_turn=first_turn,
         ),
         update=True,
     )
 
-    # use the scenario id from one of the scenario set notebook examples
     test_run_item = mut.run_test(
         scenario=response,
         api_keys={"driver": GEMINI_API_KEY, "generation": OPENAI_API_KEY},
-        name="CI run test",
+        name=f"CI run test {first_turn} first",
         test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
     )
-    assert test_run_item.name == "CI run test"
+    assert test_run_item.name == f"CI run test {first_turn} first"
     assert test_run_item.status == "FINISHED"
 
 
@@ -251,6 +252,7 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
                 "check_name": "behavior_adherence",
                 "stop_on": True,
             },  # Changed check
+            first_turn="driver",  # driver starts, the test model assumes a message from the driver first
         ),
         update=True,
     )
@@ -623,6 +625,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
                 repeats=1,
                 target=model,
                 stop_check={"check_name": "behavior_adherence", "stop_on": True},
+                first_turn="driver",  # driver starts, all the test models assume a message from the driver
             ),
             update=True,
         )
