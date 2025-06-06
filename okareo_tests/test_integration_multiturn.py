@@ -982,8 +982,30 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
-    # Run the test
-    evaluation = multiturn_model.run_test(
+    # Run the test;
+    base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
+    with pytest.raises(
+        Exception,
+        match=(
+            "Custom endpoint failed with status_code 401. Full details: Request: POST "
+            + base_url
+            + "/v0/custom_endpoint_stub/create, "
+            + "Headers: {'api-key': 'foobar', 'Content-Type': 'application/json'}, Body: {}. "
+            + 'Error message is: {"detail":"Invalid Okareo API Token. Please check the docs to '
+            + 'get Okareo API Token: https://okareo.com/docs/getting-started/overview"}.'
+        ),
+    ):
+        evaluation = multiturn_model.run_test(
+            name=f"Custom Endpoint Test Exception - {rnd}",
+            api_key=API_KEY,
+            scenario=scenario,
+            test_run_type=TestRunType.MULTI_TURN,
+            checks=["task_completed"],
+        )
+
+    # Submit the test run and check its status
+    # This path will return a TestRunItem rather than throwing an exception
+    evaluation = multiturn_model.submit_test(
         name=f"Custom Endpoint Test Exception - {rnd}",
         api_key=API_KEY,
         scenario=scenario,
@@ -991,6 +1013,16 @@ def test_multiturn_driver_with_custom_endpoint_exception(
         checks=["task_completed"],
     )
 
-    assert evaluation.name == f"Custom Endpoint Test Exception - {rnd}"
-    assert evaluation.status == "FAILED"
-    assert evaluation.failure_message is not None
+    # wait for the async run to finish
+    # try three times with linear backoff
+    for i in range(1, 4):
+        time.sleep(3 * i)
+
+        # get the test run item
+        test_run = multiturn_model.get_test_run(evaluation.id)
+        if test_run.status == "FAILED":
+            break
+
+    assert test_run.name == f"Custom Endpoint Test Exception - {rnd}"
+    assert test_run.status == "FAILED"
+    assert test_run.failure_message is not None
