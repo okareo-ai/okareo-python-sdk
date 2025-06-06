@@ -14,7 +14,7 @@ from attrs import field
 from nkeys import from_seed  # type: ignore
 from tqdm import tqdm  # type: ignore
 
-from okareo.error import MissingApiKeyError, MissingVectorDbError
+from okareo.error import MissingApiKeyError, MissingVectorDbError, TestRunError
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
@@ -808,7 +808,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             if isinstance(response, ErrorResponse):
                 error_message = f"error: {response}, {response.detail}"
                 print(error_message)
-                raise
+                raise TestRunError(str(response.detail))
             if not response:
                 print("Empty response from API")
             assert response is not None
@@ -883,17 +883,20 @@ class ModelUnderTest(AsyncProcessorMixin):
         """Server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side. For other models,
         model invocations and evaluations handled server-side."""
-        return self._run_test_internal(
-            scenario,
-            name,
-            api_key,
-            api_keys,
-            metrics_kwargs,
-            test_run_type,
-            calculate_metrics,
-            checks,
-            run_test_v0_test_run_post.sync,
-        )
+        try:
+            return self._run_test_internal(
+                scenario,
+                name,
+                api_key,
+                api_keys,
+                metrics_kwargs,
+                test_run_type,
+                calculate_metrics,
+                checks,
+                run_test_v0_test_run_post.sync,
+            )
+        except Exception as e:
+            raise TestRunError(str(e)) from e
 
     def get_test_run(self, test_run_id: str) -> TestRunItem:
         try:

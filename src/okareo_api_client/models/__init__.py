@@ -3,6 +3,9 @@
 from .add_model_to_group_v0_groups_group_id_models_post_response_add_model_to_group_v0_groups_group_id_models_post import (
     AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost,
 )
+from .assistant_message_request import AssistantMessageRequest
+from .assistant_message_response import AssistantMessageResponse
+from .assistant_thread_response import AssistantThreadResponse
 from .body_check_delete_v0_check_check_id_delete import BodyCheckDeleteV0CheckCheckIdDelete
 from .body_check_upload_v0_check_upload_post import BodyCheckUploadV0CheckUploadPost
 from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
@@ -99,6 +102,12 @@ from .slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_g
     SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
 )
 from .summary_datapoint_search import SummaryDatapointSearch
+from .test_custom_endpoint_request import TestCustomEndpointRequest
+from .test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
+from .test_custom_endpoint_request_start_session_params import TestCustomEndpointRequestStartSessionParams
+from .test_custom_endpoint_response import TestCustomEndpointResponse
+from .test_custom_endpoint_response_next_message_raw_response import TestCustomEndpointResponseNextMessageRawResponse
+from .test_custom_endpoint_response_start_session_raw_response import TestCustomEndpointResponseStartSessionRawResponse
 from .test_data_point_item import TestDataPointItem
 from .test_data_point_item_metric_value import TestDataPointItemMetricValue
 from .test_data_point_payload import TestDataPointPayload
@@ -116,6 +125,9 @@ from .validation_error import ValidationError
 
 __all__ = (
     "AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost",
+    "AssistantMessageRequest",
+    "AssistantMessageResponse",
+    "AssistantThreadResponse",
     "BodyCheckDeleteV0CheckCheckIdDelete",
     "BodyCheckUploadV0CheckUploadPost",
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
@@ -194,6 +206,12 @@ __all__ = (
     "SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost",
     "SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet",
     "SummaryDatapointSearch",
+    "TestCustomEndpointRequest",
+    "TestCustomEndpointRequestNextMessageParams",
+    "TestCustomEndpointRequestStartSessionParams",
+    "TestCustomEndpointResponse",
+    "TestCustomEndpointResponseNextMessageRawResponse",
+    "TestCustomEndpointResponseStartSessionRawResponse",
     "TestDataPointItem",
     "TestDataPointItemMetricValue",
     "TestDataPointPayload",

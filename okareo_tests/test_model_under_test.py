@@ -8,7 +8,7 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_stri
 from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
-from okareo.error import MissingApiKeyError, MissingVectorDbError
+from okareo.error import TestRunError
 from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb
 from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
@@ -269,7 +269,7 @@ def test_missing_api_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
         ],
     )
 
-    with pytest.raises(MissingApiKeyError):
+    with pytest.raises(TestRunError):
         mut.run_test(
             name="quick test",
             scenario=Mock(),
@@ -293,7 +293,7 @@ def test_missing_vector_db_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
         ],
     )
 
-    with pytest.raises(MissingVectorDbError):
+    with pytest.raises(TestRunError):
         mut.run_test(
             name="quick test",
             scenario=Mock(),
