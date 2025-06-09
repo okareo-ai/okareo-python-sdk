@@ -57,6 +57,9 @@ During the LangChain LLM runs we will collect input and output information so yo
 
 You can also see an usage example in [./examples/langchain_callback_example.py](./examples/langchain_callback_example.py)
 
+## Rendering Docs via `pydoc-markdown`
+
+To render the Python SDK documentation, you can use `source/build_docs.sh` in this repository. This will populate the folder `docs/python_sdk`.
 
 ---
 
