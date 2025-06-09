@@ -8,3 +8,7 @@ class MissingApiKeyError(Exception):
 
 class MissingVectorDbError(Exception):
     pass
+
+
+class TestRunError(Exception):
+    pass
