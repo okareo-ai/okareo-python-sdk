@@ -84,3 +84,6 @@ local-rebuild.sh
 
 # Models
 examples/webbizz_classification_model
+
+# Generated pydoc-markdown Docs
+docs/

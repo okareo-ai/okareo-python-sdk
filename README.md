@@ -59,7 +59,7 @@ You can also see an usage example in [./examples/langchain_callback_example.py](
 
 ## Rendering Docs via `pydoc-markdown`
 
-To render the Python SDK documentation, you can use `source/build_docs.sh` in this repository. This will populate the folder `docs/python_sdk`.
+To render the Python SDK documentation, you can use `source/build_docs.sh` in this repository. This will install the SDK poetry environment then run the `pydoc-markdown` as configured in `pyproject.toml`. The generated docs will be found in the `docs/python_sdk`.
 
 ---
 
