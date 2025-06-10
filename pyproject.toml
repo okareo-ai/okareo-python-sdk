@@ -94,8 +94,6 @@ loaders = [{ type = "python", search_path = ["src"], modules = ["okareo.model_un
 type = "docusaurus"
 docs_base_path = "docs"
 relative_output_path = "python-sdk"
-relative_sidebar_path = "sidebar.json"
-sidebar_top_level_label = "Reference"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

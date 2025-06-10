@@ -16,49 +16,42 @@ DESIRED_ORDER = [
     f"{DIR}/async_utils",
 ]
 SIDEBAR_PATH = f"docs/{BASE_DIR}/sidebar.json"
+CATEGORY_PATH = f"docs/{BASE_DIR}/_category_.json"
 
 
-def reorder_sidebar() -> None:
-    with open(SIDEBAR_PATH) as f:
-        sidebar = json.load(f)
-
-    # Find the category containing the items
-    for category in sidebar.get("items", []):
-        if category.get("label") == "okareo" and "items" in category:
-            # Reorder items according to DESIRED_ORDER
-            items_set = set(category["items"])
-            reordered = [item for item in DESIRED_ORDER if item in items_set]
-            # Optionally, append any items not in DESIRED_ORDER
-            reordered += [item for item in category["items"] if item not in reordered]
-            category["items"] = reordered
-            break
-
-    with open(SIDEBAR_PATH, "w") as f:
-        json.dump(sidebar, f, indent=2)
-
-
-def convert_header_order() -> None:
+def postprocess_md_files() -> None:
     # load each .md file in the DIR and convert the header order
-    for item in DESIRED_ORDER:
+    for i, item in enumerate(DESIRED_ORDER):
         md_file = f"docs/{item}.md"
         try:
             with open(md_file) as f:
                 content = f.readlines()
 
             # Convert header order
+            added_order = False
             new_content = []
             for line in content:
                 if line.startswith("#### "):
                     new_content.append("###" + line[4:])  # Convert H4 to H2
                 else:
                     new_content.append(line)
+                    if line.startswith("---") and not added_order:
+                        new_content.append(f"sidebar_position: {i+1}\n")
+                        added_order = True
 
             with open(md_file, "w") as f:
                 f.writelines(new_content)
         except FileNotFoundError:
             print(f"File {md_file} not found, skipping.")
 
+    # create a new _category_.json file to set ordering/label for the sidebar
+    category_json = {
+        "label": "Python SDK",
+        "position": 10,
+    }
+    with open(CATEGORY_PATH, "w") as f:
+        json.dump(category_json, f, indent=4)
+
 
 if __name__ == "__main__":
-    reorder_sidebar()
-    convert_header_order()
+    postprocess_md_files()
