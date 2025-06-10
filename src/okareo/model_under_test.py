@@ -370,10 +370,10 @@ class CustomBatchModel(BaseModel):
 
         arguments:
         -> input_batch: list[dict[str, Union[dict, list, str]]] - batch of inputs to the model. Expects a list of
-        dicts of the format { 'id': str, 'input_value': Union[dict, list, str] }.
+        dicts of the format `{ 'id': str, 'input_value': Union[dict, list, str] }`.
 
         returns:
-        -> list of dicts of format { 'id': str, 'model_invocation': Union[ModelInvocation, Any] }. 'id' must match
+        -> list of dicts of format `{ 'id': str, 'model_invocation': Union[ModelInvocation, Any] }`. 'id' must match
         the corresponding input_batch element's 'id'.
         """
 

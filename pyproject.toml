@@ -88,14 +88,14 @@ setuptools = "*"
 pytest-xdist = "*"
 
 [tool.pydoc-markdown]
-loader = { type = "python", search_path = ["src"] }
+loaders = [{ type = "python", search_path = ["src"], modules = ["okareo.async_utils", "okareo.autogen_logger", "okareo.callbacks", "okareo.checks", "okareo.common", "okareo.crewai_logger", "okareo.litellm_logger", "okareo.model_under_test", "okareo.okareo", "okareo.reporter"] }]
 
 [tool.pydoc-markdown.renderer]
 type = "docusaurus"
 docs_base_path = "docs"
 relative_output_path = "python_sdk"
 relative_sidebar_path = "sidebar.json"
-sidertop_level_label = "Reference"
+sidebar_top_level_label = "Reference"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
