@@ -1,6 +1,5 @@
 import json
 
-
 BASE_DIR = "python-sdk"
 DIR = f"{BASE_DIR}/okareo"
 
@@ -20,7 +19,7 @@ SIDEBAR_PATH = f"docs/{BASE_DIR}/sidebar.json"
 
 
 def reorder_sidebar() -> None:
-    with open(SIDEBAR_PATH, "r") as f:
+    with open(SIDEBAR_PATH) as f:
         sidebar = json.load(f)
 
     # Find the category containing the items
@@ -37,12 +36,13 @@ def reorder_sidebar() -> None:
     with open(SIDEBAR_PATH, "w") as f:
         json.dump(sidebar, f, indent=2)
 
+
 def convert_header_order() -> None:
     # load each .md file in the DIR and convert the header order
     for item in DESIRED_ORDER:
         md_file = f"docs/{item}.md"
         try:
-            with open(md_file, "r") as f:
+            with open(md_file) as f:
                 content = f.readlines()
 
             # Convert header order
@@ -57,6 +57,7 @@ def convert_header_order() -> None:
                 f.writelines(new_content)
         except FileNotFoundError:
             print(f"File {md_file} not found, skipping.")
+
 
 if __name__ == "__main__":
     reorder_sidebar()
