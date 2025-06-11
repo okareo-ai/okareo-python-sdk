@@ -515,6 +515,7 @@ class CustomBatchModel(BaseModel):
     Requires a valid `invoke_batch` definition that operates on a single input.
     """
 
+    type = "custom_batch"
     name: str
     batch_size: int = 1
 
