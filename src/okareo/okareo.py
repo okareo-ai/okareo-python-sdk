@@ -103,7 +103,7 @@ class SeedDataRow(TypedDict):
 
 
 class Okareo:
-    """A class for interacting with Okareo API"""
+    """A class for interacting with Okareo API and for formatting request data."""
 
     def __init__(
         self, api_key: str, base_path: str = BASE_URL, timeout: float = HTTPX_TIME_OUT  # type: ignore
@@ -121,7 +121,16 @@ class Okareo:
     @staticmethod
     def seed_data_from_list(data_list: List[SeedDataRow]) -> List[SeedData]:
         """
-        Create a list of SeedData objects from a list of dictionaries with specifically 'input' and 'result' keys.
+        Create a list of SeedData objects from a list of dictionaries.
+
+        Each dictionary in the input list must have 'input' and 'result' keys.
+
+        Args:
+            data_list (List[SeedDataRow]): A list of dictionaries, where each dictionary
+                                        contains 'input' and 'result' keys.
+
+        Returns:
+            List[SeedData]: A list of SeedData objects created from the input dictionaries.
         """
         seed_data_list = []
         for data in data_list:
@@ -133,6 +142,16 @@ class Okareo:
         return seed_data_list
 
     def get_projects(self) -> List[ProjectResponse]:
+        """
+        Get a list of all Okareo projects available to the user.
+
+        Returns:
+            List[ProjectResponse]: A list of ProjectResponse objects accessible to the user.
+
+        Raises:
+            TypeError: If the API response is an error.
+            ValueError: If no response is received from the API.
+        """
         response = get_all_projects_v0_projects_get.sync(
             client=self.client,
             api_key=self.api_key,
@@ -145,6 +164,20 @@ class Okareo:
     def create_project(
         self, name: str, tags: Union[Unset, List[str]] = UNSET
     ) -> ProjectResponse:
+        """
+        Create a new Okareo project.
+
+        Args:
+            name (str): The name of the new project.
+            tags (Union[Unset, List[str]], optional): Optional list of tags to associate with the project.
+
+        Returns:
+            ProjectResponse: The created ProjectResponse object.
+
+        Raises:
+            TypeError: If the API response is an error.
+            ValueError: If no response is received from the API.
+        """
         response = create_project_v0_projects_post.sync(
             client=self.client,
             api_key=self.api_key,
@@ -190,6 +223,23 @@ class Okareo:
         model: Union[None, BaseModel, List[BaseModel]] = None,
         update: bool = False,
     ) -> ModelUnderTest:
+        """
+        Register a new Model Under Test (MUT) to use in an Okareo evaluation.
+
+        Args:
+            name (str): The name of the model. Model names must be unique within a project. Using the same name will return or update the existing model.
+            tags (Union[List[str], None], optional): Optional list of tags to associate with the model.
+            project_id (Union[str, None], optional): The project ID to associate the model with.
+            model (Union[None, BaseModel, List[BaseModel]], optional): The model or list of models to register.
+            update (bool, optional): Whether to update an existing model with the same name. Defaults to False.
+
+        Returns:
+            ModelUnderTest: The registered ModelUnderTest object.
+
+        Raises:
+            TypeError: If the API response is an error.
+            ValueError: If no response is received from the API.
+        """
         if tags is None:
             tags = []
         data: Dict[str, Any] = {"name": name, "tags": tags, "update": update}
@@ -227,6 +277,30 @@ class Okareo:
     def create_scenario_set(
         self, create_request: ScenarioSetCreate
     ) -> ScenarioSetResponse:
+        """
+        Create a new scenario set to use in an Okareo evaluation or as a seed for synthetic data generation.
+
+        Args:
+            create_request (ScenarioSetCreate): The request object containing scenario set details and seed data. The ScenarioSetCreate object should include:
+
+        Returns:
+            ScenarioSetResponse: The created ScenarioSetResponse object.
+
+        Raises:
+            ValueError: If the seed data is empty or if no response is received from the API.
+            TypeError: If the API response is an error.
+
+        Example:
+        ```python
+        seed_data = okareo_client.seed_data_from_list([
+            {"input": {"animal": "fish", "color": "red"}, "result": "red"},
+            {"input": {"animal": "dog", "color": "blue"}, "result": "blue"},
+            {"input": {"animal": "cat", "color": "green"}, "result": "green"}
+        ])
+        create_request = ScenarioSetCreate(name="My Scenario Set", seed_data=seed_data)
+        okareo_client.create_scenario_set(create_request)
+        ```
+        """
         if create_request.seed_data == [] or create_request.seed_data is None:
             raise ValueError("Non-empty seed data is required to create a scenario set")
 
@@ -243,6 +317,32 @@ class Okareo:
     def upload_scenario_set(
         self, scenario_name: str, file_path: str, project_id: Union[Unset, str] = UNSET
     ) -> ScenarioSetResponse:
+        """
+        Upload a file as a scenario set to use in an Okareo evaluation or as a seed for synthetic data generation.
+
+        Args:
+            scenario_name (str): The name to assign to the uploaded scenario set.
+            file_path (str): The path to the file to upload.
+            project_id (Union[Unset, str], optional): The project ID to associate with the scenario set.
+
+        Returns:
+            ScenarioSetResponse: The created ScenarioSetResponse object.
+
+        Raises:
+            UnexpectedStatus: If the API returns an unexpected status.
+            TypeError: If the API response is an error.
+            ValueError: If no response is received from the API.
+
+        Example:
+        ```python
+        project_id = "your_project_id"  # Optional, can be None
+        okareo_client.upload_scenario_set(
+            scenario_name="My Uploaded Scenario Set",
+            file_path="/path/to/scenario_set_file.json",
+            project_id=project_id or None,
+        )
+        ```
+        """
         try:
             file_name = os.path.basename(file_path)
 
@@ -272,6 +372,24 @@ class Okareo:
         scenario: Union[ScenarioSetResponse, str],
         file_path: str = "",
     ) -> Any:
+        """
+        Download a scenario set from Okareo to the client's local filesystem.
+
+        Args:
+            scenario_set (ScenarioSetResponse): The scenario set to download.
+            file_path (str, optional): The path where the file will be saved. If not provided, uses scenario set name.
+
+        Returns:
+            File: The downloaded file object.
+
+        Example:
+        ```python
+        response_file = okareo_client.download_scenario_set(create_scenario_set)
+        with open(response_file.name) as scenario_file:
+            for line in scenario_file:
+                print(line)
+        ```
+        """
         try:
             scenario_id = (
                 scenario if isinstance(scenario, str) else scenario.scenario_id
@@ -304,6 +422,36 @@ class Okareo:
         project_id: Union[Unset, str] = UNSET,
         generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT,
     ) -> ScenarioSetResponse:
+        """
+        Generate a synthetic scenario set based on an existing seed scenario.
+
+        Args:
+            source_scenario (Union[str, ScenarioSetResponse]): The source scenario set or its ID to generate from.
+            name (str): The name for the new generated scenario set.
+            number_examples (int): The number of synthetic examples to generate per seed scenario row.
+            project_id (Union[Unset, str], optional): The project ID to associate with the generated scenario set.
+            generation_type (Union[Unset, ScenarioType], optional): The type of scenario generation to use.
+
+        Returns:
+            ScenarioSetResponse: The generated synthetic scenario set.
+
+        Raises:
+            TypeError: If the API response is an error.
+            ValueError: If no response is received from the API.
+
+        Example:
+        ```python
+        source_scenario = "source_scenario_id"  # or ScenarioSetResponse object
+        generated_set = okareo_client.generate_scenarios(
+            source_scenario=source_scenario,
+            name="Generated Scenario Set",
+            number_examples=100,
+            project_id="your_project_id",
+            generation_type=ScenarioType.REPHRASE_INVARIANT
+        )
+        print(generated_set.app_link) # Prints the link to the generated scenario set
+        ```
+        """
         scenario_id = (
             source_scenario.scenario_id
             if isinstance(source_scenario, ScenarioSetResponse)
@@ -322,6 +470,28 @@ class Okareo:
     def generate_scenario_set(
         self, create_request: ScenarioSetGenerate
     ) -> ScenarioSetResponse:
+        """
+        Generate a synthetic scenario set based on an existing seed scenario and a ScenarioSetGenerate object. Offers more controls than the comparable `generate_scenarios` method.
+
+        Args:
+            create_request (ScenarioSetGenerate): The request object specifying scenario generation parameters.
+
+        Returns:
+            ScenarioSetResponse: The generated synthetic scenario set.
+
+        Example:
+        ```python
+        generate_request = ScenarioSetGenerate(
+            source_scenario_id="seed_scenario_id",
+            name="My Synthetic Scenario Set",
+            number_examples=50,
+            project_id="your_project_id",
+            generation_type=ScenarioType.REPHRASE_INVARIANT,
+        )
+        generated_set = okareo_client.generate_scenario_set(generate_request)
+        print(generated_set.app_link)  # Prints the link to the generated scenario set
+        ```
+        """
         response = generate_scenario_set_v0_scenario_sets_generate_post.sync(
             client=self.client, api_key=self.api_key, json_body=create_request
         )
@@ -349,6 +519,24 @@ class Okareo:
     def get_scenario_data_points(
         self, scenario_id: str
     ) -> List[ScenarioDataPoinResponse]:
+        """
+        Fetch the scenario data points associated with a scenario set with scenario_id.
+
+        Args:
+            scenario_id (str): The ID of the scenario set to fetch data points for.
+
+        Returns:
+            List[ScenarioDataPoinResponse]: A list of scenario data point responses associated with the scenario set.
+
+        Example:
+        ```python
+        okareo_client = Okareo(api_key="your_api_key")
+        scenario_id = "your_scenario_id"
+        data_points = okareo_client.get_scenario_data_points(scenario_id)
+        for dp in data_points:
+            print(dp.input_, dp.result)
+        ```
+        """
         response = (
             get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
                 client=self.client, api_key=self.api_key, scenario_id=scenario_id
@@ -363,6 +551,31 @@ class Okareo:
     def find_test_data_points(
         self, test_data_point_payload: FindTestDataPointPayload
     ) -> Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
+        """
+        Fetch the test run data points associated as specified in the payload.
+
+        Args:
+            test_data_point_payload (FindTestDataPointPayload): The payload specifying the test data point search criteria.
+
+        Returns:
+            Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
+                A list of test or full data point items, or an error response.
+
+        Example:
+        ```python
+        from okareo_api_client.models.find_test_data_point_payload import (
+            FindTestDataPointPayload,
+        )
+
+        test_run_id = "your_test_run_id"  # Replace with your actual test run ID
+        payload = FindTestDataPointPayload(
+            test_run_id=test_run_id,
+        )
+        data_points = okareo_client.find_test_data_points(payload)
+        for dp in data_points:
+            print(dp)
+        ```
+        """
         data = find_test_data_points_v0_find_test_data_points_post.sync(
             client=self.client, api_key=self.api_key, json_body=test_data_point_payload
         )
@@ -399,6 +612,46 @@ class Okareo:
     def find_datapoints(
         self, datapoint_search: DatapointSearch
     ) -> Union[List[DatapointListItem], ErrorResponse]:
+        """
+        Fetch the datapoints specified by a Datapoint Search.
+
+        Args:
+            datapoint_search (DatapointSearch): The search criteria for fetching datapoints.
+
+        Returns:
+            Union[List[DatapointListItem], ErrorResponse]: A list of datapoint items matching the search, or an error response.
+
+        Example:
+        ```python
+        from okareo_api_client.models.datapoint_search import DatapointSearch
+
+        ### Search based on a test run ID
+        test_run__id = "your_test_run_id"  # Replace with your actual test run ID
+        search = DatapointSearch(
+            test_run_id=test_run__id,
+        )
+        datapoints = okareo_client.find_datapoints(search)
+        for dp in datapoints:
+            print(dp)
+
+        ### Search based on a context token from a logger
+        logger_config = {
+            "api_key": "<API_KEY>",
+            "tags": ["logger-test"],
+            "context_token": random_string(10),
+        }
+        # Use the logger config to log completions from CrewAI or Autogen
+        ...
+
+        # Search for the logged datapoints by the context token
+        search = DatapointSearch(
+            context_token=context_token,
+        )
+        datapoints = okareo_client.find_datapoints(search)
+        for dp in datapoints:
+            print(dp)
+        ```
+        """
         data = get_datapoints_v0_find_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
@@ -417,6 +670,46 @@ class Okareo:
     def generate_check(
         self, create_check: EvaluatorSpecRequest
     ) -> EvaluatorGenerateResponse:
+        """
+        Generate the contents of a Check based on an EvaluatorSpecRequest. Can be used to generate a behavioral (model-based) or a deterministic (code-based) check. Check names must be unique within a project.
+
+        Args:
+            create_check (EvaluatorSpecRequest): The specification for the check to generate.
+
+        Returns:
+            EvaluatorGenerateResponse: The generated check response.
+
+        Example:
+        ```python
+        from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
+        from okareo.okareo import OkareoClient, BaseCheck
+
+        # Generate a behavioral model-based check
+        spec = EvaluatorSpecRequest(
+            description="Checks if the output contains toxic language.",
+            requires_scenario_input=False,
+            requires_scenario_result=False,
+            output_data_type="bool", # bool, int, float
+        )
+        okareo_client = Okareo(api_key="your_api_key")
+        generated_check = okareo_client.generate_check(spec)
+
+        # Inspect the generated check to ensure it meets your requirements
+        print(generated_check)
+
+        # Upload the generated check to Okareo to use in evaluations
+        toxicity_check = okareo.create_or_update_check(
+            name="toxicity_check",
+            description=generated_check.description,
+            check=ModelBasedCheck(  # type: ignore
+                prompt_template=check.generated_prompt,
+                check_type=CheckOutputType.PASS_FAIL,
+            ),
+        )
+        # Inspect the uploaded check
+        print(toxicity_check)
+        ```
+        """
         response = check_generate_v0_check_generate_post.sync(
             client=self.client, api_key=self.api_key, json_body=create_check
         )
@@ -430,6 +723,22 @@ class Okareo:
         return self.get_all_checks()
 
     def get_all_checks(self) -> List[EvaluatorBriefResponse]:
+        """
+        Fetch all available checks.
+
+        Args:
+            None
+
+        Returns:
+            List[EvaluatorBriefResponse]: A list of EvaluatorBriefResponse objects representing all available checks.
+
+        Example:
+        ```python
+        checks = okareo_client.get_all_checks()
+        for check in checks:
+            print(check.name, check.id)
+        ```
+        """
         response = get_all_checks_v0_checks_get.sync(
             client=self.client,
             api_key=self.api_key,
@@ -444,6 +753,22 @@ class Okareo:
         return self.get_check(evaluator_id)
 
     def get_check(self, check_id: str) -> EvaluatorDetailedResponse:
+        """
+        Fetch details for a specific check.
+
+        Args:
+            check_id (str): The ID of the check to fetch.
+
+        Returns:
+            EvaluatorDetailedResponse: The detailed response for the specified check.
+
+        Example:
+        ```python
+        check_id = "your_check_id"
+        check_details = okareo_client.get_check(check_id)
+        print(check_details)
+        ```
+        """
         response = get_check_v0_check_check_id_get.sync(
             client=self.client, api_key=self.api_key, check_id=check_id
         )
@@ -457,6 +782,22 @@ class Okareo:
         return self.delete_check(evaluator_id, evaluator_name)
 
     def delete_check(self, check_id: str, check_name: str) -> str:
+        """
+        Deletes a check identified by its ID and name.
+
+        Args:
+            check_id (str): The unique identifier of the check to delete.
+            check_name (str): The name of the check to delete.
+
+        Returns:
+            str: A message indicating the result of the deletion.
+
+        Example:
+        ```python
+        result = okareo_client.delete_check(check_id="abc123", check_name="MyCheck")
+        print(result)  # Output: Check deletion was successful
+        ```
+        """
         check_delete_v0_check_check_id_delete.sync(
             client=self.client,
             api_key=self.api_key,
@@ -470,6 +811,42 @@ class Okareo:
     def create_or_update_check(
         self, name: str, description: str, check: BaseCheck
     ) -> EvaluatorDetailedResponse:
+        """
+        Create or update an existing check. If the check with 'name' already exists, then this method will update the existing check. Otherwise, this method will create a new check.
+
+        Args:
+            name (str): The unique name of the check to create or update.
+            description (str): A human-readable description of the check.
+            check (BaseCheck): An instance of BaseCheck containing the check configuration.
+
+        Returns:
+            EvaluatorDetailedResponse: The detailed response from the evaluator after creating or updating the check.
+
+        Raises:
+            AssertionError: If the response is not an instance of EvaluatorDetailedResponse.
+            ValueError: If the response validation fails.
+
+        Example:
+        ```python
+        from okareo.checks import CheckOutputType, ModelBasedCheck
+
+        # Define your custom check; here we use a ModelBasedCheck as an example.
+        # Mustache template is used in the prompt to pipe scenario input and generated output
+        my_check = ModelBasedCheck(
+            prompt_template="Only output the number of words in the following text: {scenario_input} {generation}",
+            check_type=CheckOutputType.PASS_FAIL,
+        )
+
+        # Create or update the check
+        response = okareo_client.create_or_update_check(
+            name="my_word_count_check",
+            description="Custom check for counting combined total number of words in input and output.",
+            check=my_check
+        )
+
+        print(response)
+        ```
+        """
         check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(
             check.check_config()
         )
@@ -559,11 +936,23 @@ class Okareo:
             test_run_type: Type of test run
             tags: Tags for filtering test runs
             checks: List of checks to include
-            scenario_id: ID of scenario set to evaluate
             datapoint_ids: List of datapoint IDs to filter by
             filter_group_id: ID of the datapoint filter group to apply
+
         Returns:
-            The evaluation results
+            TestRunItem: The evaluation results as a TestRunItem object.
+
+        Example:
+        ```python
+        checks = ["model_refusal"]  # one or more checks to apply in the evaluation
+        test_run = okareo.evaluate(
+            name="My Test Run",
+            test_run_type=TestRunType.NL_GENERATION,
+            checks=checks,
+            datapoint_ids=["datapoint_id_1", "datapoint_id_2"],
+        )
+        print(test_run.app_link)  # View link to eval results in Okareo app
+        ```
         """
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(

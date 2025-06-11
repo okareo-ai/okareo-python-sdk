@@ -57,6 +57,15 @@ During the LangChain LLM runs we will collect input and output information so yo
 
 You can also see an usage example in [./examples/langchain_callback_example.py](./examples/langchain_callback_example.py)
 
+## Rendering Docs via `pydoc-markdown`
+
+To render the Python SDK documentation, you can use `source/build_docs.sh` in this repository. This will do the following:
+
+1. Install the SDK poetry environment
+2. Run `pydoc-markdown` as configured in `pyproject.toml`
+3. Perform postprocessing to re-order the generated sidebar file and change heading levels.
+
+The generated docs will be found in the `docs/python-sdk` and can be rendered with [docusaurus](https://docusaurus.io/).
 
 ---
 

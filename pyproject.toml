@@ -49,6 +49,7 @@ autogen-agentchat = { version = "^0.2.36", optional = true }
 protobuf = ">=2.6.1"
 opentelemetry-proto = ">=1.20.0"
 tqdm = "^4.67.1"
+pydoc-markdown = "^4.8.2"
 
 [tool.poetry.extras]
 langchain = ["langchain", "openai", "litellm"]
@@ -85,6 +86,14 @@ litellm = {version = "^1.29.5"}
 ipykernel = "^6.25.2"
 setuptools = "*"
 pytest-xdist = "*"
+
+[tool.pydoc-markdown]
+loaders = [{ type = "python", search_path = ["src"], modules = ["okareo.model_under_test", "okareo.checks", "okareo.async_utils", "okareo.autogen_logger", "okareo.callbacks", "okareo.crewai_logger", "okareo.litellm_logger", "okareo.okareo", "okareo.reporter"] }]
+
+[tool.pydoc-markdown.renderer]
+type = "docusaurus"
+docs_base_path = "docs"
+relative_output_path = "python-sdk"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
