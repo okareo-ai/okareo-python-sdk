@@ -59,492 +59,10 @@ class BaseModel:
         pass
 
 
-@_attrs_define
-class ModelInvocation:
-    """
-    Model invocation response object returned from a CustomModel.invoke method
-    or as an element of a list returned from a CustomBatchModel.invoke_batch method.
-
-    Arguments:
-        model_prediction: Prediction from the model to be used when running the evaluation,
-            e.g. predicted class from classification model or generated text completion from
-            a generative model. This would typically be parsed out of the overall model_output_metadata.
-        model_input: All the input sent to the model.
-        model_output_metadata: Full model response, including any metadata returned with model's output.
-        tool_calls: List of tool calls made during the model invocation, if any.
-    """
-
-    model_prediction: Union[dict, list, str, None] = None
-    model_input: Union[dict, list, str, None] = None
-    model_output_metadata: Union[dict, list, str, None] = None
-    tool_calls: Optional[List] = None
-
-    def params(self) -> dict:
-        return {
-            "actual": self.model_prediction,
-            "model_input": self.model_input,
-            "model_result": self.model_output_metadata,
-            "tool_calls": self.tool_calls,
-        }
-
-
-@define
-class OpenAIModel(BaseModel):
-    """
-    An OpenAI model definition with prompt template and relevant parameters for an Okareo evaluation.
-
-    Arguments:
-        model_id: Model ID to request from OpenAI completion.
-            For list of available models, see https://platform.openai.com/docs/models
-        temperature: Parameter for controlling the randomness of the model's output.
-        system_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
-        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
-        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
-        tools: List of tools to pass to the model.
-    """
-
-    type = "openai"
-    model_id: str = field(default="gpt-4o-mini")
-    temperature: float = field(default=0)
-    system_prompt_template: Optional[str] = None
-    user_prompt_template: Optional[str] = None
-    dialog_template: Optional[str] = None
-    tools: Optional[List] = None
-
-    def params(self) -> dict:
-        return {
-            "model_id": self.model_id,
-            "temperature": self.temperature,
-            "system_prompt_template": self.system_prompt_template,
-            "user_prompt_template": self.user_prompt_template,
-            "dialog_template": self.dialog_template,
-            "type": self.type,
-            "tools": self.tools,
-        }
-
-
-@define
-class GenerationModel(BaseModel):
-    """An LLM definition with prompt template and relevant parameters for an Okareo evaluation.
-
-    Arguments:
-        model_id: Model ID to request for LLM completion.
-        temperature: Parameter for controlling the randomness of the model's output.
-        system_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
-        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
-        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
-        tools: List of tools to pass to the model.
-    """
-
-    type = "generation"
-    model_id: str = field(default="gpt-4o-mini")
-    temperature: float = field(default=0)
-    system_prompt_template: Optional[str] = None
-    user_prompt_template: Optional[str] = None
-    dialog_template: Optional[str] = None
-    tools: Optional[List] = None
-
-    def params(self) -> dict:
-        return {
-            "model_id": self.model_id,
-            "temperature": self.temperature,
-            "system_prompt_template": self.system_prompt_template,
-            "user_prompt_template": self.user_prompt_template,
-            "dialog_template": self.dialog_template,
-            "type": self.type,
-            "tools": self.tools,
-        }
-
-
-@_attrs_define
-class OpenAIAssistantModel(BaseModel):
-    """An OpenAI Assistant definition with prompt template and relevant parameters for an Okareo evaluation.
-
-    Arguments:
-        model_id: Assistant ID to request to run a thread against.
-        assistant_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
-        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
-        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
-    """
-
-    type = "openai_assistant"
-    model_id: str
-    assistant_prompt_template: Optional[str] = None
-    user_prompt_template: Optional[str] = None
-    dialog_template: Optional[str] = None
-
-    def params(self) -> dict:
-        return {
-            "model_id": self.model_id,
-            "assistant_prompt_template": self.assistant_prompt_template,
-            "user_prompt_template": self.user_prompt_template,
-            "dialog_template": self.dialog_template,
-            "type": self.type,
-        }
-
-
-@_attrs_define
-class CohereModel(BaseModel):
-    """
-    A Cohere model definition with prompt template and relevant parameters for an Okareo evaluation.
-
-    Arguments:
-        model_id: Model ID to request for the Cohere completion.
-            For a full list of available models, see https://docs.cohere.com/v2/docs/models
-        model_type: Type of application for the Cohere model. Currently, we support 'classify' and 'embed'.
-        input_type: Input type for the Cohere embedding model.
-            For more details, see https://docs.cohere.com/v2/docs/embeddings#the-input_type-parameter
-    """
-
-    type = "cohere"
-    model_id: str
-    model_type: str
-    input_type: Optional[str] = None
-
-    def params(self) -> dict:
-        return {
-            "model_id": self.model_id,
-            "model_type": self.model_type,
-            "input_type": self.input_type,
-        }
-
-
-@_attrs_define
-class PineconeDb(BaseModel):
-    """
-    A Pinecone vector database configuration for use in an Okareo retrieval evaluation.
-
-    Arguments:
-        index_name: The name of the Pinecone index to connect to.
-        region: The region where the Pinecone index is hosted.
-        project_id: The project identifier associated with the Pinecone index.
-        top_k: The number of top results to retrieve for queries. Defaults to 5.
-    """
-
-    type = "pinecone"
-    index_name: str
-    region: str
-    project_id: str
-    top_k: int = 5
-
-    def params(self) -> dict:
-        return {
-            "index_name": self.index_name,
-            "region": self.region,
-            "project_id": self.project_id,
-            "top_k": self.top_k,
-        }
-
-
-@_attrs_define
-class QdrantDB(BaseModel):
-    """
-    A Qdrant vector database configuration for use in an Okareo retrieval evaluation.
-
-    Arguments:
-        collection_name: The name of the Qdrant collection to connect to.
-        url: The URL of the Qdrant instance.
-        top_k: The number of top results to retrieve for queries. Defaults to 5.
-        sparse: Whether to use sparse vectors for the Qdrant collection. Defaults to False.
-    """
-
-    type = "qdrant"
-    collection_name: str
-    url: str
-    top_k: int = 5
-    sparse: bool = False
-
-    def params(self) -> dict:
-        return {
-            "collection_name": self.collection_name,
-            "url": self.url,
-            "top_k": self.top_k,
-            "sparse": self.sparse,
-        }
-
-
-@_attrs_define
-class CustomModel(BaseModel):
-    """A custom model definition for an Okareo evaluation.
-    Requires a valid `invoke` definition that operates on a single input.
-
-    Arguments:
-        name: A name for the custom model.
-    """
-
-    type = "custom"
-    name: str
-
-    @abstractmethod
-    def invoke(
-        self, input_value: Union[dict, list, str]
-    ) -> Union[ModelInvocation, Any]:
-        """Method for taking a single scenario input and returning a single model output
-
-        Arguments:
-            input_value: Union[dict, list, str] - input to the model.
-
-        Returns:
-            Union[ModelInvocation, Any] - model output.
-            If the model returns a ModelInvocation, it should contain the model's prediction, input, and metadata.
-            If the model returns a tuple, the first element should be the model's prediction and the second element should be the metadata.
-        """
-
-    def params(self) -> dict:
-        return {
-            "name": self.name,
-            "type": self.type,
-            "model_invoker": self.invoke,
-        }
-
-
-@_attrs_define
-class CustomMultiturnTarget(BaseModel):
-    """A custom model definition for an Okareo multiturn evaluation.
-    Requires a valid `invoke` definition that operates on a single turn of a converstation.
-    """
-
-    type = "custom_target"
-    name: str
-
-    @abstractmethod
-    def invoke(self, messages: List[dict[str, str]]) -> Union[ModelInvocation, Any]:
-        """Method for continuing a multiturn conversation with a custom model
-
-        Arguments:
-            messages: list - list of messages in the conversation
-
-        Returns:
-            Union[ModelInvocation, Any] - model output.
-            If the model returns a ModelInvocation, it should contain the model's prediction, input, and metadata.
-            If the model returns a tuple, the first element should be the model's prediction and the second element should be the metadata.
-        """
-
-    def params(self) -> dict:
-        return {
-            "name": self.name,
-            "type": self.type,
-            "model_invoker": self.invoke,
-        }
-
-
-@define
-class StopConfig:
-    """
-    Configuration for stopping a multiturn conversation based on a specific check.
-
-    Arguments:
-        check_name: Name of the check to use for stopping the conversation.
-        stop_on: The check condition to stop the conversation.
-            Defaults to `True` (i.e., conversation stops when check evaluates to `True`).
-    """
-
-    check_name: str
-    stop_on: bool = field(default=True)
-
-    def params(self) -> dict:
-        return {"check_name": self.check_name, "stop_on": self.stop_on}
-
-
-class SessionConfig:
-    """Configuration for a custom API endpoint that starts a session.
-
-    Arguments:
-        url: URL of the endpoint to start the session.
-        method: HTTP method to use for the request. Defaults to `POST`.
-        headers: Headers to include in the request. Defaults to an empty JSON object.
-        body: Body to include in the request. Defaults to an empty JSON object.
-        status_code: Expected HTTP status code of the response.
-        response_session_id_path: Path to extract the session ID from the response.
-            E.g., `response.id` will use the `id` field of the response JSON object to set the `session_id`.
-    """
-
-    def __init__(
-        self,
-        url: str,
-        method: str = "POST",
-        headers: Optional[Union[str, dict]] = None,
-        body: Union[str, dict] = "{}",
-        status_code: Optional[int] = None,
-        response_session_id_path: str = "",
-    ) -> None:
-        self.url = url
-        self.method = method
-        self.headers = headers or json.dumps({})
-        self.body = body
-        self.status_code = status_code
-        self.response_session_id_path = response_session_id_path
-
-    def to_dict(self) -> dict:
-        return {
-            "url": self.url,
-            "method": self.method,
-            "headers": self.headers,
-            "body": self.body,
-            "status_code": self.status_code,
-            "response_session_id_path": self.response_session_id_path,
-        }
-
-
-class TurnConfig:
-    """
-    Configuration for a custom API endpoint that continues a session/conversation by one turn.
-
-    Arguments:
-        url: URL of the endpoint to start the session.
-        method: HTTP method to use for the request. Defaults to `POST`.
-        headers: Headers to include in the request.
-            Supports mustache syntax for variable substitution for `{latest_message}`, `{message_history}`, `{session_id}`.
-            Defaults to an empty JSON object.
-        body: Body to include in the request.
-            Supports mustache syntax for variable substitution for `{latest_message}`, `{message_history}`, `{session_id}`.
-            Defaults to an empty JSON object.
-        status_code: Expected HTTP status code of the response.
-        response_message_path: Path to extract the model's generated message from the response.
-            E.g., `response.completion.message.content` will parse out the corresponding field of
-            the response JSON object as the model's generated response.
-        response_tool_calls_path: Path to extract tool calls from the response.
-    """
-
-    def __init__(
-        self,
-        url: str,
-        method: str = "POST",
-        headers: Optional[Union[str, dict]] = None,
-        body: Union[str, dict] = "{}",
-        status_code: Optional[int] = None,
-        response_message_path: str = "",
-        response_tool_calls_path: str = "",
-    ) -> None:
-        self.url = url
-        self.method = method
-        self.headers = headers or json.dumps({})
-        self.body = body
-        self.status_code = status_code
-        self.response_message_path = response_message_path
-        self.response_tool_calls_path = (
-            response_tool_calls_path  # TODO: populate this once we support on BE
-        )
-
-    def to_dict(self) -> dict:
-        return {
-            "url": self.url,
-            "method": self.method,
-            "headers": self.headers,
-            "body": self.body,
-            "status_code": self.status_code,
-            "response_message_path": self.response_message_path,
-            "response_tool_calls_path": self.response_tool_calls_path,
-        }
-
-
-class CustomEndpointTarget:
-    """
-    A pair of custom API endpoints for starting a session and continuing a conversation to use in
-    Okareo multiturn evaluation.
-
-    Arguments:
-        start_session: A valid SessionConfig for starting a session.
-        next_turn: A valid TurnConfig for requesting and parsing the next turn of a conversation.
-    """
-
-    type = "custom_endpoint"
-
-    def __init__(self, start_session: SessionConfig, next_turn: TurnConfig) -> None:
-        self.start_session = start_session
-        self.next_turn = next_turn
-
-    def params(self) -> dict:
-        return {
-            "type": self.type,
-            "start_session_params": self.start_session.to_dict(),
-            "next_message_params": self.next_turn.to_dict(),
-        }
-
-
-@_attrs_define
-class MultiTurnDriver(BaseModel):
-    """
-    A driver model for Okareo multiturn evaluation.
-
-    Arguments:
-        target: Target model under test to use in the multiturn evaluation.
-        stop_check: A valid StopConfig or a dict that can be converted to StopConfig.
-        driver_model_id: Model ID to use for the driver model (e.g., "gpt-4.1").
-        driver_temperature: Parameter for controlling the randomness of the driver model's output.
-        repeats: Number of times to run a conversation per scenario row. Defaults to 1.
-        max_turns: Maximum number of turns to run in a conversation. Defaults to 5.
-        first_turn: Name of model (i.e., "target" or "driver") that should initiate each conversation. Defaults to "target".
-    """
-
-    type = "driver"
-    target: Union[
-        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
-    ]
-    stop_check: Union[StopConfig, dict]
-    driver_model_id: Optional[str] = None
-    driver_temperature: Optional[float] = 0.8
-    repeats: Optional[int] = 1
-    max_turns: Optional[int] = 5
-    first_turn: Optional[str] = "target"
-
-    def __attrs_post_init__(self) -> None:
-        if isinstance(self.stop_check, dict):
-            self.stop_check = StopConfig(**self.stop_check)
-
-    def params(self) -> dict:
-        return {
-            "type": self.type,
-            "target": self.target.params(),
-            "driver_model_id": self.driver_model_id,
-            "driver_temperature": self.driver_temperature,
-            "repeats": self.repeats,
-            "max_turns": self.max_turns,
-            "first_turn": self.first_turn,
-            "stop_check": (
-                self.stop_check.params()
-                if isinstance(self.stop_check, StopConfig)
-                else self.stop_check
-            ),
-        }
-
-
-@_attrs_define
-class CustomBatchModel(BaseModel):
-    """A custom batch model definition for an Okareo evaluation.
-    Requires a valid `invoke_batch` definition that operates on a single input.
-    """
-
-    type = "custom_batch"
-    name: str
-    batch_size: int = 1
-
-    @abstractmethod
-    def invoke_batch(
-        self, input_batch: list[dict[str, Union[dict, list, str]]]
-    ) -> list[dict[str, Union[ModelInvocation, Any]]]:
-        """Method for taking a batch of scenario inputs and returning a corresponding batch of model outputs
-
-        Arguments:
-            input_batch: list[dict[str, Union[dict, list, str]]] - batch of inputs to the model. Expects a list of
-            dicts of the format `{ 'id': str, 'input_value': Union[dict, list, str] }`.
-
-        Returns:
-            List of dicts of format `{ 'id': str, 'model_invocation': Union[ModelInvocation, Any] }`. 'id' must match
-            the corresponding input_batch element's 'id'.
-        """
-
-    def params(self) -> dict:
-        return {
-            "name": self.name,
-            "type": self.type,
-            "batch_size": self.batch_size,
-            "model_invoker": self.invoke_batch,
-        }
-
-
 class ModelUnderTest(AsyncProcessorMixin):
-    """A class for managing a Model Under Test (MUT) in Okareo."""
+    """A class for managing a Model Under Test (MUT) in Okareo.
+    Returned by [okareo.register_model()](/docs/reference/python-sdk/okareo#register_model)
+    """
 
     def __init__(
         self,
@@ -1170,3 +688,487 @@ class ModelUnderTest(AsyncProcessorMixin):
                         model_data,
                         return_dict["id"],
                     )
+
+
+@_attrs_define
+class ModelInvocation:
+    """
+    Model invocation response object returned from a CustomModel.invoke method
+    or as an element of a list returned from a CustomBatchModel.invoke_batch method.
+
+    Arguments:
+        model_prediction: Prediction from the model to be used when running the evaluation,
+            e.g. predicted class from classification model or generated text completion from
+            a generative model. This would typically be parsed out of the overall model_output_metadata.
+        model_input: All the input sent to the model.
+        model_output_metadata: Full model response, including any metadata returned with model's output.
+        tool_calls: List of tool calls made during the model invocation, if any.
+    """
+
+    model_prediction: Union[dict, list, str, None] = None
+    model_input: Union[dict, list, str, None] = None
+    model_output_metadata: Union[dict, list, str, None] = None
+    tool_calls: Optional[List] = None
+
+    def params(self) -> dict:
+        return {
+            "actual": self.model_prediction,
+            "model_input": self.model_input,
+            "model_result": self.model_output_metadata,
+            "tool_calls": self.tool_calls,
+        }
+
+
+@define
+class OpenAIModel(BaseModel):
+    """
+    An OpenAI model definition with prompt template and relevant parameters for an Okareo evaluation.
+
+    Arguments:
+        model_id: Model ID to request from OpenAI completion.
+            For list of available models, see https://platform.openai.com/docs/models
+        temperature: Parameter for controlling the randomness of the model's output.
+        system_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
+        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
+        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
+        tools: List of tools to pass to the model.
+    """
+
+    type = "openai"
+    model_id: str = field(default="gpt-4o-mini")
+    temperature: float = field(default=0)
+    system_prompt_template: Optional[str] = None
+    user_prompt_template: Optional[str] = None
+    dialog_template: Optional[str] = None
+    tools: Optional[List] = None
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+            "temperature": self.temperature,
+            "system_prompt_template": self.system_prompt_template,
+            "user_prompt_template": self.user_prompt_template,
+            "dialog_template": self.dialog_template,
+            "type": self.type,
+            "tools": self.tools,
+        }
+
+
+@define
+class GenerationModel(BaseModel):
+    """An LLM definition with prompt template and relevant parameters for an Okareo evaluation.
+
+    Arguments:
+        model_id: Model ID to request for LLM completion.
+        temperature: Parameter for controlling the randomness of the model's output.
+        system_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
+        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
+        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
+        tools: List of tools to pass to the model.
+    """
+
+    type = "generation"
+    model_id: str = field(default="gpt-4o-mini")
+    temperature: float = field(default=0)
+    system_prompt_template: Optional[str] = None
+    user_prompt_template: Optional[str] = None
+    dialog_template: Optional[str] = None
+    tools: Optional[List] = None
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+            "temperature": self.temperature,
+            "system_prompt_template": self.system_prompt_template,
+            "user_prompt_template": self.user_prompt_template,
+            "dialog_template": self.dialog_template,
+            "type": self.type,
+            "tools": self.tools,
+        }
+
+
+@_attrs_define
+class OpenAIAssistantModel(BaseModel):
+    """An OpenAI Assistant definition with prompt template and relevant parameters for an Okareo evaluation.
+
+    Arguments:
+        model_id: Assistant ID to request to run a thread against.
+        assistant_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
+        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
+        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
+    """
+
+    type = "openai_assistant"
+    model_id: str
+    assistant_prompt_template: Optional[str] = None
+    user_prompt_template: Optional[str] = None
+    dialog_template: Optional[str] = None
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+            "assistant_prompt_template": self.assistant_prompt_template,
+            "user_prompt_template": self.user_prompt_template,
+            "dialog_template": self.dialog_template,
+            "type": self.type,
+        }
+
+
+@_attrs_define
+class CohereModel(BaseModel):
+    """
+    A Cohere model definition with prompt template and relevant parameters for an Okareo evaluation.
+
+    Arguments:
+        model_id: Model ID to request for the Cohere completion.
+            For a full list of available models, see https://docs.cohere.com/v2/docs/models
+        model_type: Type of application for the Cohere model. Currently, we support 'classify' and 'embed'.
+        input_type: Input type for the Cohere embedding model.
+            For more details, see https://docs.cohere.com/v2/docs/embeddings#the-input_type-parameter
+    """
+
+    type = "cohere"
+    model_id: str
+    model_type: str
+    input_type: Optional[str] = None
+
+    def params(self) -> dict:
+        return {
+            "model_id": self.model_id,
+            "model_type": self.model_type,
+            "input_type": self.input_type,
+        }
+
+
+@_attrs_define
+class PineconeDb(BaseModel):
+    """
+    A Pinecone vector database configuration for use in an Okareo retrieval evaluation.
+
+    Arguments:
+        index_name: The name of the Pinecone index to connect to.
+        region: The region where the Pinecone index is hosted.
+        project_id: The project identifier associated with the Pinecone index.
+        top_k: The number of top results to retrieve for queries. Defaults to 5.
+    """
+
+    type = "pinecone"
+    index_name: str
+    region: str
+    project_id: str
+    top_k: int = 5
+
+    def params(self) -> dict:
+        return {
+            "index_name": self.index_name,
+            "region": self.region,
+            "project_id": self.project_id,
+            "top_k": self.top_k,
+        }
+
+
+@_attrs_define
+class QdrantDB(BaseModel):
+    """
+    A Qdrant vector database configuration for use in an Okareo retrieval evaluation.
+
+    Arguments:
+        collection_name: The name of the Qdrant collection to connect to.
+        url: The URL of the Qdrant instance.
+        top_k: The number of top results to retrieve for queries. Defaults to 5.
+        sparse: Whether to use sparse vectors for the Qdrant collection. Defaults to False.
+    """
+
+    type = "qdrant"
+    collection_name: str
+    url: str
+    top_k: int = 5
+    sparse: bool = False
+
+    def params(self) -> dict:
+        return {
+            "collection_name": self.collection_name,
+            "url": self.url,
+            "top_k": self.top_k,
+            "sparse": self.sparse,
+        }
+
+
+@_attrs_define
+class CustomModel(BaseModel):
+    """A custom model definition for an Okareo evaluation.
+    Requires a valid `invoke` definition that operates on a single input.
+
+    Arguments:
+        name: A name for the custom model.
+    """
+
+    type = "custom"
+    name: str
+
+    @abstractmethod
+    def invoke(
+        self, input_value: Union[dict, list, str]
+    ) -> Union[ModelInvocation, Any]:
+        """Method for taking a single scenario input and returning a single model output
+
+        Arguments:
+            input_value: Union[dict, list, str] - input to the model.
+
+        Returns:
+            Union[ModelInvocation, Any] - model output.
+            If the model returns a ModelInvocation, it should contain the model's prediction, input, and metadata.
+            If the model returns a tuple, the first element should be the model's prediction and the second element should be the metadata.
+        """
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "model_invoker": self.invoke,
+        }
+
+
+@_attrs_define
+class CustomMultiturnTarget(BaseModel):
+    """A custom model definition for an Okareo multiturn evaluation.
+    Requires a valid `invoke` definition that operates on a single turn of a converstation.
+    """
+
+    type = "custom_target"
+    name: str
+
+    @abstractmethod
+    def invoke(self, messages: List[dict[str, str]]) -> Union[ModelInvocation, Any]:
+        """Method for continuing a multiturn conversation with a custom model
+
+        Arguments:
+            messages: list - list of messages in the conversation
+
+        Returns:
+            Union[ModelInvocation, Any] - model output.
+            If the model returns a ModelInvocation, it should contain the model's prediction, input, and metadata.
+            If the model returns a tuple, the first element should be the model's prediction and the second element should be the metadata.
+        """
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "model_invoker": self.invoke,
+        }
+
+
+@define
+class StopConfig:
+    """
+    Configuration for stopping a multiturn conversation based on a specific check.
+
+    Arguments:
+        check_name: Name of the check to use for stopping the conversation.
+        stop_on: The check condition to stop the conversation.
+            Defaults to `True` (i.e., conversation stops when check evaluates to `True`).
+    """
+
+    check_name: str
+    stop_on: bool = field(default=True)
+
+    def params(self) -> dict:
+        return {"check_name": self.check_name, "stop_on": self.stop_on}
+
+
+class SessionConfig:
+    """Configuration for a custom API endpoint that starts a session.
+
+    Arguments:
+        url: URL of the endpoint to start the session.
+        method: HTTP method to use for the request. Defaults to `POST`.
+        headers: Headers to include in the request. Defaults to an empty JSON object.
+        body: Body to include in the request. Defaults to an empty JSON object.
+        status_code: Expected HTTP status code of the response.
+        response_session_id_path: Path to extract the session ID from the response.
+            E.g., `response.id` will use the `id` field of the response JSON object to set the `session_id`.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        method: str = "POST",
+        headers: Optional[Union[str, dict]] = None,
+        body: Union[str, dict] = "{}",
+        status_code: Optional[int] = None,
+        response_session_id_path: str = "",
+    ) -> None:
+        self.url = url
+        self.method = method
+        self.headers = headers or json.dumps({})
+        self.body = body
+        self.status_code = status_code
+        self.response_session_id_path = response_session_id_path
+
+    def to_dict(self) -> dict:
+        return {
+            "url": self.url,
+            "method": self.method,
+            "headers": self.headers,
+            "body": self.body,
+            "status_code": self.status_code,
+            "response_session_id_path": self.response_session_id_path,
+        }
+
+
+class TurnConfig:
+    """
+    Configuration for a custom API endpoint that continues a session/conversation by one turn.
+
+    Arguments:
+        url: URL of the endpoint to start the session.
+        method: HTTP method to use for the request. Defaults to `POST`.
+        headers: Headers to include in the request.
+            Supports mustache syntax for variable substitution for `{latest_message}`, `{message_history}`, `{session_id}`.
+            Defaults to an empty JSON object.
+        body: Body to include in the request.
+            Supports mustache syntax for variable substitution for `{latest_message}`, `{message_history}`, `{session_id}`.
+            Defaults to an empty JSON object.
+        status_code: Expected HTTP status code of the response.
+        response_message_path: Path to extract the model's generated message from the response.
+            E.g., `response.completion.message.content` will parse out the corresponding field of
+            the response JSON object as the model's generated response.
+        response_tool_calls_path: Path to extract tool calls from the response.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        method: str = "POST",
+        headers: Optional[Union[str, dict]] = None,
+        body: Union[str, dict] = "{}",
+        status_code: Optional[int] = None,
+        response_message_path: str = "",
+        response_tool_calls_path: str = "",
+    ) -> None:
+        self.url = url
+        self.method = method
+        self.headers = headers or json.dumps({})
+        self.body = body
+        self.status_code = status_code
+        self.response_message_path = response_message_path
+        self.response_tool_calls_path = (
+            response_tool_calls_path  # TODO: populate this once we support on BE
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "url": self.url,
+            "method": self.method,
+            "headers": self.headers,
+            "body": self.body,
+            "status_code": self.status_code,
+            "response_message_path": self.response_message_path,
+            "response_tool_calls_path": self.response_tool_calls_path,
+        }
+
+
+class CustomEndpointTarget:
+    """
+    A pair of custom API endpoints for starting a session and continuing a conversation to use in
+    Okareo multiturn evaluation.
+
+    Arguments:
+        start_session: A valid SessionConfig for starting a session.
+        next_turn: A valid TurnConfig for requesting and parsing the next turn of a conversation.
+    """
+
+    type = "custom_endpoint"
+
+    def __init__(self, start_session: SessionConfig, next_turn: TurnConfig) -> None:
+        self.start_session = start_session
+        self.next_turn = next_turn
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "start_session_params": self.start_session.to_dict(),
+            "next_message_params": self.next_turn.to_dict(),
+        }
+
+
+@_attrs_define
+class MultiTurnDriver(BaseModel):
+    """
+    A driver model for Okareo multiturn evaluation.
+
+    Arguments:
+        target: Target model under test to use in the multiturn evaluation.
+        stop_check: A valid StopConfig or a dict that can be converted to StopConfig.
+        driver_model_id: Model ID to use for the driver model (e.g., "gpt-4.1").
+        driver_temperature: Parameter for controlling the randomness of the driver model's output.
+        repeats: Number of times to run a conversation per scenario row. Defaults to 1.
+        max_turns: Maximum number of turns to run in a conversation. Defaults to 5.
+        first_turn: Name of model (i.e., "target" or "driver") that should initiate each conversation. Defaults to "target".
+    """
+
+    type = "driver"
+    target: Union[
+        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
+    ]
+    stop_check: Union[StopConfig, dict]
+    driver_model_id: Optional[str] = None
+    driver_temperature: Optional[float] = 0.8
+    repeats: Optional[int] = 1
+    max_turns: Optional[int] = 5
+    first_turn: Optional[str] = "target"
+
+    def __attrs_post_init__(self) -> None:
+        if isinstance(self.stop_check, dict):
+            self.stop_check = StopConfig(**self.stop_check)
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "target": self.target.params(),
+            "driver_model_id": self.driver_model_id,
+            "driver_temperature": self.driver_temperature,
+            "repeats": self.repeats,
+            "max_turns": self.max_turns,
+            "first_turn": self.first_turn,
+            "stop_check": (
+                self.stop_check.params()
+                if isinstance(self.stop_check, StopConfig)
+                else self.stop_check
+            ),
+        }
+
+
+@_attrs_define
+class CustomBatchModel(BaseModel):
+    """A custom batch model definition for an Okareo evaluation.
+    Requires a valid `invoke_batch` definition that operates on a single input.
+    """
+
+    type = "custom_batch"
+    name: str
+    batch_size: int = 1
+
+    @abstractmethod
+    def invoke_batch(
+        self, input_batch: list[dict[str, Union[dict, list, str]]]
+    ) -> list[dict[str, Union[ModelInvocation, Any]]]:
+        """Method for taking a batch of scenario inputs and returning a corresponding batch of model outputs
+
+        Arguments:
+            input_batch: list[dict[str, Union[dict, list, str]]] - batch of inputs to the model. Expects a list of
+            dicts of the format `{ 'id': str, 'input_value': Union[dict, list, str] }`.
+
+        Returns:
+            List of dicts of format `{ 'id': str, 'model_invocation': Union[ModelInvocation, Any] }`. 'id' must match
+            the corresponding input_batch element's 'id'.
+        """
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "batch_size": self.batch_size,
+            "model_invoker": self.invoke_batch,
+        }
