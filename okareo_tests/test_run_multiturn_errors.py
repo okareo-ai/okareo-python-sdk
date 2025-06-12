@@ -1,25 +1,19 @@
-import io
 import json
 import os
-import time
-from contextlib import redirect_stdout
-from typing import Any, Dict, Optional
+from typing import Any
 
 import pytest
-import requests # type: ignore
+import requests  # type: ignore
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import (
     CustomEndpointTarget,
     CustomMultiturnTarget,
-    GenerationModel,
     ModelInvocation,
     MultiTurnDriver,
     OpenAIModel,
     SessionConfig,
-    StopConfig,
     TurnConfig,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
@@ -54,9 +48,7 @@ def basic_scenario(rnd: str, okareo: Okareo) -> Any:
 class CustomModelWithDict(CustomMultiturnTarget):
     def invoke(self, messages: Any) -> Any:
         return ModelInvocation(
-            "Invalid response",
-            messages,
-            {"result": "dict response"}
+            "Invalid response", messages, {"result": "dict response"}
         )
 
 
@@ -80,19 +72,19 @@ class TestMultiturnErrors:
         return {"openai": OPENAI_API_KEY, "driver": OPENAI_API_KEY}
 
     def _register_and_expect_error(
-        self, 
-        okareo: Any, 
-        name: str, 
-        model_config: Any, 
+        self,
+        okareo: Any,
+        name: str,
+        model_config: Any,
         expected_error: str,
         run_test: bool = False,
         basic_scenario: Any = None,
         api_keys: Any = None,
-        checks: Any = None
+        checks: Any = None,
     ) -> None:
         """
         Helper method to register a model and optionally run a test, expecting an error.
-        
+
         Args:
             okareo: Okareo instance
             name: Model name
@@ -110,7 +102,7 @@ class TestMultiturnErrors:
                 model=MultiTurnDriver(**model_config),
                 update=True,
             )
-            
+
             with pytest.raises(Exception, match=expected_error):
                 mut.run_test(
                     scenario=basic_scenario,
@@ -136,15 +128,17 @@ class TestMultiturnErrors:
             "stop_check": self._create_basic_stop_check(),
             # target is missing
         }
-        
+
         self._register_and_expect_error(
-            okareo, 
-            f"Missing Target {rnd}", 
+            okareo,
+            f"Missing Target {rnd}",
             model_config,
-            "missing 1 required positional argument: 'target'"
+            "missing 1 required positional argument: 'target'",
         )
 
-    def test_invalid_first_turn(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+    def test_invalid_first_turn(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when first_turn is invalid"""
         model_config = {
             "max_turns": 2,
@@ -153,17 +147,19 @@ class TestMultiturnErrors:
             "first_turn": "invalid",  # Should be 'driver' or 'target'
             "stop_check": self._create_basic_stop_check(),
         }
-        
+
         self._register_and_expect_error(
             okareo,
             f"Invalid First Turn {rnd}",
             model_config,
             "Invalid 'first_turn' value: 'invalid'. Must be either 'target' or 'driver'",
             run_test=True,
-            basic_scenario=basic_scenario
+            basic_scenario=basic_scenario,
         )
 
-    def test_missing_driver_api_key(self, rnd: str, okareo: Any, basic_scenario: Any) -> None:
+    def test_missing_driver_api_key(
+        self, rnd: str, okareo: Any, basic_scenario: Any
+    ) -> None:
         """Test failure when driver API key is missing"""
         model_config = {
             "max_turns": 2,
@@ -172,7 +168,7 @@ class TestMultiturnErrors:
             "target": self._create_basic_openai_target(),
             "stop_check": self._create_basic_stop_check(),
         }
-        
+
         self._register_and_expect_error(
             okareo,
             f"Missing Driver API Key {rnd}",
@@ -180,7 +176,7 @@ class TestMultiturnErrors:
             "Missing 'driver' API key",
             run_test=True,
             basic_scenario=basic_scenario,
-            api_keys={"openai": "test-key"}  # Missing driver key
+            api_keys={"openai": "test-key"},  # Missing driver key
         )
 
     def test_empty_stop_check(self, rnd: str, okareo: Any, basic_scenario: Any) -> None:
@@ -191,7 +187,7 @@ class TestMultiturnErrors:
             "target": self._create_basic_openai_target(),
             "stop_check": {"check_name": "", "stop_on": False},
         }
-        
+
         self._register_and_expect_error(
             okareo,
             f"Missing Checks {rnd}",
@@ -199,7 +195,7 @@ class TestMultiturnErrors:
             "Invalid 'stop_check' configuration",
             run_test=True,
             basic_scenario=basic_scenario,
-            checks=[]  # Empty list of checks
+            checks=[],  # Empty list of checks
         )
 
     def test_invalid_stop_check(self, rnd: str, okareo: Any) -> None:
@@ -210,34 +206,38 @@ class TestMultiturnErrors:
             "target": self._create_basic_openai_target(),
             "stop_check": {"invalid_field": "model_refusal"},  # Missing check_name
         }
-        
+
         self._register_and_expect_error(
             okareo,
             f"Invalid Stop Check {rnd}",
             model_config,
-            "got an unexpected keyword argument 'invalid_field'"
+            "got an unexpected keyword argument 'invalid_field'",
         )
 
-    def test_invalid_temperature_values(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+    def test_invalid_temperature_values(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when temperature values are invalid"""
         temperature_test_cases: Any = [
             {
                 "name": f"Invalid Driver Temp {rnd}",
                 "config": {"driver_temperature": 5.0},  # Outside valid range
-                "error": "Driver temperature must be between 0 and 2"
+                "error": "Driver temperature must be between 0 and 2",
             },
             {
                 "name": f"Invalid Target Temp {rnd}",
-                "config": {"target": self._create_basic_openai_target(temperature=3.0)},  # Outside valid range
-                "error": "Target temperature must be between 0 and 2"
+                "config": {
+                    "target": self._create_basic_openai_target(temperature=3.0)
+                },  # Outside valid range
+                "error": "Target temperature must be between 0 and 2",
             },
             {
                 "name": f"Non-Numeric Temp {rnd}",
                 "config": {"driver_temperature": "hot"},  # Not a number
-                "error": "Invalid driver_temperature value"
-            }
+                "error": "Invalid driver_temperature value",
+            },
         ]
-        
+
         for test_case in temperature_test_cases:
             base_config = {
                 "max_turns": 2,
@@ -247,39 +247,43 @@ class TestMultiturnErrors:
             }
             # Manually update the config to avoid type issues
             if "driver_temperature" in test_case["config"]:
-                base_config["driver_temperature"] = test_case["config"]["driver_temperature"]
+                base_config["driver_temperature"] = test_case["config"][
+                    "driver_temperature"
+                ]
             if "target" in test_case["config"]:
                 base_config["target"] = test_case["config"]["target"]
-            
+
             self._register_and_expect_error(
                 okareo,
-                test_case["name"], # type: ignore
+                test_case["name"],  # type: ignore
                 base_config,
-                test_case["error"], # type: ignore
+                test_case["error"],  # type: ignore
                 run_test=True,
-                basic_scenario=basic_scenario
+                basic_scenario=basic_scenario,
             )
 
-    def test_invalid_max_turns(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+    def test_invalid_max_turns(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when max_turns is invalid"""
         max_turns_test_cases: Any = [
             {
                 "name": f"Negative Max Turns {rnd}",
                 "max_turns": 0,  # Zero value
-                "error": "max_turns must be greater than 0"
+                "error": "max_turns must be greater than 0",
             },
             {
                 "name": f"Too High Max Turns {rnd}",
                 "max_turns": 1000,  # Too high
-                "error": "max_turns must be greater than 0 and less than 999"
+                "error": "max_turns must be greater than 0 and less than 999",
             },
             {
                 "name": f"Non-Integer Max Turns {rnd}",
                 "max_turns": "many",  # Not an integer
-                "error": "Invalid max_turns value"
-            }
+                "error": "Invalid max_turns value",
+            },
         ]
-        
+
         for test_case in max_turns_test_cases:
             model_config = {
                 "max_turns": test_case["max_turns"],
@@ -287,23 +291,24 @@ class TestMultiturnErrors:
                 "target": self._create_basic_openai_target(),
                 "stop_check": self._create_basic_stop_check(),
             }
-            
+
             self._register_and_expect_error(
                 okareo,
                 test_case["name"],
                 model_config,
                 test_case["error"],
                 run_test=True,
-                basic_scenario=basic_scenario
+                basic_scenario=basic_scenario,
             )
 
-    def _create_custom_endpoint_configs(self, start_status_code: int = 201, next_status_code: int = 200) -> Any:
+    def _create_custom_endpoint_configs(
+        self, start_status_code: int = 201, next_status_code: int = 200
+    ) -> Any:
         """Helper method to create custom endpoint configurations"""
-        api_headers = json.dumps({
-            "api-key": OKAREO_API_KEY,
-            "Content-Type": "application/json"
-        })
-        
+        api_headers = json.dumps(
+            {"api-key": OKAREO_API_KEY, "Content-Type": "application/json"}
+        )
+
         start_config = SessionConfig(
             url=f"{base_url}/v0/custom_endpoint_stub/create",
             method="POST",
@@ -311,34 +316,35 @@ class TestMultiturnErrors:
             status_code=start_status_code,
             response_session_id_path="response.thread_id",
         )
-        
+
         next_config = TurnConfig(
             url=f"{base_url}/v0/custom_endpoint_stub/message",
             method="POST",
             headers=api_headers,
-            body=json.dumps({
-                "thread_id": "{session_id}",
-                "message": "{latest_message}"
-            }),
+            body=json.dumps(
+                {"thread_id": "{session_id}", "message": "{latest_message}"}
+            ),
             status_code=next_status_code,
             response_message_path="response.assistant_response",
         )
-        
+
         return start_config, next_config
 
-    def test_invalid_custom_endpoint_response_path(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+    def test_invalid_custom_endpoint_response_path(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when response_session_id_path is invalid in CustomEndpointTarget"""
         # Create configs with invalid response path
         start_config, next_config = self._create_custom_endpoint_configs()
         start_config.response_session_id_path = "response"  # Invalid path
-        
+
         model_config = {
             "max_turns": 2,
             "repeats": 1,
             "target": CustomEndpointTarget(start_config, next_config),
             "stop_check": self._create_basic_stop_check(),
         }
-        
+
         self._register_and_expect_error(
             okareo,
             f"Invalid Response Path {rnd}",
@@ -346,21 +352,25 @@ class TestMultiturnErrors:
             "Failed to parse response from custom endpoint",
             run_test=True,
             basic_scenario=basic_scenario,
-            api_keys={"openai": OPENAI_API_KEY}
+            api_keys={"openai": OPENAI_API_KEY},
         )
 
-    def test_custom_endpoint_status_code_mismatch(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+    def test_custom_endpoint_status_code_mismatch(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when expected status code doesn't match actual response status code"""
         # Create configs with mismatched status code
-        start_config, next_config = self._create_custom_endpoint_configs(next_status_code=2000)  # Invalid status code
-        
+        start_config, next_config = self._create_custom_endpoint_configs(
+            next_status_code=2000
+        )  # Invalid status code
+
         model_config = {
             "max_turns": 2,
             "repeats": 1,
             "target": CustomEndpointTarget(start_config, next_config),
             "stop_check": self._create_basic_stop_check(),
         }
-        
+
         self._register_and_expect_error(
             okareo,
             f"Status Code Mismatch {rnd}",
@@ -368,5 +378,5 @@ class TestMultiturnErrors:
             "Custom endpoint returned status_code .* which does not match expected status code",
             run_test=True,
             basic_scenario=basic_scenario,
-            api_keys={"openai": OPENAI_API_KEY}
+            api_keys={"openai": OPENAI_API_KEY},
         )
