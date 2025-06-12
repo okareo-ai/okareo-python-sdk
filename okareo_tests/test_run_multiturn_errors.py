@@ -3,7 +3,6 @@ import os
 from typing import Any
 
 import pytest
-import requests  # type: ignore
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
