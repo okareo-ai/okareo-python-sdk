@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,10 +20,14 @@ class TestCustomEndpointRequest:
         start_session_params (TestCustomEndpointRequestStartSessionParams): API parameters to start a session.
         next_message_params (Union[Unset, TestCustomEndpointRequestNextMessageParams]): API parameters to get the next
             message in the session. Optional.
+        mut_id (Union[Unset, str]): ID of the model to use for the custom endpoint. Optional.
+        sensitive_fields (Union[Unset, List[str]]): List of sensitive fields to redact in the response. Optional.
     """
 
     start_session_params: "TestCustomEndpointRequestStartSessionParams"
     next_message_params: Union[Unset, "TestCustomEndpointRequestNextMessageParams"] = UNSET
+    mut_id: Union[Unset, str] = UNSET
+    sensitive_fields: Union[Unset, List[str]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -32,6 +36,11 @@ class TestCustomEndpointRequest:
         next_message_params: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.next_message_params, Unset):
             next_message_params = self.next_message_params.to_dict()
+
+        mut_id = self.mut_id
+        sensitive_fields: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.sensitive_fields, Unset):
+            sensitive_fields = self.sensitive_fields
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -42,6 +51,10 @@ class TestCustomEndpointRequest:
         )
         if next_message_params is not UNSET:
             field_dict["next_message_params"] = next_message_params
+        if mut_id is not UNSET:
+            field_dict["mut_id"] = mut_id
+        if sensitive_fields is not UNSET:
+            field_dict["sensitive_fields"] = sensitive_fields
 
         return field_dict
 
@@ -62,9 +75,15 @@ class TestCustomEndpointRequest:
         else:
             next_message_params = TestCustomEndpointRequestNextMessageParams.from_dict(_next_message_params)
 
+        mut_id = d.pop("mut_id", UNSET)
+
+        sensitive_fields = cast(List[str], d.pop("sensitive_fields", UNSET))
+
         test_custom_endpoint_request = cls(
             start_session_params=start_session_params,
             next_message_params=next_message_params,
+            mut_id=mut_id,
+            sensitive_fields=sensitive_fields,
         )
 
         test_custom_endpoint_request.additional_properties = d

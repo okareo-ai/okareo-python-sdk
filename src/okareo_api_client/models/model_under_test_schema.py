@@ -18,6 +18,8 @@ class ModelUnderTestSchema:
     Attributes:
         name (Union[Unset, str]): Name of the model
         models (Union[Unset, ModelUnderTestSchemaModels]): Models to be added for testing
+        sensitive_fields (Union[Unset, List[str]]): List of sensitive fields in the model to redact. Should include
+            nested fields, e.g. ['headers.authorization', 'body.password']
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter models in the Okareo app
         project_id (Union[Unset, str]): ID of the project
         update (Union[Unset, bool]): If set to true, the model will be updated instead of returning the existing model
@@ -25,6 +27,7 @@ class ModelUnderTestSchema:
 
     name: Union[Unset, str] = UNSET
     models: Union[Unset, "ModelUnderTestSchemaModels"] = UNSET
+    sensitive_fields: Union[Unset, List[str]] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
     update: Union[Unset, bool] = False
@@ -35,6 +38,10 @@ class ModelUnderTestSchema:
         models: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.models, Unset):
             models = self.models.to_dict()
+
+        sensitive_fields: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.sensitive_fields, Unset):
+            sensitive_fields = self.sensitive_fields
 
         tags: Union[Unset, List[str]] = UNSET
         if not isinstance(self.tags, Unset):
@@ -50,6 +57,8 @@ class ModelUnderTestSchema:
             field_dict["name"] = name
         if models is not UNSET:
             field_dict["models"] = models
+        if sensitive_fields is not UNSET:
+            field_dict["sensitive_fields"] = sensitive_fields
         if tags is not UNSET:
             field_dict["tags"] = tags
         if project_id is not UNSET:
@@ -73,6 +82,8 @@ class ModelUnderTestSchema:
         else:
             models = ModelUnderTestSchemaModels.from_dict(_models)
 
+        sensitive_fields = cast(List[str], d.pop("sensitive_fields", UNSET))
+
         tags = cast(List[str], d.pop("tags", UNSET))
 
         project_id = d.pop("project_id", UNSET)
@@ -82,6 +93,7 @@ class ModelUnderTestSchema:
         model_under_test_schema = cls(
             name=name,
             models=models,
+            sensitive_fields=sensitive_fields,
             tags=tags,
             project_id=project_id,
             update=update,

@@ -22,6 +22,7 @@ class ModelUnderTestResponse:
         tags (List[str]):
         time_created (str):
         models (Union[Unset, ModelUnderTestResponseModels]):
+        sensitive_fields (Union[Unset, List[str]]):
         datapoint_count (Union[Unset, int]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this model Default: ''.
         warning (Union[Unset, str]):
@@ -33,6 +34,7 @@ class ModelUnderTestResponse:
     tags: List[str]
     time_created: str
     models: Union[Unset, "ModelUnderTestResponseModels"] = UNSET
+    sensitive_fields: Union[Unset, List[str]] = UNSET
     datapoint_count: Union[Unset, int] = UNSET
     app_link: Union[Unset, str] = ""
     warning: Union[Unset, str] = UNSET
@@ -48,6 +50,10 @@ class ModelUnderTestResponse:
         models: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.models, Unset):
             models = self.models.to_dict()
+
+        sensitive_fields: Union[Unset, List[str]] = UNSET
+        if not isinstance(self.sensitive_fields, Unset):
+            sensitive_fields = self.sensitive_fields
 
         datapoint_count = self.datapoint_count
         app_link = self.app_link
@@ -66,6 +72,8 @@ class ModelUnderTestResponse:
         )
         if models is not UNSET:
             field_dict["models"] = models
+        if sensitive_fields is not UNSET:
+            field_dict["sensitive_fields"] = sensitive_fields
         if datapoint_count is not UNSET:
             field_dict["datapoint_count"] = datapoint_count
         if app_link is not UNSET:
@@ -97,6 +105,8 @@ class ModelUnderTestResponse:
         else:
             models = ModelUnderTestResponseModels.from_dict(_models)
 
+        sensitive_fields = cast(List[str], d.pop("sensitive_fields", UNSET))
+
         datapoint_count = d.pop("datapoint_count", UNSET)
 
         app_link = d.pop("app_link", UNSET)
@@ -110,6 +120,7 @@ class ModelUnderTestResponse:
             tags=tags,
             time_created=time_created,
             models=models,
+            sensitive_fields=sensitive_fields,
             datapoint_count=datapoint_count,
             app_link=app_link,
             warning=warning,
