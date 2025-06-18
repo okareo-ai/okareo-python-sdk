@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -81,7 +81,7 @@ class TestMultiturnErrors:
         basic_scenario: Any = None,
         api_keys: Any = None,
         checks: Any = None,
-        sensitive_fields: list[str] | None = None,
+        sensitive_fields: Optional[list[str]] = None,
     ) -> None:
         """
         Helper method to register a model and optionally run a test, expecting an error.
