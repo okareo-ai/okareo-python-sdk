@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import Any
 
 import pytest
@@ -80,6 +81,7 @@ class TestMultiturnErrors:
         basic_scenario: Any = None,
         api_keys: Any = None,
         checks: Any = None,
+        sensitive_fields: list[str] | None = None,
     ) -> None:
         """
         Helper method to register a model and optionally run a test, expecting an error.
@@ -93,6 +95,7 @@ class TestMultiturnErrors:
             basic_scenario: Scenario for test run
             api_keys: API keys for test run
             checks: Checks for test run
+            sensitive_fields: Sensitive fields to redact in responses/error messages
         """
         if run_test:
             # Register model first, then run test and expect error
@@ -100,6 +103,7 @@ class TestMultiturnErrors:
                 name=name,
                 model=MultiTurnDriver(**model_config),
                 update=True,
+                sensitive_fields=sensitive_fields,
             )
 
             with pytest.raises(Exception, match=expected_error):
@@ -117,6 +121,7 @@ class TestMultiturnErrors:
                     name=name,
                     model=MultiTurnDriver(**model_config),
                     update=True,
+                    sensitive_fields=sensitive_fields,
                 )
 
     def test_missing_target(self, rnd: str, okareo: Any) -> None:
@@ -301,11 +306,14 @@ class TestMultiturnErrors:
             )
 
     def _create_custom_endpoint_configs(
-        self, start_status_code: int = 201, next_status_code: int = 200
+        self,
+        start_status_code: int = 201,
+        next_status_code: int = 200,
+        api_key: str = OKAREO_API_KEY,
     ) -> Any:
         """Helper method to create custom endpoint configurations"""
         api_headers = json.dumps(
-            {"api-key": OKAREO_API_KEY, "Content-Type": "application/json"}
+            {"api-key": api_key, "Content-Type": "application/json"}
         )
 
         start_config = SessionConfig(
@@ -378,4 +386,85 @@ class TestMultiturnErrors:
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
+        )
+
+    def test_custom_endpoint_sensitive_fields(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
+        """Test failure ensuring that sensitive fields are not leaked in error messages"""
+        # Create configs with mismatched status code
+        # Status code mismatch will be used to trigger an error, but assertions will target
+        # the sensitive fields redaction in the error message.
+        start_config, next_config = self._create_custom_endpoint_configs(
+            start_status_code=2000
+        )
+
+        model_config = {
+            "max_turns": 2,
+            "repeats": 1,
+            "target": CustomEndpointTarget(start_config, next_config),
+            "stop_check": self._create_basic_stop_check(),
+        }
+
+        model_name = "Sensitive Fields Test " + rnd
+        redacted_str = re.escape("*" * 16)
+        exception_str_template = (
+            "Custom endpoint returned status_code {status_code} which does not match expected status code.*"
+            + "Headers: {'api-key': '"
+            + redacted_str
+            + "', 'Content-Type': 'application/json'}, Body: {}. .*"
+        )
+        exception_str_match = exception_str_template.replace("{status_code}", "201")
+
+        # Register the model with a custom endpoint that will fail.
+        # Anticipate a redacted api-key
+        self._register_and_expect_error(
+            okareo,
+            model_name,
+            model_config,
+            exception_str_match,
+            run_test=True,
+            basic_scenario=basic_scenario,
+            api_keys={"openai": OPENAI_API_KEY},
+            sensitive_fields=["api-key"],
+        )
+
+        # Register the model using redacted api-key field with same sensitive fields.
+        # Anticipate same failure as above
+        start_config, next_config = self._create_custom_endpoint_configs(
+            start_status_code=2000, api_key="****************"
+        )
+
+        model_config = {
+            "max_turns": 2,
+            "repeats": 1,
+            "target": CustomEndpointTarget(start_config, next_config),
+            "stop_check": self._create_basic_stop_check(),
+        }
+
+        # Register the model with a custom endpoint that will fail.
+        # Anticipate a redacted api-key
+        self._register_and_expect_error(
+            okareo,
+            model_name,
+            model_config,
+            exception_str_match,
+            run_test=True,
+            basic_scenario=basic_scenario,
+            api_keys={"openai": OPENAI_API_KEY},
+            sensitive_fields=["api-key"],
+        )
+
+        # Register the model using redacted api-key field with api-key rm from sensitive fields.
+        # Anticipate an auth error failure due to bad api-key
+        exception_str_match = exception_str_template.replace("{status_code}", "401")
+        self._register_and_expect_error(
+            okareo,
+            model_name,
+            model_config,
+            exception_str_match,
+            run_test=True,
+            basic_scenario=basic_scenario,
+            api_keys={"openai": OPENAI_API_KEY},
+            sensitive_fields=[],  # api-key should be overwritten with redacted string, causing 401
         )

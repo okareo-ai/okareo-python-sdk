@@ -222,6 +222,7 @@ class Okareo:
         project_id: Union[str, None] = None,
         model: Union[None, BaseModel, List[BaseModel]] = None,
         update: bool = False,
+        sensitive_fields: Union[List[str], None] = None,
     ) -> ModelUnderTest:
         """
         Register a new Model Under Test (MUT) to use in an Okareo evaluation.
@@ -232,6 +233,7 @@ class Okareo:
             project_id (Union[str, None], optional): The project ID to associate the model with.
             model (Union[None, BaseModel, List[BaseModel]], optional): The model or list of models to register.
             update (bool, optional): Whether to update an existing model with the same name. Defaults to False.
+            sensitive_fields (List[str], optional): A list of sensitive fields to mask in the model parameters. Defaults to None.
 
         Returns:
             ModelUnderTest: The registered ModelUnderTest object.
@@ -242,7 +244,12 @@ class Okareo:
         """
         if tags is None:
             tags = []
-        data: Dict[str, Any] = {"name": name, "tags": tags, "update": update}
+        data: Dict[str, Any] = {
+            "name": name,
+            "tags": tags,
+            "update": update,
+            "sensitive_fields": sensitive_fields,
+        }
         # will rename name to model in the future api-breaking release
         model_invoker = None
         if isinstance(model, BaseModel) or (

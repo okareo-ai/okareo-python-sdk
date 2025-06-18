@@ -1,8 +1,8 @@
 import io
 import json
 import os
-import time
 import re
+import time
 from contextlib import redirect_stdout
 from typing import Any
 
@@ -984,7 +984,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     scenario = okareo.create_scenario_set(scenario_set_create)
 
     # Run the test; ensure the api-key is redacted in the exception
-    REDACTED_STR = re.escape("*"*16)
+    redacted_str = re.escape("*" * 16)
     base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
     with pytest.raises(
         Exception,
@@ -992,10 +992,12 @@ def test_multiturn_driver_with_custom_endpoint_exception(
             "Custom endpoint failed with status_code 401. Full details: Request: POST "
             + base_url
             + "/v0/custom_endpoint_stub/create, "
-            + "Headers: {'api-key': '" + REDACTED_STR + "', 'Content-Type': 'application/json'}, Body: {}. "
+            + "Headers: {'api-key': '"
+            + redacted_str
+            + "', 'Content-Type': 'application/json'}, Body: {}. "
             + 'Error message is: {"detail":"Invalid Okareo API Token. Please check the docs to '
             + 'get Okareo API Token: https://okareo.com/docs/getting-started/overview"}.'
-        )
+        ),
     ):
         evaluation = multiturn_model.run_test(
             name=f"Custom Endpoint Test Exception - {rnd}",
