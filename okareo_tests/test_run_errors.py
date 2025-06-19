@@ -468,39 +468,36 @@ class TestMultiturnErrors:
             api_keys={"openai": OPENAI_API_KEY},
             sensitive_fields=[],  # api-key should be overwritten with redacted string, causing 401
         )
-    def test_nl_generation_missing_api_key(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+
+    def test_nl_generation_missing_api_key(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when API keys are missing for NL_GENERATION test run"""
         target = self._create_basic_openai_target()
         model_name = f"Missing API Key NL Gen {rnd}"
-        
+
         # Register the model
-        mut = okareo.register_model(
-            name=model_name,
-            model=target,
-            update=True
-        )
-        
+        mut = okareo.register_model(name=model_name, model=target, update=True)
+
         # Run test without providing api_keys
         with pytest.raises(Exception, match="Missing API"):
             mut.run_test(
                 scenario=basic_scenario,
                 name="Test Run",
                 test_run_type=TestRunType.NL_GENERATION,
-                checks=["coherence_summary"]
+                checks=["coherence_summary"],
             )
 
-    def test_nl_generation_no_checks(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+    def test_nl_generation_no_checks(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when no checks are provided for NL_GENERATION test run"""
         target = self._create_basic_openai_target()
         model_name = f"No Checks NL Gen {rnd}"
-        
+
         # Register the model
-        mut = okareo.register_model(
-            name=model_name,
-            model=target,
-            update=True
-        )
-        
+        mut = okareo.register_model(name=model_name, model=target, update=True)
+
         # Run test with empty checks list
         with pytest.raises(Exception, match="No checks were provided"):
             mut.run_test(
@@ -508,26 +505,27 @@ class TestMultiturnErrors:
                 name="Test Run",
                 test_run_type=TestRunType.NL_GENERATION,
                 api_keys={"openai": OPENAI_API_KEY},
-                checks=[]
+                checks=[],
             )
-    def test_nl_generation_invalid_checks(self, rnd: str, basic_scenario: Any, okareo: Any) -> None:
+
+    def test_nl_generation_invalid_checks(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
         """Test failure when no checks are provided for NL_GENERATION test run"""
         target = self._create_basic_openai_target()
         model_name = f"No Checks NL Gen {rnd}"
-        
+
         # Register the model
-        mut = okareo.register_model(
-            name=model_name,
-            model=target,
-            update=True
-        )
-        
+        mut = okareo.register_model(name=model_name, model=target, update=True)
+
         # Run test with empty checks list
-        with pytest.raises(Exception, match="One of more of the checks entered was invalid"):
+        with pytest.raises(
+            Exception, match="One of more of the checks entered was invalid"
+        ):
             mut.run_test(
                 scenario=basic_scenario,
                 name="Test Run",
                 test_run_type=TestRunType.NL_GENERATION,
                 api_keys={"openai": OPENAI_API_KEY},
-                checks=["asdf"]
+                checks=["asdf"],
             )
