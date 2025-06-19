@@ -82,7 +82,7 @@ class TestScenarioExceptions:
                 seed_data=[SeedData(input_=complex_input, result="Test result")],
             )
             okareo_client.create_scenario_set(scenario_set_create)
-            assert False, "Expected exception was not raised"
+            pytest.fail("Expected exception was not raised")
         except Exception:
             # Either a client-side serialization error or server-side processing error
             assert True
