@@ -129,10 +129,11 @@ def test_run_test_openai(
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
+        checks=["latency"],
     )
     assert run_resp.name == f"openai-chat-run-{rnd}"
     assert run_resp.status == "FINISHED"
-    assert_metrics(run_resp, num_rows=1)
+    assert_metrics(run_resp, num_rows=1, custom_dimensions=["latency"])
 
 
 def test_run_test_openai_2prompts(
@@ -235,10 +236,11 @@ def test_run_test_openai_assistant(
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
         calculate_metrics=True,
+        checks=["latency"],
     )
     assert run_resp.name == f"openai-assistant-run-{rnd}"
     assert run_resp.status == "FINISHED"
-    assert_metrics(run_resp, num_rows=1)
+    assert_metrics(run_resp, num_rows=1, custom_dimensions=["latency"])
 
 
 def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:

@@ -67,10 +67,11 @@ def run_generation_model_test(
         scenario=article_scenario_set,
         api_key=api_key,
         test_run_type=TestRunType.NL_GENERATION,
+        checks=["latency"],
     )
 
     assert run_resp.name == f"ci-generation-model-{model_id}-run-{rnd}"
-    assert_metrics(run_resp, num_rows=1)
+    assert_metrics(run_resp, num_rows=1, custom_dimensions=["latency"])
 
 
 def test_gpt35(
