@@ -1077,19 +1077,27 @@ class CustomEndpointTarget:
     Arguments:
         start_session: A valid SessionConfig for starting a session.
         next_turn: A valid TurnConfig for requesting and parsing the next turn of a conversation.
+        max_parallel_requests: Maximum number of parallel requests to allow when running the evaluation.
     """
 
     type = "custom_endpoint"
 
-    def __init__(self, start_session: SessionConfig, next_turn: TurnConfig) -> None:
+    def __init__(
+        self,
+        start_session: SessionConfig,
+        next_turn: TurnConfig,
+        max_parallel_requests: Optional[int] = None,
+    ) -> None:
         self.start_session = start_session
         self.next_turn = next_turn
+        self.max_parallel_requests = max_parallel_requests
 
     def params(self) -> dict:
         return {
             "type": self.type,
             "start_session_params": self.start_session.to_dict(),
             "next_message_params": self.next_turn.to_dict(),
+            "max_parallel_requests": self.max_parallel_requests,
         }
 
 
