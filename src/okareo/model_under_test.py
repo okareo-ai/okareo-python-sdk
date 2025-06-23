@@ -650,7 +650,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         if not self._has_custom_batch_model():
             custom_model_invoker = self.models["custom"]["model_invoker"]
             for scenario_data_point in tqdm(
-                scenario_data_points, desc="Generating", unit="datapoint"
+                scenario_data_points, desc="Invoking CustomModel", unit="datapoint"
             ):
                 scenario_input = self._extract_input_from_scenario_data_point(
                     scenario_data_point
@@ -667,7 +667,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             custom_model_invoker = self.models["custom_batch"]["model_invoker"]
             batch_size = self.models["custom_batch"]["batch_size"]
             for index in tqdm(
-                range(0, datapoint_len, batch_size), desc="Generating", unit="batch"
+                range(0, datapoint_len, batch_size),
+                desc="Invoking CustomModel",
+                unit="batch",
             ):
                 end_index = min(index + batch_size, datapoint_len)
                 scenario_data_points_batch = scenario_data_points[index:end_index]
