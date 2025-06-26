@@ -20,6 +20,8 @@ from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
 
+from .check_error_raise import Check
+
 OKAREO_API_KEY = os.environ.get("OKAREO_API_KEY", "NOT SET")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "NOT SET")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "NOT SET")
@@ -356,7 +358,7 @@ class TestMultiturnErrors:
             okareo,
             f"Invalid Response Path {rnd}",
             model_config,
-            "Failed to parse response from custom endpoint",
+            "Could not parse the response using path",
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
@@ -382,7 +384,7 @@ class TestMultiturnErrors:
             okareo,
             f"Status Code Mismatch {rnd}",
             model_config,
-            "Custom endpoint returned status_code .* which does not match expected status code",
+            "did not match expected status code",
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
@@ -528,4 +530,161 @@ class TestMultiturnErrors:
                 test_run_type=TestRunType.NL_GENERATION,
                 api_keys={"openai": OPENAI_API_KEY},
                 checks=["asdf"],
+            )
+
+    def test_custom_model_raises_value_error(self, rnd: str, okareo: Okareo) -> None:
+        """Test failure when custom model raises a ValueError during invocation."""
+
+        # Define a custom model that raises a ValueError
+        class ErrorRaisingModel(CustomMultiturnTarget):
+            def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+                # Always raise a ValueError with a specific message
+                raise ValueError("This is a deliberate error from the custom model")
+
+        # Create the model instance
+        custom_model = ErrorRaisingModel(name=f"error_model_{rnd}")
+
+        # Register the model with MultiTurnDriver
+        model_under_test = okareo.register_model(
+            name=f"Error Model Test {rnd}",
+            model=MultiTurnDriver(
+                driver_temperature=0.5,
+                max_turns=3,
+                repeats=1,
+                target=custom_model,
+                stop_check={"check_name": "model_refusal", "stop_on": False},
+            ),
+            update=True,
+        )
+
+        # Create a basic scenario
+        seeds = [
+            SeedData(
+                input_="Hello, how are you today?",
+                result="appropriate greeting response",
+            ),
+        ]
+
+        scenario_set_create = ScenarioSetCreate(
+            name=f"Error Model Test Scenario - {rnd}", seed_data=seeds
+        )
+        scenario = okareo.create_scenario_set(scenario_set_create)
+
+        # Run the test and expect an error
+        with pytest.raises(
+            Exception, match="This is a deliberate error from the custom model"
+        ):
+            model_under_test.run_test(
+                name=f"Error Model Test - {rnd}",
+                api_key=OPENAI_API_KEY,
+                scenario=scenario,
+                test_run_type=TestRunType.MULTI_TURN,
+                checks=["task_completed"],
+            )
+
+    def test_custom_model_parsing_error_from_return(
+        self, rnd: str, okareo: Okareo
+    ) -> None:
+        """Test failure when custom model raises a ValueError during invocation."""
+
+        # Define a custom model that raises a ValueError
+        class ErrorRaisingModel(CustomMultiturnTarget):
+            def invoke(self, messages: list[dict[str, str]]) -> Any:
+                # Always raise a ValueError with a specific message
+                return "Not a modelinvocation object"
+
+        # Create the model instance
+        custom_model = ErrorRaisingModel(name=f"error_model_{rnd}")
+
+        # Register the model with MultiTurnDriver
+        model_under_test = okareo.register_model(
+            name=f"Error Model Test {rnd}",
+            model=MultiTurnDriver(
+                driver_temperature=0.5,
+                max_turns=3,
+                repeats=1,
+                target=custom_model,
+                stop_check={"check_name": "model_refusal", "stop_on": False},
+            ),
+            update=True,
+        )
+
+        # Create a basic scenario
+        seeds = [
+            SeedData(
+                input_="Hello, how are you today?",
+                result="appropriate greeting response",
+            ),
+        ]
+
+        scenario_set_create = ScenarioSetCreate(
+            name=f"Error Model Test Scenario - {rnd}", seed_data=seeds
+        )
+        scenario = okareo.create_scenario_set(scenario_set_create)
+
+        # Run the test and expect an error
+        with pytest.raises(
+            Exception,
+            match="CustomModel did not return a response, or we were unable to parse it.",
+        ):
+            model_under_test.run_test(
+                name=f"Error Model Test - {rnd}",
+                api_key=OPENAI_API_KEY,
+                scenario=scenario,
+                test_run_type=TestRunType.MULTI_TURN,
+                checks=[
+                    "contains_all_imports",
+                    "compression_ratio",
+                    "are_all_params_expected",
+                    "reverse_qa_quality",
+                ],
+            )
+
+    def test_multiturn_error_checks(self, rnd: str, okareo: Okareo) -> None:
+        """Test failure when invalid checks are provided for MULTI_TURN test run"""
+        # Create a custom check that raises an error
+        okareo.create_or_update_check(
+            name="error_check",
+            description="error_check",
+            check=Check(),
+        )
+
+        # Create a basic multiturn model
+        model_under_test = okareo.register_model(
+            name=f"Error Check MT {rnd}",
+            model=MultiTurnDriver(
+                driver_temperature=0.5,
+                max_turns=3,
+                repeats=1,
+                target=OpenAIModel(
+                    model_id="gpt-4o-mini",
+                    temperature=0,
+                    system_prompt_template="test prompt",
+                ),
+                stop_check={"check_name": "model_refusal", "stop_on": False},
+            ),
+            update=True,
+        )
+
+        # Create a basic scenario
+        seeds = [
+            SeedData(
+                input_="Test input",
+                result="Test result",
+            ),
+        ]
+
+        scenario_set_create = ScenarioSetCreate(
+            name=f"Error Check Test Scenario - {rnd}", seed_data=seeds
+        )
+        scenario = okareo.create_scenario_set(scenario_set_create)
+
+        # Run test with invalid check and expect error
+        with pytest.raises(Exception, match="OAn error occurred while running checks"):
+            model_under_test.run_test(
+                scenario=scenario,
+                name="Test Run",
+                test_run_type=TestRunType.MULTI_TURN,
+                api_keys={"openai": OPENAI_API_KEY},
+                checks=["error_check"],
             )
