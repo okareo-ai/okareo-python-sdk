@@ -60,7 +60,7 @@ class TestMultiturnErrors:
     def _create_basic_openai_target(self, temperature: float = 0) -> Any:
         """Helper method to create a basic OpenAI target model"""
         return OpenAIModel(
-            model_id="gpt-4o-mini",
+            model_id="gpt-4o-2024-11-20",
             temperature=temperature,
             system_prompt_template="test prompt",
         )
@@ -411,10 +411,9 @@ class TestMultiturnErrors:
         model_name = "Sensitive Fields Test " + rnd
         redacted_str = re.escape("*" * 16)
         exception_str_template = (
-            "Custom endpoint returned status_code {status_code} which does not match expected status code.*"
-            + "Headers: {'api-key': '"
+            "Response status code {status_code} did not match expected status code 2000. Response: .*. Request: .* http://.*?, Headers: {'api-key': '"
             + redacted_str
-            + "', 'Content-Type': 'application/json'}, Body: {}. .*"
+            + "', 'Content-Type': 'application/json'}, Body: {}."
         )
         exception_str_match = exception_str_template.replace("{status_code}", "201")
 
@@ -680,7 +679,7 @@ class TestMultiturnErrors:
         scenario = okareo.create_scenario_set(scenario_set_create)
 
         # Run test with invalid check and expect error
-        with pytest.raises(Exception, match="OAn error occurred while running checks"):
+        with pytest.raises(Exception, match="An error occurred while running checks"):
             model_under_test.run_test(
                 scenario=scenario,
                 name="Test Run",
