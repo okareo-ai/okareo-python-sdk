@@ -3,6 +3,8 @@
 from .add_model_to_group_v0_groups_group_id_models_post_response_add_model_to_group_v0_groups_group_id_models_post import (
     AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost,
 )
+from .assistant_end_thread_request import AssistantEndThreadRequest
+from .assistant_end_thread_response import AssistantEndThreadResponse
 from .assistant_message_request import AssistantMessageRequest
 from .assistant_message_response import AssistantMessageResponse
 from .assistant_thread_response import AssistantThreadResponse
@@ -103,9 +105,11 @@ from .slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_g
 )
 from .summary_datapoint_search import SummaryDatapointSearch
 from .test_custom_endpoint_request import TestCustomEndpointRequest
+from .test_custom_endpoint_request_end_session_params import TestCustomEndpointRequestEndSessionParams
 from .test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
 from .test_custom_endpoint_request_start_session_params import TestCustomEndpointRequestStartSessionParams
 from .test_custom_endpoint_response import TestCustomEndpointResponse
+from .test_custom_endpoint_response_end_session_raw_response import TestCustomEndpointResponseEndSessionRawResponse
 from .test_custom_endpoint_response_next_message_raw_response import TestCustomEndpointResponseNextMessageRawResponse
 from .test_custom_endpoint_response_start_session_raw_response import TestCustomEndpointResponseStartSessionRawResponse
 from .test_data_point_item import TestDataPointItem
@@ -125,6 +129,8 @@ from .validation_error import ValidationError
 
 __all__ = (
     "AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost",
+    "AssistantEndThreadRequest",
+    "AssistantEndThreadResponse",
     "AssistantMessageRequest",
     "AssistantMessageResponse",
     "AssistantThreadResponse",
@@ -207,9 +213,11 @@ __all__ = (
     "SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet",
     "SummaryDatapointSearch",
     "TestCustomEndpointRequest",
+    "TestCustomEndpointRequestEndSessionParams",
     "TestCustomEndpointRequestNextMessageParams",
     "TestCustomEndpointRequestStartSessionParams",
     "TestCustomEndpointResponse",
+    "TestCustomEndpointResponseEndSessionRawResponse",
     "TestCustomEndpointResponseNextMessageRawResponse",
     "TestCustomEndpointResponseStartSessionRawResponse",
     "TestDataPointItem",

@@ -337,20 +337,28 @@ class TestMultiturnErrors:
             response_message_path="response.assistant_response",
         )
 
-        return start_config, next_config
+        end_config = SessionConfig(
+            url=f"{base_url}/v0/custom_endpoint_stub/end",
+            method="POST",
+            headers=api_headers,
+            body=json.dumps({"thread_id": "{session_id}"}),
+            status_code=start_status_code,
+        )
+
+        return start_config, next_config, end_config
 
     def test_invalid_custom_endpoint_response_path(
         self, rnd: str, basic_scenario: Any, okareo: Any
     ) -> None:
         """Test failure when response_session_id_path is invalid in CustomEndpointTarget"""
         # Create configs with invalid response path
-        start_config, next_config = self._create_custom_endpoint_configs()
+        start_config, next_config, end_config = self._create_custom_endpoint_configs()
         start_config.response_session_id_path = "response"  # Invalid path
 
         model_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config),
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
             "stop_check": self._create_basic_stop_check(),
         }
 
@@ -369,14 +377,14 @@ class TestMultiturnErrors:
     ) -> None:
         """Test failure when expected status code doesn't match actual response status code"""
         # Create configs with mismatched status code
-        start_config, next_config = self._create_custom_endpoint_configs(
+        start_config, next_config, end_config = self._create_custom_endpoint_configs(
             next_status_code=2000
         )  # Invalid status code
 
         model_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config),
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
             "stop_check": self._create_basic_stop_check(),
         }
 
@@ -397,14 +405,14 @@ class TestMultiturnErrors:
         # Create configs with mismatched status code
         # Status code mismatch will be used to trigger an error, but assertions will target
         # the sensitive fields redaction in the error message.
-        start_config, next_config = self._create_custom_endpoint_configs(
+        start_config, next_config, end_config = self._create_custom_endpoint_configs(
             start_status_code=2000
         )
 
         model_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config),
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
             "stop_check": self._create_basic_stop_check(),
         }
 
@@ -432,14 +440,14 @@ class TestMultiturnErrors:
 
         # Register the model using redacted api-key field with same sensitive fields.
         # Anticipate same failure as above
-        start_config, next_config = self._create_custom_endpoint_configs(
+        start_config, next_config, end_config = self._create_custom_endpoint_configs(
             start_status_code=2000, api_key="****************"
         )
 
         model_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config),
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
             "stop_check": self._create_basic_stop_check(),
         }
 

@@ -15,6 +15,7 @@ from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import (
     CustomEndpointTarget,
     CustomMultiturnTarget,
+    EndSessionConfig,
     GenerationModel,
     ModelInvocation,
     MultiTurnDriver,
@@ -805,9 +806,17 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
         response_message_path="response.assistant_response",
     )
 
+    # Create end session config
+    end_config = EndSessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/end",
+        method="POST",
+        headers=api_headers,
+        body={"thread_id": "{session_id}"},
+    )
+
     # Create the model with the configs
     assistant_model = MultiTurnDriver(
-        target=CustomEndpointTarget(start_config, next_config),
+        target=CustomEndpointTarget(start_config, next_config, end_config),
         stop_check=StopConfig(check_name="task_completed"),
         max_turns=2,
         driver_temperature=0,
@@ -876,9 +885,16 @@ def test_multiturn_driver_with_custom_endpoint_same_message(
         response_message_path="response.assistant_response",
     )
 
+    end_config = EndSessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/end",
+        method="POST",
+        headers=api_headers,
+        body={"thread_id": "{session_id}"},
+    )
+
     # Create the model with the configs
     assistant_model = MultiTurnDriver(
-        target=CustomEndpointTarget(start_config, next_config),
+        target=CustomEndpointTarget(start_config, next_config, end_config),
         stop_check=StopConfig(check_name="task_completed"),
         max_turns=2,
         driver_temperature=0,
@@ -950,9 +966,16 @@ def test_multiturn_driver_with_custom_endpoint_exception(
         response_message_path="response.assistant_response",
     )
 
+    end_config = EndSessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/end",
+        method="POST",
+        headers=api_headers,
+        body={"thread_id": "{session_id}"},
+    )
+
     # Create the model with the configs
     assistant_model = MultiTurnDriver(
-        target=CustomEndpointTarget(start_config, next_config),
+        target=CustomEndpointTarget(start_config, next_config, end_config),
         stop_check=StopConfig(check_name="task_completed"),
         max_turns=2,
         driver_temperature=0,
@@ -1060,9 +1083,19 @@ def test_multiturn_driver_with_max_parallel_requests(rnd: str, okareo: Okareo) -
         response_message_path="response.assistant_response",
     )
 
+    # Create end session config
+    end_config = EndSessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/end",
+        method="POST",
+        headers=api_headers,
+        body={"thread_id": "{session_id}"},
+    )
+
     # Create the model with the configs
     assistant_model = MultiTurnDriver(
-        target=CustomEndpointTarget(start_config, next_config, max_parallel_requests=1),
+        target=CustomEndpointTarget(
+            start_config, next_config, end_config, max_parallel_requests=1
+        ),
         stop_check=StopConfig(check_name="task_completed"),
         max_turns=2,
         driver_temperature=0,
