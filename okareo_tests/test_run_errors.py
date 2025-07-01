@@ -419,7 +419,7 @@ class TestMultiturnErrors:
         model_name = "Sensitive Fields Test " + rnd
         redacted_str = re.escape("*" * 16)
         exception_str_template = (
-            "Response status code {status_code} did not match expected status code 2000. Response: .*. Request: .* http?://.*?, Headers: {'api-key': '"
+            "Response status code {status_code} did not match expected status code 2000. Response: .*. Request: [A-Z]+ https?://.*?, Headers: {'api-key': '"
             + redacted_str
             + "', 'Content-Type': 'application/json'}, Body: {}."
         )
