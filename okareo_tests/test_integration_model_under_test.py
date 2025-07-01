@@ -371,14 +371,16 @@ def test_run_test_cohere_pinecone_ir_tags(
         api_key=API_KEY,
     )
     assert isinstance(test_data_points, list)
-    update_test_data_point_v0_update_test_data_point_post.sync(
-        client=okareo.client,
-        json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
-            tags=[["ci-testing"]],
-            ids=[test_data_points[0].id],
-        ),
-        api_key=API_KEY,
-    )
+    # Update tags for each test data point individually
+    for dp in test_data_points:
+        update_test_data_point_v0_update_test_data_point_post.sync(
+            client=okareo.client,
+            json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+                tags=[["ci-testing"]],
+                ids=[dp.id],
+            ),
+            api_key=API_KEY,
+        )
     run_resp = mut.run_test(
         name=f"ci-pinecone-cohere-embed-{rnd}",
         scenario=question_scenario_set,
@@ -402,12 +404,10 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     assert isinstance(new_test_data_points, list)
     assert test_data_points[0].id != new_test_data_points[0].id
-    assert new_test_data_points[0].tags == ["ci-testing"] or (
-        len(new_test_data_points) > 1 and new_test_data_points[1].tags == ["ci-testing"]
-    )
+    assert new_test_data_points[0].tags == ["ci-testing"]
     assert run_resp.name == f"ci-pinecone-cohere-embed-{rnd}"
     mut = okareo.register_model(
-        name=f"ci-pinecone-cohere-english-light-tags-test-v3.0-{rnd}-{1}",
+        name=f"ci-pinecone-cohere-english-light-tags-test-v3.0-{rnd}-{5}",
         model=[
             CohereModel(
                 model_id="embed-english-light-v3.0",
@@ -445,9 +445,7 @@ def test_run_test_cohere_pinecone_ir_tags(
         api_key=API_KEY,
     )
     assert isinstance(new_test_data_points_no_tag, list)
-    assert new_test_data_points_no_tag[0].tags != [
-        "ci-testing"
-    ] or new_test_data_points[1].tags != ["ci-testing"]
+    assert new_test_data_points_no_tag[0].tags != ["ci-testing"]
     assert run_resp.status == "FINISHED"
 
 
