@@ -77,7 +77,7 @@ def sync_detailed(
 ) -> Response[Union[AssistantEndThreadResponse, ErrorResponse]]:
     """End Assistant Thread
 
-     Ends an OpenAI Assistant thread with a final message and returns a thread summary.
+     Ends an OpenAI Assistant thread and returns a thread summary.
 
     Args:
         thread_id: The ID of the thread to end
@@ -117,7 +117,7 @@ def sync(
 ) -> Optional[Union[AssistantEndThreadResponse, ErrorResponse]]:
     """End Assistant Thread
 
-     Ends an OpenAI Assistant thread with a final message and returns a thread summary.
+     Ends an OpenAI Assistant thread and returns a thread summary.
 
     Args:
         thread_id: The ID of the thread to end
@@ -152,7 +152,7 @@ async def asyncio_detailed(
 ) -> Response[Union[AssistantEndThreadResponse, ErrorResponse]]:
     """End Assistant Thread
 
-     Ends an OpenAI Assistant thread with a final message and returns a thread summary.
+     Ends an OpenAI Assistant thread and returns a thread summary.
 
     Args:
         thread_id: The ID of the thread to end
@@ -190,7 +190,7 @@ async def asyncio(
 ) -> Optional[Union[AssistantEndThreadResponse, ErrorResponse]]:
     """End Assistant Thread
 
-     Ends an OpenAI Assistant thread with a final message and returns a thread summary.
+     Ends an OpenAI Assistant thread and returns a thread summary.
 
     Args:
         thread_id: The ID of the thread to end
