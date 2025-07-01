@@ -1071,6 +1071,43 @@ class TurnConfig:
         }
 
 
+class EndSessionConfig:
+    """Configuration for a custom API endpoint that ends a session.
+
+    Arguments:
+        url: URL of the endpoint to start the session.
+        method: HTTP method to use for the request. Defaults to `POST`.
+        headers: Headers to include in the request. Defaults to an empty JSON object.
+        body: Body to include in the request. Defaults to an empty JSON object.
+        status_code: Expected HTTP status code of the response.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        method: str = "POST",
+        headers: Optional[Union[str, dict]] = None,
+        body: Union[str, dict] = "{}",
+        status_code: Optional[int] = None,
+        response_session_id_path: str = "",
+    ) -> None:
+        self.url = url
+        self.method = method
+        self.headers = headers or json.dumps({})
+        self.body = body
+        self.status_code = status_code
+        self.response_session_id_path = response_session_id_path
+
+    def to_dict(self) -> dict:
+        return {
+            "url": self.url,
+            "method": self.method,
+            "headers": self.headers,
+            "body": self.body,
+            "status_code": self.status_code,
+        }
+
+
 class CustomEndpointTarget:
     """
     A pair of custom API endpoints for starting a session and continuing a conversation to use in
@@ -1079,6 +1116,7 @@ class CustomEndpointTarget:
     Arguments:
         start_session: A valid SessionConfig for starting a session.
         next_turn: A valid TurnConfig for requesting and parsing the next turn of a conversation.
+        end_session: A valid EndSessionConfig for ending a session.
         max_parallel_requests: Maximum number of parallel requests to allow when running the evaluation.
     """
 
@@ -1088,10 +1126,12 @@ class CustomEndpointTarget:
         self,
         start_session: SessionConfig,
         next_turn: TurnConfig,
+        end_session: Optional[EndSessionConfig] = None,
         max_parallel_requests: Optional[int] = None,
     ) -> None:
         self.start_session = start_session
         self.next_turn = next_turn
+        self.end_session = end_session
         self.max_parallel_requests = max_parallel_requests
 
     def params(self) -> dict:
@@ -1099,6 +1139,9 @@ class CustomEndpointTarget:
             "type": self.type,
             "start_session_params": self.start_session.to_dict(),
             "next_message_params": self.next_turn.to_dict(),
+            "end_session_params": (
+                self.end_session.to_dict() if self.end_session is not None else {}
+            ),
             "max_parallel_requests": self.max_parallel_requests,
         }
 
