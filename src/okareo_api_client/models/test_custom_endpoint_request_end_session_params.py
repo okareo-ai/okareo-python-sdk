@@ -8,7 +8,7 @@ T = TypeVar("T", bound="TestCustomEndpointRequestEndSessionParams")
 
 @_attrs_define
 class TestCustomEndpointRequestEndSessionParams:
-    """API parameters to end a session."""
+    """API parameters to end a session. Optional."""
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 

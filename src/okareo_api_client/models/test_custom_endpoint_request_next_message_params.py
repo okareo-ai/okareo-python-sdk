@@ -8,7 +8,7 @@ T = TypeVar("T", bound="TestCustomEndpointRequestNextMessageParams")
 
 @_attrs_define
 class TestCustomEndpointRequestNextMessageParams:
-    """API parameters to get the next message in the session. Optional."""
+    """API parameters to get the next message in the session."""
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 

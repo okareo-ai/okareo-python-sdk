@@ -8,7 +8,7 @@ T = TypeVar("T", bound="TestCustomEndpointRequestStartSessionParams")
 
 @_attrs_define
 class TestCustomEndpointRequestStartSessionParams:
-    """API parameters to start a session."""
+    """API parameters to start a session. Optional"""
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 

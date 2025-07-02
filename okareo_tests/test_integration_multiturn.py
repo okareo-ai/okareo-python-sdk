@@ -4,7 +4,7 @@ import os
 import re
 import time
 from contextlib import redirect_stdout
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 import requests  # type:ignore
@@ -30,6 +30,7 @@ from okareo_api_client.models.test_run_type import TestRunType
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "NOT SET")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "NOT SET")
+base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
 
 
 @pytest.fixture(scope="module")
@@ -1140,3 +1141,123 @@ def test_multiturn_driver_with_max_parallel_requests(rnd: str, okareo: Okareo) -
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
+
+
+def _create_custom_endpoint_configs(
+    start_status_code: int = 201,
+    next_status_code: int = 200,
+    include_start: bool = True,
+    include_end: bool = True,
+    api_key: str = API_KEY,
+    session_id: Optional[str] = None,
+) -> Any:
+    """Helper method to create custom endpoint configurations"""
+    api_headers = json.dumps({"api-key": api_key, "Content-Type": "application/json"})
+
+    start_config = {}
+    if include_start:
+        start_config = SessionConfig(
+            url=f"{base_url}/v0/custom_endpoint_stub/create",
+            method="POST",
+            headers=api_headers,
+            status_code=start_status_code,
+            response_session_id_path="response.thread_id",
+        ).to_dict()
+
+    # If session_id is provided, use it; otherwise, use templatized placeholder
+    # Allows us to test `test_custom_endpoint` without calling start_session
+    session_id = session_id if session_id is not None else "{session_id}"
+    next_config = TurnConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/message",
+        method="POST",
+        headers=api_headers,
+        body=json.dumps({"thread_id": session_id, "message": "{latest_message}"}),
+        status_code=next_status_code,
+        response_message_path="response.assistant_response",
+    ).to_dict()
+
+    end_config = {}
+    if include_end:
+        end_config = SessionConfig(
+            url=f"{base_url}/v0/custom_endpoint_stub/end",
+            method="POST",
+            headers=api_headers,
+            body=json.dumps({"thread_id": "{session_id}"}),
+            status_code=start_status_code,
+        ).to_dict()
+
+    return start_config, next_config, end_config
+
+
+def _call_test_custom_endpoint(
+    start_config: dict, next_config: dict, end_config: dict
+) -> Any:
+    # Use requests to make API call to `test_custom_endpoint`
+    api_headers = {"api-key": API_KEY, "Content-Type": "application/json"}
+    body = {}
+    if start_config:
+        body["start_session_params"] = start_config
+    body["next_message_params"] = next_config
+    if end_config:
+        body["end_session_params"] = end_config
+    body_keys = [v.replace("_params", "_raw_response") for v in list(body.keys())]
+
+    response = requests.post(
+        f"{base_url}/v0/test_custom_endpoint",
+        headers=api_headers,
+        json=body,
+    )
+    response_json = response.json()
+    for key in body_keys:
+        assert key in response_json, f"key '{key}' should be in json response"
+        raw_response = response_json[key]
+        assert "status_code" in raw_response, f"'{key}' should contain status_code"
+        assert (
+            raw_response["status_code"] // 100 == 2
+        ), f"'status_code' for {key} should be 2xx"
+        response_body = json.loads(raw_response.get("body", "{}"))
+        # all custom endpoint stub responses should include thread_id
+        assert response_body.get("thread_id") is not None
+
+    return response_json
+
+
+def test_test_custom_endpoint_combinations() -> None:
+    # Test all combinations of start, next, and end session configs
+
+    # Scenario 1: All configs provided
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs()
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+    # Scenario 2: Only next config provided, no start or end config
+    # The prior response contains a session ID, which we will need to use with the next config
+    thread_id = json.loads(
+        response.get("next_message_raw_response", {}).get("body", "{}")
+    ).get("thread_id", None)
+    assert (
+        thread_id is not None
+    ), "Thread ID should be present in the response of Scenario #1"
+
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        include_start=False,
+        include_end=False,
+        session_id=thread_id,
+    )
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+    # Scenario 3: Start and next config provided, no end config
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        include_start=True,
+        include_end=False,
+        session_id=thread_id,
+    )
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
