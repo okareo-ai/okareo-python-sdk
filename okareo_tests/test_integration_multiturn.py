@@ -4,7 +4,7 @@ import os
 import re
 import time
 from contextlib import redirect_stdout
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 import requests  # type:ignore
@@ -1149,7 +1149,7 @@ def _create_custom_endpoint_configs(
     include_start: bool = True,
     include_end: bool = True,
     api_key: str = API_KEY,
-    session_id: str | None = None,
+    session_id: Optional[str] = None,
 ) -> Any:
     """Helper method to create custom endpoint configurations"""
     api_headers = json.dumps({"api-key": api_key, "Content-Type": "application/json"})
