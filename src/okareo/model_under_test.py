@@ -1160,6 +1160,8 @@ class MultiTurnDriver(BaseModel):
         repeats: Number of times to run a conversation per scenario row. Defaults to 1.
         max_turns: Maximum number of turns to run in a conversation. Defaults to 5.
         first_turn: Name of model (i.e., "target" or "driver") that should initiate each conversation. Defaults to "target".
+        driver_prompt_template: Optional system prompt template to pass to the driver model.
+            Uses mustache syntax for variable substitution, e.g. `{input}`.
     """
 
     type = "driver"
@@ -1172,6 +1174,7 @@ class MultiTurnDriver(BaseModel):
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
     first_turn: Optional[str] = "target"
+    driver_prompt_template: Optional[str] = None
 
     def __attrs_post_init__(self) -> None:
         if isinstance(self.stop_check, dict):
@@ -1183,6 +1186,7 @@ class MultiTurnDriver(BaseModel):
             "target": self.target.params(),
             "driver_model_id": self.driver_model_id,
             "driver_temperature": self.driver_temperature,
+            "driver_prompt_template": self.driver_prompt_template,
             "repeats": self.repeats,
             "max_turns": self.max_turns,
             "first_turn": self.first_turn,
