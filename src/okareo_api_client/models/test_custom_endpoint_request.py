@@ -18,27 +18,29 @@ T = TypeVar("T", bound="TestCustomEndpointRequest")
 class TestCustomEndpointRequest:
     """
     Attributes:
-        start_session_params (TestCustomEndpointRequestStartSessionParams): API parameters to start a session.
-        next_message_params (Union[Unset, TestCustomEndpointRequestNextMessageParams]): API parameters to get the next
-            message in the session. Optional.
+        next_message_params (TestCustomEndpointRequestNextMessageParams): API parameters to get the next message in the
+            session.
+        start_session_params (Union[Unset, TestCustomEndpointRequestStartSessionParams]): API parameters to start a
+            session. Optional
         end_session_params (Union[Unset, TestCustomEndpointRequestEndSessionParams]): API parameters to end a session.
+            Optional.
         mut_id (Union[Unset, str]): ID of the model to use for the custom endpoint. Optional.
         sensitive_fields (Union[Unset, List[str]]): List of sensitive fields to redact in the response. Optional.
     """
 
-    start_session_params: "TestCustomEndpointRequestStartSessionParams"
-    next_message_params: Union[Unset, "TestCustomEndpointRequestNextMessageParams"] = UNSET
+    next_message_params: "TestCustomEndpointRequestNextMessageParams"
+    start_session_params: Union[Unset, "TestCustomEndpointRequestStartSessionParams"] = UNSET
     end_session_params: Union[Unset, "TestCustomEndpointRequestEndSessionParams"] = UNSET
     mut_id: Union[Unset, str] = UNSET
     sensitive_fields: Union[Unset, List[str]] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        start_session_params = self.start_session_params.to_dict()
+        next_message_params = self.next_message_params.to_dict()
 
-        next_message_params: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.next_message_params, Unset):
-            next_message_params = self.next_message_params.to_dict()
+        start_session_params: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.start_session_params, Unset):
+            start_session_params = self.start_session_params.to_dict()
 
         end_session_params: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.end_session_params, Unset):
@@ -53,11 +55,11 @@ class TestCustomEndpointRequest:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "start_session_params": start_session_params,
+                "next_message_params": next_message_params,
             }
         )
-        if next_message_params is not UNSET:
-            field_dict["next_message_params"] = next_message_params
+        if start_session_params is not UNSET:
+            field_dict["start_session_params"] = start_session_params
         if end_session_params is not UNSET:
             field_dict["end_session_params"] = end_session_params
         if mut_id is not UNSET:
@@ -76,14 +78,14 @@ class TestCustomEndpointRequest:
         )
 
         d = src_dict.copy()
-        start_session_params = TestCustomEndpointRequestStartSessionParams.from_dict(d.pop("start_session_params"))
+        next_message_params = TestCustomEndpointRequestNextMessageParams.from_dict(d.pop("next_message_params"))
 
-        _next_message_params = d.pop("next_message_params", UNSET)
-        next_message_params: Union[Unset, TestCustomEndpointRequestNextMessageParams]
-        if isinstance(_next_message_params, Unset):
-            next_message_params = UNSET
+        _start_session_params = d.pop("start_session_params", UNSET)
+        start_session_params: Union[Unset, TestCustomEndpointRequestStartSessionParams]
+        if isinstance(_start_session_params, Unset):
+            start_session_params = UNSET
         else:
-            next_message_params = TestCustomEndpointRequestNextMessageParams.from_dict(_next_message_params)
+            start_session_params = TestCustomEndpointRequestStartSessionParams.from_dict(_start_session_params)
 
         _end_session_params = d.pop("end_session_params", UNSET)
         end_session_params: Union[Unset, TestCustomEndpointRequestEndSessionParams]
@@ -97,8 +99,8 @@ class TestCustomEndpointRequest:
         sensitive_fields = cast(List[str], d.pop("sensitive_fields", UNSET))
 
         test_custom_endpoint_request = cls(
-            start_session_params=start_session_params,
             next_message_params=next_message_params,
+            start_session_params=start_session_params,
             end_session_params=end_session_params,
             mut_id=mut_id,
             sensitive_fields=sensitive_fields,

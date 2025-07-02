@@ -1080,6 +1080,7 @@ class EndSessionConfig:
         headers: Headers to include in the request. Defaults to an empty JSON object.
         body: Body to include in the request. Defaults to an empty JSON object.
         status_code: Expected HTTP status code of the response.
+        response_session_id_path: Path to extract the session ID from the response.
     """
 
     def __init__(
