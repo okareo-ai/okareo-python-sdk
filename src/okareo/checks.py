@@ -12,11 +12,14 @@ class BaseCheck(ABC):
     @staticmethod
     @abstractmethod
     def evaluate(
-        model_output: str, scenario_input: str, scenario_result: str, metadata: dict
+        model_output: str,
+        scenario_input: str,
+        scenario_result: str,
+        metadata: dict,
+        model_input: str,
     ) -> Union[bool, int, float]:
         """
-        Evaluate your model output, scenario input, scenario result, and metadata
-        to determine if the data should pass or fail the check.
+        Evaluate your model output, scenario input, scenario result, metadata, and model_input to determine if the data should pass or fail the check.
         """
 
     def check_config(self) -> dict:
@@ -67,6 +70,7 @@ class ModelBasedCheck(BaseCheck):
         scenario_input: str,
         scenario_result: str,
         metadata: dict,
+        model_input: str,
     ) -> Union[bool, int, float]:
         raise NotImplementedError("Evaluate method is handled on server.")
 
@@ -82,7 +86,7 @@ class CodeBasedCheck(BaseCheck):
     4. Include any additional code used by your check in the same file.
 
     Example:
-    ```
+    ```python
     # In my_custom_check.py
     from okareo.checks import CodeBasedCheck
 
@@ -90,10 +94,19 @@ class CodeBasedCheck(BaseCheck):
         @staticmethod
         @abstractmethod
         def evaluate(
-            model_output: str, scenario_input: str, scenario_result: str, metadata: dict
+            model_output: str, scenario_input: str, scenario_result: str, metadata: dict, model_input: str
         ) -> Union[bool, int, float]:
             # Your code here
             pass
+    ```
+
+    The `evaluate` method parameters can be any subset of the possible parameters.
+    For example, if your check only needs `model_output` and `model_input`, then you can write a method like this:
+    ```python
+    def evaluate(
+        model_output: str, model_input: str
+    ) -> bool:
+        # ...your check logic here...
     ```
     """
 
