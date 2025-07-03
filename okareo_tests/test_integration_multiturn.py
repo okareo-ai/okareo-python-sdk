@@ -100,6 +100,53 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     assert test_run_item.status == "FINISHED"
 
 
+def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
+    # generate scenario and return results in one call
+    scenario_set_create = ScenarioSetCreate(
+        name=rnd + random_string(5),
+        seed_data=[
+            SeedData(
+                input_={"phrase": "homework"},
+                result="hello world",
+            ),
+            SeedData(
+                input_={"phrase": "cake"},
+                result="stand mixer",
+            ),
+        ],
+    )
+    response = okareo.create_scenario_set(scenario_set_create)
+    response.scenario_id
+
+    mut = okareo.register_model(
+        name=rnd,
+        model=MultiTurnDriver(
+            max_turns=2,
+            repeats=1,
+            target=GenerationModel(
+                model_id="gpt-4o-mini",
+                temperature=0,
+                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
+            ),
+            stop_check={"check_name": "model_refusal", "stop_on": False},
+            driver_prompt_template="Ignore what the user is saying. Talk about the following topic: {input.phrase}. Try to get the user to say the following word: {result}.",
+        ),
+        update=True,
+    )
+
+    # use the scenario id from one of the scenario set notebook examples
+    test_run_name = f"Driver Prompt Template Test: {rnd}"
+    test_run_item = mut.run_test(
+        scenario=response,
+        api_key=OPENAI_API_KEY,
+        name=test_run_name,
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+    )
+    assert test_run_item.name == test_run_name
+    assert test_run_item.status == "FINISHED"
+
+
 @pytest.mark.parametrize("first_turn", ["driver", "target"])
 def test_run_multiturn_with_driver_model_id(
     rnd: str, okareo: Okareo, first_turn: str
