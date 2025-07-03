@@ -278,7 +278,7 @@ def test_parallel_predefined_checks(
     assert_metrics(run_resp, checks, num_rows=51)
 
 
-def test_custom_check_on_multiturn_model_input_args(rnd, okareo):
+def test_custom_check_on_multiturn_model_input_args(rnd: str, okareo: Okareo) -> None:
     # Ensure that the 'model_input' is always longer than the 'scenario_input'
     # The 'model_input' is the full list of messages
     # The 'scenario_input' is the most recent message to the target
@@ -324,17 +324,16 @@ def test_custom_check_on_multiturn_model_input_args(rnd, okareo):
         name=test_run_name,
         test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
-        checks=[input_comparison_check.name],
+        checks=["input_comparison_check"],
     )
-    print(f"test_run_item: {test_run_item}")
     assert test_run_item.name == test_run_name
     assert test_run_item.status == "FINISHED"
-    assert (
-        test_run_item.model_metrics.additional_properties["mean_scores"][
-            "input_comparison_check"
-        ]
-        == 1
-    )
+
+    assert test_run_item.model_metrics
+    assert test_run_item.model_metrics.additional_properties
+    metrics_dict = test_run_item.model_metrics.additional_properties
+    assert metrics_dict.get("mean_scores") is not None
+    assert metrics_dict["mean_scores"]["input_comparison_check"] == 1
 
     # cleanup: remove the check
-    okareo.delete_check(input_comparison_check.id, input_comparison_check.name)
+    okareo.delete_check(input_comparison_check.id, input_comparison_check.name)  # type: ignore
