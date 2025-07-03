@@ -43,3 +43,33 @@ def test_generate_and_create_check(okareo_client: Okareo) -> None:
     assert uploaded_check.name
     assert uploaded_check.is_predefined is False
     okareo_client.delete_check(uploaded_check.id, uploaded_check.name)
+
+
+def test_upload_code_based_check_all_args(okareo_client: Okareo):
+    check_arg_names = [
+        "scenario_input",
+        "model_input",
+        "model_output",
+        "metadata",
+    ]
+    for arg_name in check_arg_names:
+        # dynamically import the Check class from the arg_name file
+        module_name = f"okareo_tests.checks.{arg_name}_check"
+        module = __import__(module_name, fromlist=["Check"])
+        Check = getattr(module, "Check")
+
+        # upload the check
+        check = okareo_client.create_or_update_check(
+            name=f"test_upload_check_{arg_name} {random_string(5)}",
+            description=f"Test check for {arg_name}",
+            check=Check(),
+        )
+
+        # assert the check was created successfully
+        print(
+            f"Uploaded check for {arg_name}: {check.name}\nFull check details: {check}"
+        )
+        assert check.id
+        assert check.name
+        assert check.is_predefined is False
+        okareo_client.delete_check(check.id, check.name)

@@ -12,11 +12,14 @@ class BaseCheck(ABC):
     @staticmethod
     @abstractmethod
     def evaluate(
-        model_output: str, scenario_input: str, scenario_result: str, metadata: dict
+        model_output: str,
+        scenario_input: str,
+        scenario_result: str,
+        metadata: dict,
+        model_input: str,
     ) -> Union[bool, int, float]:
         """
-        Evaluate your model output, scenario input, scenario result, and metadata
-        to determine if the data should pass or fail the check.
+        Evaluate your model output, scenario input, scenario result, metadata, and model_input to determine if the data should pass or fail the check.
         """
 
     def check_config(self) -> dict:
@@ -67,6 +70,7 @@ class ModelBasedCheck(BaseCheck):
         scenario_input: str,
         scenario_result: str,
         metadata: dict,
+        model_input: str,
     ) -> Union[bool, int, float]:
         raise NotImplementedError("Evaluate method is handled on server.")
 
@@ -90,7 +94,7 @@ class CodeBasedCheck(BaseCheck):
         @staticmethod
         @abstractmethod
         def evaluate(
-            model_output: str, scenario_input: str, scenario_result: str, metadata: dict
+            model_output: str, scenario_input: str, scenario_result: str, metadata: dict, model_input: str
         ) -> Union[bool, int, float]:
             # Your code here
             pass

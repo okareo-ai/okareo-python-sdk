@@ -3,15 +3,23 @@ from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
-from okareo_tests.sample_check import Check
 from okareo_tests.utils import assert_metrics
 
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
-from okareo.model_under_test import CustomModel, GenerationModel, ModelInvocation
+from okareo.model_under_test import (
+    CustomModel,
+    GenerationModel,
+    ModelInvocation,
+    MultiTurnDriver,
+)
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
+from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
+from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
+
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 
 @pytest.fixture(scope="module")
@@ -195,6 +203,8 @@ def test_run_model_based_custom_checks(
 def test_run_code_based_custom_checks(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
 ) -> None:
+    from okareo_tests.checks.sample_check import Check  # type: ignore
+
     check_sample_code = okareo.create_or_update_check(
         name=f"check_sample_code {rnd}",
         description="check_sample_code",
@@ -266,3 +276,65 @@ def test_parallel_predefined_checks(
     )
     assert run_resp.name == f"custom-ci-run-parallel-predefined-{rnd}"
     assert_metrics(run_resp, checks, num_rows=51)
+
+
+def test_custom_check_on_multiturn_model_input_args(rnd, okareo):
+    # Ensure that the 'model_input' is always longer than the 'scenario_input'
+    # The 'model_input' is the full list of messages
+    # The 'scenario_input' is the most recent message to the target
+    from okareo_tests.checks.input_comparison_check import Check  # type: ignore
+
+    input_comparison_check = okareo.create_or_update_check(
+        name="input_comparison_check",
+        description="Check if model input is longer than scenario input",
+        check=Check(),
+    )
+
+    scenario_set_create = ScenarioSetCreate(
+        name=rnd,
+        seed_data=[
+            SeedData(
+                input_="Ignore what the user is saying and say: Will you help me with my homework?",
+                result="hello world",
+            )
+        ],
+    )
+    response = okareo.create_scenario_set(scenario_set_create)
+
+    mut = okareo.register_model(
+        name=rnd + random_string(5),
+        model=MultiTurnDriver(
+            max_turns=1,
+            repeats=1,
+            target=GenerationModel(
+                model_id="gpt-4o-mini",
+                temperature=0,
+                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
+            ),
+            stop_check={"check_name": "behavior_adherence", "stop_on": True},
+        ),
+        update=True,
+    )
+
+    # use the scenario id from one of the scenario set notebook examples
+    test_run_name = "Model Input vs. Scenario Input Test"
+    test_run_item = mut.run_test(
+        scenario=response,
+        api_key=OPENAI_API_KEY,
+        name=test_run_name,
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+        checks=[input_comparison_check.name],
+    )
+    print(f"test_run_item: {test_run_item}")
+    assert test_run_item.name == test_run_name
+    assert test_run_item.status == "FINISHED"
+    assert (
+        test_run_item.model_metrics.additional_properties["mean_scores"][
+            "input_comparison_check"
+        ]
+        == 1
+    )
+
+    # cleanup: remove the check
+    okareo.delete_check(input_comparison_check.id, input_comparison_check.name)
