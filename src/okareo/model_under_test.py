@@ -335,8 +335,8 @@ class ModelUnderTest(AsyncProcessorMixin):
     def call_custom_invoker(
         self,
         args: Any,
-        message_history: list[dict[str, str]] | None = None,
-        scenario_input: str | dict | list | None = None,
+        message_history: Optional[list[dict[str, str]]] = None,
+        scenario_input: Optional[Union[str, dict, list]] = None,
     ) -> Any:
         assert isinstance(self.models, dict)
         if self.models.get("custom"):
@@ -973,7 +973,7 @@ class CustomMultiturnTarget(BaseModel):
 
         Arguments:
             messages: list - list of messages in the conversation
-            scenario_input: dict | list | str | None - scenario input for the conversation
+            scenario_input: Optional[dict | list | str] - scenario input for the conversation
 
         Returns:
             Union[ModelInvocation, Any] - model output.
