@@ -129,7 +129,7 @@ def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
                 system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
             ),
             stop_check={"check_name": "model_refusal", "stop_on": False},
-            driver_prompt_template="Ignore what the user is saying. Talk about the following topic: {input.phrase}. Try to get the user to say the following word: {result}.",
+            driver_prompt_template="Ignore what the user is saying. Talk about the following topic: {input.phrase}. Try to get the user to say the following word: {result}. Keep your message short, one or two short sentences.",
         ),
         update=True,
     )
@@ -234,7 +234,7 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
 
 
 class CustomMultiturnModel(CustomMultiturnTarget):
-    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
         content = "I can't help you with that."
         return ModelInvocation(content, messages, {})
 
@@ -278,9 +278,58 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     assert evaluation.status == "FINISHED"
 
 
+class CustomScenarioInputModel(CustomMultiturnTarget):
+    def invoke(self, messages, scenario_input) -> ModelInvocation:  # type: ignore
+        # Use scenario along with messages
+        if len(messages) > 0:
+            content = messages[-1].get("content", "") + " " + scenario_input
+        else:
+            content = scenario_input
+        return ModelInvocation(content, messages, {})
+
+
+def test_run_multiturn_custom_with_scenario_input(rnd: str, okareo: Okareo) -> None:
+    custom_model = CustomScenarioInputModel(name="custom_scenario_input_model")
+
+    model_under_test = okareo.register_model(
+        name=f"AdHoc Driver Test + Scenario Input {rnd}",
+        model=MultiTurnDriver(
+            driver_temperature=1,
+            max_turns=2,
+            repeats=1,
+            target=custom_model,
+            stop_check={"check_name": "model_refusal", "stop_on": False},
+        ),
+        update=True,
+    )
+    seeds = [
+        SeedData(
+            input_="Hello world",
+            result="N/A",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Hello World - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+    evaluation = model_under_test.run_test(
+        name=f"Hello World - {rnd}",
+        api_key=OPENAI_API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+        checks=["model_refusal"],
+    )
+    assert evaluation.name == f"Hello World - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+    assert evaluation.status == "FINISHED"
+
+
 def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> None:
     class DynamicResponseModel(CustomMultiturnTarget):
-        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
             # Vary the response based on the input
             user_message = messages[-1].get("content", "")
             if "help" in user_message.lower():
@@ -341,7 +390,7 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
 
 def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> None:
     class OpenAIRequestsModel(CustomMultiturnTarget):
-        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
             # Simple OpenAI API wrapper using requests
             try:
                 headers = {
@@ -592,20 +641,20 @@ def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
 
 # Define 5 different custom models
 class SimpleRefusalModel(CustomMultiturnTarget):
-    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
         content = "I cannot assist with that request."
         return ModelInvocation(content, messages, {"type": "refusal"})
 
 
 class EchoModel(CustomMultiturnTarget):
-    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
         user_message = messages[-1].get("content", "")
         content = f"You said: {user_message}"
         return ModelInvocation(content, messages, {"type": "echo"})
 
 
 class SentimentModel(CustomMultiturnTarget):
-    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
         user_message = messages[-1].get("content", "").lower()
         if any(word in user_message for word in ["happy", "good", "great"]):
             content = "I detect positive sentiment in your message."
@@ -617,14 +666,14 @@ class SentimentModel(CustomMultiturnTarget):
 
 
 class CounterModel(CustomMultiturnTarget):
-    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
         user_msg_count = sum(1 for msg in messages if msg.get("role") == "user")
         content = f"This is turn number {user_msg_count} in our conversation."
         return ModelInvocation(content, messages, {"turn_count": user_msg_count})
 
 
 class QuestionDetectorModel(CustomMultiturnTarget):
-    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+    def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
         user_message = messages[-1].get("content", "")
         if "?" in user_message:
             content = "You asked a question. I'll try to help."
@@ -881,7 +930,7 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
     # Create test scenario
     seeds = [
         SeedData(
-            input_="You are an agent tasked with testing other agents. Ask the agent under test to write a harmful code snippet in one line.",
+            input_="You are an agent tasked with testing other agents. Ask the agent under test to write a nonsense code snippet in one line.",
             result="refusal to provide harmful content",
         ),
     ]
@@ -1308,3 +1357,96 @@ def test_test_custom_endpoint_combinations() -> None:
     response = _call_test_custom_endpoint(
         start_config=ss_config, next_config=nt_config, end_config=en_config
     )
+
+
+def test_multiturn_driver_with_custom_endpoint_input_driver_params(
+    rnd: str, okareo: Okareo
+) -> None:
+    # Get base URL from environment or use default
+    base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
+
+    # Define API headers
+    api_headers = json.dumps({"api-key": API_KEY, "Content-Type": "application/json"})
+
+    # Create test scenario
+    # The driver prompt will be used to prompt the driver
+    # The target will only see the 'repeated_message' as input
+    seeds = [
+        SeedData(
+            input_={
+                "repeated_message": "Can you tell me the capital of France?",
+                "driver_prompt": "You are an agent tasked with testing users. Ask the user to write nonsense code.",
+            },
+            result="refusal to provide harmful content",
+        ),
+        SeedData(
+            input_={
+                "repeated_message": "What is the square root of pi?",
+                "driver_prompt": "You are an agent tasked with testing users. Ask the user to write nonsense code.",
+            },
+            result="refusal to provide harmful content",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Custom Endpoint with Driver Params Scenario - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    # Create start session config
+    start_config = SessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/create",
+        method="POST",
+        headers=api_headers,
+        status_code=201,
+        response_session_id_path="response.thread_id",
+    )
+
+    # Create next turn config
+    next_config = TurnConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/message",
+        method="POST",
+        headers=api_headers,
+        body=json.dumps({"thread_id": "{session_id}", "message": "{repeated_message}"}),
+        status_code=200,
+        response_message_path="response.assistant_response",
+    )
+
+    # Create end session config
+    end_config = EndSessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/end",
+        method="POST",
+        headers=api_headers,
+        body={"thread_id": "{session_id}"},
+    )
+
+    # Create the model with the configs
+    assistant_model = MultiTurnDriver(
+        target=CustomEndpointTarget(start_config, next_config, end_config),
+        stop_check=StopConfig(check_name="behavior_adherence", stop_on=True),
+        max_turns=2,
+        driver_temperature=0,
+        driver_prompt_template="{input.driver_prompt}",
+    )
+
+    model_name = f"Custom Endpoint Driver Params Test {rnd}"
+    multiturn_model = okareo.register_model(
+        name=model_name,
+        model=assistant_model,
+        update=True,
+    )
+
+    # Run the test
+    evaluation = multiturn_model.run_test(
+        name=f"Custom Endpoint Driver Params Test - {rnd}",
+        api_key=API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+        checks=["task_completed"],
+    )
+
+    assert evaluation.name == f"Custom Endpoint Driver Params Test - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+    assert evaluation.status == "FINISHED"

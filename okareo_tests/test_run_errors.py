@@ -48,7 +48,7 @@ def basic_scenario(rnd: str, okareo: Okareo) -> Any:
 
 
 class CustomModelWithDict(CustomMultiturnTarget):
-    def invoke(self, messages: Any) -> Any:
+    def invoke(self, messages: Any) -> Any:  # type: ignore
         return ModelInvocation(
             "Invalid response", messages, {"result": "dict response"}
         )
@@ -544,7 +544,7 @@ class TestMultiturnErrors:
 
         # Define a custom model that raises a ValueError
         class ErrorRaisingModel(CustomMultiturnTarget):
-            def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:
+            def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
                 # Always raise a ValueError with a specific message
                 raise ValueError("This is a deliberate error from the custom model")
 
@@ -596,7 +596,7 @@ class TestMultiturnErrors:
 
         # Define a custom model that raises a ValueError
         class ErrorRaisingModel(CustomMultiturnTarget):
-            def invoke(self, messages: list[dict[str, str]]) -> Any:
+            def invoke(self, messages: list[dict[str, str]]) -> Any:  # type: ignore
                 # Always raise a ValueError with a specific message
                 return "Not a modelinvocation object"
 
