@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import json
 import ssl
 import threading
@@ -331,14 +332,32 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
         return nc
 
-    def call_custom_invoker(self, args: Any) -> Any:
+    def call_custom_invoker(
+        self,
+        args: Any,
+        message_history: Optional[list[dict[str, str]]] = None,
+        scenario_input: Optional[Union[str, dict, list]] = None,
+    ) -> Any:
         assert isinstance(self.models, dict)
         if self.models.get("custom"):
             return self.models["custom"]["model_invoker"](args)
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"]["model_invoker"](args)
         else:
-            return self.models["driver"]["target"]["model_invoker"](args)
+            messages = message_history if message_history is not None else args
+            invoker = self.models["driver"]["target"]["model_invoker"]
+            sig = inspect.signature(invoker)
+            num_positional = sum(
+                1
+                for param in sig.parameters.values()
+                if param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
+            )
+            if num_positional > 1 and scenario_input is not None:
+                # new impl; first pos arg is message_history, second is scenario_input
+                return invoker(messages, scenario_input)
+            else:
+                # legacy impl; first pos arg is message_history (named args)
+                return invoker(args)
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):
@@ -367,7 +386,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                         stop_event.set()
                         return
                     args = data.get("args", [])
-                    result = self.call_custom_invoker(args)
+                    message_history = data.get("message_history", [])
+                    scenario_input = data.get("scenario_input", None)
+                    result = self.call_custom_invoker(
+                        args, message_history, scenario_input
+                    )
                     json_encodable_result = self.get_params_from_custom_result(result)
                     await nats_connection.publish(
                         msg.reply, json.dumps(json_encodable_result).encode()
@@ -941,11 +964,16 @@ class CustomMultiturnTarget(BaseModel):
     name: str
 
     @abstractmethod
-    def invoke(self, messages: List[dict[str, str]]) -> Union[ModelInvocation, Any]:
+    def invoke(
+        self,
+        messages: List[dict[str, str]],
+        scenario_input: Optional[Union[dict, list, str]] = None,
+    ) -> Union[ModelInvocation, Any]:
         """Method for continuing a multiturn conversation with a custom model
 
         Arguments:
             messages: list - list of messages in the conversation
+            scenario_input: Optional[dict | list | str] - scenario input for the conversation
 
         Returns:
             Union[ModelInvocation, Any] - model output.
