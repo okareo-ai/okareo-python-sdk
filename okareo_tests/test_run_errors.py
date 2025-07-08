@@ -695,3 +695,23 @@ class TestMultiturnErrors:
                 api_keys={"openai": OPENAI_API_KEY},
                 checks=["error_check"],
             )
+
+    def test_openai_authentication_error(
+        self, rnd: str, basic_scenario: Any, okareo: Any
+    ) -> None:
+        """Test failure when an invalid OpenAI API key is provided"""
+        target = self._create_basic_openai_target()
+        model_name = f"Invalid API Key Test {rnd}"
+
+        # Register the model
+        mut = okareo.register_model(name=model_name, model=target, update=True)
+
+        # Run test with invalid API key and expect authentication error
+        with pytest.raises(Exception, match="authentication"):
+            mut.run_test(
+                scenario=basic_scenario,
+                name="Test Run",
+                test_run_type=TestRunType.NL_GENERATION,
+                api_keys={"openai": "test"},  # Invalid API key
+                checks=["coherence_summary"],
+            )
