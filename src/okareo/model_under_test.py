@@ -1196,7 +1196,7 @@ class MultiTurnDriver(BaseModel):
     target: Union[
         OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
     ]
-    stop_check: Union[StopConfig, dict] = None
+    stop_check: Union[StopConfig, dict, None] = None
     driver_model_id: Optional[str] = None
     driver_temperature: Optional[float] = 0.8
     repeats: Optional[int] = 1
