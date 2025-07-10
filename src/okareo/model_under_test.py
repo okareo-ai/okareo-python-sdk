@@ -1028,6 +1028,7 @@ class SessionConfig:
         body: Union[str, dict] = "{}",
         status_code: Optional[int] = None,
         response_session_id_path: str = "",
+        response_message_path: str = "",
     ) -> None:
         self.url = url
         self.method = method
@@ -1035,6 +1036,7 @@ class SessionConfig:
         self.body = body
         self.status_code = status_code
         self.response_session_id_path = response_session_id_path
+        self.response_message_path = response_message_path
 
     def to_dict(self) -> dict:
         return {
@@ -1044,6 +1046,7 @@ class SessionConfig:
             "body": self.body,
             "status_code": self.status_code,
             "response_session_id_path": self.response_session_id_path,
+            "response_message_path": self.response_message_path,
         }
 
 
