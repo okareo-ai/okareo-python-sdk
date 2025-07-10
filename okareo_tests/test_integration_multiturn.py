@@ -24,6 +24,9 @@ from okareo.model_under_test import (
     StopConfig,
     TurnConfig,
 )
+from okareo_api_client.models.find_test_data_point_payload import (
+    FindTestDataPointPayload,
+)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
@@ -1450,3 +1453,129 @@ def test_multiturn_driver_with_custom_endpoint_input_driver_params(
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
+
+
+# ------------------------ Tests for start_session returning a message ------------------------ #
+
+
+def _build_start_config_with_message(
+    api_headers: str, initial_message: str = "Hello"
+) -> SessionConfig:
+    """Helper that configures start_session to hit the message endpoint directly so we receive
+    both a session_id *and* an assistant response in the same call."""
+    return SessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/message",  # hit the message endpoint directly
+        method="POST",
+        headers=api_headers,
+        body=json.dumps({"thread_id": "", "message": initial_message}),
+        status_code=200,  # message endpoint returns 200
+        response_session_id_path="response.thread_id",
+        response_message_path="response.assistant_response",
+    )
+
+
+@pytest.mark.parametrize("first_turn", ["driver", "target"])
+def test_multiturn_custom_endpoint_start_with_message(
+    rnd: str, okareo: Okareo, first_turn: str
+) -> None:
+    """Validates that our logic correctly seeds an initial assistant message returned from
+    start_session regardless of who is configured to speak first."""
+
+    api_headers = json.dumps({"api-key": API_KEY, "Content-Type": "application/json"})
+
+    start_config = _build_start_config_with_message(api_headers)
+
+    # Next turn config – simple echo of the last user message so the conversation can progress
+    next_config = TurnConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/message",
+        method="POST",
+        headers=api_headers,
+        body=json.dumps({"thread_id": "{session_id}", "message": "{latest_message}"}),
+        status_code=200,
+        response_message_path="response.assistant_response",
+    )
+
+    # End session config (optional but neat)
+    end_config = EndSessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/end",
+        method="POST",
+        headers=api_headers,
+        body={"thread_id": "{session_id}"},
+    )
+
+    assistant_model = MultiTurnDriver(
+        target=CustomEndpointTarget(start_config, next_config, end_config),
+        stop_check=StopConfig(check_name="task_completed"),
+        max_turns=2,
+        driver_temperature=0,
+        first_turn=first_turn,
+    )
+
+    multiturn_model = okareo.register_model(
+        name=f"Custom Endpoint StartMsg ({first_turn}) {rnd}",
+        model=assistant_model,
+        update=True,
+    )
+
+    # Minimal scenario so test runs quickly
+    seeds = [
+        SeedData(
+            input_="Say something nice!",
+            result="n/a",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"StartMsg Scenario {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    evaluation = multiturn_model.run_test(
+        name=f"StartMsg Eval ({first_turn}) {rnd}",
+        api_key=API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+        checks=["task_completed"],
+    )
+
+    assert evaluation.status == "FINISHED"
+    # Validate via test data points API
+    tdp = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=evaluation.id)
+    )
+    assert isinstance(tdp, list)
+    assert len(tdp) == 1
+
+    td = tdp[0]
+
+    # Ensure this is a multi-turn datapoint
+    assert td.metric_type == "MULTI_TURN"
+
+    # For MULTI_TURN runs the conversation is stored under
+    #   td.metric_value.additional_properties["generation_output"]  # noqa
+    # which is a list of OpenAI-style message dicts.
+    generation_output = None
+    if hasattr(td, "metric_value") and td.metric_value is not None:
+        generation_output = td.metric_value.additional_properties.get("generation_output")  # type: ignore[attr-defined]
+
+    # Basic sanity: we should have a non-empty list and at least one assistant message inside.
+    assert isinstance(generation_output, list) and len(generation_output) > 0
+    assert any(msg.get("role") == "assistant" for msg in generation_output)
+    print(generation_output)
+
+    # The first message after any optional system prompt should come from the assistant.
+    first_non_system_idx = next(
+        (
+            idx
+            for idx, msg in enumerate(generation_output)
+            if msg.get("role") != "system"
+        ),
+        None,
+    )
+    assert (
+        first_non_system_idx is not None
+    ), "No non-system messages found in generation_output"
+    assert (
+        generation_output[first_non_system_idx]["role"] == "assistant"
+    ), "Expected the assistant to respond first after the system message"
