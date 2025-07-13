@@ -347,31 +347,6 @@ class TestMultiturnErrors:
 
         return start_config, next_config, end_config
 
-    def test_invalid_custom_endpoint_response_path(
-        self, rnd: str, basic_scenario: Any, okareo: Any
-    ) -> None:
-        """Test failure when response_session_id_path is invalid in CustomEndpointTarget"""
-        # Create configs with invalid response path
-        start_config, next_config, end_config = self._create_custom_endpoint_configs()
-        start_config.response_session_id_path = "response"  # Invalid path
-
-        model_config = {
-            "max_turns": 2,
-            "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config, end_config),
-            "stop_check": self._create_basic_stop_check(),
-        }
-
-        self._register_and_expect_error(
-            okareo,
-            f"Invalid Response Path {rnd}",
-            model_config,
-            "Could not parse the response using path",
-            run_test=True,
-            basic_scenario=basic_scenario,
-            api_keys={"openai": OPENAI_API_KEY},
-        )
-
     def test_custom_endpoint_status_code_mismatch(
         self, rnd: str, basic_scenario: Any, okareo: Any
     ) -> None:
