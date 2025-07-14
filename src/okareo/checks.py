@@ -1,7 +1,22 @@
 import inspect
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Union
+from typing import Optional, Union
+
+from attrs import define as _attrs_define
+
+
+@_attrs_define
+class CheckResponse:
+    """Response object for code-based checks.
+
+    Attributes:
+        score: The numeric or boolean result of the check.
+        explanation: Optional string explanation for the score, if applicable.
+    """
+
+    score: Union[bool, int, float]
+    explanation: Optional[str] = None
 
 
 class BaseCheck(ABC):
@@ -17,7 +32,7 @@ class BaseCheck(ABC):
         scenario_result: str,
         metadata: dict,
         model_input: str,
-    ) -> Union[bool, int, float]:
+    ) -> Union[bool, int, float, CheckResponse, tuple[Union[bool, int, float], str]]:
         """
         Evaluate your model output, scenario input, scenario result, metadata, and model_input to determine if the data should pass or fail the check.
         """
@@ -71,7 +86,7 @@ class ModelBasedCheck(BaseCheck):
         scenario_result: str,
         metadata: dict,
         model_input: str,
-    ) -> Union[bool, int, float]:
+    ) -> CheckResponse:
         raise NotImplementedError("Evaluate method is handled on server.")
 
 
@@ -88,16 +103,16 @@ class CodeBasedCheck(BaseCheck):
     Example:
     ```python
     # In my_custom_check.py
-    from okareo.checks import CodeBasedCheck
+    from okareo.checks import CodeBasedCheck, CheckResponse
 
     class Check(CodeBasedCheck):
         @staticmethod
         @abstractmethod
         def evaluate(
             model_output: str, scenario_input: str, scenario_result: str, metadata: dict, model_input: str
-        ) -> Union[bool, int, float]:
+        ) -> CheckResponse:
             # Your code here
-            pass
+            return CheckResponse(score=True, explanation="This is an explanation of my score.")
     ```
 
     The `evaluate` method parameters can be any subset of the possible parameters.
@@ -105,7 +120,7 @@ class CodeBasedCheck(BaseCheck):
     ```python
     def evaluate(
         model_output: str, model_input: str
-    ) -> bool:
+    ) -> CheckResponse:
         # ...your check logic here...
     ```
     """
