@@ -212,6 +212,16 @@ def test_run_code_based_custom_checks(
     )
     assert check_sample_code.id
     assert check_sample_code.name
+
+    from okareo_tests.checks.sample_check_with_explanation import Check  # type: ignore
+
+    check_sample_code_exp = okareo.create_or_update_check(
+        name=f"check_sample_code_with_explanation {rnd}",
+        description="check_sample_code_with_explanation",
+        check=Check(),  # type: ignore
+    )
+    assert check_sample_code_exp.id
+    assert check_sample_code_exp.name
     mut = okareo.register_model(
         name=f"openai-ci-run-levenshtein-{rnd}",
         model=GenerationModel(
@@ -226,13 +236,16 @@ def test_run_code_based_custom_checks(
         scenario=article_scenario_set,
         api_key=os.environ["OPENAI_API_KEY"],
         test_run_type=TestRunType.NL_GENERATION,
-        checks=[check_sample_code.name],
+        checks=[check_sample_code.name, check_sample_code_exp.name],
         calculate_metrics=True,
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
-    assert_metrics(run_resp, [check_sample_code.name], num_rows=3)
+    assert_metrics(
+        run_resp, [check_sample_code.name, check_sample_code_exp.name], num_rows=3
+    )
 
     okareo.delete_check(check_sample_code.id, check_sample_code.name)
+    okareo.delete_check(check_sample_code_exp.id, check_sample_code_exp.name)
 
 
 @pytest.fixture(scope="module")

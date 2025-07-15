@@ -19,9 +19,12 @@ def assert_scores_geval(scores: dict) -> None:
 
 
 def assert_scores(scores: dict, custom_dimensions: List[str]) -> None:
+    # Assert non-explanation scores specified in 'custom_dimensions' are present in 'scores'
     dimension_keys = custom_dimensions
     skip_keys = ["scenario_index", "test_id"]
-    assert len(dimension_keys) == len([k for k in scores.keys() if k not in skip_keys])
+    assert len(dimension_keys) == len(
+        [k for k in scores.keys() if k not in skip_keys and "__explanation" not in k]
+    )
     for dimension in dimension_keys:
         assert dimension in scores
 
