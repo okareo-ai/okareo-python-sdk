@@ -7,7 +7,7 @@ import pytest
 import requests  # type: ignore
 from okareo_tests.common import API_KEY, random_string
 
-from okareo import Okareo
+from okareo import BaseGenerationSchema, Okareo
 from okareo_api_client.models import (
     ScenarioSetCreate,
     ScenarioSetGenerate,
@@ -158,6 +158,42 @@ def generate_scenarios_custom_multi_chunk(
         number_examples=1,
         generation_type=ScenarioType.CUSTOM_MULTI_CHUNK_GENERATOR,
         generation_prompt="generate the next 5 words of 'lorem ipsum' based on the following text: {input}",
+    )
+    response = okareo_client.generate_scenario_set(scenario_set_generate)
+    return response
+
+
+class InnerInput(BaseGenerationSchema):
+    inner_foo: str
+    inner_bar: int
+    inner_baz: float
+
+
+class ComplicatedJsonInput(BaseGenerationSchema):
+    foo: str
+    bar: int
+    baz: float
+    qux: dict
+    tic: List[str]
+    toc: List[InnerInput]
+
+
+class GenerationSchema(BaseGenerationSchema):
+    input: ComplicatedJsonInput
+    result: str
+
+
+@pytest.fixture(scope="module")
+def generate_scenarios_custom_with_schema(
+    okareo_client: Okareo, create_examples_scenario_set: ScenarioSetResponse
+) -> ScenarioSetResponse:
+    scenario_set_generate = ScenarioSetGenerate(
+        source_scenario_id=create_examples_scenario_set.scenario_id,
+        name=f"generated custom scenario set with schema {random_string(5)}",
+        number_examples=1,
+        generation_type=ScenarioType.CUSTOM_GENERATOR,
+        generation_prompt="generate the next 5 words of 'lorem ipsum' based on the following text: {input}",
+        generation_schema=GenerationSchema,  # type: ignore
     )
     response = okareo_client.generate_scenario_set(scenario_set_generate)
     return response
@@ -363,6 +399,47 @@ def test_generate_scenarios_custom_multi_chunk(
     assert_generated_scenarios_seed_ids(
         okareo_client, generate_scenarios_custom_multi_chunk
     )
+
+
+def test_generate_scenarios_custom_with_schema(
+    generate_scenarios_custom_with_schema: ScenarioSetResponse,
+    seed_data: List[SeedData],
+    okareo_client: Okareo,
+) -> None:
+    assert generate_scenarios_custom_with_schema.type == "CUSTOM_GENERATOR"
+    assert generate_scenarios_custom_with_schema.seed_data == []
+    assert generate_scenarios_custom_with_schema is not None
+    assert generate_scenarios_custom_with_schema.scenario_id
+    assert generate_scenarios_custom_with_schema.project_id
+    assert generate_scenarios_custom_with_schema.time_created
+    assert type(generate_scenarios_custom_with_schema.tags) is list
+
+    assert_generated_scenarios_seed_ids(
+        okareo_client, generate_scenarios_custom_with_schema
+    )
+
+    # assert the structure of the generated scenario rows matches the schema
+    scenario_data = generate_scenarios_custom_with_schema.scenario_data
+    assert scenario_data is not None
+    for row in scenario_data:  # type: ignore
+        assert row.input_ is not None
+        assert isinstance(row.input_, dict)
+        assert "foo" in row.input_ and isinstance(row.input_["foo"], str)
+        assert "bar" in row.input_ and isinstance(row.input_["bar"], int)
+        assert "baz" in row.input_ and isinstance(row.input_["baz"], float)
+        assert "qux" in row.input_ and isinstance(row.input_["qux"], dict)
+        assert "tic" in row.input_ and isinstance(row.input_["tic"], list)
+        assert all(isinstance(item, str) for item in row.input_["tic"])
+        assert "toc" in row.input_ and isinstance(row.input_["toc"], list)
+        assert all(
+            isinstance(item, dict)
+            and "inner_foo" in item
+            and "inner_bar" in item
+            and "inner_baz" in item
+            for item in row.input_["toc"]
+        )
+        assert row.result is not None
+        assert isinstance(row.result, str)
 
 
 def test_generate_scenarios_empty(

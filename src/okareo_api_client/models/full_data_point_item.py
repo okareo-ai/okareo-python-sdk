@@ -33,6 +33,7 @@ class FullDataPointItem:
         time_created (Union[Unset, str]):
         checks (Union[Unset, Any]):
         end_time (Union[Unset, Any]):
+        driver_prompt (Union[Unset, str]):
     """
 
     id: str
@@ -49,6 +50,7 @@ class FullDataPointItem:
     time_created: Union[Unset, str] = UNSET
     checks: Union[Unset, Any] = UNSET
     end_time: Union[Unset, Any] = UNSET
+    driver_prompt: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -117,6 +119,7 @@ class FullDataPointItem:
         time_created = self.time_created
         checks = self.checks
         end_time = self.end_time
+        driver_prompt = self.driver_prompt
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -148,6 +151,8 @@ class FullDataPointItem:
             field_dict["checks"] = checks
         if end_time is not UNSET:
             field_dict["end_time"] = end_time
+        if driver_prompt is not UNSET:
+            field_dict["driver_prompt"] = driver_prompt
 
         return field_dict
 
@@ -259,6 +264,8 @@ class FullDataPointItem:
 
         end_time = d.pop("end_time", UNSET)
 
+        driver_prompt = d.pop("driver_prompt", UNSET)
+
         full_data_point_item = cls(
             id=id,
             test_run_id=test_run_id,
@@ -274,6 +281,7 @@ class FullDataPointItem:
             time_created=time_created,
             checks=checks,
             end_time=end_time,
+            driver_prompt=driver_prompt,
         )
 
         full_data_point_item.additional_properties = d

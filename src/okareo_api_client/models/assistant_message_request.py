@@ -1,7 +1,9 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AssistantMessageRequest")
 
@@ -10,39 +12,40 @@ T = TypeVar("T", bound="AssistantMessageRequest")
 class AssistantMessageRequest:
     """
     Attributes:
-        thread_id (str):
         message (str):
+        thread_id (Union[Unset, str]):
     """
 
-    thread_id: str
     message: str
+    thread_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        thread_id = self.thread_id
         message = self.message
+        thread_id = self.thread_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "thread_id": thread_id,
                 "message": message,
             }
         )
+        if thread_id is not UNSET:
+            field_dict["thread_id"] = thread_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        thread_id = d.pop("thread_id")
-
         message = d.pop("message")
 
+        thread_id = d.pop("thread_id", UNSET)
+
         assistant_message_request = cls(
-            thread_id=thread_id,
             message=message,
+            thread_id=thread_id,
         )
 
         assistant_message_request.additional_properties = d
