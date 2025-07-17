@@ -93,6 +93,7 @@ from .scenario_data_poin_response_meta_data import ScenarioDataPoinResponseMetaD
 from .scenario_set_create import ScenarioSetCreate
 from .scenario_set_generate import ScenarioSetGenerate
 from .scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
+from .scenario_set_generate_generation_schema import ScenarioSetGenerateGenerationSchema
 from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
@@ -205,6 +206,7 @@ __all__ = (
     "ScenarioSetCreate",
     "ScenarioSetGenerate",
     "ScenarioSetGenerateChecksItemType1",
+    "ScenarioSetGenerateGenerationSchema",
     "ScenarioSetResponse",
     "ScenarioSetUpdate",
     "ScenarioType",
