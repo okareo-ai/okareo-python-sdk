@@ -5,6 +5,7 @@ import warnings
 from typing import Any, Dict, List, TypedDict, Union
 
 import httpx
+from pydantic import BaseModel as PydanticBaseModel
 
 from okareo.checks import BaseCheck
 from okareo_api_client import Client
@@ -100,6 +101,14 @@ def check_deprecation_warning() -> None:
 class SeedDataRow(TypedDict):
     input: Union[dict, list, str]
     result: Union[dict, list, str]
+
+
+class BaseGenerationSchema(PydanticBaseModel):
+    """A base schema class for specifying structured outputs to synthetic data generators."""
+
+    @classmethod
+    def to_dict(cls) -> dict:
+        return cls.model_json_schema()
 
 
 class Okareo:

@@ -741,7 +741,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
             scenario=scenario,
             test_run_type=TestRunType.MULTI_TURN,
             calculate_metrics=True,
-            checks=["behavior_adherence", "levenshtein_distance"],
+            checks=["behavior_adherence", "levenshtein_distance", "result_completed"],
         )
         return index, evaluation
 
