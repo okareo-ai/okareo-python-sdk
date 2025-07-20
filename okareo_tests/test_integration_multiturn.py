@@ -1542,7 +1542,7 @@ def test_multiturn_custom_endpoint_start_with_message(
     assert evaluation.status == "FINISHED"
     # Validate via test data points API
     tdp = okareo.find_test_data_points(
-        FindTestDataPointPayload(test_run_id=evaluation.id)
+        FindTestDataPointPayload(test_run_id=evaluation.id, full_data_point=True)
     )
     assert isinstance(tdp, list)
     assert len(tdp) == 1

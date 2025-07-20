@@ -40,6 +40,7 @@ class DatapointListItem:
         project_id (Union[Unset, str]):
         mut_id (Union[Unset, str]):
         test_run_id (Union[Unset, str]):
+        test_data_point_id (Union[Unset, str]):
         group_id (Union[Unset, str]):
         scenario_data_point_id (Union[Unset, str]):
         latency (Union[Unset, int]):
@@ -81,6 +82,7 @@ class DatapointListItem:
     project_id: Union[Unset, str] = UNSET
     mut_id: Union[Unset, str] = UNSET
     test_run_id: Union[Unset, str] = UNSET
+    test_data_point_id: Union[Unset, str] = UNSET
     group_id: Union[Unset, str] = UNSET
     scenario_data_point_id: Union[Unset, str] = UNSET
     latency: Union[Unset, int] = UNSET
@@ -149,6 +151,7 @@ class DatapointListItem:
         project_id = self.project_id
         mut_id = self.mut_id
         test_run_id = self.test_run_id
+        test_data_point_id = self.test_data_point_id
         group_id = self.group_id
         scenario_data_point_id = self.scenario_data_point_id
         latency = self.latency
@@ -257,6 +260,8 @@ class DatapointListItem:
             field_dict["mut_id"] = mut_id
         if test_run_id is not UNSET:
             field_dict["test_run_id"] = test_run_id
+        if test_data_point_id is not UNSET:
+            field_dict["test_data_point_id"] = test_data_point_id
         if group_id is not UNSET:
             field_dict["group_id"] = group_id
         if scenario_data_point_id is not UNSET:
@@ -380,6 +385,8 @@ class DatapointListItem:
 
         test_run_id = d.pop("test_run_id", UNSET)
 
+        test_data_point_id = d.pop("test_data_point_id", UNSET)
+
         group_id = d.pop("group_id", UNSET)
 
         scenario_data_point_id = d.pop("scenario_data_point_id", UNSET)
@@ -497,6 +504,7 @@ class DatapointListItem:
             project_id=project_id,
             mut_id=mut_id,
             test_run_id=test_run_id,
+            test_data_point_id=test_data_point_id,
             group_id=group_id,
             scenario_data_point_id=scenario_data_point_id,
             latency=latency,

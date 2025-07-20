@@ -1199,13 +1199,14 @@ class MultiTurnDriver(BaseModel):
     target: Union[
         OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
     ]
-    stop_check: Union[StopConfig, dict]
+    stop_check: Union[StopConfig, dict, None] = None
     driver_model_id: Optional[str] = None
     driver_temperature: Optional[float] = 0.8
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
     first_turn: Optional[str] = "target"
     driver_prompt_template: Optional[str] = None
+    checks_at_every_turn: Optional[bool] = False
 
     def __attrs_post_init__(self) -> None:
         if isinstance(self.stop_check, dict):
@@ -1226,6 +1227,7 @@ class MultiTurnDriver(BaseModel):
                 if isinstance(self.stop_check, StopConfig)
                 else self.stop_check
             ),
+            "checks_at_every_turn": self.checks_at_every_turn,
         }
 
 
