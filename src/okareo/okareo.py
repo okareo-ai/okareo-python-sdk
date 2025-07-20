@@ -705,10 +705,14 @@ class Okareo:
             print(dp)
 
         ### Find datapoints based on filters on datapoints fields
+        from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
+        from okareo_api_client.models.filter_condition import FilterCondition
+        from okareo_api_client.models.comparison_operator import ComparisonOperator
+
         search = DatapointFilterSearch(
             filters=[FilterCondition(
-                field="input",
-                operator="contains",
+                field=DatapointField.TEST_RUN_ID,
+                operator=ComparisonOperator.EQUAL,
                 value="France"
             )]
         )
