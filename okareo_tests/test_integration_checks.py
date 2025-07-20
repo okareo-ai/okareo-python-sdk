@@ -297,8 +297,9 @@ def test_custom_check_on_multiturn_model_input_args(rnd: str, okareo: Okareo) ->
     # The 'scenario_input' is the most recent message to the target
     from okareo_tests.checks.input_comparison_check import Check  # type: ignore
 
+    check_name = f"input_comparison_check_{rnd}"
     input_comparison_check = okareo.create_or_update_check(
-        name="input_comparison_check",
+        name=check_name,
         description="Check if model input is longer than scenario input",
         check=Check(),
     )
@@ -337,7 +338,7 @@ def test_custom_check_on_multiturn_model_input_args(rnd: str, okareo: Okareo) ->
         name=test_run_name,
         test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
-        checks=["input_comparison_check"],
+        checks=[check_name],
     )
     assert test_run_item.name == test_run_name
     assert test_run_item.status == "FINISHED"
@@ -346,7 +347,7 @@ def test_custom_check_on_multiturn_model_input_args(rnd: str, okareo: Okareo) ->
     assert test_run_item.model_metrics.additional_properties
     metrics_dict = test_run_item.model_metrics.additional_properties
     assert metrics_dict.get("mean_scores") is not None
-    assert metrics_dict["mean_scores"]["input_comparison_check"] == 1
+    assert metrics_dict["mean_scores"][check_name] == 1
 
     # cleanup: remove the check
     okareo.delete_check(input_comparison_check.id, input_comparison_check.name)  # type: ignore
