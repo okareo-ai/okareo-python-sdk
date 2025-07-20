@@ -26,6 +26,8 @@ class DatapointField(str, Enum):
     SOURCE = "source"
     TAGS = "tags"
     TEMPERATURE = "temperature"
+    TEST_DATA_POINT_ID = "test_data_point_id"
+    TEST_RUN_ID = "test_run_id"
     TIME_CREATED = "time_created"
     USER_METADATA = "user_metadata"
 

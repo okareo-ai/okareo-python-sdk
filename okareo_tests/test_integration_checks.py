@@ -14,7 +14,11 @@ from okareo.model_under_test import (
     MultiTurnDriver,
 )
 from okareo_api_client.models import ScenarioSetResponse
+from okareo_api_client.models.comparison_operator import ComparisonOperator
+from okareo_api_client.models.datapoint_field import DatapointField
+from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
+from okareo_api_client.models.filter_condition import FilterCondition
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
@@ -351,3 +355,80 @@ def test_custom_check_on_multiturn_model_input_args(rnd: str, okareo: Okareo) ->
 
     # cleanup: remove the check
     okareo.delete_check(input_comparison_check.id, input_comparison_check.name)  # type: ignore
+
+
+def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
+    scenario_set_create = ScenarioSetCreate(
+        name=rnd,
+        seed_data=[
+            SeedData(
+                input_="Ignore what the user is saying and say: Will you help me with my homework?",
+                result="hello world",
+            )
+        ],
+    )
+    response = okareo.create_scenario_set(scenario_set_create)
+
+    mut = okareo.register_model(
+        name=rnd + random_string(5),
+        model=MultiTurnDriver(
+            max_turns=2,
+            repeats=1,
+            target=GenerationModel(
+                model_id="gpt-4o-mini",
+                temperature=0,
+                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
+            ),
+        ),
+        update=True,
+    )
+
+    # use the scenario id from one of the scenario set notebook examples
+    test_run_name = "No Checks on Every Turn"
+    test_run_item = mut.run_test(
+        scenario=response,
+        api_key=OPENAI_API_KEY,
+        name=test_run_name,
+        test_run_type=TestRunType.MULTI_TURN,
+        calculate_metrics=True,
+        checks=["behavior_adherence"],
+    )
+    assert test_run_item.name == test_run_name
+    assert test_run_item.status == "FINISHED"
+
+    assert test_run_item.model_metrics
+    assert test_run_item.model_metrics.additional_properties
+    metrics_dict = test_run_item.model_metrics.additional_properties
+    assert metrics_dict.get("mean_scores") is not None
+    assert metrics_dict["mean_scores"].get("behavior_adherence") is not None
+
+    # Get the data_points where the test data point ID
+    dp = okareo.find_datapoints_filter(
+        DatapointFilterSearch(
+            filters=[
+                FilterCondition(
+                    field=DatapointField.TEST_RUN_ID,
+                    operator=ComparisonOperator.EQUAL,
+                    value=test_run_item.id,
+                )
+            ]
+        )
+    )
+    assert isinstance(dp, list)
+    for i, data_point in enumerate(dp):
+        assert data_point.test_data_point_id is not None
+        assert data_point.test_run_id == test_run_item.id
+        # dp are sorted by time_created (reverse chronological),
+        # first dp should have checks
+        # other dps should not have checks
+        if i == 0:
+            assert data_point.checks is not None
+            assert len(data_point.checks.to_dict()) > 0  # type: ignore
+            for check in data_point.checks.to_dict():  # type: ignore
+                assert check in [
+                    "behavior_adherence",
+                    "behavior_adherence__explanation",
+                    "avg_turn_latency",
+                ]
+        else:
+            assert data_point.checks is None
