@@ -51,7 +51,7 @@ from okareo_api_client.types import UNSET, Unset
 
 from .async_utils import AsyncProcessorMixin
 
-# Apply monkey patch at module level
+# Apply monkey patch at module level to allow aiohttp client session to pull proxy env vars
 _original_client_session = aiohttp.ClientSession
 
 
