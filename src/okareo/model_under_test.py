@@ -8,6 +8,7 @@ from base64 import b64encode
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
+import aiohttp
 import nats  # type: ignore
 from attrs import define
 from attrs import define as _attrs_define
@@ -49,6 +50,20 @@ from okareo_api_client.models.test_run_payload_v2_model_results import (
 from okareo_api_client.types import UNSET, Unset
 
 from .async_utils import AsyncProcessorMixin
+
+# Apply monkey patch at module level
+_original_client_session = aiohttp.ClientSession
+
+
+# Create a wrapper class that inherits from the original ClientSession
+class PatchedClientSession(_original_client_session):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs["trust_env"] = True
+        super().__init__(*args, **kwargs)
+
+
+# Replace the original ClientSession with our patched version
+aiohttp.ClientSession = PatchedClientSession  # type: ignore
 
 
 class BaseModel:
