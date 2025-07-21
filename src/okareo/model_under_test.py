@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
-import nats  # type: ignore
 from attrs import define
 from attrs import define as _attrs_define
 from attrs import field
@@ -64,6 +63,8 @@ class PatchedClientSession(_original_client_session):
 
 # Replace the original ClientSession with our patched version
 aiohttp.ClientSession = PatchedClientSession  # type: ignore
+
+import nats  # type: ignore # noqa: E402
 
 
 class BaseModel:
