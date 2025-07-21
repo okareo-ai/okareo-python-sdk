@@ -52,23 +52,26 @@ from okareo_api_client.types import UNSET, Unset
 
 from .async_utils import AsyncProcessorMixin
 
-# Apply monkey patch at module level to allow aiohttp client session to pull proxy env vars
+## BEGIN Monkey Patch for nats to use proxy env vars (via aiohttp)
+#  Apply monkey patch at module level to allow aiohttp client session to pull proxy env vars
 _original_client_session = aiohttp.ClientSession
 
 
 # Create a wrapper class that inherits from the original ClientSession
 class PatchedClientSession(_original_client_session):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        logging.debug("Applying patch to aiohttp")
-        logging.debug(urllib.request.getproxies())
+        logging.debug("Applying proxy patch to aiohttp")
+        logging.debug("Proxy env vars: %s", urllib.request.getproxies())
         kwargs["trust_env"] = True
         super().__init__(*args, **kwargs)
 
 
 # Replace the original ClientSession with our patched version
 aiohttp.ClientSession = PatchedClientSession  # type: ignore
-
+# We import nats only after patching aiohttp to respect the proxy env vars
 import nats  # type: ignore # noqa: E402
+## END Monkey Patch for nats to use proxy env vars (via aiohttp)
+
 
 
 class BaseModel:
