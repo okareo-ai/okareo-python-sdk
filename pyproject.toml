@@ -42,14 +42,15 @@ aiohttp = "^3.10.0"
 opentelemetry-sdk = ">=1.0.0"
 opentelemetry-api = ">=1.0.0"
 opentelemetry-instrumentation = ">=0.40b.0"
-langchain = {version = "^0.0.321", optional = true}
-openai = {version = "^1.20.0", optional = true}
-litellm = {version = "^1.29.5", optional = true}
-autogen-agentchat = { version = "^0.2.36", optional = true }
 protobuf = ">=2.6.1"
 opentelemetry-proto = ">=1.20.0"
 tqdm = "^4.67.1"
 pydoc-markdown = "^4.8.2"
+pydantic = "^2.11.7"
+langchain = {version = "^0.0.321", optional = true}
+openai = {version = "^1.20.0", optional = true}
+litellm = {version = "^1.29.5", optional = true}
+autogen-agentchat = { version = "^0.2.36", optional = true }
 
 [tool.poetry.extras]
 langchain = ["langchain", "openai", "litellm"]
