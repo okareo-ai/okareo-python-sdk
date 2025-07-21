@@ -1,8 +1,10 @@
 import asyncio
 import inspect
 import json
+import logging
 import ssl
 import threading
+import urllib
 from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
@@ -57,6 +59,8 @@ _original_client_session = aiohttp.ClientSession
 # Create a wrapper class that inherits from the original ClientSession
 class PatchedClientSession(_original_client_session):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        logging.debug("Applying patch to aiohttp")
+        logging.debug(urllib.request.getproxies())
         kwargs["trust_env"] = True
         super().__init__(*args, **kwargs)
 
