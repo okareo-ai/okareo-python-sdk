@@ -720,7 +720,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
     registered_models = []
     for i, model in enumerate(models):
         model_under_test = okareo.register_model(
-            name=f"Custom Model {i+1} - {rnd}",
+            name=f"Custom Model {i + 1} - {rnd}",
             model=MultiTurnDriver(
                 driver_temperature=0.5 + (i * 0.1),  # Vary temperature
                 max_turns=3 + i,  # Vary max turns
@@ -736,7 +736,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
     # Function to run a single test
     def run_single_test(index: Any, model: Any) -> Any:
         evaluation = model.run_test(
-            name=f"Custom Model {index+1} Evaluation - {rnd}",
+            name=f"Custom Model {index + 1} Evaluation - {rnd}",
             api_key=OPENAI_API_KEY,
             scenario=scenario,
             test_run_type=TestRunType.MULTI_TURN,
@@ -763,7 +763,7 @@ def test_run_multiple_custom_multiturn_models(rnd: str, okareo: Okareo) -> None:
     assert len(evaluations) == 5
     for i in range(5):
         evaluation = evaluations[i]
-        assert evaluation.name == f"Custom Model {i+1} Evaluation - {rnd}"
+        assert evaluation.name == f"Custom Model {i + 1} Evaluation - {rnd}"
         assert evaluation.model_metrics is not None
         assert evaluation.app_link is not None
     if evaluation.status is not None:

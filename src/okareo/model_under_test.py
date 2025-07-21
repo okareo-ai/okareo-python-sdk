@@ -70,8 +70,8 @@ class PatchedClientSession(_original_client_session):
 aiohttp.ClientSession = PatchedClientSession  # type: ignore
 # We import nats only after patching aiohttp to respect the proxy env vars
 import nats  # type: ignore # noqa: E402
-## END Monkey Patch for nats to use proxy env vars (via aiohttp)
 
+## END Monkey Patch for nats to use proxy env vars (via aiohttp)
 
 
 class BaseModel:
