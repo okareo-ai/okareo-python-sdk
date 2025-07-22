@@ -24,6 +24,7 @@ from okareo_api_client.api.default import (
     get_all_checks_v0_checks_get,
     get_all_projects_v0_projects_get,
     get_check_v0_check_check_id_get,
+    get_datapoints_filter_v0_find_datapoints_filter_post,
     get_datapoints_v0_find_datapoints_post,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     register_model_v0_register_model_post,
@@ -43,6 +44,7 @@ from okareo_api_client.models.check_create_update_schema_check_config import (
 from okareo_api_client.models.create_group_v0_groups_post_source import (
     CreateGroupV0GroupsPostSource,
 )
+from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.error_response import ErrorResponse
@@ -669,6 +671,57 @@ class Okareo:
         ```
         """
         data = get_datapoints_v0_find_datapoints_post.sync(
+            client=self.client,
+            api_key=self.api_key,
+            json_body=datapoint_search,
+        )
+        if not data:
+            return []
+        return data
+
+    def find_datapoints_filter(
+        self, datapoint_search: DatapointFilterSearch
+    ) -> Union[List[DatapointListItem], ErrorResponse]:
+        """
+        Fetch the datapoints specified by a Datapoint Search.
+
+        Args:
+            datapoint_search (DatapointSearch): The search criteria for fetching datapoints.
+
+        Returns:
+            Union[List[DatapointListItem], ErrorResponse]: A list of datapoint items matching the search, or an error response.
+
+        Example:
+        ```python
+        from okareo_api_client.models.datapoint_search import DatapointFilterSearch
+
+        ### Search based on a test run ID
+        test_run__id = "your_test_run_id"  # Replace with your actual test run ID
+        search = DatapointFilterSearch(
+            test_run_id=test_run__id,
+        )
+        datapoints = okareo_client.find_datapoints(search)
+        for dp in datapoints:
+            print(dp)
+
+        ### Find datapoints based on filters on datapoints fields
+        from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
+        from okareo_api_client.models.filter_condition import FilterCondition
+        from okareo_api_client.models.comparison_operator import ComparisonOperator
+
+        search = DatapointFilterSearch(
+            filters=[FilterCondition(
+                field=DatapointField.TEST_RUN_ID,
+                operator=ComparisonOperator.EQUAL,
+                value="France"
+            )]
+        )
+        datapoints = okareo_client.find_datapoints_filter(search)
+        for dp in datapoints:
+            print(dp)
+        ```
+        """
+        data = get_datapoints_filter_v0_find_datapoints_filter_post.sync(
             client=self.client,
             api_key=self.api_key,
             json_body=datapoint_search,

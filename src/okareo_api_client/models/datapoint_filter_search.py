@@ -24,6 +24,10 @@ class DatapointFilterSearch:
         errors_only (Union[Unset, bool]): Only return errors
         checks (Union[Unset, List[Any]]): List of checks to only flag issues for
         filter_group_id (Union[Unset, str]): Filter group ID to search with
+        timezone (Union[Unset, str]): IANA timezone to use for date filtering/aggregation (e.g., 'America/New_York').
+            Defaults to None (i.e., UTC).
+        precision (Union[Unset, str]): Time precision for the summary. Valid values include ['day', 'hour', 'minute'].
+            Defaults to 'day'. Default: 'day'.
     """
 
     filters: List["FilterCondition"]
@@ -34,6 +38,8 @@ class DatapointFilterSearch:
     errors_only: Union[Unset, bool] = False
     checks: Union[Unset, List[Any]] = UNSET
     filter_group_id: Union[Unset, str] = UNSET
+    timezone: Union[Unset, str] = UNSET
+    precision: Union[Unset, str] = "day"
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -53,6 +59,8 @@ class DatapointFilterSearch:
             checks = self.checks
 
         filter_group_id = self.filter_group_id
+        timezone = self.timezone
+        precision = self.precision
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -75,6 +83,10 @@ class DatapointFilterSearch:
             field_dict["checks"] = checks
         if filter_group_id is not UNSET:
             field_dict["filter_group_id"] = filter_group_id
+        if timezone is not UNSET:
+            field_dict["timezone"] = timezone
+        if precision is not UNSET:
+            field_dict["precision"] = precision
 
         return field_dict
 
@@ -104,6 +116,10 @@ class DatapointFilterSearch:
 
         filter_group_id = d.pop("filter_group_id", UNSET)
 
+        timezone = d.pop("timezone", UNSET)
+
+        precision = d.pop("precision", UNSET)
+
         datapoint_filter_search = cls(
             filters=filters,
             project_id=project_id,
@@ -113,6 +129,8 @@ class DatapointFilterSearch:
             errors_only=errors_only,
             checks=checks,
             filter_group_id=filter_group_id,
+            timezone=timezone,
+            precision=precision,
         )
 
         datapoint_filter_search.additional_properties = d
