@@ -837,7 +837,7 @@ def test_submit_test_openai(
 
     # wait for the async run to finish
     # try three times with linear backoff
-    for i in range(1, 4):
+    for i in range(1, 10):
         time.sleep(3 * i)
 
         # get the test run item
@@ -879,7 +879,7 @@ def test_submit_batch_model_generation(
 
     # wait for the async run to finish
     # try three times with linear backoff
-    for i in range(1, 4):
+    for i in range(1, 10):
         time.sleep(3 * i)
 
         # get the test run item
