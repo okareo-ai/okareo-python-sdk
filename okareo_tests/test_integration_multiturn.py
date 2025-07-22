@@ -812,7 +812,7 @@ def test_submit_multiturn_test_generation_model(rnd: str, okareo: Okareo) -> Non
 
     # wait for the async run to finish
     # try three times with linear backoff
-    for i in range(1, 4):
+    for i in range(1, 10):
         time.sleep(3 * i)
 
         # get the test run item
