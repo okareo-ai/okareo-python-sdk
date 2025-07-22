@@ -1142,7 +1142,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
 
     # wait for the async run to finish
     # try three times with linear backoff
-    for i in range(1, 10):
+    for i in range(1, 11):
         time.sleep(3 * i)
 
         # get the test run item
