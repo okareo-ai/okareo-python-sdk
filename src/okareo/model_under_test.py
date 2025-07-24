@@ -564,6 +564,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
         self.custom_model_thread_stop_event: Any = None
+        self.custom_model_thread_session: Any = None
+        self.custom_model_thread_session_stop_event: Any = None
 
         try:
             assert isinstance(self.models, dict)
@@ -628,6 +630,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             print(f"Unexpected status {e=}, {e.content=}")
             raise
         finally:
+            print("Cleaning up custom model threads")
             self._internal_cleanup_custom_model(
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
