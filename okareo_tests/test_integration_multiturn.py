@@ -284,13 +284,16 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
 class CustomScenarioInputModel(CustomMultiturnTarget):
     def __init__(self, name: str):
         super().__init__(name=name)
-        self.session_id = None
-        self.message_id = None
+        self.session_id: str = "None"
 
     def start_session(self) -> dict[str, str | None]:  # type: ignore
         """Start a session for the custom multiturn model."""
         self.session_id = "custom_session_123"
         return {"session_id": self.session_id}
+
+    def end_session(self, session_id: str) -> None:
+        assert session_id == self.session_id, "Session ID mismatch"
+        return None
 
     def invoke(self, messages, scenario_input, session_id) -> ModelInvocation:  # type: ignore
         # Use scenario along with messages

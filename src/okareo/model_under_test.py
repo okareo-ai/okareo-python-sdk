@@ -361,6 +361,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         message_history: Optional[list[dict[str, str]]] = None,
         scenario_input: Optional[Union[str, dict, list]] = None,
         session_id: Optional[str] = None,
+        call_type: str = "invoke",
     ) -> Any:
         assert isinstance(self.models, dict)
         if self.models.get("custom"):
@@ -368,43 +369,34 @@ class ModelUnderTest(AsyncProcessorMixin):
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"]["model_invoker"](args)
         else:
-            messages = message_history if message_history is not None else args
-            invoker = self.models["driver"]["target"]["model_invoker"]
-            sig = inspect.signature(invoker)
-            num_positional = sum(
-                1
-                for param in sig.parameters.values()
-                if param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
-            )
-            if num_positional > 1 and scenario_input is not None:
-                # new impl; first pos arg is message_history, second is scenario_input
-                return invoker(messages, scenario_input, session_id)
-            else:
-                # legacy impl; first pos arg is message_history (named args)
-                return invoker(args)
-
-    def call_custom_session_starter(
-        self,
-        args: Any,
-        message_history: Optional[list[dict[str, str]]] = None,
-        scenario_input: Optional[Union[str, dict, list]] = None,
-    ) -> Any:
-        assert isinstance(self.models, dict)
-        if "session_starter" in self.models["driver"]["target"]:
-            message_history if message_history is not None else args
-            invoker = self.models["driver"]["target"]["session_starter"]
-            sig = inspect.signature(invoker)
-            num_positional = sum(
-                1
-                for param in sig.parameters.values()
-                if param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
-            )
-            if num_positional > 1 and scenario_input is not None:
-                # new impl; first pos arg is message_history, second is scenario_input
-                return invoker()
-            else:
-                # legacy impl; first pos arg is message_history (named args)
-                return invoker()
+            if call_type == "invoke":
+                messages = message_history if message_history is not None else args
+                invoker = self.models["driver"]["target"]["model_invoker"]
+                sig = inspect.signature(invoker)
+                num_positional = sum(
+                    1
+                    for param in sig.parameters.values()
+                    if param.kind
+                    in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
+                )
+                if num_positional > 1 and scenario_input is not None:
+                    # new impl; first pos arg is message_history, second is scenario_input
+                    return invoker(messages, scenario_input, session_id)
+                else:
+                    # legacy impl; first pos arg is message_history (named args)
+                    return invoker(args)
+            elif call_type == "start_session":
+                if "session_starter" in self.models["driver"]["target"]:
+                    message_history if message_history is not None else args
+                    invoker = self.models["driver"]["target"]["session_starter"]
+                    return invoker()
+            elif call_type == "end_session":
+                if (
+                    "session_ender" in self.models["driver"]["target"]
+                    and session_id is not None
+                ):
+                    return self.models["driver"]["target"]["session_ender"](session_id)
+        return None
 
     def get_params_from_custom_result(self, result: Any) -> Any:
         if isinstance(result, ModelInvocation):
@@ -436,8 +428,9 @@ class ModelUnderTest(AsyncProcessorMixin):
                     message_history = data.get("message_history", [])
                     scenario_input = data.get("scenario_input", None)
                     session_id = data.get("session_id", None)
+                    call_type = data.get("call_type", "invoke")
                     result = self.call_custom_invoker(
-                        args, message_history, scenario_input, session_id
+                        args, message_history, scenario_input, session_id, call_type
                     )
                     json_encodable_result = self.get_params_from_custom_result(result)
                     await nats_connection.publish(
@@ -452,48 +445,6 @@ class ModelUnderTest(AsyncProcessorMixin):
 
             await nats_connection.subscribe(
                 f"invoke.{self.mut_id}", cb=message_handler_custom_model
-            )
-            while not stop_event.is_set():
-                await asyncio.sleep(0.1)
-        except Exception as e:
-            print(f"An error occurred in the custom model invocation: {str(e)}")
-        finally:
-            await nats_connection.close()
-
-    async def _internal_run_custom_model_listener_session(
-        self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str
-    ) -> None:
-        nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
-        try:
-
-            async def message_handler_custom_model(msg: Any) -> None:
-                try:
-                    data = json.loads(msg.data.decode())
-                    if data.get("close"):
-                        await nats_connection.publish(
-                            msg.reply, json.dumps({"status": "disconnected"}).encode()
-                        )
-                        stop_event.set()
-                        return
-                    args = data.get("args", [])
-                    message_history = data.get("message_history", [])
-                    scenario_input = data.get("scenario_input", None)
-                    result = self.call_custom_session_starter(
-                        args, message_history, scenario_input
-                    )
-                    json_encodable_result = self.get_params_from_custom_result(result)
-                    await nats_connection.publish(
-                        msg.reply, json.dumps(json_encodable_result).encode()
-                    )
-                except Exception as e:
-                    error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
-                    print(error_msg)
-                    await nats_connection.publish(
-                        msg.reply, json.dumps({"error": error_msg}).encode()
-                    )
-
-            await nats_connection.subscribe(
-                f"start_session.{self.mut_id}", cb=message_handler_custom_model
             )
             while not stop_event.is_set():
                 await asyncio.sleep(0.1)
@@ -518,20 +469,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             target=self._internal_run_custom_model_thread,
             args=(
                 self._internal_run_custom_model_listener(
-                    custom_model_thread_stop_event, nats_jwt, seed, local_nats
-                ),
-            ),
-        )
-        return custom_model_thread, custom_model_thread_stop_event
-
-    def _internal_start_custom_model_session_thread(
-        self, nats_jwt: str, seed: str, local_nats: str
-    ) -> tuple:
-        custom_model_thread_stop_event = threading.Event()
-        custom_model_thread = threading.Thread(
-            target=self._internal_run_custom_model_thread,
-            args=(
-                self._internal_run_custom_model_listener_session(
                     custom_model_thread_stop_event, nats_jwt, seed, local_nats
                 ),
             ),
@@ -564,8 +501,6 @@ class ModelUnderTest(AsyncProcessorMixin):
         """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
         self.custom_model_thread_stop_event: Any = None
-        self.custom_model_thread_session: Any = None
-        self.custom_model_thread_session_stop_event: Any = None
 
         try:
             assert isinstance(self.models, dict)
@@ -592,13 +527,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                     self.custom_model_thread_stop_event,
                 ) = self._internal_start_custom_model_thread(nats_jwt, seed, local_nats)
                 self.custom_model_thread.start()
-                (
-                    self.custom_model_thread_session,
-                    self.custom_model_thread_session_stop_event,
-                ) = self._internal_start_custom_model_session_thread(
-                    nats_jwt, seed, local_nats
-                )
-                self.custom_model_thread_session.start()
             elif self._has_custom_model():
                 self._custom_exec(scenario_id, model_data)
 
@@ -633,10 +561,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             print("Cleaning up custom model threads")
             self._internal_cleanup_custom_model(
                 self.custom_model_thread_stop_event, self.custom_model_thread
-            )
-            self._internal_cleanup_custom_model(
-                self.custom_model_thread_session_stop_event,
-                self.custom_model_thread_session,
             )
 
     def _check_multiturn_submit_safe(self, test_run_type: TestRunType) -> bool:
@@ -1089,6 +1013,13 @@ class CustomMultiturnTarget(BaseModel):
         """
         return {"session_id": None}
 
+    def end_session(self, session_id: str) -> None:
+        """Method for ending a multiturn conversation with a custom model
+
+        Arguments:
+            session_id: str - the ID of the session to end.
+        """
+
     @abstractmethod
     def invoke(
         self,
@@ -1114,6 +1045,7 @@ class CustomMultiturnTarget(BaseModel):
             "type": self.type,
             "model_invoker": self.invoke,
             "session_starter": self.start_session,
+            "session_ender": self.end_session,
         }
 
 
