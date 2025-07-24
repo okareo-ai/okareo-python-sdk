@@ -288,7 +288,7 @@ class CustomScenarioInputModel(CustomMultiturnTarget):
 
     def start_session(self) -> dict[str, str | None]:  # type: ignore
         """Start a session for the custom multiturn model."""
-        self.session_id = "custom_session_123"
+        self.session_id = rnd()  # Generate a random session ID
         return {"session_id": self.session_id}
 
     def end_session(self, session_id: str) -> None:
