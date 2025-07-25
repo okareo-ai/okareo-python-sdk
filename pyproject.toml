@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okareo"
-version = "0.0.98"
+version = "0.0.99"
 description = "Python SDK for interacting with Okareo Cloud APIs"
 authors = [
     "Okareo <info@okareo.com>",
