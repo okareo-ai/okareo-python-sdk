@@ -351,6 +351,7 @@ def test_run_multiturn_custom_with_scenario_input(rnd: str, okareo: Okareo) -> N
     tdps = okareo.find_test_data_points(
         FindTestDataPointPayload(test_run_id=evaluation.id, full_data_point=True)
     )
+    assert isinstance(tdps, list)
     # First assistant response should be "Hello world", next should be "Nice to meet you!"
     assert (
         tdps[0].metric_value.additional_properties["generation_output"][1]["content"]
