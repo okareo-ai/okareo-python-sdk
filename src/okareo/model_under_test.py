@@ -389,7 +389,12 @@ class ModelUnderTest(AsyncProcessorMixin):
                 if "session_starter" in self.models["driver"]["target"]:
                     message_history if message_history is not None else args
                     invoker = self.models["driver"]["target"]["session_starter"]
-                    return invoker()
+                    result = invoker(scenario_input)
+                    if not isinstance(result, tuple):
+                        raise TypeError(
+                            "session_starter must return a tuple (session_id, ModelInvocation)"
+                        )
+                    return result
             elif call_type == "end_session":
                 if (
                     "session_ender" in self.models["driver"]["target"]
@@ -399,6 +404,21 @@ class ModelUnderTest(AsyncProcessorMixin):
         return None
 
     def get_params_from_custom_result(self, result: Any) -> Any:
+        if isinstance(result, tuple):
+            if len(result) != 2:
+                raise TypeError(
+                    "start_session must return a tuple (session_id, ModelInvocation)"
+                )
+            if result[1] is not None and isinstance(result[1], ModelInvocation):
+                invocation = result[1].params()
+            else:
+                invocation = {}
+            if result[0] is not None and isinstance(result[0], str):
+                # If session_id is provided, add it to the invocation
+                invocation["session_id"] = result[0]
+            else:
+                invocation["session_id"] = None
+            return invocation
         if isinstance(result, ModelInvocation):
             result = result.params()
         if (
@@ -558,7 +578,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             print(f"Unexpected status {e=}, {e.content=}")
             raise
         finally:
-            print("Cleaning up custom model threads")
             self._internal_cleanup_custom_model(
                 self.custom_model_thread_stop_event, self.custom_model_thread
             )
@@ -1005,13 +1024,16 @@ class CustomMultiturnTarget(BaseModel):
     type = "custom_target"
     name: str
 
-    def start_session(self) -> dict[str, str | None]:
+    def start_session(
+        self, scenario_input: str | None = None
+    ) -> tuple[str | None, ModelInvocation | None]:
         """Method for starting a multiturn conversation with a custom model
 
         Returns:
-            dict - a dictionary containing session_id and any other relevant metadata.
+            - str | None: session_id - the ID of the session started by the model.
+            - ModelInvocation | None: model output - the model's response to the session start, if any.
         """
-        return {"session_id": None}
+        return None, None
 
     def end_session(self, session_id: str) -> None:
         """Method for ending a multiturn conversation with a custom model
