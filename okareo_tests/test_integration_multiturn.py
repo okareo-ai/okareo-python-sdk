@@ -288,7 +288,7 @@ class CustomScenarioInputModel(CustomMultiturnTarget):
 
     def start_session(self, scenario_input) -> tuple[str | None, ModelInvocation | None]:  # type: ignore
         """Start a session for the custom multiturn model."""
-        self.session_id = "rnd()"  # Generate a random session ID
+        self.session_id = random_string(5)  # Generate a random session ID
         print(scenario_input)
         if scenario_input == "Hello worlds":
             resp = ModelInvocation("Nice to meet you!", None, None)
