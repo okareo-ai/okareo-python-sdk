@@ -353,14 +353,21 @@ def test_run_multiturn_custom_with_scenario_input(rnd: str, okareo: Okareo) -> N
     )
     assert isinstance(tdps, list)
     # First assistant response should be "Hello world", next should be "Nice to meet you!"
-    assert (
-        tdps[0].metric_value.additional_properties["generation_output"][1]["content"]
-        == "Hello world"
-    )
-    assert (
-        tdps[1].metric_value.additional_properties["generation_output"][1]["content"]
-        == "Nice to meet you!"
-    )
+    for tdp in tdps:
+        if tdp.scenario_input == "Hello world":  # type: ignore
+            assert (
+                tdp.metric_value.additional_properties["generation_output"][1][
+                    "content"
+                ]
+                == "Hello world"
+            )
+        elif tdp.scenario_input == "Hello worlds":  # type: ignore
+            assert (
+                tdp.metric_value.additional_properties["generation_output"][1][
+                    "content"
+                ]
+                == "Nice to meet you!"
+            )
 
     assert evaluation.name == f"Hello World - {rnd}"
     assert evaluation.model_metrics is not None
