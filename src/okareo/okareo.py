@@ -215,8 +215,8 @@ class Okareo:
             session_starter = data["models"]["driver"]["target"]["session_starter"]
             session_ender = data["models"]["driver"]["target"]["session_ender"]
             del data["models"]["driver"]["target"]["model_invoker"]
-            del data["models"]["driver"]["target"]["session_starter"]
-            del data["models"]["driver"]["target"]["session_ender"]
+            data["models"]["driver"]["target"]["session_starter"] = True
+            data["models"]["driver"]["target"]["session_ender"] = True
             return data, model_invoker, session_starter, session_ender
         return data, None, None, None
 
