@@ -19,6 +19,9 @@ from okareo_api_client.models.datapoint_field import DatapointField
 from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.filter_condition import FilterCondition
+from okareo_api_client.models.find_test_data_point_payload import (
+    FindTestDataPointPayload,
+)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
@@ -402,6 +405,14 @@ def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
     assert metrics_dict.get("mean_scores") is not None
     assert metrics_dict["mean_scores"].get("behavior_adherence") is not None
 
+    # Get the test data point
+    tdp = okareo.find_test_data_points(
+        FindTestDataPointPayload(
+            test_run_id=test_run_item.id,
+        )
+    )
+    assert isinstance(tdp, list)
+
     # Get the data_points where the test data point ID
     dp = okareo.find_datapoints_filter(
         DatapointFilterSearch(
@@ -409,16 +420,17 @@ def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
                 FilterCondition(
                     field=DatapointField.TEST_RUN_ID,
                     operator=ComparisonOperator.EQUAL,
-                    value=test_run_item.id,
+                    value=tdp[0].id,
                 )
             ]
         )
     )
     assert isinstance(dp, list)
+    # sort dp by time_created (reverse chronological)
+    dp.sort(key=lambda x: x.time_created, reverse=True)  # type: ignore
     for i, data_point in enumerate(dp):
         assert data_point.test_data_point_id is not None
         assert data_point.test_run_id == test_run_item.id
-        # dp are sorted by time_created (reverse chronological),
         # first dp should have checks
         # other dps should not have checks
         if i == 0:
