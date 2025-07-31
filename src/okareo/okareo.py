@@ -5,6 +5,7 @@ import warnings
 from typing import Any, Dict, List, TypedDict, Union
 
 import httpx
+import pydantic
 from pydantic import BaseModel as PydanticBaseModel
 
 from okareo.checks import BaseCheck
@@ -110,7 +111,12 @@ class BaseGenerationSchema(PydanticBaseModel):
 
     @classmethod
     def to_dict(cls) -> dict:
-        return cls.model_json_schema()
+        version_major = int(pydantic.VERSION.split(".")[0])
+        if version_major >= 2:
+            return cls.model_json_schema()
+        else:
+            # Workaround for older pydantic versions
+            return cls.schema()
 
 
 class Okareo:
