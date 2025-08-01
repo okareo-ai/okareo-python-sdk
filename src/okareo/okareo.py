@@ -111,12 +111,13 @@ class BaseGenerationSchema(PydanticBaseModel):
 
     @classmethod
     def to_dict(cls) -> dict:
-        version_major = int(pydantic.VERSION.split(".")[0])
-        if version_major >= 2:
-            return cls.model_json_schema()
-        else:
+        version_str = getattr(pydantic, "VERSION", getattr(pydantic, "__version__"))
+        version_major = int(version_str.split(".")[0]) if version_str else None
+        if version_major is None or version_major == 1:
             # Workaround for older pydantic versions
             return cls.schema()
+        else:
+            return cls.model_json_schema()
 
 
 class Okareo:
