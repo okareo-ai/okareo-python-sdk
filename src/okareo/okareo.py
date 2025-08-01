@@ -111,7 +111,9 @@ class BaseGenerationSchema(PydanticBaseModel):
 
     @classmethod
     def to_dict(cls) -> dict:
-        version_str = getattr(pydantic, "VERSION", getattr(pydantic, "__version__"))
+        version_str = getattr(
+            pydantic, "VERSION", getattr(pydantic, "__version__", None)
+        )
         version_major = int(version_str.split(".")[0]) if version_str else None
         if version_major is None or version_major == 1:
             # Workaround for older pydantic versions
