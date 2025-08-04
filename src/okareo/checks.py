@@ -13,10 +13,12 @@ class CheckResponse:
     Attributes:
         score: The numeric or boolean result of the check.
         explanation: Optional string explanation for the score, if applicable.
+        metadata: Optional dictionary containing metadata about the check. E.g., output tokens, input tokens, latency, cost, etc.
     """
 
     score: Union[bool, int, float]
     explanation: Optional[str] = None
+    metadata: Optional[dict] = None
 
 
 class BaseCheck(ABC):
