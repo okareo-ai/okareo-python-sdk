@@ -282,8 +282,27 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
 
 
 class CustomScenarioInputModel(CustomMultiturnTarget):
-    def invoke(self, messages, scenario_input) -> ModelInvocation:  # type: ignore
+    def __init__(self, name: str):
+        super().__init__(name=name)
+        self.session_id: str = "None"
+
+    def start_session(self, scenario_input) -> tuple[str | None, ModelInvocation | None]:  # type: ignore
+        """Start a session for the custom multiturn model."""
+        self.session_id = random_string(5)  # Generate a random session ID
+        print(scenario_input)
+        if scenario_input == "Hello worlds":
+            resp = ModelInvocation("Nice to meet you!", None, None)
+        else:
+            resp = None  # No specific response for other inputs
+        return self.session_id, resp
+
+    def end_session(self, session_id: str) -> None:
+        assert session_id == self.session_id, "Session ID mismatch"
+        return None
+
+    def invoke(self, messages, scenario_input, session_id="None") -> ModelInvocation:  # type: ignore
         # Use scenario along with messages
+        assert self.session_id == session_id, "Session ID mismatch"
         if len(messages) > 0:
             content = messages[-1].get("content", "") + " " + scenario_input
         else:
@@ -310,6 +329,10 @@ def test_run_multiturn_custom_with_scenario_input(rnd: str, okareo: Okareo) -> N
             input_="Hello world",
             result="N/A",
         ),
+        SeedData(
+            input_="Hello worlds",
+            result="N/A",
+        ),
     ]
 
     scenario_set_create = ScenarioSetCreate(
@@ -324,6 +347,29 @@ def test_run_multiturn_custom_with_scenario_input(rnd: str, okareo: Okareo) -> N
         calculate_metrics=True,
         checks=["model_refusal"],
     )
+
+    tdps = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=evaluation.id, full_data_point=True)
+    )
+    assert isinstance(tdps, list)
+    # First assistant response should be "Hello world", next should be "Nice to meet you!"
+    for tdp in tdps:
+        if tdp.scenario_input == "Hello world":  # type: ignore
+            assert (
+                tdp.metric_value.additional_properties["generation_output"][1][
+                    "content"
+                ]
+                == "Hello world"
+            )
+        elif tdp.scenario_input == "Hello worlds":  # type: ignore
+            assert (
+                tdp.metric_value.additional_properties["generation_output"][1][
+                    "content"
+                ]
+                == "Nice to meet you!"
+                or custom_model.session_id == "None"
+            )
+
     assert evaluation.name == f"Hello World - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None

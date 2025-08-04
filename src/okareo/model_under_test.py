@@ -360,6 +360,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         args: Any,
         message_history: Optional[list[dict[str, str]]] = None,
         scenario_input: Optional[Union[str, dict, list]] = None,
+        session_id: Optional[str] = None,
+        call_type: str = "invoke",
     ) -> Any:
         assert isinstance(self.models, dict)
         if self.models.get("custom"):
@@ -367,22 +369,56 @@ class ModelUnderTest(AsyncProcessorMixin):
         elif self.models.get("custom_batch"):
             return self.models["custom_batch"]["model_invoker"](args)
         else:
-            messages = message_history if message_history is not None else args
-            invoker = self.models["driver"]["target"]["model_invoker"]
-            sig = inspect.signature(invoker)
-            num_positional = sum(
-                1
-                for param in sig.parameters.values()
-                if param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
-            )
-            if num_positional > 1 and scenario_input is not None:
-                # new impl; first pos arg is message_history, second is scenario_input
-                return invoker(messages, scenario_input)
-            else:
-                # legacy impl; first pos arg is message_history (named args)
-                return invoker(args)
+            if call_type == "invoke":
+                messages = message_history if message_history is not None else args
+                invoker = self.models["driver"]["target"]["model_invoker"]
+                sig = inspect.signature(invoker)
+                num_positional = sum(
+                    1
+                    for param in sig.parameters.values()
+                    if param.kind
+                    in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
+                )
+                if num_positional > 1 and scenario_input is not None:
+                    # new impl; first pos arg is message_history, second is scenario_input
+                    return invoker(messages, scenario_input, session_id)
+                else:
+                    # legacy impl; first pos arg is message_history (named args)
+                    return invoker(args)
+            elif call_type == "start_session":
+                if "session_starter" in self.models["driver"]["target"]:
+                    message_history if message_history is not None else args
+                    invoker = self.models["driver"]["target"]["session_starter"]
+                    result = invoker(scenario_input)
+                    if not isinstance(result, tuple):
+                        raise TypeError(
+                            "session_starter must return a tuple (session_id, ModelInvocation)"
+                        )
+                    return result
+            elif call_type == "end_session":
+                if (
+                    "session_ender" in self.models["driver"]["target"]
+                    and session_id is not None
+                ):
+                    return self.models["driver"]["target"]["session_ender"](session_id)
+        return None
 
     def get_params_from_custom_result(self, result: Any) -> Any:
+        if isinstance(result, tuple):
+            if len(result) != 2:
+                raise TypeError(
+                    "start_session must return a tuple (session_id, ModelInvocation)"
+                )
+            if result[1] is not None and isinstance(result[1], ModelInvocation):
+                invocation = result[1].params()
+            else:
+                invocation = {}
+            if result[0] is not None and isinstance(result[0], str):
+                # If session_id is provided, add it to the invocation
+                invocation["session_id"] = result[0]
+            else:
+                invocation["session_id"] = None
+            return invocation
         if isinstance(result, ModelInvocation):
             result = result.params()
         if (
@@ -411,8 +447,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                     args = data.get("args", [])
                     message_history = data.get("message_history", [])
                     scenario_input = data.get("scenario_input", None)
+                    session_id = data.get("session_id", None)
+                    call_type = data.get("call_type", "invoke")
                     result = self.call_custom_invoker(
-                        args, message_history, scenario_input
+                        args, message_history, scenario_input, session_id, call_type
                     )
                     json_encodable_result = self.get_params_from_custom_result(result)
                     await nats_connection.publish(
@@ -986,11 +1024,30 @@ class CustomMultiturnTarget(BaseModel):
     type = "custom_target"
     name: str
 
+    def start_session(
+        self, scenario_input: str | None = None
+    ) -> tuple[str | None, ModelInvocation | None]:
+        """Method for starting a multiturn conversation with a custom model
+
+        Returns:
+            - str | None: session_id - the ID of the session started by the model.
+            - ModelInvocation | None: model output - the model's response to the session start, if any.
+        """
+        return None, None
+
+    def end_session(self, session_id: str) -> None:
+        """Method for ending a multiturn conversation with a custom model
+
+        Arguments:
+            session_id: str - the ID of the session to end.
+        """
+
     @abstractmethod
     def invoke(
         self,
         messages: List[dict[str, str]],
         scenario_input: Optional[Union[dict, list, str]] = None,
+        session_id: Optional[str] = None,
     ) -> Union[ModelInvocation, Any]:
         """Method for continuing a multiturn conversation with a custom model
 
@@ -1009,6 +1066,8 @@ class CustomMultiturnTarget(BaseModel):
             "name": self.name,
             "type": self.type,
             "model_invoker": self.invoke,
+            "session_starter": self.start_session,
+            "session_ender": self.end_session,
         }
 
 

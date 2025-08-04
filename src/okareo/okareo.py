@@ -207,29 +207,39 @@ class Okareo:
 
     def _get_custom_model_invoker(
         self, data: Dict[str, Any]
-    ) -> tuple[dict[str, Any], Any]:
+    ) -> tuple[dict[str, Any], Any, Any, Any]:
         for custom_model_str in CUSTOM_MODEL_STRS:
             if custom_model_str in data["models"].keys():
                 model_invoker = data["models"][custom_model_str]["model_invoker"]
                 del data["models"][custom_model_str]["model_invoker"]
-                return data, model_invoker
+                return data, model_invoker, None, None
         if (
             "driver" in data["models"].keys()
             and data["models"]["driver"]["target"]["type"] == "custom_target"
         ):
             model_invoker = data["models"]["driver"]["target"]["model_invoker"]
+            session_starter = data["models"]["driver"]["target"]["session_starter"]
+            session_ender = data["models"]["driver"]["target"]["session_ender"]
             del data["models"]["driver"]["target"]["model_invoker"]
-            return data, model_invoker
-        return data, None
+            data["models"]["driver"]["target"]["session_starter"] = True
+            data["models"]["driver"]["target"]["session_ender"] = True
+            return data, model_invoker, session_starter, session_ender
+        return data, None, None, None
 
     def _set_custom_model_invoker(
-        self, data: Dict[str, Any], model_invoker: Any
+        self,
+        data: Dict[str, Any],
+        model_invoker: Any,
+        session_starter: Any,
+        session_ender: Any,
     ) -> Any:
         for custom_model_str in CUSTOM_MODEL_STRS:
             if custom_model_str in data.keys():
                 data[custom_model_str]["model_invoker"] = model_invoker
         if "driver" in data.keys():
             data["driver"]["target"]["model_invoker"] = model_invoker
+            data["driver"]["target"]["session_starter"] = session_starter
+            data["driver"]["target"]["session_ender"] = session_ender
         return data
 
     def register_model(
@@ -269,6 +279,8 @@ class Okareo:
         }
         # will rename name to model in the future api-breaking release
         model_invoker = None
+        session_starter = None
+        session_ender = None
         if isinstance(model, BaseModel) or (
             isinstance(model, list) and all(isinstance(x, BaseModel) for x in model)
         ):
@@ -276,7 +288,9 @@ class Okareo:
             data["models"] = {}
             for model in models:
                 data["models"][model.type] = model.params()
-            data, model_invoker = self._get_custom_model_invoker(data)
+            data, model_invoker, session_starter, session_ender = (
+                self._get_custom_model_invoker(data)
+            )
         if project_id is not None:
             data["project_id"] = project_id
         json_body = ModelUnderTestSchema.from_dict(data)
@@ -288,7 +302,9 @@ class Okareo:
         assert isinstance(response, ModelUnderTestResponse)
         model_data = data.get("models")
         if model_invoker and isinstance(model_data, dict):
-            model_data = self._set_custom_model_invoker(model_data, model_invoker)
+            model_data = self._set_custom_model_invoker(
+                model_data, model_invoker, session_starter, session_ender
+            )
         if response.warning:
             print(response.warning)
         return ModelUnderTest(
