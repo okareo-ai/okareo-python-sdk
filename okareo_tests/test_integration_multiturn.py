@@ -149,6 +149,63 @@ def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
     assert test_run_item.name == test_run_name
     assert test_run_item.status == "FINISHED"
 
+    tdps = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=test_run_item.id, full_data_point=True)
+    )
+    assert isinstance(tdps, list)
+
+    meta_metrics: dict[str, list[float]] = {
+        "latency": [],
+        "cost": [],
+        "input_tokens": [],
+        "output_tokens": [],
+    }
+    baseline_metrics: dict[str, list[float]] = {
+        "latency": [],
+        "cost": [],
+        "input_tokens": [],
+        "output_tokens": [],
+    }
+
+    for tdp in tdps:
+        meta = tdp.additional_properties["checks_metadata"]["model_refusal"]  # type: ignore[attr-defined]
+        meta_metrics["latency"].append(meta["average_latency"])
+        meta_metrics["cost"].append(meta["total_cost"])
+        meta_metrics["input_tokens"].append(meta["total_input_tokens"])
+        meta_metrics["output_tokens"].append(meta["total_output_tokens"])
+
+        baseline = tdp.additional_properties["baseline_metrics"]  # type: ignore[attr-defined]
+        baseline_metrics["latency"].append(baseline["avg_latency"])
+        baseline_metrics["cost"].append(baseline["total_cost"])
+        baseline_metrics["input_tokens"].append(baseline["total_input_tokens"])
+        baseline_metrics["output_tokens"].append(baseline["total_output_tokens"])
+
+    test_run = mut.get_test_run(test_run_item.id)
+    run_check_meta = test_run.model_metrics.additional_properties[  # type: ignore
+        "aggregate_check_metadata"
+    ]
+    run_baseline_meta = test_run.model_metrics.additional_properties[  # type: ignore
+        "aggregate_baseline_metrics"
+    ]
+
+    assert run_check_meta["average_latency"] == sum(meta_metrics["latency"]) / len(
+        meta_metrics["latency"]
+    )
+    assert run_check_meta["total_cost"] == sum(meta_metrics["cost"])
+    assert run_check_meta["total_input_tokens"] == sum(meta_metrics["input_tokens"])
+    assert run_check_meta["total_output_tokens"] == sum(meta_metrics["output_tokens"])
+
+    assert run_baseline_meta["avg_latency"] == sum(baseline_metrics["latency"]) / len(
+        baseline_metrics["latency"]
+    )
+    assert run_baseline_meta["total_cost"] == sum(baseline_metrics["cost"])
+    assert run_baseline_meta["total_input_tokens"] == sum(
+        baseline_metrics["input_tokens"]
+    )
+    assert run_baseline_meta["total_output_tokens"] == sum(
+        baseline_metrics["output_tokens"]
+    )
+
 
 @pytest.mark.parametrize("first_turn", ["driver", "target"])
 def test_run_multiturn_with_driver_model_id(
@@ -250,7 +307,7 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
         model=MultiTurnDriver(
             driver_temperature=1,
             max_turns=2,
-            repeats=1,
+            repeats=2,
             target=custom_model,
             stop_check={"check_name": "model_refusal", "stop_on": False},
         ),
@@ -279,6 +336,62 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
+
+    tdps = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=evaluation.id, full_data_point=True)
+    )
+    assert isinstance(tdps, list)
+
+    from litellm import token_counter
+
+    expected_tokens = token_counter(text="I can't help you with that.") * 3
+
+    meta_metrics: dict[str, list[float]] = {
+        "latency": [],
+        "input_tokens": [],
+        "output_tokens": [],
+    }
+    baseline_metrics: dict[str, list[float]] = {
+        "latency": [],
+        "input_tokens": [],
+        "output_tokens": [],
+    }
+
+    for tdp in tdps:
+        meta = tdp.additional_properties["checks_metadata"]["model_refusal"]  # type: ignore[attr-defined]
+        meta_metrics["latency"].append(meta["average_latency"])
+        meta_metrics["input_tokens"].append(meta["total_input_tokens"])
+        meta_metrics["output_tokens"].append(meta["total_output_tokens"])
+
+        baseline = tdp.additional_properties["baseline_metrics"]  # type: ignore[attr-defined]
+        baseline_metrics["latency"].append(baseline["avg_latency"])
+        baseline_metrics["input_tokens"].append(baseline["total_input_tokens"])
+        baseline_metrics["output_tokens"].append(baseline["total_output_tokens"])
+        assert baseline["total_output_tokens"] == expected_tokens
+
+    test_run = model_under_test.get_test_run(evaluation.id)
+    run_check_meta = test_run.model_metrics.additional_properties[  # type: ignore
+        "aggregate_check_metadata"
+    ]
+    run_baseline_meta = test_run.model_metrics.additional_properties[  # type: ignore
+        "aggregate_baseline_metrics"
+    ]
+
+    assert run_check_meta["average_latency"] == sum(meta_metrics["latency"]) / len(
+        meta_metrics["latency"]
+    )
+    assert run_check_meta["total_input_tokens"] == sum(meta_metrics["input_tokens"])
+    assert run_check_meta["total_output_tokens"] == sum(meta_metrics["output_tokens"])
+
+    assert run_baseline_meta["avg_latency"] == sum(baseline_metrics["latency"]) / len(
+        baseline_metrics["latency"]
+    )
+    assert run_baseline_meta["total_input_tokens"] == sum(
+        baseline_metrics["input_tokens"]
+    )
+    assert run_baseline_meta["total_output_tokens"] == sum(
+        baseline_metrics["output_tokens"]
+    )
 
 
 class CustomScenarioInputModel(CustomMultiturnTarget):
