@@ -366,7 +366,8 @@ def test_run_multiturn_custom_with_scenario_input(rnd: str, okareo: Okareo) -> N
                 tdp.metric_value.additional_properties["generation_output"][1][
                     "content"
                 ]
-                == "Nice to meet you!" or custom_model.session_id == "None"
+                == "Nice to meet you!"
+                or custom_model.session_id == "None"
             )
 
     assert evaluation.name == f"Hello World - {rnd}"
