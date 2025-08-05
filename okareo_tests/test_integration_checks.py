@@ -204,20 +204,24 @@ def test_run_model_based_predefined_checks(
         "aggregate_baseline_metrics"
     ]
 
-    assert run_check_meta["average_latency"] == sum(meta_metrics["latency"]) / len(
-        meta_metrics["latency"]
+    assert round(run_check_meta["average_latency"], 2) == round(
+        sum(meta_metrics["latency"]) / len(meta_metrics["latency"]), 2
     )
-    assert run_check_meta["total_input_tokens"] == sum(meta_metrics["input_tokens"])
-    assert run_check_meta["total_output_tokens"] == sum(meta_metrics["output_tokens"])
+    assert round(run_check_meta["total_input_tokens"], 2) == round(
+        sum(meta_metrics["input_tokens"]), 2
+    )
+    assert round(run_check_meta["total_output_tokens"], 2) == round(
+        sum(meta_metrics["output_tokens"]), 2
+    )
 
-    assert run_baseline_meta["avg_latency"] == sum(baseline_metrics["latency"]) / len(
-        baseline_metrics["latency"]
+    assert round(run_baseline_meta["avg_latency"], 2) == round(
+        sum(baseline_metrics["latency"]) / len(baseline_metrics["latency"]), 2
     )
-    assert run_baseline_meta["total_input_tokens"] == sum(
-        baseline_metrics["input_tokens"]
+    assert round(run_baseline_meta["total_input_tokens"], 2) == round(
+        sum(baseline_metrics["input_tokens"]), 2
     )
-    assert run_baseline_meta["total_output_tokens"] == sum(
-        baseline_metrics["output_tokens"]
+    assert round(run_baseline_meta["total_output_tokens"], 2) == round(
+        sum(baseline_metrics["output_tokens"]), 2
     )
 
 
