@@ -3,7 +3,7 @@ from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
-from okareo_tests.utils import assert_metrics
+from okareo_tests.utils import assert_baseline_metrics, assert_metrics
 
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
@@ -160,68 +160,14 @@ def test_run_model_based_predefined_checks(
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
     assert_metrics(run_resp, checks, num_rows=3)
 
-    tdps = okareo.find_test_data_points(
-        FindTestDataPointPayload(test_run_id=run_resp.id, full_data_point=True)
-    )
-    assert isinstance(tdps, list)
-
-    from litellm import token_counter
-
-    meta_metrics: dict[str, list[float]] = {
-        "latency": [],
-        "input_tokens": [],
-        "output_tokens": [],
-        "cost": [],
-    }
-    baseline_metrics: dict[str, list[float]] = {
-        "latency": [],
-        "input_tokens": [],
-        "output_tokens": [],
-        "cost": [],
-    }
-
-    for tdp in tdps:
-        metas = tdp.additional_properties["checks_metadata"]
-        for check in metas:
-            meta = metas[check]  # type: ignore[attr-defined]
-            meta_metrics["latency"].append(meta["latency"])
-            meta_metrics["input_tokens"].append(meta["input_tokens"])
-            meta_metrics["output_tokens"].append(meta["output_tokens"])
-            meta_metrics["cost"].append(meta["cost"])
-
-        baseline = tdp.additional_properties["baseline_metrics"]  # type: ignore[attr-defined]
-        baseline_metrics["latency"].append(baseline["latency"])
-        baseline_metrics["input_tokens"].append(baseline["input_tokens"])
-        baseline_metrics["output_tokens"].append(baseline["output_tokens"])
-        baseline_metrics["cost"].append(baseline["cost"])
-        assert baseline["output_tokens"] == token_counter(text=tdp.model_result)  # type: ignore
-
-    test_run = mut.get_test_run(run_resp.id)
-    run_check_meta = test_run.model_metrics.additional_properties[  # type: ignore
-        "aggregate_check_metadata"
-    ]
-    run_baseline_meta = test_run.model_metrics.additional_properties[  # type: ignore
-        "aggregate_baseline_metrics"
-    ]
-
-    assert round(run_check_meta["average_latency"], 2) == round(
-        sum(meta_metrics["latency"]) / len(meta_metrics["latency"]), 2
-    )
-    assert round(run_check_meta["total_input_tokens"], 2) == round(
-        sum(meta_metrics["input_tokens"]), 2
-    )
-    assert round(run_check_meta["total_output_tokens"], 2) == round(
-        sum(meta_metrics["output_tokens"]), 2
-    )
-
-    assert round(run_baseline_meta["avg_latency"], 2) == round(
-        sum(baseline_metrics["latency"]) / len(baseline_metrics["latency"]), 2
-    )
-    assert round(run_baseline_meta["total_input_tokens"], 2) == round(
-        sum(baseline_metrics["input_tokens"]), 2
-    )
-    assert round(run_baseline_meta["total_output_tokens"], 2) == round(
-        sum(baseline_metrics["output_tokens"]), 2
+    assert_baseline_metrics(
+        okareo,
+        evaluation=run_resp,
+        model=mut,
+        checks=checks,
+        cost=False,
+        multiturn=False,
+        turns=1,
     )
 
 
