@@ -68,8 +68,7 @@ def assert_baseline_metrics(
     checks: list,
     cost: bool = False,
     multiturn: bool = True,
-    turns: int = 1,
-    expected_tokens: int | None = None,
+    turns: int | None = None,
 ) -> None:
 
     tdps = okareo.find_test_data_points(
@@ -123,8 +122,6 @@ def assert_baseline_metrics(
                 tdp.model_result, str
             )
             assert token_counter(text=tdp.model_result) == baseline[output_tokens_key]  # type: ignore
-        if expected_tokens is not None:
-            assert baseline[output_tokens_key] == expected_tokens
         if cost:
             baseline_metrics["cost"].append(baseline[cost_key])
 

@@ -134,6 +134,8 @@ def test_run_code_based_predefined_checks(
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
     assert_metrics(run_resp, checks, num_rows=3)
 
+    assert_baseline_metrics(okareo, run_resp, mut, [], False, False, 1)
+
 
 def test_run_model_based_predefined_checks(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse

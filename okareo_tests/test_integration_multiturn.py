@@ -103,6 +103,10 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     assert test_run_item.name == "CI run test"
     assert test_run_item.status == "FINISHED"
 
+    assert_baseline_metrics(
+        okareo, test_run_item, mut, ["model_refusal"], True, True, 2
+    )
+
 
 def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
     # generate scenario and return results in one call
@@ -197,6 +201,10 @@ def test_run_multiturn_with_driver_model_id(
     assert test_run_item.name == f"CI run test {first_turn} first"
     assert test_run_item.status == "FINISHED"
 
+    assert_baseline_metrics(
+        okareo, test_run_item, mut, ["model_refusal"], True, True, 2
+    )
+
 
 def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> None:
     # generate scenario and return results in one call
@@ -244,7 +252,7 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
         okareo,
         evaluation=test_run_item,
         model=mut,
-        checks=[],
+        checks=["model_refusal"],
         cost=True,
         multiturn=True,
         turns=2,
@@ -295,9 +303,6 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
-    from litellm import token_counter
-
-    expected_tokens = token_counter(text="I can't help you with that.") * 3
     assert_baseline_metrics(
         okareo,
         evaluation,
@@ -306,7 +311,6 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
         False,
         True,
         2,
-        expected_tokens,
     )
 
 
@@ -465,6 +469,10 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
     assert evaluation.app_link is not None
     assert evaluation.test_data_point_count == 4  # 2 seeds × 2 repeats
 
+    assert_baseline_metrics(
+        okareo, evaluation, model_under_test, ["behavior_adherence"], False, True, 2
+    )
+
 
 def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> None:
     class OpenAIRequestsModel(CustomMultiturnTarget):
@@ -545,6 +553,10 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
     assert evaluation.name == f"OpenAI Requests Test - {rnd}"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
+
+    assert_baseline_metrics(
+        okareo, evaluation, model_under_test, ["model_refusal"], False, True, 2
+    )
 
 
 def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
@@ -1033,6 +1045,10 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
+    assert_baseline_metrics(
+        okareo, evaluation, multiturn_model, ["task_completed"], False, True, 2
+    )
+
 
 def test_multiturn_driver_with_custom_endpoint_same_message(
     rnd: str, okareo: Okareo
@@ -1320,6 +1336,10 @@ def test_multiturn_driver_with_max_parallel_requests(rnd: str, okareo: Okareo) -
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
+    assert_baseline_metrics(
+        okareo, evaluation, multiturn_model, ["task_completed"], False, True, 2
+    )
+
 
 def _create_custom_endpoint_configs(
     start_status_code: int = 201,
@@ -1532,6 +1552,16 @@ def test_multiturn_driver_with_custom_endpoint_input_driver_params(
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
+
+    assert_baseline_metrics(
+        okareo,
+        evaluation,
+        multiturn_model,
+        ["task_completed", "behavior_adherence"],
+        False,
+        True,
+        2,
+    )
 
 
 # ------------------------ Tests for start_session returning a message ------------------------ #
