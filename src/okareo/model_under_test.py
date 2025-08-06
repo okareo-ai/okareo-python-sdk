@@ -485,16 +485,22 @@ class ModelUnderTest(AsyncProcessorMixin):
             loop.close()
 
     def _internal_start_custom_model_threads(
-        self, nats_jwt: str, seed: str, local_nats: str, num_workers: int
+        self, nats_jwt: str, seed: str, local_nats: str
     ) -> tuple:
+        if isinstance(nats_jwt, list) and isinstance(seed, list):
+            num_workers = len(nats_jwt)
+        else:
+            num_workers = 1
+        print(f"num_workers: {num_workers}")
         custom_model_thread_stop_events = [threading.Event()]*num_workers
         custom_model_threads = []
         for i in range(num_workers):
+            print(f"Starting custom model thread #{i} of {num_workers}")
             custom_model_thread = threading.Thread(
                 target=self._internal_run_custom_model_thread,
                 args=(
                     self._internal_run_custom_model_listener(
-                        custom_model_thread_stop_events[i], nats_jwt, seed, local_nats
+                        custom_model_thread_stop_events[i], nats_jwt[i], seed[i], local_nats, worker_index=i
                     ),
                 ),
             )
@@ -538,23 +544,24 @@ class ModelUnderTest(AsyncProcessorMixin):
             run_api_keys = self._validate_run_test_params(
                 api_key, api_keys, test_run_type
             )
+            
 
             model_data: dict = {"model_data": {}}
             if self._has_custom_model() and "driver" in self.models:
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
-                    client=self.client, api_key=self.api_key, mut_id=self.mut_id
+                    client=self.client, api_key=self.api_key, mut_id=self.mut_id, parallelize=True
                 )
+                print(f"creds: {creds}")
                 assert isinstance(creds, dict)
                 nats_jwt = creds["jwt"]
                 seed = creds["seed"]
                 local_nats = creds["local_nats"]
-                num_workers = creds.get("num_workers", 1)
                 # Determine how to handle parallelism for custom model threads
                 # Current impl uses threads
                 (
                     self.custom_model_threads,
                     self.custom_model_thread_stop_events,
-                ) = self._internal_start_custom_model_threads(nats_jwt, seed, local_nats, num_workers)
+                ) = self._internal_start_custom_model_threads(nats_jwt, seed, local_nats)
                 for thread in self.custom_model_threads:
                     thread.start()
             elif self._has_custom_model():

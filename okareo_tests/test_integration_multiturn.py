@@ -250,7 +250,7 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
         model=MultiTurnDriver(
             driver_temperature=1,
             max_turns=2,
-            repeats=1,
+            repeats=4,
             target=custom_model,
             stop_check={"check_name": "model_refusal", "stop_on": False},
         ),

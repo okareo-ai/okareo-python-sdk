@@ -6,12 +6,13 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     mut_id: str,
+    parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -19,6 +20,8 @@ def _get_kwargs(
 
     params: Dict[str, Any] = {}
     params["mut_id"] = mut_id
+
+    params["parallelize"] = parallelize
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -61,12 +64,14 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
+        parallelize (Union[Unset, None, bool]):
         api_key (str):
 
     Raises:
@@ -79,6 +84,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         mut_id=mut_id,
+        parallelize=parallelize,
         api_key=api_key,
     )
 
@@ -93,12 +99,14 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
+        parallelize (Union[Unset, None, bool]):
         api_key (str):
 
     Raises:
@@ -112,6 +120,7 @@ def sync(
     return sync_detailed(
         client=client,
         mut_id=mut_id,
+        parallelize=parallelize,
         api_key=api_key,
     ).parsed
 
@@ -120,12 +129,14 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
+        parallelize (Union[Unset, None, bool]):
         api_key (str):
 
     Raises:
@@ -138,6 +149,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         mut_id=mut_id,
+        parallelize=parallelize,
         api_key=api_key,
     )
 
@@ -150,12 +162,14 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
+        parallelize (Union[Unset, None, bool]):
         api_key (str):
 
     Raises:
@@ -170,6 +184,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             mut_id=mut_id,
+            parallelize=parallelize,
             api_key=api_key,
         )
     ).parsed
