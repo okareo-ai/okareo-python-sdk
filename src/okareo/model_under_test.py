@@ -430,7 +430,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         return result
 
     async def _internal_run_custom_model_listener(
-        self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str
+        self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str, worker_index: int = 0
     ) -> None:
         nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
         try:
@@ -463,8 +463,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                         msg.reply, json.dumps({"error": error_msg}).encode()
                     )
 
+            connection_name = f"invoke.{self.mut_id}"
+            if worker_index > 0:
+                connection_name += f".{worker_index}"
             await nats_connection.subscribe(
-                f"invoke.{self.mut_id}", cb=message_handler_custom_model
+                connection_name, cb=message_handler_custom_model
             )
             while not stop_event.is_set():
                 await asyncio.sleep(0.1)
@@ -481,19 +484,22 @@ class ModelUnderTest(AsyncProcessorMixin):
         finally:
             loop.close()
 
-    def _internal_start_custom_model_thread(
-        self, nats_jwt: str, seed: str, local_nats: str
+    def _internal_start_custom_model_threads(
+        self, nats_jwt: str, seed: str, local_nats: str, num_workers: int
     ) -> tuple:
-        custom_model_thread_stop_event = threading.Event()
-        custom_model_thread = threading.Thread(
-            target=self._internal_run_custom_model_thread,
-            args=(
-                self._internal_run_custom_model_listener(
-                    custom_model_thread_stop_event, nats_jwt, seed, local_nats
+        custom_model_thread_stop_events = [threading.Event()]*num_workers
+        custom_model_threads = []
+        for i in range(num_workers):
+            custom_model_thread = threading.Thread(
+                target=self._internal_run_custom_model_thread,
+                args=(
+                    self._internal_run_custom_model_listener(
+                        custom_model_thread_stop_events[i], nats_jwt, seed, local_nats
+                    ),
                 ),
-            ),
-        )
-        return custom_model_thread, custom_model_thread_stop_event
+            )
+            custom_model_threads.append(custom_model_thread)
+        return custom_model_threads, custom_model_thread_stop_events
 
     def _internal_cleanup_custom_model(
         self,
@@ -542,11 +548,15 @@ class ModelUnderTest(AsyncProcessorMixin):
                 nats_jwt = creds["jwt"]
                 seed = creds["seed"]
                 local_nats = creds["local_nats"]
+                num_workers = creds.get("num_workers", 1)
+                # Determine how to handle parallelism for custom model threads
+                # Current impl uses threads
                 (
-                    self.custom_model_thread,
-                    self.custom_model_thread_stop_event,
-                ) = self._internal_start_custom_model_thread(nats_jwt, seed, local_nats)
-                self.custom_model_thread.start()
+                    self.custom_model_threads,
+                    self.custom_model_thread_stop_events,
+                ) = self._internal_start_custom_model_threads(nats_jwt, seed, local_nats, num_workers)
+                for thread in self.custom_model_threads:
+                    thread.start()
             elif self._has_custom_model():
                 self._custom_exec(scenario_id, model_data)
 
@@ -578,9 +588,10 @@ class ModelUnderTest(AsyncProcessorMixin):
             print(f"Unexpected status {e=}, {e.content=}")
             raise
         finally:
-            self._internal_cleanup_custom_model(
-                self.custom_model_thread_stop_event, self.custom_model_thread
-            )
+            for thread, stop_event in zip(
+                self.custom_model_threads, self.custom_model_thread_stop_events
+            ):
+                self._internal_cleanup_custom_model(stop_event, thread)
 
     def _check_multiturn_submit_safe(self, test_run_type: TestRunType) -> bool:
         """Check if the test_run_type is MULTI_TURN and if the model is a CustomMultiturnTarget.
