@@ -12,6 +12,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     mut_id: str,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Dict[str, Any]:
@@ -20,6 +21,8 @@ def _get_kwargs(
 
     params: Dict[str, Any] = {}
     params["mut_id"] = mut_id
+
+    params["scenario_set_id"] = scenario_set_id
 
     params["parallelize"] = parallelize
 
@@ -64,6 +67,7 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
@@ -71,6 +75,7 @@ def sync_detailed(
 
     Args:
         mut_id (str):
+        scenario_set_id (Union[Unset, None, str]):
         parallelize (Union[Unset, None, bool]):
         api_key (str):
 
@@ -84,6 +89,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         mut_id=mut_id,
+        scenario_set_id=scenario_set_id,
         parallelize=parallelize,
         api_key=api_key,
     )
@@ -99,6 +105,7 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
@@ -106,6 +113,7 @@ def sync(
 
     Args:
         mut_id (str):
+        scenario_set_id (Union[Unset, None, str]):
         parallelize (Union[Unset, None, bool]):
         api_key (str):
 
@@ -120,6 +128,7 @@ def sync(
     return sync_detailed(
         client=client,
         mut_id=mut_id,
+        scenario_set_id=scenario_set_id,
         parallelize=parallelize,
         api_key=api_key,
     ).parsed
@@ -129,6 +138,7 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
@@ -136,6 +146,7 @@ async def asyncio_detailed(
 
     Args:
         mut_id (str):
+        scenario_set_id (Union[Unset, None, str]):
         parallelize (Union[Unset, None, bool]):
         api_key (str):
 
@@ -149,6 +160,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         mut_id=mut_id,
+        scenario_set_id=scenario_set_id,
         parallelize=parallelize,
         api_key=api_key,
     )
@@ -162,6 +174,7 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     mut_id: str,
+    scenario_set_id: Union[Unset, None, str] = UNSET,
     parallelize: Union[Unset, None, bool] = False,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
@@ -169,6 +182,7 @@ async def asyncio(
 
     Args:
         mut_id (str):
+        scenario_set_id (Union[Unset, None, str]):
         parallelize (Union[Unset, None, bool]):
         api_key (str):
 
@@ -184,6 +198,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             mut_id=mut_id,
+            scenario_set_id=scenario_set_id,
             parallelize=parallelize,
             api_key=api_key,
         )
