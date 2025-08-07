@@ -3,7 +3,7 @@ from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
-from okareo_tests.utils import assert_metrics
+from okareo_tests.utils import assert_baseline_metrics, assert_metrics
 
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
@@ -134,6 +134,8 @@ def test_run_code_based_predefined_checks(
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
     assert_metrics(run_resp, checks, num_rows=3)
 
+    assert_baseline_metrics(okareo, run_resp, mut, [], False, False, 1)
+
 
 def test_run_model_based_predefined_checks(
     rnd: str, okareo: Okareo, article_scenario_set: ScenarioSetResponse
@@ -159,6 +161,16 @@ def test_run_model_based_predefined_checks(
     )
     assert run_resp.name == f"openai-chat-run-predefined-{rnd}"
     assert_metrics(run_resp, checks, num_rows=3)
+
+    assert_baseline_metrics(
+        okareo,
+        evaluation=run_resp,
+        model=mut,
+        checks=checks,
+        cost=False,
+        multiturn=False,
+        turns=1,
+    )
 
 
 def test_run_model_based_custom_checks(

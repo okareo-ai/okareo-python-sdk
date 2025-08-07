@@ -1,5 +1,13 @@
 from typing import List, Union
 
+from litellm import token_counter
+
+from okareo import Okareo
+from okareo.model_under_test import ModelUnderTest
+from okareo_api_client.models.find_test_data_point_payload import (
+    FindTestDataPointPayload,
+)
+from okareo_api_client.models.full_data_point_item import FullDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
 
@@ -51,3 +59,106 @@ def assert_metrics(
             assert_scores(row, custom_dimensions)
         else:
             assert_scores_geval(row)
+
+
+def assert_baseline_metrics(
+    okareo: Okareo,
+    evaluation: TestRunItem,
+    model: ModelUnderTest,
+    checks: list,
+    cost: bool = False,
+    multiturn: bool = True,
+    turns: int | None = None,
+) -> None:
+
+    tdps = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=evaluation.id, full_data_point=True)
+    )
+    assert isinstance(tdps, list)
+
+    if multiturn:
+        latency_key_baseline = "avg_turn_latency"
+        latency_key_run = "avg_turn_latency"
+        latency_key_meta = "average_latency"
+        input_tokens_key = "total_input_tokens"
+        output_tokens_key = "total_output_tokens"
+        cost_key = "total_cost"
+    else:
+        latency_key_baseline = "latency"
+        latency_key_run = "avg_latency"
+        latency_key_meta = "latency"
+        input_tokens_key = "input_tokens"
+        output_tokens_key = "output_tokens"
+        cost_key = "cost"
+
+    meta_metrics: dict[str, list[float]] = {
+        "latency": [],
+        "cost": [],
+        "input_tokens": [],
+        "output_tokens": [],
+    }
+    baseline_metrics: dict[str, list[float]] = {
+        "latency": [],
+        "cost": [],
+        "input_tokens": [],
+        "output_tokens": [],
+    }
+
+    for tdp in tdps:
+        for check in checks:
+            meta = tdp.additional_properties["checks_metadata"][check]  # type: ignore[attr-defined]
+            meta_metrics["latency"].append(meta[latency_key_meta])
+            meta_metrics["input_tokens"].append(meta[input_tokens_key])
+            meta_metrics["output_tokens"].append(meta[output_tokens_key])
+            if cost:
+                meta_metrics["cost"].append(meta[cost_key])
+
+        baseline = tdp.additional_properties["baseline_metrics"]  # type: ignore[attr-defined]
+        baseline_metrics["latency"].append(baseline[latency_key_baseline])
+        baseline_metrics["input_tokens"].append(baseline[input_tokens_key])
+        baseline_metrics["output_tokens"].append(baseline[output_tokens_key])
+        if turns == 1:
+            assert isinstance(tdp, FullDataPointItem) and isinstance(
+                tdp.model_result, str
+            )
+            assert token_counter(text=tdp.model_result) == baseline[output_tokens_key]  # type: ignore
+        if cost:
+            baseline_metrics["cost"].append(baseline[cost_key])
+
+    test_run = model.get_test_run(evaluation.id)
+    run_check_meta = test_run.model_metrics.additional_properties[  # type: ignore
+        "aggregate_check_metadata"
+    ]
+    run_baseline_meta = test_run.model_metrics.additional_properties[  # type: ignore
+        "aggregate_baseline_metrics"
+    ]
+
+    if checks:
+        assert round(run_check_meta["average_latency"], 2) == round(
+            sum(meta_metrics["latency"]) / len(meta_metrics["latency"]), 2
+        )
+        assert round(run_check_meta["total_input_tokens"], 2) == round(
+            sum(meta_metrics["input_tokens"]), 2
+        )
+        assert round(run_check_meta["total_output_tokens"], 2) == round(
+            sum(meta_metrics["output_tokens"]), 2
+        )
+
+    assert round(run_baseline_meta[latency_key_run], 2) == round(
+        sum(baseline_metrics["latency"]) / len(baseline_metrics["latency"]), 2
+    )
+    assert round(run_baseline_meta["total_input_tokens"], 2) == round(
+        sum(baseline_metrics["input_tokens"]), 2
+    )
+    assert round(run_baseline_meta["total_output_tokens"], 2) == round(
+        sum(baseline_metrics["output_tokens"]), 2
+    )
+
+    if cost:
+        if checks:
+            assert round(run_check_meta["total_cost"], 5) == round(
+                sum(meta_metrics["cost"]), 5
+            )
+        assert round(run_baseline_meta["total_cost"], 5) == round(
+            sum(baseline_metrics["cost"]), 5
+        )
