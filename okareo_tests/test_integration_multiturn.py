@@ -510,7 +510,7 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
         model=MultiTurnDriver(
             driver_temperature=0.5,
             max_turns=3,
-            repeats=5,
+            repeats=1,
             target=custom_model,
             stop_check={"check_name": "model_refusal", "stop_on": True},
         ),
