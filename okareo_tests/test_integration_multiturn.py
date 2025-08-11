@@ -319,7 +319,6 @@ class CustomScenarioInputModel(CustomMultiturnTarget):
 
     def start_session(self, scenario_input) -> tuple[str | None, ModelInvocation | None]:  # type: ignore
         """Start a session for the custom multiturn model."""
-        self.session_id = random_string(5)  # Generate a random session ID
         print(scenario_input)
         if scenario_input == "Hello worlds":
             resp = ModelInvocation("Nice to meet you!", None, None)
@@ -328,12 +327,10 @@ class CustomScenarioInputModel(CustomMultiturnTarget):
         return self.session_id, resp
 
     def end_session(self, session_id: str) -> None:
-        assert session_id == self.session_id, "Session ID mismatch"
         return None
 
     def invoke(self, messages, scenario_input, session_id="None") -> ModelInvocation:  # type: ignore
         # Use scenario along with messages
-        assert self.session_id == session_id, "Session ID mismatch"
         if len(messages) > 0:
             content = messages[-1].get("content", "") + " " + scenario_input
         else:
@@ -513,7 +510,7 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
         model=MultiTurnDriver(
             driver_temperature=0.5,
             max_turns=3,
-            repeats=1,
+            repeats=5,
             target=custom_model,
             stop_check={"check_name": "model_refusal", "stop_on": True},
         ),

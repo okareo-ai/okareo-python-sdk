@@ -435,7 +435,6 @@ class ModelUnderTest(AsyncProcessorMixin):
         nats_jwt: str,
         seed: str,
         local_nats: str,
-        worker_index: int = 0,
     ) -> None:
         nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
         try:
@@ -469,8 +468,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                     )
 
             connection_name = f"invoke.{self.mut_id}"
-            if worker_index > 0:
-                connection_name += f".{worker_index}"
             await nats_connection.subscribe(
                 connection_name, cb=message_handler_custom_model
             )
@@ -492,48 +489,37 @@ class ModelUnderTest(AsyncProcessorMixin):
         if custom_model_thread:
             custom_model_thread.join(timeout=5)
 
-    async def _internal_start_custom_model_tasks(
-        self, nats_jwt: list | str, seed: list | str, local_nats: str
+    async def _internal_start_custom_model_task(
+        self, nats_jwt: str, seed: str, local_nats: str
     ) -> tuple:
-        if isinstance(nats_jwt, list) and isinstance(seed, list):
-            num_workers = len(nats_jwt)
-        else:
-            num_workers = 1
-            nats_jwt = [nats_jwt]
-            seed = [seed]
-        custom_model_task_stop_events = [asyncio.Event() for _ in range(num_workers)]
-        custom_model_tasks: list[asyncio.Task] = []
-        for i in range(num_workers):
-            task = asyncio.create_task(
-                self._internal_run_custom_model_listener(
-                    custom_model_task_stop_events[i],
-                    nats_jwt[i],
-                    seed[i],
-                    local_nats,
-                    worker_index=i,
-                )
+        stop_event = asyncio.Event()
+        task = asyncio.create_task(
+            self._internal_run_custom_model_listener(
+                stop_event,
+                nats_jwt,
+                seed,
+                local_nats,
             )
-            custom_model_tasks.append(task)
-        return custom_model_tasks, custom_model_task_stop_events
+        )
+        return task, stop_event
 
-    async def _internal_cleanup_custom_model_tasks(
+    async def _internal_cleanup_custom_model_task(
         self,
-        custom_model_task_stop_events: list[asyncio.Event],
-        custom_model_tasks: list[asyncio.Task],
+        stop_event: asyncio.Event,
+        task: asyncio.Task,
     ) -> None:
-        """Cleanup method for custom model tasks. This method is used to signal the tasks to stop"""
-        for stop_event, task in zip(custom_model_task_stop_events, custom_model_tasks):
-            if stop_event:
-                stop_event.set()
+        """Cleanup method for custom model task. This method is used to signal the task to stop"""
+        if stop_event:
+            stop_event.set()
 
-            if task:
-                task.cancel()
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    pass
-                except Exception as e:
-                    print(f"Exception during task cleanup: {e}")
+        if task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            except Exception as e:
+                print(f"Exception during task cleanup: {e}")
 
     def _call_run_test_method(
         self,
@@ -574,25 +560,25 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert response is not None
         return response
 
-    def run_custom_model_tasks_event_loop(
-        self, nats_jwt: list[str], seed: list[str], local_nats: str
+    def run_custom_model_task_event_loop(
+        self, nats_jwt: str, seed: str, local_nats: str
     ) -> None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            self.custom_model_tasks, self.custom_model_task_stop_events = (
+            self.custom_model_task, self.custom_model_task_stop_event = (
                 loop.run_until_complete(
-                    self._internal_start_custom_model_tasks(nats_jwt, seed, local_nats)
+                    self._internal_start_custom_model_task(nats_jwt, seed, local_nats)
                 )
             )
-            # Wait for stop events or tasks to finish (main thread will join this thread after test run)
-            while any(not e.is_set() for e in self.custom_model_task_stop_events):
+            # Wait for stop event or task to finish (main thread will join this thread after test run)
+            while not self.custom_model_task_stop_event.is_set():
                 loop.run_until_complete(asyncio.sleep(0.1))
         finally:
-            if hasattr(self, "custom_model_tasks"):
+            if hasattr(self, "custom_model_task"):
                 loop.run_until_complete(
-                    self._internal_cleanup_custom_model_tasks(
-                        self.custom_model_task_stop_events, self.custom_model_tasks
+                    self._internal_cleanup_custom_model_task(
+                        self.custom_model_task_stop_event, self.custom_model_task
                     )
                 )
             loop.close()
@@ -631,7 +617,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                     client=self.client,
                     api_key=self.api_key,
                     mut_id=self.mut_id,
-                    scenario_set_id=scenario_id,
                     parallelize=True,
                 )
                 assert isinstance(creds, dict)
@@ -641,7 +626,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
                 # Run a single thread with an asyncio event loop to handle async custom model invocations
                 event_loop_thread = threading.Thread(
-                    target=self.run_custom_model_tasks_event_loop,
+                    target=self.run_custom_model_task_event_loop,
                     args=(nats_jwt, seed, local_nats),
                     name=f"custom-model-event-loop-mut-{self.mut_id}",
                 )
@@ -663,12 +648,12 @@ class ModelUnderTest(AsyncProcessorMixin):
                     )
                 finally:
                     # Signal all stop events to end the event loop thread
-                    if hasattr(self, "custom_model_task_stop_events"):
-                        for e in self.custom_model_task_stop_events:
-                            e.set()
+                    if hasattr(self, "custom_model_task_stop_event"):
+                        self.custom_model_task_stop_event.set()
                     event_loop_thread.join()
-            elif self._has_custom_model():
-                self._custom_exec(scenario_id, model_data)
+            else:
+                if self._has_custom_model():
+                    self._custom_exec(scenario_id, model_data)
                 response = self._call_run_test_method(
                     scenario_id,
                     name,

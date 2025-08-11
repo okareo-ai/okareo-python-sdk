@@ -8,6 +8,12 @@ from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
+from okareo_api_client.models.full_data_point_item_baseline_metrics import (
+    FullDataPointItemBaselineMetrics,
+)
+from okareo_api_client.models.full_data_point_item_checks_metadata import (
+    FullDataPointItemChecksMetadata,
+)
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
 
@@ -61,6 +67,31 @@ def assert_metrics(
             assert_scores_geval(row)
 
 
+def _get_baseline_metrics_keys(multiturn: bool) -> tuple[str, str, str, str, str, str]:
+    if multiturn:
+        latency_key_baseline = "avg_turn_latency"
+        latency_key_run = "avg_turn_latency"
+        latency_key_meta = "average_latency"
+        input_tokens_key = "total_input_tokens"
+        output_tokens_key = "total_output_tokens"
+        cost_key = "total_cost"
+    else:
+        latency_key_baseline = "latency"
+        latency_key_run = "avg_latency"
+        latency_key_meta = "latency"
+        input_tokens_key = "input_tokens"
+        output_tokens_key = "output_tokens"
+        cost_key = "cost"
+    return (
+        latency_key_baseline,
+        latency_key_run,
+        latency_key_meta,
+        input_tokens_key,
+        output_tokens_key,
+        cost_key,
+    )
+
+
 def assert_baseline_metrics(
     okareo: Okareo,
     evaluation: TestRunItem,
@@ -76,20 +107,14 @@ def assert_baseline_metrics(
     )
     assert isinstance(tdps, list)
 
-    if multiturn:
-        latency_key_baseline = "avg_turn_latency"
-        latency_key_run = "avg_turn_latency"
-        latency_key_meta = "average_latency"
-        input_tokens_key = "total_input_tokens"
-        output_tokens_key = "total_output_tokens"
-        cost_key = "total_cost"
-    else:
-        latency_key_baseline = "latency"
-        latency_key_run = "avg_latency"
-        latency_key_meta = "latency"
-        input_tokens_key = "input_tokens"
-        output_tokens_key = "output_tokens"
-        cost_key = "cost"
+    (
+        latency_key_baseline,
+        latency_key_run,
+        latency_key_meta,
+        input_tokens_key,
+        output_tokens_key,
+        cost_key,
+    ) = _get_baseline_metrics_keys(multiturn)
 
     meta_metrics: dict[str, list[float]] = {
         "latency": [],
@@ -105,15 +130,21 @@ def assert_baseline_metrics(
     }
 
     for tdp in tdps:
+        assert isinstance(tdp, FullDataPointItem)
         for check in checks:
-            meta = tdp.additional_properties["checks_metadata"][check]  # type: ignore[attr-defined]
+            checks_metadata = tdp.checks_metadata  # type: ignore[attr-defined]
+            if isinstance(checks_metadata, FullDataPointItemChecksMetadata):
+                meta = checks_metadata[check]
+            else:
+                meta = {}
             meta_metrics["latency"].append(meta[latency_key_meta])
             meta_metrics["input_tokens"].append(meta[input_tokens_key])
             meta_metrics["output_tokens"].append(meta[output_tokens_key])
             if cost:
                 meta_metrics["cost"].append(meta[cost_key])
 
-        baseline = tdp.additional_properties["baseline_metrics"]  # type: ignore[attr-defined]
+        baseline = tdp.baseline_metrics  # type: ignore[attr-defined]
+        assert isinstance(baseline, FullDataPointItemBaselineMetrics)
         baseline_metrics["latency"].append(baseline[latency_key_baseline])
         baseline_metrics["input_tokens"].append(baseline[input_tokens_key])
         baseline_metrics["output_tokens"].append(baseline[output_tokens_key])
