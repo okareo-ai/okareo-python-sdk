@@ -491,8 +491,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         max_concurrent_invocations = 10
         semaphore = asyncio.Semaphore(max_concurrent_invocations)
         active_tasks = set()
-        
+
         try:
+
             async def process_model_invocation(msg: Any) -> None:
                 """Process a single model invocation with concurrency control"""
                 async with semaphore:
@@ -500,7 +501,8 @@ class ModelUnderTest(AsyncProcessorMixin):
                         data = json.loads(msg.data.decode())
                         if data.get("close"):
                             await nats_connection.publish(
-                                msg.reply, json.dumps({"status": "disconnected"}).encode()
+                                msg.reply,
+                                json.dumps({"status": "disconnected"}).encode(),
                             )
                             stop_event.set()
                             return
@@ -510,22 +512,32 @@ class ModelUnderTest(AsyncProcessorMixin):
                         scenario_input = data.get("scenario_input", None)
                         session_id = data.get("session_id", None)
                         call_type = data.get("call_type", "invoke")
-                        
+
                         if not is_async_model:
                             # For sync models, run in thread pool to avoid blocking the event loop
                             loop = asyncio.get_event_loop()
                             result = await loop.run_in_executor(
                                 None,
                                 self.call_custom_invoker,
-                                args, message_history, scenario_input, session_id, call_type
+                                args,
+                                message_history,
+                                scenario_input,
+                                session_id,
+                                call_type,
                             )
                         else:
                             # For async models, await directly for true async concurrency
                             result = await self.call_custom_invoker_async(
-                                args, message_history, scenario_input, session_id, call_type
+                                args,
+                                message_history,
+                                scenario_input,
+                                session_id,
+                                call_type,
                             )
-                        
-                        json_encodable_result = self.get_params_from_custom_result(result)
+
+                        json_encodable_result = self.get_params_from_custom_result(
+                            result
+                        )
                         await nats_connection.publish(
                             msg.reply, json.dumps(json_encodable_result).encode()
                         )
@@ -541,15 +553,15 @@ class ModelUnderTest(AsyncProcessorMixin):
                 # Create a task for concurrent processing
                 task = asyncio.create_task(process_model_invocation(msg))
                 active_tasks.add(task)
-                
+
                 # Clean up completed tasks to prevent memory leaks
                 task.add_done_callback(active_tasks.discard)
 
             await nats_connection.subscribe(
                 f"invoke.{self.mut_id}", cb=message_handler_custom_model
-            ) 
+            )
             while not stop_event.is_set():
-                await asyncio.sleep(0.1) 
+                await asyncio.sleep(0.1)
         except Exception as e:
             print(f"An error occurred in the custom model invocation: {str(e)}")
         finally:
@@ -575,7 +587,11 @@ class ModelUnderTest(AsyncProcessorMixin):
             target=self._internal_run_custom_model_thread,
             args=(
                 self._internal_run_custom_model_listener(
-                    custom_model_thread_stop_event, nats_jwt, seed, local_nats, self._has_async_custom_model()
+                    custom_model_thread_stop_event,
+                    nats_jwt,
+                    seed,
+                    local_nats,
+                    self._has_async_custom_model(),
                 ),
             ),
         )
