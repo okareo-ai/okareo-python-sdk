@@ -502,8 +502,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                             msg.reply, json.dumps({"status": "disconnected"}).encode()
                         )
                         stop_event.set()
-                        # Acknowledge the close message
-                        await msg.ack()
                         return
                     args = data.get("args", [])
                     message_history = data.get("message_history", [])
