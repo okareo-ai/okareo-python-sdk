@@ -4,6 +4,9 @@ import os
 import warnings
 from typing import Any, Dict, List, TypedDict, Union
 
+from typing import Union, Optional, Dict, Any, List
+from okareo.model_under_test import OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget, Driver, StopConfig, Simulation
+
 import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
@@ -1072,3 +1075,70 @@ class Okareo:
             print("Empty response from API")
         assert response is not None
         return response
+
+    def register_driver(self, driver: Driver) -> Driver:
+        """Register a new driver.
+
+        Args:
+            driver: The driver to register.
+
+        Returns:
+            The registered driver.
+        """
+        response = register_driver_v0_drivers_post.sync(
+            client=self.client,
+            json_body=driver.params(),
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        if not response:
+            print("Empty response from API")
+        assert response is not None
+        return response
+
+    def run_simulation(
+        self,
+        name: str,
+        scenario: Union[ScenarioSetResponse, str],
+        target: Union[
+            OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
+        ],
+        driver: str | Driver,
+        checks: list[str],
+        stop_check: Union[StopConfig, dict, None] = None,
+        repeats: Optional[int] = 1,
+        max_turns: Optional[int] = 5,
+        first_turn: Optional[str] = "target",
+        checks_at_every_turn: Optional[bool] = False,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+    ) -> Any:
+        
+        # register driver if needed
+        if isinstance(driver, Driver):
+            driver_model = self.register_driver(driver)
+            driver_id = driver_model.id
+        else:
+            driver_id = driver
+
+        # create model with target
+        simulation = Simulation(
+            target=target,
+            driver=driver_id,
+            stop_check=stop_check,
+            repeats=repeats,
+            max_turns=max_turns,
+            first_turn=first_turn,
+            checks_at_every_turn=checks_at_every_turn
+        )
+
+        # run_test
+        simulation.run_test(
+            scenario=scenario,
+            name=name,
+            api_key=api_key,
+            api_keys=api_keys,
+            test_run_type=TestRunType.MULTI_TURN,
+            calculate_metrics=True,
+            checks=checks,
+        )

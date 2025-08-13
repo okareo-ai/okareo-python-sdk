@@ -1258,6 +1258,40 @@ class CustomEndpointTarget:
             ),
             "max_parallel_requests": self.max_parallel_requests,
         }
+    
+class Simulation(BaseModel):
+
+    type = "simulation"
+    target: Union[
+        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
+    ]
+    stop_check: Union[StopConfig, dict, None] = None
+    driver: Optional[str] = None
+    repeats: Optional[int] = 1
+    max_turns: Optional[int] = 5
+    first_turn: Optional[str] = "target"
+    checks_at_every_turn: Optional[bool] = False
+
+    def __attrs_post_init__(self) -> None:
+        if isinstance(self.stop_check, dict):
+            self.stop_check = StopConfig(**self.stop_check)
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "target": self.target.params(),
+            "driver": self.driver,
+            "repeats": self.repeats,
+            "max_turns": self.max_turns,
+            "first_turn": self.first_turn,
+            "stop_check": (
+                self.stop_check.params()
+                if isinstance(self.stop_check, StopConfig)
+                else self.stop_check
+            ),
+            "checks_at_every_turn": self.checks_at_every_turn,
+        }
+
 
 
 @_attrs_define
