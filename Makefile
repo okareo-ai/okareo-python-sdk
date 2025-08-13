@@ -3,7 +3,8 @@ SHELL := /bin/bash
 GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 VERSION := $(shell git describe --tags)-$(GIT_SHA_SHORT)
-OPENAPI_SPEC ?= "https://api.okareo.com/openapi.json"
+# OPENAPI_SPEC ?= "https://api.okareo.com/openapi.json" # used in prod
+OPENAPI_SPEC ?= "http://localhost:8000/openapi.json" # use in local development
 
 .PHONY: spec/update
 spec/update:
