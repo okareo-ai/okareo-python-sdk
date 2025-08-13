@@ -215,7 +215,7 @@ class Okareo:
                 return data, model_invoker, None, None
         if (
             "driver" in data["models"].keys()
-            and data["models"]["driver"]["target"]["type"] == "custom_target"
+            and data["models"]["driver"]["target"]["type"] in ["custom_target", "custom_target_async"]
         ):
             model_invoker = data["models"]["driver"]["target"]["model_invoker"]
             session_starter = data["models"]["driver"]["target"]["session_starter"]
