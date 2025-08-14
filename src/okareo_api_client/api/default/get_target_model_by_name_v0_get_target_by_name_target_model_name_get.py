@@ -5,58 +5,35 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
-from ...models.slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_get import (
-    SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
-)
-from ...types import UNSET, Response
+from ...models.http_validation_error import HTTPValidationError
+from ...types import Response
 
 
 def _get_kwargs(
+    target_model_name: str,
     *,
-    code: str,
-    state: str,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["code"] = code
-
-    params["state"] = state
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
-
     return {
         "method": "get",
-        "url": "/v0/slack",
-        "params": params,
+        "url": "/v0/get_target_by_name/{target_model_name}".format(
+            target_model_name=target_model_name,
+        ),
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
+) -> Optional[Union[Any, HTTPValidationError]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet.from_dict(response.json())
-
+        response_200 = response.json()
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
-        response_401 = ErrorResponse.from_dict(response.json())
-
-        return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
-        response_404 = ErrorResponse.from_dict(response.json())
-
-        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -67,7 +44,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
+) -> Response[Union[Any, HTTPValidationError]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,17 +54,15 @@ def _build_response(
 
 
 def sync_detailed(
+    target_model_name: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Response[Union[Any, HTTPValidationError]]:
+    """Get Target Model By Name
 
     Args:
-        code (str):
-        state (str):
+        target_model_name (str):
         api_key (str):
 
     Raises:
@@ -95,12 +70,11 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]
+        Response[Union[Any, HTTPValidationError]]
     """
 
     kwargs = _get_kwargs(
-        code=code,
-        state=state,
+        target_model_name=target_model_name,
         api_key=api_key,
     )
 
@@ -112,17 +86,15 @@ def sync_detailed(
 
 
 def sync(
+    target_model_name: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Optional[Union[Any, HTTPValidationError]]:
+    """Get Target Model By Name
 
     Args:
-        code (str):
-        state (str):
+        target_model_name (str):
         api_key (str):
 
     Raises:
@@ -130,29 +102,26 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]
+        Union[Any, HTTPValidationError]
     """
 
     return sync_detailed(
+        target_model_name=target_model_name,
         client=client,
-        code=code,
-        state=state,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
+    target_model_name: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Response[Union[Any, HTTPValidationError]]:
+    """Get Target Model By Name
 
     Args:
-        code (str):
-        state (str):
+        target_model_name (str):
         api_key (str):
 
     Raises:
@@ -160,12 +129,11 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]
+        Response[Union[Any, HTTPValidationError]]
     """
 
     kwargs = _get_kwargs(
-        code=code,
-        state=state,
+        target_model_name=target_model_name,
         api_key=api_key,
     )
 
@@ -175,17 +143,15 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    target_model_name: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Optional[Union[Any, HTTPValidationError]]:
+    """Get Target Model By Name
 
     Args:
-        code (str):
-        state (str):
+        target_model_name (str):
         api_key (str):
 
     Raises:
@@ -193,14 +159,13 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]
+        Union[Any, HTTPValidationError]
     """
 
     return (
         await asyncio_detailed(
+            target_model_name=target_model_name,
             client=client,
-            code=code,
-            state=state,
             api_key=api_key,
         )
     ).parsed

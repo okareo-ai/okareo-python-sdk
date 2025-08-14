@@ -1258,15 +1258,50 @@ class CustomEndpointTarget:
             ),
             "max_parallel_requests": self.max_parallel_requests,
         }
-    
-class Simulation(BaseModel):
 
-    type = "simulation"
+
+@_attrs_define
+class Driver:
+    name: str
+    prompt_template: str
+    model_id: Optional[str] = None
+    temperature: Optional[float] = 0.6
+    id: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "temperature": self.temperature,
+            "model_id": self.model_id,
+            "prompt_template": self.prompt_template,
+        }
+
+
+@_attrs_define
+class Target:
+    name: str
     target: Union[
         OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
     ]
+    id: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "target": (
+                self.target if isinstance(self.target, dict) else self.target.params()
+            ),
+            "id": self.id,
+        }
+
+
+@_attrs_define
+class Simulation(BaseModel):
+
+    type = "driver"
+    target: Target
+    driver: Driver
     stop_check: Union[StopConfig, dict, None] = None
-    driver: Optional[str] = None
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
     first_turn: Optional[str] = "target"
@@ -1279,8 +1314,12 @@ class Simulation(BaseModel):
     def params(self) -> dict:
         return {
             "type": self.type,
-            "target": self.target.params(),
-            "driver": self.driver,
+            "target": (
+                self.target.target
+                if isinstance(self.target.target, dict)
+                else self.target.target.params()
+            ),
+            "driver": self.driver.to_dict(),
             "repeats": self.repeats,
             "max_turns": self.max_turns,
             "first_turn": self.first_turn,
@@ -1291,7 +1330,6 @@ class Simulation(BaseModel):
             ),
             "checks_at_every_turn": self.checks_at_every_turn,
         }
-
 
 
 @_attrs_define
