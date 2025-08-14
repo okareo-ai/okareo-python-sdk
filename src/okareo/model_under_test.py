@@ -1263,7 +1263,7 @@ class CustomEndpointTarget:
 @_attrs_define
 class Driver:
     name: str
-    prompt_template: str
+    prompt_template: str = "{scenario_input}"
     model_id: Optional[str] = None
     temperature: Optional[float] = 0.6
     id: Optional[str] = None

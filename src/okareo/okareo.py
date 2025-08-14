@@ -1166,6 +1166,9 @@ class Okareo:
         response_dict = response.to_dict()
         response_dict["target"] = model_data["driver"]["target"]
 
+        # Set target model back to original value
+        target.target = model
+
         return Target(**response_dict)
 
     def get_target_by_name(self, target_name: str) -> Target:
@@ -1206,11 +1209,22 @@ class Okareo:
 
         # create or update target if needed
         if isinstance(target, Target):
+            if isinstance(target.target, dict):
+                if (
+                    target.target["type"] == "custom_target"
+                    and "model_invoker" not in target.target
+                ):
+                    raise TypeError(
+                        "Cannot retrieve Target by name for CustomMultiturnTarget"
+                    )
             target_model = self.create_or_update_target(target)
         else:
             target_model = self.get_target_by_name(target)
-            if target_model.target["type"] != "custom_target":
-                raise TypeError("Cannot retrieve Target by name for CustomMultiturnTarget")
+            assert isinstance(target_model.target, dict)
+            if target_model.target["type"] == "custom_target":
+                raise TypeError(
+                    "Cannot retrieve Target by name for CustomMultiturnTarget"
+                )
 
         # create model with target
         simulation = Simulation(
