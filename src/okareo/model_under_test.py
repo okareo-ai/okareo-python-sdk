@@ -401,7 +401,9 @@ class ModelUnderTest(AsyncProcessorMixin):
                 "session_ender" in self.models["driver"]["target"]
                 and session_id is not None
             ):
-                return await self.models["driver"]["target"]["session_ender"](session_id)
+                return await self.models["driver"]["target"]["session_ender"](
+                    session_id
+                )
         return None
 
     def call_custom_invoker(
@@ -484,20 +486,21 @@ class ModelUnderTest(AsyncProcessorMixin):
         nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
         # Track active tasks for proper cleanup
         active_tasks: set[asyncio.Task] = set()
-        
+
         try:
 
             async def process_single_message(msg: Any) -> None:
                 import time
+
                 start_time = time.time()
                 task_id = id(asyncio.current_task())
-                print(f"[DEBUG] Task {task_id}: Started processing message at {start_time}")
-                
+                print(
+                    f"[DEBUG] Task {task_id}: Started processing message at {start_time}"
+                )
+
                 try:
                     data = json.loads(msg.data.decode())
                     if data.get("close"):
-                        # Handle race condition to determine if a worker has initiated client-side disconnect
-                        # Use nonlocal to modify the outer scope variable
                         await nats_connection.publish(
                             msg.reply, json.dumps({"status": "disconnected"}).encode()
                         )
@@ -508,9 +511,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                     scenario_input = data.get("scenario_input", None)
                     session_id = data.get("session_id", None)
                     call_type = data.get("call_type", "invoke")
-                    
-                    print(f"[DEBUG] Task {task_id}: About to call model invoker. Active tasks: {len(active_tasks)}")
-                    
+
+                    print(
+                        f"[DEBUG] Task {task_id}: About to call model invoker. Active tasks: {len(active_tasks)}"
+                    )
+
                     if not self._has_async_custom_model():
                         result = self.call_custom_invoker(
                             args, message_history, scenario_input, session_id, call_type
@@ -519,15 +524,17 @@ class ModelUnderTest(AsyncProcessorMixin):
                         result = await self.call_custom_invoker_async(
                             args, message_history, scenario_input, session_id, call_type
                         )
-                    
+
                     end_time = time.time()
-                    print(f"[DEBUG] Task {task_id}: Completed model invocation in {end_time - start_time:.2f}s")
-                    
+                    print(
+                        f"[DEBUG] Task {task_id}: Completed model invocation in {end_time - start_time:.2f}s"
+                    )
+
                     json_encodable_result = self.get_params_from_custom_result(result)
                     await nats_connection.publish(
                         msg.reply, json.dumps(json_encodable_result).encode()
                     )
-                    
+
                 except Exception as e:
                     error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
                     print(error_msg)
@@ -537,27 +544,31 @@ class ModelUnderTest(AsyncProcessorMixin):
 
             async def message_handler_custom_model(msg: Any) -> None:
                 # Log which worker received the message
-                print(f"[DEBUG] Worker received message. Current active tasks: {len(active_tasks)}")
-                
+                print(
+                    f"[DEBUG] Worker received message. Current active tasks: {len(active_tasks)}"
+                )
+
                 # Create task and track it
                 task = asyncio.create_task(process_single_message(msg))
                 active_tasks.add(task)
-                
+
                 # Remove completed tasks from the set to prevent memory leaks
                 def task_done_callback(completed_task: asyncio.Task) -> None:
                     active_tasks.discard(completed_task)
-                    print(f"[DEBUG] Task completed. Remaining active tasks: {len(active_tasks)}")
-                
+                    print(
+                        f"[DEBUG] Task completed. Remaining active tasks: {len(active_tasks)}"
+                    )
+
                 task.add_done_callback(task_done_callback)
 
             # Create multiple subscribers for better concurrency
             await nats_connection.subscribe(
-                f"invoke.{self.mut_id}", 
+                f"invoke.{self.mut_id}",
                 cb=message_handler_custom_model,
             )
             while not stop_event.is_set():
                 await asyncio.sleep(0.1)
-                
+
         except Exception as e:
             print(f"An error occurred in the custom model invocation: {str(e)}")
         finally:
@@ -1178,7 +1189,7 @@ class CustomMultiturnTargetAsync(BaseModel):
 
     async def start_session(
         self, scenario_input: str | None = None
-    ) -> Awaitable[tuple[str | None, ModelInvocation | None]]:
+    ) -> tuple[str | None, ModelInvocation | None]:
         """Method for starting a multiturn conversation with a custom model
 
         Returns:
@@ -1187,7 +1198,7 @@ class CustomMultiturnTargetAsync(BaseModel):
         """
         return None, None
 
-    async def end_session(self, session_id: str) -> Awaitable[None]:
+    async def end_session(self, session_id: str) -> None:
         """Method for ending a multiturn conversation with a custom model
 
         Arguments:
