@@ -1222,9 +1222,9 @@ class EndSessionConfig:
         }
 
 
-class CustomEndpointTarget:
+class CustomEndpointTarget(BaseModel):
     """
-    A pair of custom API endpoints for starting a session and continuing a conversation to use in
+    A trio of custom API endpoints for starting a session and continuing a conversation to use in
     Okareo multiturn evaluation.
 
     Arguments:
