@@ -10,7 +10,6 @@ from ..types import UNSET, Unset
 if TYPE_CHECKING:
     from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
     from ..models.datapoint_list_item_checks import DatapointListItemChecks
-    from ..models.datapoint_list_item_checks_metadata import DatapointListItemChecksMetadata
     from ..models.datapoint_list_item_input_tools_item import DatapointListItemInputToolsItem
     from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
     from ..models.datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
@@ -53,7 +52,6 @@ class DatapointListItem:
         result_tool_calls (Union[Unset, List['DatapointListItemResultToolCallsItem']]):
         result_embeddings (Union[Unset, List['DatapointListItemResultEmbeddingsItem']]):
         checks (Union[Unset, DatapointListItemChecks]):
-        checks_metadata (Union[Unset, DatapointListItemChecksMetadata]):
         agent_metadata (Union['DatapointListItemAgentMetadataType0', Any, Unset]):
         provider (Union[Unset, str]):
         total_search_count (Union[Unset, int]):
@@ -96,7 +94,6 @@ class DatapointListItem:
     result_tool_calls: Union[Unset, List["DatapointListItemResultToolCallsItem"]] = UNSET
     result_embeddings: Union[Unset, List["DatapointListItemResultEmbeddingsItem"]] = UNSET
     checks: Union[Unset, "DatapointListItemChecks"] = UNSET
-    checks_metadata: Union[Unset, "DatapointListItemChecksMetadata"] = UNSET
     agent_metadata: Union["DatapointListItemAgentMetadataType0", Any, Unset] = UNSET
     provider: Union[Unset, str] = UNSET
     total_search_count: Union[Unset, int] = UNSET
@@ -189,10 +186,6 @@ class DatapointListItem:
         checks: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.checks, Unset):
             checks = self.checks.to_dict()
-
-        checks_metadata: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.checks_metadata, Unset):
-            checks_metadata = self.checks_metadata.to_dict()
 
         agent_metadata: Union[Any, Dict[str, Any], Unset]
         if isinstance(self.agent_metadata, Unset):
@@ -291,8 +284,6 @@ class DatapointListItem:
             field_dict["result_embeddings"] = result_embeddings
         if checks is not UNSET:
             field_dict["checks"] = checks
-        if checks_metadata is not UNSET:
-            field_dict["checks_metadata"] = checks_metadata
         if agent_metadata is not UNSET:
             field_dict["agent_metadata"] = agent_metadata
         if provider is not UNSET:
@@ -322,7 +313,6 @@ class DatapointListItem:
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
         from ..models.datapoint_list_item_checks import DatapointListItemChecks
-        from ..models.datapoint_list_item_checks_metadata import DatapointListItemChecksMetadata
         from ..models.datapoint_list_item_input_tools_item import DatapointListItemInputToolsItem
         from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
         from ..models.datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
@@ -439,13 +429,6 @@ class DatapointListItem:
         else:
             checks = DatapointListItemChecks.from_dict(_checks)
 
-        _checks_metadata = d.pop("checks_metadata", UNSET)
-        checks_metadata: Union[Unset, DatapointListItemChecksMetadata]
-        if isinstance(_checks_metadata, Unset):
-            checks_metadata = UNSET
-        else:
-            checks_metadata = DatapointListItemChecksMetadata.from_dict(_checks_metadata)
-
         def _parse_agent_metadata(data: object) -> Union["DatapointListItemAgentMetadataType0", Any, Unset]:
             if isinstance(data, Unset):
                 return data
@@ -533,7 +516,6 @@ class DatapointListItem:
             result_tool_calls=result_tool_calls,
             result_embeddings=result_embeddings,
             checks=checks,
-            checks_metadata=checks_metadata,
             agent_metadata=agent_metadata,
             provider=provider,
             total_search_count=total_search_count,

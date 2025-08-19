@@ -58,8 +58,6 @@ from .feedback_range_summary import FeedbackRangeSummary
 from .filter_condition import FilterCondition
 from .find_test_data_point_payload import FindTestDataPointPayload
 from .full_data_point_item import FullDataPointItem
-from .full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
-from .full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
 from .full_data_point_item_metric_value import FullDataPointItemMetricValue
 from .full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
 from .full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
@@ -186,8 +184,6 @@ __all__ = (
     "FilterCondition",
     "FindTestDataPointPayload",
     "FullDataPointItem",
-    "FullDataPointItemBaselineMetrics",
-    "FullDataPointItemChecksMetadata",
     "FullDataPointItemMetricValue",
     "FullDataPointItemModelMetadataType0",
     "FullDataPointItemScenarioInputType0",
