@@ -1280,6 +1280,7 @@ class Driver:
             "temperature": self.temperature,
             "model_id": self.model_id,
             "prompt_template": self.prompt_template,
+            "id": self.id
         }
 
 
