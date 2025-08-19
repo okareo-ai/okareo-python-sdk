@@ -1,7 +1,9 @@
+import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -17,6 +19,8 @@ class DatapointFilterSearch:
     """
     Attributes:
         filters (List['FilterCondition']): List of filter conditions to apply
+        from_date (Union[Unset, datetime.datetime]): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
+        to_date (Union[Unset, datetime.datetime]): Latest date
         project_id (Union[Unset, str]): Project ID to search within
         offset (Union[Unset, int]): Offset for pagination
         limit (Union[Unset, int]): Limit for pagination
@@ -26,11 +30,13 @@ class DatapointFilterSearch:
         filter_group_id (Union[Unset, str]): Filter group ID to search with
         timezone (Union[Unset, str]): IANA timezone to use for date filtering/aggregation (e.g., 'America/New_York').
             Defaults to None (i.e., UTC).
-        precision (Union[Unset, str]): Time precision for the summary. Valid values include ['day', 'hour', 'minute'].
-            Defaults to 'day'. Default: 'day'.
+        precision (Union[Unset, str]): Time precision for the filter search. Valid values include ['day', 'hour',
+            'minute']. Applied to 'from_date'. Defaults to 'day'. Default: 'day'.
     """
 
     filters: List["FilterCondition"]
+    from_date: Union[Unset, datetime.datetime] = isoparse("2022-12-31T23:59:59.999999")
+    to_date: Union[Unset, datetime.datetime] = UNSET
     project_id: Union[Unset, str] = UNSET
     offset: Union[Unset, int] = UNSET
     limit: Union[Unset, int] = UNSET
@@ -48,6 +54,14 @@ class DatapointFilterSearch:
             filters_item = filters_item_data.to_dict()
 
             filters.append(filters_item)
+
+        from_date: Union[Unset, str] = UNSET
+        if not isinstance(self.from_date, Unset):
+            from_date = self.from_date.isoformat()
+
+        to_date: Union[Unset, str] = UNSET
+        if not isinstance(self.to_date, Unset):
+            to_date = self.to_date.isoformat()
 
         project_id = self.project_id
         offset = self.offset
@@ -69,6 +83,10 @@ class DatapointFilterSearch:
                 "filters": filters,
             }
         )
+        if from_date is not UNSET:
+            field_dict["from_date"] = from_date
+        if to_date is not UNSET:
+            field_dict["to_date"] = to_date
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
         if offset is not UNSET:
@@ -102,6 +120,20 @@ class DatapointFilterSearch:
 
             filters.append(filters_item)
 
+        _from_date = d.pop("from_date", UNSET)
+        from_date: Union[Unset, datetime.datetime]
+        if isinstance(_from_date, Unset):
+            from_date = UNSET
+        else:
+            from_date = isoparse(_from_date)
+
+        _to_date = d.pop("to_date", UNSET)
+        to_date: Union[Unset, datetime.datetime]
+        if isinstance(_to_date, Unset):
+            to_date = UNSET
+        else:
+            to_date = isoparse(_to_date)
+
         project_id = d.pop("project_id", UNSET)
 
         offset = d.pop("offset", UNSET)
@@ -122,6 +154,8 @@ class DatapointFilterSearch:
 
         datapoint_filter_search = cls(
             filters=filters,
+            from_date=from_date,
+            to_date=to_date,
             project_id=project_id,
             offset=offset,
             limit=limit,

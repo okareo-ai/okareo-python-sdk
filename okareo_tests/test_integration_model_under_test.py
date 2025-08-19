@@ -18,6 +18,7 @@ from okareo.model_under_test import (
     QdrantDB,
 )
 from okareo_api_client.api.default import (
+    delete_model_under_test_v0_models_under_test_mut_id_delete,
     delete_test_run_v0_test_runs_delete,
     find_test_data_points_v0_find_test_data_points_post,
     update_test_data_point_v0_update_test_data_point_post,
@@ -803,3 +804,25 @@ def test_delete_eval_with_checks(
         test_run_ids=[run_resp.id],
         api_key=API_KEY,
     )
+
+
+def test_register_model_versions(rnd: str, okareo: Okareo) -> None:
+    muts = []
+    try:
+        for i in range(1, 4):
+            mut = okareo.register_model(
+                name="test_register_model_versions_mut_rnd",
+                model=GenerationModel(
+                    system_prompt_template="\n".join(["hello world"] * i)
+                ),
+                update=True,
+            )
+            muts.append(mut)
+            assert mut.version == i
+    finally:
+        for mut in muts:
+            delete_model_under_test_v0_models_under_test_mut_id_delete.sync_detailed(
+                client=okareo.client,
+                api_key=API_KEY,
+                mut_id=mut.mut_id,
+            )

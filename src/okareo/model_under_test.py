@@ -98,6 +98,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.client = client
         self.api_key = api_key
 
+        self.version = mut.version
         self.mut_id = mut.id
         self.project_id = mut.project_id
         self.name = mut.name
