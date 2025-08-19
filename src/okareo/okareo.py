@@ -33,7 +33,6 @@ from okareo_api_client.api.default import (
     get_target_model_by_name_v0_get_target_by_name_target_model_name_get,
     register_driver_model_v0_register_driver_model_post,
     register_model_v0_register_model_post,
-    register_target_model_v0_register_target_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
@@ -83,7 +82,6 @@ from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
-from okareo_api_client.models.target_model_schema import TargetModelSchema
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
@@ -1134,7 +1132,11 @@ class Okareo:
         session_starter = None
         session_ender = None
 
-        data: dict[str, Any] = {"models": {"driver": {}}}
+        data: dict[str, Any] = {
+            "models": {"driver": {}},
+            "name": target.name,
+            "update": True
+        }
         model = target.target
         data["models"]["driver"]["target"] = (
             model if isinstance(model, dict) else model.params()
@@ -1142,19 +1144,15 @@ class Okareo:
         data, model_invoker, session_starter, session_ender = (
             self._get_custom_model_invoker(data)
         )
-        # put updated data into the target field of the Target
-        target.target = data["models"]["driver"]["target"]
-
-        json_body = TargetModelSchema.from_dict(target.to_dict())
-        response = register_target_model_v0_register_target_model_post.sync(
-            client=self.client,
-            json_body=json_body,
-            api_key=self.api_key,
+        json_body = ModelUnderTestSchema.from_dict(data)
+        response = register_model_v0_register_model_post.sync(
+            client=self.client, api_key=self.api_key, json_body=json_body
         )
+
         self.validate_response(response)
-        if not response:
-            print("Empty response from API")
-        assert response is not None
+        assert isinstance(response, ModelUnderTestResponse)
+        if response.warning:
+            print(response.warning)
 
         model_data = data.get("models")
         if model_invoker and isinstance(model_data, dict):
@@ -1163,11 +1161,11 @@ class Okareo:
             )
 
         # Update the response with the model data
-        response_dict = response.to_dict()
+        response_dict = {
+            "name": target.name,
+            "id": response.id,
+        }
         response_dict["target"] = model_data["driver"]["target"]
-
-        # Set target model back to original value
-        target.target = model
 
         return Target(**response_dict)
 
@@ -1199,6 +1197,8 @@ class Okareo:
         checks_at_every_turn: Optional[bool] = False,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
+        project_id: Optional[str] = None,
+        tags: Optional[list[str]] = None
     ) -> TestRunItem:
 
         # create or update driver if needed
@@ -1227,8 +1227,7 @@ class Okareo:
                 )
 
         # create model with target
-        simulation = Simulation(
-            target=target_model,
+        simulation_params = Simulation(
             driver=driver_model,
             stop_check=stop_check,
             repeats=repeats,
@@ -1237,20 +1236,29 @@ class Okareo:
             checks_at_every_turn=checks_at_every_turn,
         )
 
-        # register model
-        simulation_model = self.register_model(
+        # create MUT object
+        dummy_response = ModelUnderTestResponse(
+            id=target_model.id,
+            project_id=project_id,
             name=target_model.name,
-            model=simulation,
-            update=True,
+            tags=tags,
+            time_created=datetime.datetime.now()
+        )
+        mut = ModelUnderTest(
+            client=self.client,
+            api_key=api_key if api_key else self.api_key,
+            mut=dummy_response,
+            models={"driver": {"target": target_model.target}},
         )
 
         # run_test
-        return simulation_model.run_test(
+        return mut.run_test(
             scenario=scenario,
             name=name,
-            api_key=api_key,
+            api_key=api_key if api_key else self.api_key,
             api_keys=api_keys,
             test_run_type=TestRunType.MULTI_TURN,
             calculate_metrics=True,
             checks=checks,
+            simulation_params=simulation_params
         )

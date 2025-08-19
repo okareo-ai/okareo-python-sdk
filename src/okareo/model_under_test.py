@@ -295,6 +295,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool,
         model_data: dict,
         checks: Optional[List[str]],
+        simulation_params: Optional[Any],
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
@@ -316,6 +317,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 else UNSET
             ),
             checks=checks if checks else UNSET,
+            simulation_params=simulation_params if simulation_params else UNSET,
         )
 
     async def connect_nats(self, user_jwt: str, seed: str, local_nats: str) -> Any:
@@ -516,6 +518,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
+        simulation_params: Optional[Any] = None,
         run_test_method: Any = None,
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
@@ -564,6 +567,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     calculate_metrics,
                     model_data,
                     checks,
+                    simulation_params,
                 ),
             )
             if isinstance(response, ErrorResponse):
@@ -654,6 +658,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
+        simulation_params: Optional[Any] = None
     ) -> TestRunItem:
         """Server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side. For other models,
@@ -682,6 +687,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 test_run_type,
                 calculate_metrics,
                 checks,
+                simulation_params,
                 run_test_v0_test_run_post.sync,
             )
         except Exception as e:
@@ -1296,11 +1302,9 @@ class Target:
 
 
 @_attrs_define
-class Simulation(BaseModel):
+class Simulation:
 
-    type = "driver"
-    target: Target
-    driver: Driver
+    driver: Union[Driver, dict] = None
     stop_check: Union[StopConfig, dict, None] = None
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
@@ -1311,15 +1315,11 @@ class Simulation(BaseModel):
         if isinstance(self.stop_check, dict):
             self.stop_check = StopConfig(**self.stop_check)
 
-    def params(self) -> dict:
+    def to_dict(self) -> dict:
         return {
-            "type": self.type,
-            "target": (
-                self.target.target
-                if isinstance(self.target.target, dict)
-                else self.target.target.params()
+            "driver": (
+                self.driver if isinstance(self.driver, dict) else self.driver.to_dict()
             ),
-            "driver": self.driver.to_dict(),
             "repeats": self.repeats,
             "max_turns": self.max_turns,
             "first_turn": self.first_turn,

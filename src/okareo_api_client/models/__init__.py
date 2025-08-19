@@ -109,10 +109,6 @@ from .slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_g
     SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
 )
 from .summary_datapoint_search import SummaryDatapointSearch
-from .target_model_response import TargetModelResponse
-from .target_model_response_target import TargetModelResponseTarget
-from .target_model_schema import TargetModelSchema
-from .target_model_schema_target import TargetModelSchemaTarget
 from .test_custom_endpoint_request import TestCustomEndpointRequest
 from .test_custom_endpoint_request_end_session_params import TestCustomEndpointRequestEndSessionParams
 from .test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
@@ -132,6 +128,7 @@ from .test_run_payload_v2 import TestRunPayloadV2
 from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
 from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
 from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
+from .test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationParams
 from .test_run_type import TestRunType
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .validation_error import ValidationError
@@ -226,10 +223,6 @@ __all__ = (
     "SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost",
     "SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet",
     "SummaryDatapointSearch",
-    "TargetModelResponse",
-    "TargetModelResponseTarget",
-    "TargetModelSchema",
-    "TargetModelSchemaTarget",
     "TestCustomEndpointRequest",
     "TestCustomEndpointRequestEndSessionParams",
     "TestCustomEndpointRequestNextMessageParams",
@@ -249,6 +242,7 @@ __all__ = (
     "TestRunPayloadV2ApiKeys",
     "TestRunPayloadV2MetricsKwargs",
     "TestRunPayloadV2ModelResults",
+    "TestRunPayloadV2SimulationParams",
     "TestRunType",
     "UpdateTestDataPointPayload",
     "ValidationError",

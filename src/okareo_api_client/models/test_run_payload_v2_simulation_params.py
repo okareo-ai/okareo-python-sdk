@@ -3,12 +3,12 @@ from typing import Any, Dict, List, Type, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="TargetModelSchemaTarget")
+T = TypeVar("T", bound="TestRunPayloadV2SimulationParams")
 
 
 @_attrs_define
-class TargetModelSchemaTarget:
-    """Parameters for the target model"""
+class TestRunPayloadV2SimulationParams:
+    """Simulation parameters for the test run."""
 
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -22,10 +22,10 @@ class TargetModelSchemaTarget:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        target_model_schema_target = cls()
+        test_run_payload_v2_simulation_params = cls()
 
-        target_model_schema_target.additional_properties = d
-        return target_model_schema_target
+        test_run_payload_v2_simulation_params.additional_properties = d
+        return test_run_payload_v2_simulation_params
 
     @property
     def additional_keys(self) -> List[str]:
