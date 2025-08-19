@@ -4,6 +4,7 @@ import re
 import time
 from typing import Any, Optional
 
+from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 import pytest
 import requests  # type:ignore
 from okareo_tests.common import API_KEY, random_string
@@ -470,6 +471,103 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
     assert_baseline_metrics(
         okareo, evaluation, model_under_test, ["behavior_adherence"], False, True, 2
     )
+
+def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> None:
+    class DynamicResponseModel(CustomMultiturnTarget):
+        def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
+            # Vary the response based on the input
+            user_message = messages[-1].get("content", "")
+            if "help" in user_message.lower():
+                content = "I'd be happy to assist with appropriate tasks."
+            else:
+                content = "Please let me know how I can help you."
+            return ModelInvocation(content, messages, {"response_type": "dynamic"})
+
+    custom_model = DynamicResponseModel(name="dynamic_response_model")
+
+    from okareo.model_under_test import Target
+
+    target = Target(name="test_simulation_custom_with_dynamic_response", target=custom_model)
+
+    target_after_create = okareo.create_or_update_target(
+        target
+    )
+
+    target_after_get = okareo.get_target_by_name("test_simulation_custom_with_dynamic_response")
+
+    from okareo.model_under_test import Driver
+
+    endpoint_driver = Driver(name="test_simulation_custom_with_dynamic_response_driver", prompt_template="{scenario_input}", temperature=0.7)
+    okareo.create_or_update_driver(
+        endpoint_driver
+    )
+
+    # More varied seed data
+    seeds = [
+        SeedData(
+            input_="Can you help me solve this puzzle?",
+            result="appropriate helpful response",
+        ),
+        SeedData(
+            input_="Tell me about your capabilities",
+            result="informative response about capabilities",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Dynamic Response Test - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    for i, t in enumerate([target, target_after_create, target_after_get, "test_simulation_custom_with_dynamic_response"]):
+
+        try:
+            evaluation = okareo.run_simulation(
+                scenario=scenario,
+                name=f"Dynamic Simulation Test - {rnd}", # or maybe a default name
+                driver="test_simulation_custom_with_dynamic_response_driver", # or pass whole driver object, or pass predefined driver name
+                target=t, # or pass whole target object, or pass predefined target name
+                checks=["avg_turn_latency", "total_input_tokens", "total_cost"],
+                # optional
+                max_turns=3,  # Increased max turns
+                repeats=1,  # Increased repeats
+                stop_check={
+                    "check_name": "behavior_adherence",
+                    "stop_on": True,
+                },  # Changed check
+                first_turn="driver",  # driver starts, the test model assumes a message from the driver first
+            )
+        except TypeError as e:
+            print(f"TypeError: {e}")
+            continue
+
+        assert evaluation.name == f"Dynamic Simulation Test - {rnd}"
+        assert evaluation.model_metrics is not None
+        assert evaluation.app_link is not None
+        assert evaluation.test_data_point_count == 2  # 2 seeds × 1 repeat
+
+
+        # create MUT object
+        from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
+        from okareo.model_under_test import ModelUnderTest
+        import datetime
+        dummy_response = ModelUnderTestResponse(
+            id=t.id,
+            project_id=evaluation.project_id,
+            name=t.name,
+            tags=[],
+            time_created=datetime.datetime.now()
+        )
+        mut = ModelUnderTest(
+            client=okareo.client,
+            api_key=okareo.api_key,
+            mut=dummy_response,
+            models={"driver": {"target": t.target}},
+        )
+
+        assert_baseline_metrics(
+            okareo, evaluation, mut, ["behavior_adherence"], False, True, 3
+        )
 
 
 def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> None:

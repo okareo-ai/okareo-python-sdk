@@ -32,7 +32,6 @@ from .datapoint_filter_update import DatapointFilterUpdate
 from .datapoint_list_item import DatapointListItem
 from .datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
 from .datapoint_list_item_checks import DatapointListItemChecks
-from .datapoint_list_item_checks_metadata import DatapointListItemChecksMetadata
 from .datapoint_list_item_input_tools_item import DatapointListItemInputToolsItem
 from .datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
 from .datapoint_list_item_result_embeddings_item import DatapointListItemResultEmbeddingsItem
@@ -158,7 +157,6 @@ __all__ = (
     "DatapointListItem",
     "DatapointListItemAgentMetadataType0",
     "DatapointListItemChecks",
-    "DatapointListItemChecksMetadata",
     "DatapointListItemInputToolsItem",
     "DatapointListItemModelMetadataType0",
     "DatapointListItemResultEmbeddingsItem",
