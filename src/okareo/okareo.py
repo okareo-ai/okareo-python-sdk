@@ -1119,7 +1119,13 @@ class Okareo:
         assert response is not None and isinstance(response, dict)
         return Driver(**response)
 
-    def create_or_update_target(self, target: Target) -> Target:
+    def create_or_update_target(
+        self,
+        target: Target,
+        tags: Optional[List[str]] = None,
+        project_id: Optional[str] = None,
+        sensitive_fields: Union[List[str], None] = None,
+    ) -> Target:
         """Create or update a target.
 
         Args:
@@ -1135,7 +1141,9 @@ class Okareo:
         data: dict[str, Any] = {
             "models": {"driver": {}},
             "name": target.name,
+            "tags": tags or [],
             "update": True,
+            "sensitive_fields": sensitive_fields,
         }
         model = target.target
         data["models"]["driver"]["target"] = (
@@ -1144,6 +1152,8 @@ class Okareo:
         data, model_invoker, session_starter, session_ender = (
             self._get_custom_model_invoker(data)
         )
+        if project_id is not None:
+            data["project_id"] = project_id
         json_body = ModelUnderTestSchema.from_dict(data)
         response = register_model_v0_register_model_post.sync(
             client=self.client, api_key=self.api_key, json_body=json_body
@@ -1161,21 +1171,24 @@ class Okareo:
             )
 
         # Update the response with the model data
-        response_dict = {
+        response_dict: dict[str, Any] = {
             "name": target.name,
             "id": response.id,
         }
+        assert (
+            isinstance(model_data, dict)
+            and "driver" in model_data
+            and "target" in model_data["driver"]
+        )
         response_dict["target"] = model_data["driver"]["target"]
 
         return Target(**response_dict)
 
     def get_target_by_name(self, target_name: str) -> Target:
-        response = (
-            get_target_model_by_name_v0_target_target_model_name_get.sync(
-                client=self.client,
-                api_key=self.api_key,
-                target_model_name=target_name,
-            )
+        response = get_target_model_by_name_v0_target_target_model_name_get.sync(
+            client=self.client,
+            api_key=self.api_key,
+            target_model_name=target_name,
         )
         self.validate_response(response)
         if not response:
@@ -1197,8 +1210,11 @@ class Okareo:
         checks_at_every_turn: Optional[bool] = False,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        calculate_metrics: bool = True,
         project_id: Optional[str] = None,
         tags: Optional[list[str]] = None,
+        sensitive_fields: Union[List[str], None] = None,
     ) -> TestRunItem:
 
         # create or update driver if needed
@@ -1217,7 +1233,9 @@ class Okareo:
                     raise TypeError(
                         "Cannot retrieve Target by name for CustomMultiturnTarget"
                     )
-            target_model = self.create_or_update_target(target)
+            target_model = self.create_or_update_target(
+                target, tags or [], project_id, sensitive_fields
+            )
         else:
             target_model = self.get_target_by_name(target)
             assert isinstance(target_model.target, dict)
@@ -1238,11 +1256,11 @@ class Okareo:
 
         # create MUT object
         dummy_response = ModelUnderTestResponse(
-            id=target_model.id,
-            project_id=project_id,
+            id=target_model.id if target_model.id else "",
+            project_id=project_id if project_id else "",
             name=target_model.name,
-            tags=tags,
-            time_created=datetime.datetime.now(),
+            tags=tags or [],
+            time_created=datetime.datetime.now().isoformat(),
         )
         mut = ModelUnderTest(
             client=self.client,
@@ -1257,8 +1275,9 @@ class Okareo:
             name=name,
             api_key=api_key if api_key else self.api_key,
             api_keys=api_keys,
+            metrics_kwargs=metrics_kwargs,
             test_run_type=TestRunType.MULTI_TURN,
-            calculate_metrics=True,
+            calculate_metrics=calculate_metrics,
             checks=checks,
             simulation_params=simulation_params,
         )

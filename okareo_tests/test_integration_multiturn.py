@@ -529,6 +529,7 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
         target_after_get,
         "test_simulation_custom_with_dynamic_response",
     ]:
+        assert isinstance(t, (Target, str))
 
         try:
             evaluation = okareo.run_simulation(
@@ -563,12 +564,15 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
             ModelUnderTestResponse,
         )
 
+        assert isinstance(t, Target)
+        t_get = okareo.get_target_by_name(t.name)
+        assert isinstance(t_get, Target) and t_get.id is not None
         dummy_response = ModelUnderTestResponse(
-            id=t.id,
+            id=t_get.id,
             project_id=evaluation.project_id,
-            name=t.name,
+            name=t_get.name,
             tags=[],
-            time_created=datetime.datetime.now(),
+            time_created=datetime.datetime.now().isoformat(),
         )
         mut = ModelUnderTest(
             client=okareo.client,

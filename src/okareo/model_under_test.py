@@ -1288,7 +1288,7 @@ class Driver:
 class Target:
     name: str
     target: Union[
-        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
+        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget, dict
     ]
     id: Optional[str] = None
 
@@ -1305,7 +1305,7 @@ class Target:
 @_attrs_define
 class Simulation:
 
-    driver: Union[Driver, dict] = None
+    driver: Union[Driver, dict]
     stop_check: Union[StopConfig, dict, None] = None
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5

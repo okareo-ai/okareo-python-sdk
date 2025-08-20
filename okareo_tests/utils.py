@@ -129,6 +129,7 @@ def _parse_baseline_metrics(
     turns: int | None = None,
     cost: bool = False,
 ) -> dict:
+    baseline = None
     if isinstance(tdp, FullDataPointItem) and tdp.baseline_metrics:
         baseline = tdp.baseline_metrics  # type: ignore[attr-defined]
         if isinstance(baseline, FullDataPointItemBaselineMetrics):
@@ -143,10 +144,23 @@ def _parse_baseline_metrics(
                 tdp_baseline_metrics[output_tokens_key]
             )
 
+    elif isinstance(tdp, TestDataPointItem) and tdp.additional_properties.get(
+        "baseline_metrics"
+    ):
+        baseline = tdp.additional_properties["baseline_metrics"]
+        baseline_metrics["latency"].append(baseline[latency_key_baseline])
+        baseline_metrics["input_tokens"].append(baseline[input_tokens_key])
+        baseline_metrics["output_tokens"].append(baseline[output_tokens_key])
+
     if turns == 1:
-        assert isinstance(tdp, FullDataPointItem) and isinstance(tdp.model_result, str)
-        assert token_counter(text=tdp.model_result) == tdp_baseline_metrics[output_tokens_key]  # type: ignore
+        if isinstance(tdp, FullDataPointItem):
+            assert token_counter(text=tdp.model_result) == baseline[output_tokens_key]  # type: ignore
+        elif isinstance(tdp, TestDataPointItem) and isinstance(
+            tdp.additional_properties["model_result"], str
+        ):
+            assert token_counter(text=tdp.additional_properties["model_result"]) == baseline[output_tokens_key]  # type: ignore
     if cost:
+        assert isinstance(baseline, dict) and cost_key in baseline
         baseline_metrics["cost"].append(baseline[cost_key])
     return baseline_metrics
 
