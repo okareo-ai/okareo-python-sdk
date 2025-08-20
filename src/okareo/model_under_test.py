@@ -518,8 +518,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
-        simulation_params: Optional[Any] = None,
         run_test_method: Any = None,
+        simulation_params: Optional[Any] = None,
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
@@ -687,8 +687,8 @@ class ModelUnderTest(AsyncProcessorMixin):
                 test_run_type,
                 calculate_metrics,
                 checks,
-                simulation_params,
                 run_test_v0_test_run_post.sync,
+                simulation_params,
             )
         except Exception as e:
             raise TestRunError(str(e)) from e
