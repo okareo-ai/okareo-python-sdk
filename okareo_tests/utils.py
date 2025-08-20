@@ -160,8 +160,10 @@ def _parse_baseline_metrics(
         ):
             assert token_counter(text=tdp.additional_properties["model_result"]) == baseline[output_tokens_key]  # type: ignore
     if cost:
-        assert isinstance(baseline, dict) and cost_key in baseline
-        baseline_metrics["cost"].append(baseline[cost_key])
+        if isinstance(baseline, dict) and cost_key in baseline:
+            baseline_metrics["cost"].append(baseline[cost_key])
+        elif isinstance(baseline, FullDataPointItemBaselineMetrics):
+            baseline_metrics["cost"].append(baseline.additional_properties[cost_key])
     return baseline_metrics
 
 
