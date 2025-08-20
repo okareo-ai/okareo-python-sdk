@@ -19,7 +19,7 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/get_driver_by_name/{driver_name}".format(
+        "url": "/v0/driver/{driver_name}".format(
             driver_name=driver_name,
         ),
         "headers": headers,

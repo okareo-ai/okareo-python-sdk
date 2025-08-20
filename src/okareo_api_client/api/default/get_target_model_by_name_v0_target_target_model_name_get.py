@@ -19,7 +19,7 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/get_target_by_name/{target_model_name}".format(
+        "url": "/v0/target/{target_model_name}".format(
             target_model_name=target_model_name,
         ),
         "headers": headers,

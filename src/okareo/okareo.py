@@ -28,10 +28,10 @@ from okareo_api_client.api.default import (
     get_check_v0_check_check_id_get,
     get_datapoints_filter_v0_find_datapoints_filter_post,
     get_datapoints_v0_find_datapoints_post,
-    get_driver_by_name_v0_get_driver_by_name_driver_name_get,
+    get_driver_by_name_v0_driver_driver_name_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
-    get_target_model_by_name_v0_get_target_by_name_target_model_name_get,
-    register_driver_model_v0_register_driver_model_post,
+    get_target_model_by_name_v0_target_target_model_name_get,
+    register_driver_model_v0_driver_post,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
 )
@@ -1088,7 +1088,7 @@ class Okareo:
             The created or updated driver.
         """
         json_body = DriverModelSchema.from_dict(driver.to_dict())
-        response = register_driver_model_v0_register_driver_model_post.sync(
+        response = register_driver_model_v0_driver_post.sync(
             client=self.client,
             json_body=json_body,
             api_key=self.api_key,
@@ -1108,7 +1108,7 @@ class Okareo:
         Returns:
             The driver with the specified name.
         """
-        response = get_driver_by_name_v0_get_driver_by_name_driver_name_get.sync(
+        response = get_driver_by_name_v0_driver_driver_name_get.sync(
             client=self.client,
             api_key=self.api_key,
             driver_name=driver_name,
@@ -1171,7 +1171,7 @@ class Okareo:
 
     def get_target_by_name(self, target_name: str) -> Target:
         response = (
-            get_target_model_by_name_v0_get_target_by_name_target_model_name_get.sync(
+            get_target_model_by_name_v0_target_target_model_name_get.sync(
                 client=self.client,
                 api_key=self.api_key,
                 target_model_name=target_name,

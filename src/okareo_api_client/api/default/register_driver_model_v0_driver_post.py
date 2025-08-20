@@ -22,7 +22,7 @@ def _get_kwargs(
 
     return {
         "method": "post",
-        "url": "/v0/register_driver_model",
+        "url": "/v0/driver",
         "json": json_json_body,
         "headers": headers,
     }
