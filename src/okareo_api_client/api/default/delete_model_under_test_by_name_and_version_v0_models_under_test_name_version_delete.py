@@ -6,38 +6,24 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
-    *,
     name: str,
-    version: Union[None, Unset, int, str] = "latest",
+    version: Union[int, str],
+    *,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["name"] = name
-
-    json_version: Union[None, Unset, int, str]
-    if isinstance(version, Unset):
-        json_version = UNSET
-    elif version is None:
-        json_version = None
-
-    else:
-        json_version = version
-
-    params["version"] = json_version
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
-
     return {
         "method": "delete",
-        "url": "/v0/model_under_test",
-        "params": params,
+        "url": "/v0/models_under_test/{name}/{version}".format(
+            name=name,
+            version=version,
+        ),
         "headers": headers,
     }
 
@@ -82,10 +68,10 @@ def _build_response(
 
 
 def sync_detailed(
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
-    version: Union[None, Unset, int, str] = "latest",
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Model Under Test By Name And Version
@@ -94,9 +80,8 @@ def sync_detailed(
     objects associated with it.
 
     Args:
-        name (str): The name of the model under test
-        version (Union[None, Unset, int, str]): The version (integer, 'latest', or 'all') of the
-            model under test. Default: 'latest'.
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -121,10 +106,10 @@ def sync_detailed(
 
 
 def sync(
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
-    version: Union[None, Unset, int, str] = "latest",
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Model Under Test By Name And Version
@@ -133,9 +118,8 @@ def sync(
     objects associated with it.
 
     Args:
-        name (str): The name of the model under test
-        version (Union[None, Unset, int, str]): The version (integer, 'latest', or 'all') of the
-            model under test. Default: 'latest'.
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -147,18 +131,18 @@ def sync(
     """
 
     return sync_detailed(
-        client=client,
         name=name,
         version=version,
+        client=client,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
-    version: Union[None, Unset, int, str] = "latest",
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Model Under Test By Name And Version
@@ -167,9 +151,8 @@ async def asyncio_detailed(
     objects associated with it.
 
     Args:
-        name (str): The name of the model under test
-        version (Union[None, Unset, int, str]): The version (integer, 'latest', or 'all') of the
-            model under test. Default: 'latest'.
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -192,10 +175,10 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
-    name: str,
-    version: Union[None, Unset, int, str] = "latest",
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Model Under Test By Name And Version
@@ -204,9 +187,8 @@ async def asyncio(
     objects associated with it.
 
     Args:
-        name (str): The name of the model under test
-        version (Union[None, Unset, int, str]): The version (integer, 'latest', or 'all') of the
-            model under test. Default: 'latest'.
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -219,9 +201,9 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            client=client,
             name=name,
             version=version,
+            client=client,
             api_key=api_key,
         )
     ).parsed

@@ -18,7 +18,7 @@ from okareo.model_under_test import (
     QdrantDB,
 )
 from okareo_api_client.api.default import (
-    delete_model_under_test_v0_models_under_test_mut_id_delete,
+    delete_model_under_test_by_name_and_version_v0_models_under_test_name_version_delete,
     delete_test_run_v0_test_runs_delete,
     find_test_data_points_v0_find_test_data_points_post,
     update_test_data_point_v0_update_test_data_point_post,
@@ -806,12 +806,14 @@ def test_delete_eval_with_checks(
     )
 
 
-def test_register_model_versions(rnd: str, okareo: Okareo) -> None:
+def test_register_model_versions(
+    rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
+) -> None:
     muts = []
     try:
         for i in range(1, 4):
             mut = okareo.register_model(
-                name="test_register_model_versions_mut_rnd",
+                name=f"test_register_model_versions_mut_{rnd}",
                 model=GenerationModel(
                     system_prompt_template="\n".join(["hello world"] * i)
                 ),
@@ -819,10 +821,37 @@ def test_register_model_versions(rnd: str, okareo: Okareo) -> None:
             )
             muts.append(mut)
             assert mut.version == i
+
+            # get the model at the version
+            model = okareo.get_model(
+                f"test_register_model_versions_mut_{rnd}", version=i
+            )
+            assert model.version == i
+
+            # ensure that we can run an eval on the fetched model
+            eval_name = f"test_register_model_versions_mut_eval_v{i}_{rnd}"
+            eval_run = model.run_test(
+                name=eval_name,
+                scenario=single_line_scenario_set,
+                api_key=os.environ["OPENAI_API_KEY"],
+                test_run_type=TestRunType.NL_GENERATION,
+                checks=[
+                    "fluency_summary",
+                ],
+            )
+            assert eval_run.name == eval_name
+
+        # get the model at the latest version
+        latest_model = okareo.get_model(
+            f"test_register_model_versions_mut_{rnd}", version="latest"
+        )
+        assert latest_model.version == 3
+
     finally:
         for mut in muts:
-            delete_model_under_test_v0_models_under_test_mut_id_delete.sync_detailed(
+            delete_model_under_test_by_name_and_version_v0_models_under_test_name_version_delete.sync_detailed(
                 client=okareo.client,
                 api_key=API_KEY,
-                mut_id=mut.mut_id,
+                name=mut.name,
+                version=mut.version,
             )
