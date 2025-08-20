@@ -4,7 +4,6 @@ import re
 import time
 from typing import Any, Optional
 
-from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 import pytest
 import requests  # type:ignore
 from okareo_tests.common import API_KEY, random_string
@@ -472,6 +471,7 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
         okareo, evaluation, model_under_test, ["behavior_adherence"], False, True, 2
     )
 
+
 def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> None:
     class DynamicResponseModel(CustomMultiturnTarget):
         def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
@@ -487,20 +487,24 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
 
     from okareo.model_under_test import Target
 
-    target = Target(name="test_simulation_custom_with_dynamic_response", target=custom_model)
-
-    target_after_create = okareo.create_or_update_target(
-        target
+    target = Target(
+        name="test_simulation_custom_with_dynamic_response", target=custom_model
     )
 
-    target_after_get = okareo.get_target_by_name("test_simulation_custom_with_dynamic_response")
+    target_after_create = okareo.create_or_update_target(target)
+
+    target_after_get = okareo.get_target_by_name(
+        "test_simulation_custom_with_dynamic_response"
+    )
 
     from okareo.model_under_test import Driver
 
-    endpoint_driver = Driver(name="test_simulation_custom_with_dynamic_response_driver", prompt_template="{scenario_input}", temperature=0.7)
-    okareo.create_or_update_driver(
-        endpoint_driver
+    endpoint_driver = Driver(
+        name="test_simulation_custom_with_dynamic_response_driver",
+        prompt_template="{scenario_input}",
+        temperature=0.7,
     )
+    okareo.create_or_update_driver(endpoint_driver)
 
     # More varied seed data
     seeds = [
@@ -519,14 +523,19 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
-    for i, t in enumerate([target, target_after_create, target_after_get, "test_simulation_custom_with_dynamic_response"]):
+    for t in [
+        target,
+        target_after_create,
+        target_after_get,
+        "test_simulation_custom_with_dynamic_response",
+    ]:
 
         try:
             evaluation = okareo.run_simulation(
                 scenario=scenario,
-                name=f"Dynamic Simulation Test - {rnd}", # or maybe a default name
-                driver="test_simulation_custom_with_dynamic_response_driver", # or pass whole driver object, or pass predefined driver name
-                target=t, # or pass whole target object, or pass predefined target name
+                name=f"Dynamic Simulation Test - {rnd}",  # or maybe a default name
+                driver="test_simulation_custom_with_dynamic_response_driver",  # or pass whole driver object, or pass predefined driver name
+                target=t,  # or pass whole target object, or pass predefined target name
                 checks=["avg_turn_latency", "total_input_tokens", "total_cost"],
                 # optional
                 max_turns=3,  # Increased max turns
@@ -546,17 +555,20 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
         assert evaluation.app_link is not None
         assert evaluation.test_data_point_count == 2  # 2 seeds × 1 repeat
 
-
         # create MUT object
-        from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
-        from okareo.model_under_test import ModelUnderTest
         import datetime
+
+        from okareo.model_under_test import ModelUnderTest
+        from okareo_api_client.models.model_under_test_response import (
+            ModelUnderTestResponse,
+        )
+
         dummy_response = ModelUnderTestResponse(
             id=t.id,
             project_id=evaluation.project_id,
             name=t.name,
             tags=[],
-            time_created=datetime.datetime.now()
+            time_created=datetime.datetime.now(),
         )
         mut = ModelUnderTest(
             client=okareo.client,

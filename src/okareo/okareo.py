@@ -1135,7 +1135,7 @@ class Okareo:
         data: dict[str, Any] = {
             "models": {"driver": {}},
             "name": target.name,
-            "update": True
+            "update": True,
         }
         model = target.target
         data["models"]["driver"]["target"] = (
@@ -1198,7 +1198,7 @@ class Okareo:
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
         project_id: Optional[str] = None,
-        tags: Optional[list[str]] = None
+        tags: Optional[list[str]] = None,
     ) -> TestRunItem:
 
         # create or update driver if needed
@@ -1242,7 +1242,7 @@ class Okareo:
             project_id=project_id,
             name=target_model.name,
             tags=tags,
-            time_created=datetime.datetime.now()
+            time_created=datetime.datetime.now(),
         )
         mut = ModelUnderTest(
             client=self.client,
@@ -1260,5 +1260,5 @@ class Okareo:
             test_run_type=TestRunType.MULTI_TURN,
             calculate_metrics=True,
             checks=checks,
-            simulation_params=simulation_params
+            simulation_params=simulation_params,
         )
