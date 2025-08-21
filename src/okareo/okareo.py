@@ -1201,8 +1201,8 @@ class Okareo:
         name: str,
         scenario: Union[ScenarioSetResponse, str],
         target: str | Target,
-        driver: str | Driver,
-        checks: list[str],
+        driver: Optional[str | Driver] = None,
+        checks: Optional[list[str]] = None,
         stop_check: Union[StopConfig, dict, None] = None,
         repeats: Optional[int] = 1,
         max_turns: Optional[int] = 5,
@@ -1220,6 +1220,8 @@ class Okareo:
         # create or update driver if needed
         if isinstance(driver, Driver):
             driver_model = self.create_or_update_driver(driver)
+        elif not driver:
+            driver_model = self.create_or_update_driver(Driver(name="default_driver"))
         else:
             driver_model = self.get_driver_by_name(driver)
 
@@ -1264,7 +1266,7 @@ class Okareo:
         )
         mut = ModelUnderTest(
             client=self.client,
-            api_key=api_key if api_key else self.api_key,
+            api_key=self.api_key,
             mut=dummy_response,
             models={"driver": {"target": target_model.target}},
         )
