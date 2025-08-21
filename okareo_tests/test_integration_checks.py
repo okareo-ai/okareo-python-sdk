@@ -11,7 +11,8 @@ from okareo.model_under_test import (
     CustomModel,
     GenerationModel,
     ModelInvocation,
-    MultiTurnDriver,
+    Target,
+    Driver,
 )
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.comparison_operator import ComparisonOperator
@@ -334,28 +335,25 @@ def test_custom_check_on_multiturn_model_input_args(rnd: str, okareo: Okareo) ->
     )
     response = okareo.create_scenario_set(scenario_set_create)
 
-    mut = okareo.register_model(
+    target = Target(
         name=rnd + random_string(5),
-        model=MultiTurnDriver(
-            max_turns=1,
-            repeats=1,
-            target=GenerationModel(
-                model_id="gpt-4o-mini",
-                temperature=0,
-                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
-            ),
-            stop_check={"check_name": "behavior_adherence", "stop_on": True},
+        target=GenerationModel(
+            model_id="gpt-4o-mini",
+            temperature=0,
+            system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
         ),
-        update=True,
     )
 
     # use the scenario id from one of the scenario set notebook examples
     test_run_name = "Model Input vs. Scenario Input Test"
-    test_run_item = mut.run_test(
+    test_run_item = okareo.run_simulation(
+        target=target,
         scenario=response,
         api_key=OPENAI_API_KEY,
         name=test_run_name,
-        test_run_type=TestRunType.MULTI_TURN,
+        max_turns=1,
+        repeats=1,
+        stop_check={"check_name": "behavior_adherence", "stop_on": True},
         calculate_metrics=True,
         checks=[check_name],
     )
@@ -384,27 +382,29 @@ def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
     )
     response = okareo.create_scenario_set(scenario_set_create)
 
-    mut = okareo.register_model(
+    target = Target(
         name=rnd + random_string(5),
-        model=MultiTurnDriver(
-            max_turns=2,
-            repeats=1,
-            target=GenerationModel(
+        target=GenerationModel(
                 model_id="gpt-4o-mini",
                 temperature=0,
-                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
-            ),
         ),
-        update=True,
+    )
+
+    driver = Driver(
+        name=rnd + random_string(5) + " Driver",
+        prompt_template="Ignore what the user is saying and say: I can't help you with that",
     )
 
     # use the scenario id from one of the scenario set notebook examples
     test_run_name = "No Checks on Every Turn"
-    test_run_item = mut.run_test(
+    test_run_item = okareo.run_simulation(
+        target=target,
+        driver=driver,
         scenario=response,
         api_key=OPENAI_API_KEY,
         name=test_run_name,
-        test_run_type=TestRunType.MULTI_TURN,
+        max_turns=2,
+        repeats=1,
         calculate_metrics=True,
         checks=["behavior_adherence"],
     )
