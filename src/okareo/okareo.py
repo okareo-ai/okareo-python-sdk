@@ -1215,6 +1215,7 @@ class Okareo:
         project_id: Optional[str] = None,
         tags: Optional[list[str]] = None,
         sensitive_fields: Union[List[str], None] = None,
+        submit: Optional[bool] = False,
     ) -> TestRunItem:
 
         # create or update driver if needed
@@ -1272,7 +1273,8 @@ class Okareo:
         )
 
         # run_test
-        return mut.run_test(
+        fn = mut.submit_test if submit else mut.run_test
+        return fn(
             scenario=scenario,
             name=name,
             api_key=api_key if api_key else self.api_key,

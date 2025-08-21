@@ -44,6 +44,7 @@ from .datapoint_search import DatapointSearch
 from .datapoint_summary_item import DatapointSummaryItem
 from .datapoint_summary_item_user_metadata_type_0 import DatapointSummaryItemUserMetadataType0
 from .datapoint_tags_schema import DatapointTagsSchema
+from .driver_model_response import DriverModelResponse
 from .driver_model_schema import DriverModelSchema
 from .error_response import ErrorResponse
 from .evaluation_payload import EvaluationPayload
@@ -172,6 +173,7 @@ __all__ = (
     "DatapointSummaryItem",
     "DatapointSummaryItemUserMetadataType0",
     "DatapointTagsSchema",
+    "DriverModelResponse",
     "DriverModelSchema",
     "ErrorResponse",
     "EvaluationPayload",
