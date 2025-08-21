@@ -7,7 +7,7 @@ from typing import Any, Optional
 import pytest
 import requests  # type:ignore
 from okareo_tests.common import API_KEY, random_string
-from okareo_tests.utils import assert_baseline_metrics
+from okareo_tests.utils import assert_baseline_metrics, create_dummy_mut
 
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
@@ -29,6 +29,7 @@ from okareo_api_client.models.find_test_data_point_payload import (
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_type import TestRunType
+from okareo.model_under_test import Target, Driver
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "NOT SET")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "NOT SET")
@@ -46,19 +47,20 @@ def okareo() -> Okareo:
 
 
 def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
-    mut = okareo.register_model(
+
+    target = Target(
         name=rnd,
-        model=MultiTurnDriver(
-            target=OpenAIModel(
+        target=OpenAIModel(
                 model_id="gpt-4o-mini",
                 temperature=0,
                 system_prompt_template="target_system_prompt",
-            ),
-            stop_check={"check_name": "behavior_adherence", "stop_on": True},
-        ),
-        update=True,
+            )
     )
-    assert mut.name == rnd
+
+    target_after_create = okareo.create_or_update_target(target)
+    target_after_get = okareo.get_target_by_name(rnd)
+    assert target_after_create.name == rnd
+    assert target_after_create.name == target_after_get.name
 
 
 def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> None:
@@ -75,31 +77,34 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     response = okareo.create_scenario_set(scenario_set_create)
     response.scenario_id
 
-    mut = okareo.register_model(
-        name=rnd,
-        model=MultiTurnDriver(
-            max_turns=2,
-            repeats=1,
-            target=GenerationModel(
+    target = Target(
+        name = rnd,
+        target = GenerationModel(
                 model_id="gpt-4o-mini",
                 temperature=0,
                 system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
-            ),
-            stop_check={"check_name": "model_refusal", "stop_on": False},
-        ),
-        update=True,
+            )
     )
 
+    okareo.create_or_update_target(target)
+
     # use the scenario id from one of the scenario set notebook examples
-    test_run_item = mut.run_test(
+    test_run_item = okareo.run_simulation(
+        target=target,
         scenario=response,
         api_key=OPENAI_API_KEY,
         name="CI run test",
-        test_run_type=TestRunType.MULTI_TURN,
         calculate_metrics=True,
+        max_turns=2,
+        repeats=1,
+        stop_check={"check_name": "model_refusal", "stop_on": False},
     )
     assert test_run_item.name == "CI run test"
     assert test_run_item.status == "FINISHED"
+
+    mut = create_dummy_mut(
+        target, test_run_item, okareo
+    )
 
     assert_baseline_metrics(
         okareo, test_run_item, mut, ["model_refusal"], True, True, 2
@@ -124,33 +129,43 @@ def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
     response = okareo.create_scenario_set(scenario_set_create)
     response.scenario_id
 
-    mut = okareo.register_model(
-        name=rnd,
-        model=MultiTurnDriver(
-            max_turns=2,
-            repeats=1,
+    driver_model = okareo.create_or_update_driver(
+        Driver(
+            name="ignore_user",
+            prompt_template="Ignore what the user is saying. Talk about the following topic: {input.phrase}. Try to get the user to say the following word: {result}. Keep your message short, one or two short sentences.",
+        )
+    )
+
+    target = okareo.create_or_update_target(
+        Target(
+            name=rnd,
             target=GenerationModel(
                 model_id="gpt-4o-mini",
                 temperature=0,
                 system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
             ),
-            stop_check={"check_name": "model_refusal", "stop_on": False},
-            driver_prompt_template="Ignore what the user is saying. Talk about the following topic: {input.phrase}. Try to get the user to say the following word: {result}. Keep your message short, one or two short sentences.",
-        ),
-        update=True,
+        )
     )
 
     # use the scenario id from one of the scenario set notebook examples
     test_run_name = f"Driver Prompt Template Test: {rnd}"
-    test_run_item = mut.run_test(
+    test_run_item = okareo.run_simulation(
         scenario=response,
+        driver=driver_model,
+        target=target,
         api_key=OPENAI_API_KEY,
         name=test_run_name,
-        test_run_type=TestRunType.MULTI_TURN,
+        max_turns=2,
+        repeats=1,
+        stop_check={"check_name": "model_refusal", "stop_on": False},
         calculate_metrics=True,
     )
     assert test_run_item.name == test_run_name
     assert test_run_item.status == "FINISHED"
+
+    mut = create_dummy_mut(
+        target, test_run_item, okareo
+    )
 
     assert_baseline_metrics(
         okareo, test_run_item, mut, ["model_refusal"], True, True, 2
@@ -485,8 +500,6 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
 
     custom_model = DynamicResponseModel(name="dynamic_response_model")
 
-    from okareo.model_under_test import Target
-
     target = Target(
         name="test_simulation_custom_with_dynamic_response", target=custom_model
     )
@@ -496,8 +509,6 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
     target_after_get = okareo.get_target_by_name(
         "test_simulation_custom_with_dynamic_response"
     )
-
-    from okareo.model_under_test import Driver
 
     endpoint_driver = Driver(
         name="test_simulation_custom_with_dynamic_response_driver",
@@ -556,29 +567,8 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
         assert evaluation.app_link is not None
         assert evaluation.test_data_point_count == 2  # 2 seeds × 1 repeat
 
-        # create MUT object
-        import datetime
-
-        from okareo.model_under_test import ModelUnderTest
-        from okareo_api_client.models.model_under_test_response import (
-            ModelUnderTestResponse,
-        )
-
-        assert isinstance(t, Target)
-        t_get = okareo.get_target_by_name(t.name)
-        assert isinstance(t_get, Target) and t_get.id is not None
-        dummy_response = ModelUnderTestResponse(
-            id=t_get.id,
-            project_id=evaluation.project_id,
-            name=t_get.name,
-            tags=[],
-            time_created=datetime.datetime.now().isoformat(),
-        )
-        mut = ModelUnderTest(
-            client=okareo.client,
-            api_key=okareo.api_key,
-            mut=dummy_response,
-            models={"driver": {"target": t.target}},
+        mut = create_dummy_mut(
+            t, evaluation, okareo
         )
 
         assert_baseline_metrics(
@@ -1241,8 +1231,8 @@ def test_multiturn_driver_with_custom_endpoint_exception(
 
     # wait for the async run to finish
     # try three times with linear backoff
-    for i in range(1, 11):
-        time.sleep(3 * i)
+    for i in range(1, 6):
+        time.sleep(5 * i)
 
         # get the test run item
         test_run = multiturn_model.get_test_run(evaluation.id)

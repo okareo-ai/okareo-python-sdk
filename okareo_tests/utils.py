@@ -17,6 +17,13 @@ from okareo_api_client.models.full_data_point_item_checks_metadata import (
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
+from okareo.model_under_test import Target
+import datetime
+
+from okareo.model_under_test import ModelUnderTest
+from okareo_api_client.models.model_under_test_response import (
+    ModelUnderTestResponse,
+)
 
 
 def assert_scores_geval(scores: dict) -> None:
@@ -307,3 +314,27 @@ def assert_baseline_metrics(
         run_baseline_meta,
         meta_metrics,
     )
+
+def create_dummy_mut(
+    target: Target,
+    evaluation: TestRunItem,
+    okareo: Okareo
+) -> ModelUnderTest:
+    """Create a dummy ModelUnderTest for testing purposes."""
+    assert isinstance(target, Target)
+    t_get = okareo.get_target_by_name(target.name)
+    assert isinstance(t_get, Target) and t_get.id is not None
+    dummy_response = ModelUnderTestResponse(
+        id=t_get.id,
+        project_id=evaluation.project_id,
+        name=t_get.name,
+        tags=[],
+        time_created=datetime.datetime.now().isoformat(),
+    )
+    mut = ModelUnderTest(
+        client=okareo.client,
+        api_key=okareo.api_key,
+        mut=dummy_response,
+        models={"driver": {"target": target.target}},
+    )
+    return mut
