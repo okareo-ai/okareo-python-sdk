@@ -1,9 +1,10 @@
+import datetime
 from typing import List, Union
 
 from litellm import token_counter
 
 from okareo import Okareo
-from okareo.model_under_test import ModelUnderTest
+from okareo.model_under_test import ModelUnderTest, Target
 from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
@@ -14,16 +15,12 @@ from okareo_api_client.models.full_data_point_item_baseline_metrics import (
 from okareo_api_client.models.full_data_point_item_checks_metadata import (
     FullDataPointItemChecksMetadata,
 )
-from okareo_api_client.models.test_data_point_item import TestDataPointItem
-from okareo_api_client.models.test_run_item import TestRunItem
-from okareo_api_client.types import Unset
-from okareo.model_under_test import Target
-import datetime
-
-from okareo.model_under_test import ModelUnderTest
 from okareo_api_client.models.model_under_test_response import (
     ModelUnderTestResponse,
 )
+from okareo_api_client.models.test_data_point_item import TestDataPointItem
+from okareo_api_client.models.test_run_item import TestRunItem
+from okareo_api_client.types import Unset
 
 
 def assert_scores_geval(scores: dict) -> None:
@@ -315,10 +312,9 @@ def assert_baseline_metrics(
         meta_metrics,
     )
 
+
 def create_dummy_mut(
-    target: Target,
-    evaluation: TestRunItem,
-    okareo: Okareo
+    target: Target, evaluation: TestRunItem, okareo: Okareo
 ) -> ModelUnderTest:
     """Create a dummy ModelUnderTest for testing purposes."""
     assert isinstance(target, Target)

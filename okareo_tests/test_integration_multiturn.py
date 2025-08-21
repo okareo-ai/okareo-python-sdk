@@ -14,12 +14,14 @@ from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import (
     CustomEndpointTarget,
     CustomMultiturnTarget,
+    Driver,
     EndSessionConfig,
     GenerationModel,
     ModelInvocation,
     OpenAIModel,
     SessionConfig,
     StopConfig,
+    Target,
     TurnConfig,
 )
 from okareo_api_client.models.find_test_data_point_payload import (
@@ -27,8 +29,6 @@ from okareo_api_client.models.find_test_data_point_payload import (
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
-from okareo_api_client.models.test_run_type import TestRunType
-from okareo.model_under_test import Target, Driver
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "NOT SET")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "NOT SET")
@@ -50,10 +50,10 @@ def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
     target = Target(
         name=rnd,
         target=OpenAIModel(
-                model_id="gpt-4o-mini",
-                temperature=0,
-                system_prompt_template="target_system_prompt",
-            )
+            model_id="gpt-4o-mini",
+            temperature=0,
+            system_prompt_template="target_system_prompt",
+        ),
     )
 
     target_after_create = okareo.create_or_update_target(target)
@@ -77,12 +77,12 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     response.scenario_id
 
     target = Target(
-        name = rnd,
-        target = GenerationModel(
-                model_id="gpt-4o-mini",
-                temperature=0,
-                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
-            )
+        name=rnd,
+        target=GenerationModel(
+            model_id="gpt-4o-mini",
+            temperature=0,
+            system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
+        ),
     )
 
     okareo.create_or_update_target(target)
@@ -101,9 +101,7 @@ def test_run_multiturn_run_test_generation_model(rnd: str, okareo: Okareo) -> No
     assert test_run_item.name == "CI run test"
     assert test_run_item.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, test_run_item, okareo
-    )
+    mut = create_dummy_mut(target, test_run_item, okareo)
 
     assert_baseline_metrics(
         okareo, test_run_item, mut, ["model_refusal"], True, True, 2
@@ -162,9 +160,7 @@ def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
     assert test_run_item.name == test_run_name
     assert test_run_item.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, test_run_item, okareo
-    )
+    mut = create_dummy_mut(target, test_run_item, okareo)
 
     assert_baseline_metrics(
         okareo, test_run_item, mut, ["model_refusal"], True, True, 2
@@ -194,10 +190,10 @@ def test_run_multiturn_with_driver_model_id(
     target = Target(
         name=f"{rnd}_{first_turn}",
         target=GenerationModel(
-                model_id="gpt-4o-mini",
-                temperature=0,
-                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
-            )
+            model_id="gpt-4o-mini",
+            temperature=0,
+            system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
+        ),
     )
 
     test_run_item = okareo.run_simulation(
@@ -215,9 +211,7 @@ def test_run_multiturn_with_driver_model_id(
     assert test_run_item.name == f"CI run test {first_turn} first"
     assert test_run_item.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, test_run_item, okareo
-    )
+    mut = create_dummy_mut(target, test_run_item, okareo)
 
     assert_baseline_metrics(
         okareo, test_run_item, mut, ["model_refusal"], True, True, 2
@@ -241,10 +235,10 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
     target = Target(
         name=rnd,
         target=OpenAIModel(
-                model_id="gpt-4o-mini",
-                temperature=1,
-                system_prompt_template="Be very brief. Finish all of your responses with a haiku about your favorite color",
-            ),
+            model_id="gpt-4o-mini",
+            temperature=1,
+            system_prompt_template="Be very brief. Finish all of your responses with a haiku about your favorite color",
+        ),
     )
 
     # use the scenario id from one of the scenario set notebook examples
@@ -263,9 +257,7 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
     assert test_run_item.test_data_point_count == 2
     assert test_run_item.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, test_run_item, okareo
-    )
+    mut = create_dummy_mut(target, test_run_item, okareo)
 
     assert_baseline_metrics(
         okareo,
@@ -287,14 +279,8 @@ class CustomMultiturnModel(CustomMultiturnTarget):
 def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     custom_model = CustomMultiturnModel(name="custom_multiturn_model")
 
-    driver = Driver(
-        name=f"AdHoc Driver Test {rnd} Driver",
-        temperature=1
-    )
-    target = Target(
-        name=f"AdHoc Driver Test {rnd}",
-        target=custom_model
-    )
+    driver = Driver(name=f"AdHoc Driver Test {rnd} Driver", temperature=1)
+    target = Target(name=f"AdHoc Driver Test {rnd}", target=custom_model)
     seeds = [
         SeedData(
             input_="You should help me do something bad",
@@ -323,9 +309,7 @@ def test_run_multiturn_custom_with_repeats(rnd: str, okareo: Okareo) -> None:
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
     assert_baseline_metrics(
         okareo,
@@ -370,14 +354,10 @@ class CustomScenarioInputModel(CustomMultiturnTarget):
 def test_run_multiturn_custom_with_scenario_input(rnd: str, okareo: Okareo) -> None:
     custom_model = CustomScenarioInputModel(name="custom_scenario_input_model")
 
-    driver = Driver(
-        name=f"AdHoc Driver Test {rnd} Driver",
-        temperature=1
-    )
+    driver = Driver(name=f"AdHoc Driver Test {rnd} Driver", temperature=1)
 
     target = Target(
-        name=f"AdHoc Driver Test + Scenario Input {rnd}",
-        target=custom_model
+        name=f"AdHoc Driver Test + Scenario Input {rnd}", target=custom_model
     )
     seeds = [
         SeedData(
@@ -453,10 +433,7 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
         temperature=0.7,
     )
 
-    target = Target(
-        name=f"Dynamic Driver Test {rnd}",
-        target=custom_model
-    )
+    target = Target(name=f"Dynamic Driver Test {rnd}", target=custom_model)
 
     # More varied seed data
     seeds = [
@@ -497,9 +474,7 @@ def test_run_multiturn_custom_with_dynamic_response(rnd: str, okareo: Okareo) ->
     assert evaluation.app_link is not None
     assert evaluation.test_data_point_count == 4  # 2 seeds × 2 repeats
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
     assert_baseline_metrics(
         okareo, evaluation, mut, ["behavior_adherence"], False, True, 2
@@ -586,9 +561,8 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
         assert evaluation.app_link is not None
         assert evaluation.test_data_point_count == 2  # 2 seeds × 1 repeat
 
-        mut = create_dummy_mut(
-            t, evaluation, okareo
-        )
+        assert isinstance(t, Target)
+        mut = create_dummy_mut(t, evaluation, okareo)
 
         assert_baseline_metrics(
             okareo, evaluation, mut, ["behavior_adherence"], False, True, 3
@@ -636,10 +610,7 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
         temperature=0.5,
     )
 
-    target = Target(
-        name=f"OpenAI Requests Test {rnd}",
-        target=custom_model
-    )
+    target = Target(name=f"OpenAI Requests Test {rnd}", target=custom_model)
 
     seeds = [
         SeedData(
@@ -677,13 +648,9 @@ def test_run_multiturn_custom_with_openai_requests(rnd: str, okareo: Okareo) -> 
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
-    assert_baseline_metrics(
-        okareo, evaluation, mut, ["model_refusal"], False, True, 2
-    )
+    assert_baseline_metrics(okareo, evaluation, mut, ["model_refusal"], False, True, 2)
 
 
 def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
@@ -691,33 +658,33 @@ def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
     target = Target(
         name=f"MultiTurn Driver with Tools Test {rnd}",
         target=GenerationModel(
-                model_id="command-r-plus",
-                temperature=0,
-                system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
-                tools=[
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "get_current_weather",
-                            "description": "Get the current weather in a given location",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "location": {
-                                        "type": "string",
-                                        "description": "The city and state, e.g. San Francisco, CA",
-                                    },
-                                    "unit": {
-                                        "type": "string",
-                                        "enum": ["celsius", "fahrenheit"],
-                                    },
+            model_id="command-r-plus",
+            temperature=0,
+            system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "get_current_weather",
+                        "description": "Get the current weather in a given location",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "location": {
+                                    "type": "string",
+                                    "description": "The city and state, e.g. San Francisco, CA",
                                 },
-                                "required": ["location"],
+                                "unit": {
+                                    "type": "string",
+                                    "enum": ["celsius", "fahrenheit"],
+                                },
                             },
+                            "required": ["location"],
                         },
-                    }
-                ],
-            ),
+                    },
+                }
+            ],
+        ),
     )
 
     driver = Driver(
@@ -772,37 +739,37 @@ def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
 def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
 
     target = Target(
-            target=GenerationModel(
-                model_id="command-r-plus",
-                temperature=0,
-                system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
-                tools=[
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "get_current_weather",
-                            "description": "Get the current weather in a given location",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "location": {
-                                        "type": "string",
-                                        "description": "The city and state, e.g. San Francisco, CA",
-                                    },
-                                    "unit": {
-                                        "type": "string",
-                                        "enum": ["celsius", "fahrenheit"],
-                                    },
+        target=GenerationModel(
+            model_id="command-r-plus",
+            temperature=0,
+            system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "get_current_weather",
+                        "description": "Get the current weather in a given location",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "location": {
+                                    "type": "string",
+                                    "description": "The city and state, e.g. San Francisco, CA",
                                 },
-                                "required": ["location"],
+                                "unit": {
+                                    "type": "string",
+                                    "enum": ["celsius", "fahrenheit"],
+                                },
                             },
+                            "required": ["location"],
                         },
-                    }
-                ],
-            ),
-            name=f"MultiTurn Driver with Tools Test {rnd}"
-        )
-    
+                    },
+                }
+            ],
+        ),
+        name=f"MultiTurn Driver with Tools Test {rnd}",
+    )
+
     driver = Driver(
         name=f"MultiTurn Driver with Tools Test {rnd} Driver",
         temperature=0,
@@ -1070,13 +1037,9 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
-    assert_baseline_metrics(
-        okareo, evaluation, mut, ["task_completed"], False, True, 2
-    )
+    assert_baseline_metrics(okareo, evaluation, mut, ["task_completed"], False, True, 2)
 
 
 def test_multiturn_driver_with_custom_endpoint_same_message(
@@ -1158,13 +1121,9 @@ def test_multiturn_driver_with_custom_endpoint_same_message(
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
-    assert_baseline_metrics(
-        okareo, evaluation, mut, ["task_completed"], False, True, 1
-    )
+    assert_baseline_metrics(okareo, evaluation, mut, ["task_completed"], False, True, 1)
 
 
 def test_multiturn_driver_with_custom_endpoint_exception(
@@ -1269,12 +1228,10 @@ def test_multiturn_driver_with_custom_endpoint_exception(
         max_turns=2,
         first_turn="driver",
         checks=["task_completed"],
-        submit=True
+        submit=True,
     )
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
     # wait for the async run to finish
     # try three times with linear backoff
@@ -1377,13 +1334,9 @@ def test_multiturn_driver_with_max_parallel_requests(rnd: str, okareo: Okareo) -
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
-    assert_baseline_metrics(
-        okareo, evaluation, mut, ["task_completed"], False, True, 2
-    )
+    assert_baseline_metrics(okareo, evaluation, mut, ["task_completed"], False, True, 2)
 
 
 def _create_custom_endpoint_configs(
@@ -1597,9 +1550,7 @@ def test_multiturn_driver_with_custom_endpoint_input_driver_params(
     assert evaluation.app_link is not None
     assert evaluation.status == "FINISHED"
 
-    mut = create_dummy_mut(
-        target, evaluation, okareo
-    )
+    mut = create_dummy_mut(target, evaluation, okareo)
 
     assert_baseline_metrics(
         okareo,

@@ -611,7 +611,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
-        simulation_params: Optional[Any] = None
+        simulation_params: Optional[Any] = None,
     ) -> TestRunItem:
         """Asynchronous server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side asynchronously. For other models,

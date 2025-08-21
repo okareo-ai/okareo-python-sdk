@@ -9,10 +9,10 @@ from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import (
     CustomModel,
+    Driver,
     GenerationModel,
     ModelInvocation,
     Target,
-    Driver,
 )
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.comparison_operator import ComparisonOperator
@@ -385,8 +385,8 @@ def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
     target = Target(
         name=rnd + random_string(5),
         target=GenerationModel(
-                model_id="gpt-4o-mini",
-                temperature=0,
+            model_id="gpt-4o-mini",
+            temperature=0,
         ),
     )
 

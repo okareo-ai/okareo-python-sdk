@@ -75,6 +75,15 @@ def sync_detailed(
 ) -> Response[Union[Any, ErrorResponse]]:
     """Register Driver Model
 
+     Register a driver model or update if it already exists.
+
+    Args:
+        request: FastAPI request object containing database session
+        payload: DriverModelSchema containing model configuration
+
+    Returns:
+        DriverModelResponse with the registered or updated driver model details
+
     Args:
         api_key (str):
         json_body (DriverModelSchema):
@@ -107,6 +116,15 @@ def sync(
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Register Driver Model
 
+     Register a driver model or update if it already exists.
+
+    Args:
+        request: FastAPI request object containing database session
+        payload: DriverModelSchema containing model configuration
+
+    Returns:
+        DriverModelResponse with the registered or updated driver model details
+
     Args:
         api_key (str):
         json_body (DriverModelSchema):
@@ -133,6 +151,15 @@ async def asyncio_detailed(
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Register Driver Model
+
+     Register a driver model or update if it already exists.
+
+    Args:
+        request: FastAPI request object containing database session
+        payload: DriverModelSchema containing model configuration
+
+    Returns:
+        DriverModelResponse with the registered or updated driver model details
 
     Args:
         api_key (str):
@@ -163,6 +190,15 @@ async def asyncio(
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Register Driver Model
+
+     Register a driver model or update if it already exists.
+
+    Args:
+        request: FastAPI request object containing database session
+        payload: DriverModelSchema containing model configuration
+
+    Returns:
+        DriverModelResponse with the registered or updated driver model details
 
     Args:
         api_key (str):
