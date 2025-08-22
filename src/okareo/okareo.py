@@ -2,13 +2,14 @@ import datetime
 import json
 import os
 import warnings
-from typing import Any, Dict, List, TypedDict, Union
+from typing import Any, Dict, List, Optional, TypedDict, Union
 
 import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
 
 from okareo.checks import BaseCheck
+from okareo.model_under_test import Driver, Simulation, StopConfig, Target
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     add_model_to_group_v0_groups_group_id_models_post,
@@ -27,7 +28,10 @@ from okareo_api_client.api.default import (
     get_check_v0_check_check_id_get,
     get_datapoints_filter_v0_find_datapoints_filter_post,
     get_datapoints_v0_find_datapoints_post,
+    get_driver_by_name_v0_driver_driver_name_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
+    get_target_model_by_name_v0_target_target_model_name_get,
+    register_driver_model_v0_driver_post,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
 )
@@ -48,6 +52,7 @@ from okareo_api_client.models.create_group_v0_groups_post_source import (
 from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
+from okareo_api_client.models.driver_model_schema import DriverModelSchema
 from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.evaluation_payload import EvaluationPayload
 from okareo_api_client.models.evaluation_payload_metrics_kwargs import (
@@ -1072,3 +1077,211 @@ class Okareo:
             print("Empty response from API")
         assert response is not None
         return response
+
+    def create_or_update_driver(self, driver: Driver) -> Driver:
+        """Create or update a driver.
+
+        Args:
+            driver: The driver to create or update.
+
+        Returns:
+            The created or updated driver.
+        """
+        json_body = DriverModelSchema.from_dict(driver.to_dict())
+        response = register_driver_model_v0_driver_post.sync(
+            client=self.client,
+            json_body=json_body,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        if not response:
+            print("Empty response from API")
+        assert response is not None and isinstance(response, dict)
+        return Driver(**response)
+
+    def get_driver_by_name(self, driver_name: str) -> Driver:
+        """Get a driver by its name.
+
+        Args:
+            driver_name: The name of the driver to retrieve.
+
+        Returns:
+            The driver with the specified name.
+        """
+        response = get_driver_by_name_v0_driver_driver_name_get.sync(
+            client=self.client,
+            api_key=self.api_key,
+            driver_name=driver_name,
+        )
+        self.validate_response(response)
+        if not response:
+            print("Empty response from API")
+        assert response is not None and isinstance(response, dict)
+        return Driver(**response)
+
+    def create_or_update_target(
+        self,
+        target: Target,
+        tags: Optional[List[str]] = None,
+        project_id: Optional[str] = None,
+        sensitive_fields: Union[List[str], None] = None,
+    ) -> Target:
+        """Create or update a target.
+
+        Args:
+            target: The target to create or update.
+
+        Returns:
+            The created or updated target.
+        """
+        model_invoker = None
+        session_starter = None
+        session_ender = None
+
+        data: dict[str, Any] = {
+            "models": {"driver": {}},
+            "name": target.name,
+            "tags": tags or [],
+            "update": True,
+            "sensitive_fields": sensitive_fields,
+        }
+        model = target.target
+        data["models"]["driver"]["target"] = (
+            model if isinstance(model, dict) else model.params()
+        )
+        data, model_invoker, session_starter, session_ender = (
+            self._get_custom_model_invoker(data)
+        )
+        if project_id is not None:
+            data["project_id"] = project_id
+        json_body = ModelUnderTestSchema.from_dict(data)
+        response = register_model_v0_register_model_post.sync(
+            client=self.client, api_key=self.api_key, json_body=json_body
+        )
+
+        self.validate_response(response)
+        assert isinstance(response, ModelUnderTestResponse)
+        if response.warning:
+            print(response.warning)
+
+        model_data = data.get("models")
+        if model_invoker and isinstance(model_data, dict):
+            model_data = self._set_custom_model_invoker(
+                model_data, model_invoker, session_starter, session_ender
+            )
+
+        # Update the response with the model data
+        response_dict: dict[str, Any] = {
+            "name": target.name,
+            "id": response.id,
+        }
+        assert (
+            isinstance(model_data, dict)
+            and "driver" in model_data
+            and "target" in model_data["driver"]
+        )
+        response_dict["target"] = model_data["driver"]["target"]
+
+        return Target(**response_dict)
+
+    def get_target_by_name(self, target_name: str) -> Target:
+        response = get_target_model_by_name_v0_target_target_model_name_get.sync(
+            client=self.client,
+            api_key=self.api_key,
+            target_model_name=target_name,
+        )
+        self.validate_response(response)
+        if not response:
+            print("Empty response from API")
+        assert response is not None and isinstance(response, dict)
+        return Target(**response)
+
+    def run_simulation(
+        self,
+        name: str,
+        scenario: Union[ScenarioSetResponse, str],
+        target: str | Target,
+        driver: Optional[str | Driver] = None,
+        checks: Optional[list[str]] = None,
+        stop_check: Union[StopConfig, dict, None] = None,
+        repeats: Optional[int] = 1,
+        max_turns: Optional[int] = 5,
+        first_turn: Optional[str] = "target",
+        checks_at_every_turn: Optional[bool] = False,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        calculate_metrics: bool = True,
+        project_id: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        sensitive_fields: Union[List[str], None] = None,
+        submit: Optional[bool] = False,
+    ) -> TestRunItem:
+
+        # create or update driver if needed
+        if isinstance(driver, Driver):
+            driver_model = self.create_or_update_driver(driver)
+        elif not driver:
+            driver_model = self.create_or_update_driver(Driver(name="default_driver"))
+        else:
+            driver_model = self.get_driver_by_name(driver)
+
+        # create or update target if needed
+        if isinstance(target, Target):
+            if isinstance(target.target, dict):
+                if (
+                    target.target["type"] == "custom_target"
+                    and "model_invoker" not in target.target
+                ):
+                    raise TypeError(
+                        "Cannot retrieve Target by name for CustomMultiturnTarget"
+                    )
+            target_model = self.create_or_update_target(
+                target, tags or [], project_id, sensitive_fields
+            )
+        else:
+            target_model = self.get_target_by_name(target)
+            assert isinstance(target_model.target, dict)
+            if target_model.target["type"] == "custom_target":
+                raise TypeError(
+                    "Cannot retrieve Target by name for CustomMultiturnTarget"
+                )
+
+        # create model with target
+        simulation_params = Simulation(
+            driver=driver_model,
+            stop_check=stop_check,
+            repeats=repeats,
+            max_turns=max_turns,
+            first_turn=first_turn,
+            checks_at_every_turn=checks_at_every_turn,
+        )
+
+        # create MUT object
+        dummy_response = ModelUnderTestResponse(
+            id=target_model.id if target_model.id else "",
+            project_id=project_id if project_id else "",
+            name=target_model.name,
+            tags=tags or [],
+            time_created=datetime.datetime.now().isoformat(),
+        )
+        mut = ModelUnderTest(
+            client=self.client,
+            api_key=self.api_key,
+            mut=dummy_response,
+            models={"driver": {"target": target_model.target}},
+        )
+
+        # run_test
+        fn = mut.submit_test if submit else mut.run_test
+        return fn(
+            scenario=scenario,
+            name=name,
+            api_key=api_key if api_key else self.api_key,
+            api_keys=api_keys,
+            metrics_kwargs=metrics_kwargs,
+            test_run_type=TestRunType.MULTI_TURN,
+            calculate_metrics=calculate_metrics,
+            checks=checks,
+            simulation_params=simulation_params,
+        )

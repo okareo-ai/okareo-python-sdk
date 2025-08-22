@@ -295,6 +295,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool,
         model_data: dict,
         checks: Optional[List[str]],
+        simulation_params: Optional[Any],
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
@@ -316,6 +317,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 else UNSET
             ),
             checks=checks if checks else UNSET,
+            simulation_params=simulation_params if simulation_params else UNSET,
         )
 
     async def connect_nats(self, user_jwt: str, seed: str, local_nats: str) -> Any:
@@ -517,6 +519,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         run_test_method: Any = None,
+        simulation_params: Optional[Any] = None,
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
@@ -564,6 +567,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     calculate_metrics,
                     model_data,
                     checks,
+                    simulation_params,
                 ),
             )
             if isinstance(response, ErrorResponse):
@@ -607,6 +611,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
+        simulation_params: Optional[Any] = None,
     ) -> TestRunItem:
         """Asynchronous server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side asynchronously. For other models,
@@ -642,6 +647,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             calculate_metrics,
             checks,
             endpoint,
+            simulation_params,
         )
 
     def run_test(
@@ -654,6 +660,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
+        simulation_params: Optional[Any] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side. For other models,
@@ -683,6 +690,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 calculate_metrics,
                 checks,
                 run_test_v0_test_run_post.sync,
+                simulation_params,
             )
         except Exception as e:
             raise TestRunError(str(e)) from e
@@ -1257,6 +1265,73 @@ class CustomEndpointTarget:
                 self.end_session.to_dict() if self.end_session is not None else {}
             ),
             "max_parallel_requests": self.max_parallel_requests,
+        }
+
+
+@_attrs_define
+class Driver:
+    name: str
+    prompt_template: str = "{scenario_input}"
+    model_id: Optional[str] = None
+    temperature: Optional[float] = 0.6
+    id: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "temperature": self.temperature,
+            "model_id": self.model_id,
+            "prompt_template": self.prompt_template,
+            "id": self.id,
+        }
+
+
+@_attrs_define
+class Target:
+    name: str
+    target: Union[
+        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget, dict
+    ]
+    id: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "target": (
+                self.target if isinstance(self.target, dict) else self.target.params()
+            ),
+            "id": self.id,
+        }
+
+
+@_attrs_define
+class Simulation:
+
+    driver: Union[Driver, dict]
+    stop_check: Union[StopConfig, dict, None] = None
+    repeats: Optional[int] = 1
+    max_turns: Optional[int] = 5
+    first_turn: Optional[str] = "target"
+    checks_at_every_turn: Optional[bool] = False
+
+    def __attrs_post_init__(self) -> None:
+        if isinstance(self.stop_check, dict):
+            self.stop_check = StopConfig(**self.stop_check)
+
+    def to_dict(self) -> dict:
+        return {
+            "driver": (
+                self.driver if isinstance(self.driver, dict) else self.driver.to_dict()
+            ),
+            "repeats": self.repeats,
+            "max_turns": self.max_turns,
+            "first_turn": self.first_turn,
+            "stop_check": (
+                self.stop_check.params()
+                if isinstance(self.stop_check, StopConfig)
+                else self.stop_check
+            ),
+            "checks_at_every_turn": self.checks_at_every_turn,
         }
 
 
