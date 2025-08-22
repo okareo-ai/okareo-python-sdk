@@ -480,6 +480,63 @@ class ModelUnderTest(AsyncProcessorMixin):
             result = [r["model_invocation"].params() for r in result]
         return result
 
+    async def process_single_message(
+        self,
+        msg: Any,
+        nats_connection: Any,
+        stop_event: Any,
+        active_tasks: set[asyncio.Task],
+    ) -> None:
+        import time
+
+        start_time = time.time()
+        task_id = id(asyncio.current_task())
+        print(f"[DEBUG] Task {task_id}: Started processing message at {start_time}")
+
+        try:
+            data = json.loads(msg.data.decode())
+            if data.get("close"):
+                await nats_connection.publish(
+                    msg.reply, json.dumps({"status": "disconnected"}).encode()
+                )
+                stop_event.set()
+                return
+            args = data.get("args", [])
+            message_history = data.get("message_history", [])
+            scenario_input = data.get("scenario_input", None)
+            session_id = data.get("session_id", None)
+            call_type = data.get("call_type", "invoke")
+
+            print(
+                f"[DEBUG] Task {task_id}: About to call model invoker. Active tasks: {len(active_tasks)}"
+            )
+
+            if not self._has_async_custom_model():
+                result = self.call_custom_invoker(
+                    args, message_history, scenario_input, session_id, call_type
+                )
+            else:
+                result = await self.call_custom_invoker_async(
+                    args, message_history, scenario_input, session_id, call_type
+                )
+
+            end_time = time.time()
+            print(
+                f"[DEBUG] Task {task_id}: Completed model invocation in {end_time - start_time:.2f}s"
+            )
+
+            json_encodable_result = self.get_params_from_custom_result(result)
+            await nats_connection.publish(
+                msg.reply, json.dumps(json_encodable_result).encode()
+            )
+
+        except Exception as e:
+            error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
+            print(error_msg)
+            await nats_connection.publish(
+                msg.reply, json.dumps({"error": error_msg}).encode()
+            )
+
     async def _internal_run_custom_model_listener(
         self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str
     ) -> None:
@@ -489,59 +546,6 @@ class ModelUnderTest(AsyncProcessorMixin):
 
         try:
 
-            async def process_single_message(msg: Any) -> None:
-                import time
-
-                start_time = time.time()
-                task_id = id(asyncio.current_task())
-                print(
-                    f"[DEBUG] Task {task_id}: Started processing message at {start_time}"
-                )
-
-                try:
-                    data = json.loads(msg.data.decode())
-                    if data.get("close"):
-                        await nats_connection.publish(
-                            msg.reply, json.dumps({"status": "disconnected"}).encode()
-                        )
-                        stop_event.set()
-                        return
-                    args = data.get("args", [])
-                    message_history = data.get("message_history", [])
-                    scenario_input = data.get("scenario_input", None)
-                    session_id = data.get("session_id", None)
-                    call_type = data.get("call_type", "invoke")
-
-                    print(
-                        f"[DEBUG] Task {task_id}: About to call model invoker. Active tasks: {len(active_tasks)}"
-                    )
-
-                    if not self._has_async_custom_model():
-                        result = self.call_custom_invoker(
-                            args, message_history, scenario_input, session_id, call_type
-                        )
-                    else:
-                        result = await self.call_custom_invoker_async(
-                            args, message_history, scenario_input, session_id, call_type
-                        )
-
-                    end_time = time.time()
-                    print(
-                        f"[DEBUG] Task {task_id}: Completed model invocation in {end_time - start_time:.2f}s"
-                    )
-
-                    json_encodable_result = self.get_params_from_custom_result(result)
-                    await nats_connection.publish(
-                        msg.reply, json.dumps(json_encodable_result).encode()
-                    )
-
-                except Exception as e:
-                    error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
-                    print(error_msg)
-                    await nats_connection.publish(
-                        msg.reply, json.dumps({"error": error_msg}).encode()
-                    )
-
             async def message_handler_custom_model(msg: Any) -> None:
                 # Log which worker received the message
                 print(
@@ -549,7 +553,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                 )
 
                 # Create task and track it
-                task = asyncio.create_task(process_single_message(msg))
+                task = asyncio.create_task(
+                    self.process_single_message(
+                        msg, nats_connection, stop_event, active_tasks
+                    )
+                )
                 active_tasks.add(task)
 
                 # Remove completed tasks from the set to prevent memory leaks
@@ -1442,7 +1450,11 @@ class MultiTurnDriver(BaseModel):
 
     type = "driver"
     target: Union[
-        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
+        OpenAIModel,
+        CustomMultiturnTarget,
+        CustomMultiturnTargetAsync,
+        GenerationModel,
+        CustomEndpointTarget,
     ]
     stop_check: Union[StopConfig, dict, None] = None
     driver_model_id: Optional[str] = None
