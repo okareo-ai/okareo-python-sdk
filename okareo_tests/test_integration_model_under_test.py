@@ -18,7 +18,7 @@ from okareo.model_under_test import (
     QdrantDB,
 )
 from okareo_api_client.api.default import (
-    delete_model_under_test_by_name_and_version_v0_models_under_test_name_version_delete,
+    delete_model_under_test_v0_models_under_test_mut_id_delete,
     delete_test_run_v0_test_runs_delete,
     find_test_data_points_v0_find_test_data_points_post,
     update_test_data_point_v0_update_test_data_point_post,
@@ -848,10 +848,7 @@ def test_register_model_versions(
         assert latest_model.version == 3
 
     finally:
-        for mut in muts:
-            delete_model_under_test_by_name_and_version_v0_models_under_test_name_version_delete.sync_detailed(
-                client=okareo.client,
-                api_key=API_KEY,
-                name=mut.name,
-                version=mut.version,
-            )
+        # Delete all versions of the model
+        delete_model_under_test_v0_models_under_test_mut_id_delete.sync_detailed(
+            client=okareo.client, api_key=API_KEY, mut_id=muts[0].mut_id
+        )

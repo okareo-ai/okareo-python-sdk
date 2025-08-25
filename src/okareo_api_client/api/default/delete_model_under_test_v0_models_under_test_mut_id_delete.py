@@ -73,7 +73,8 @@ def sync_detailed(
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Model Under Test
 
-     Delete a model under test and cascade delete TestRun and TestDataPoint objects associated with it.
+     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
+    associated with all versions.
 
     Args:
         mut_id (str): The ID of the model under test
@@ -107,7 +108,8 @@ def sync(
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Model Under Test
 
-     Delete a model under test and cascade delete TestRun and TestDataPoint objects associated with it.
+     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
+    associated with all versions.
 
     Args:
         mut_id (str): The ID of the model under test
@@ -136,7 +138,8 @@ async def asyncio_detailed(
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Model Under Test
 
-     Delete a model under test and cascade delete TestRun and TestDataPoint objects associated with it.
+     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
+    associated with all versions.
 
     Args:
         mut_id (str): The ID of the model under test
@@ -168,7 +171,8 @@ async def asyncio(
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Model Under Test
 
-     Delete a model under test and cascade delete TestRun and TestDataPoint objects associated with it.
+     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
+    associated with all versions.
 
     Args:
         mut_id (str): The ID of the model under test
