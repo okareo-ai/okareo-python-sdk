@@ -852,3 +852,55 @@ def test_register_model_versions(
         delete_model_under_test_v0_models_under_test_mut_id_delete.sync_detailed(
             client=okareo.client, api_key=API_KEY, mut_id=muts[0].mut_id
         )
+
+
+def test_register_model_versions_custom(
+    rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
+) -> None:
+    """Expected behavior for CustomModel: version should stay at 1, regardless of contents of 'invoke' method"""
+    try:
+
+        class FirstCustomModel(CustomModel):
+            def __init__(self, name: str) -> None:
+                super().__init__(name=name)
+
+            def invoke(self, input_value: Any) -> ModelInvocation:
+                return ModelInvocation(
+                    model_prediction="foo",
+                    model_input=input_value,
+                )
+
+        mut = okareo.register_model(
+            name=f"test_register_model_versions_mut_custom_{rnd}",
+            model=FirstCustomModel(
+                name=f"test_register_model_versions_mut_custom_{rnd}"
+            ),
+            update=True,
+        )
+        assert mut.version == 1
+
+        class SecondCustomModel(CustomModel):
+            def __init__(self, name: str) -> None:
+                super().__init__(name=name)
+
+            def invoke(self, input_value: Any) -> ModelInvocation:
+                return ModelInvocation(
+                    model_prediction=rnd,
+                    model_input=input_value,
+                )
+
+        # Register the second custom model under the same name
+        mut = okareo.register_model(
+            name=f"test_register_model_versions_mut_custom_{rnd}",
+            model=SecondCustomModel(
+                name=f"test_register_model_versions_mut_custom_{rnd}"
+            ),
+            update=True,
+        )
+        assert mut.version == 1
+
+    finally:
+        # Delete all versions of the model
+        delete_model_under_test_v0_models_under_test_mut_id_delete.sync_detailed(
+            client=okareo.client, api_key=API_KEY, mut_id=mut.mut_id
+        )
