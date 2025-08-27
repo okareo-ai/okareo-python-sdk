@@ -16,6 +16,7 @@ class DriverModelResponse:
         name (str):
         temperature (float):
         prompt_template (str):
+        time_created (str):
         model_id (Union[Unset, str]):
     """
 
@@ -23,6 +24,7 @@ class DriverModelResponse:
     name: str
     temperature: float
     prompt_template: str
+    time_created: str
     model_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -31,6 +33,7 @@ class DriverModelResponse:
         name = self.name
         temperature = self.temperature
         prompt_template = self.prompt_template
+        time_created = self.time_created
         model_id = self.model_id
 
         field_dict: Dict[str, Any] = {}
@@ -41,6 +44,7 @@ class DriverModelResponse:
                 "name": name,
                 "temperature": temperature,
                 "prompt_template": prompt_template,
+                "time_created": time_created,
             }
         )
         if model_id is not UNSET:
@@ -59,6 +63,8 @@ class DriverModelResponse:
 
         prompt_template = d.pop("prompt_template")
 
+        time_created = d.pop("time_created")
+
         model_id = d.pop("model_id", UNSET)
 
         driver_model_response = cls(
@@ -66,6 +72,7 @@ class DriverModelResponse:
             name=name,
             temperature=temperature,
             prompt_template=prompt_template,
+            time_created=time_created,
             model_id=model_id,
         )
 
