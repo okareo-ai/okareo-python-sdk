@@ -1275,6 +1275,7 @@ class Driver:
     model_id: Optional[str] = None
     temperature: Optional[float] = 0.6
     id: Optional[str] = None
+    time_created: Any = None
 
     def to_dict(self) -> dict:
         return {
