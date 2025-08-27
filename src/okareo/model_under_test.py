@@ -1275,6 +1275,7 @@ class Driver:
     model_id: Optional[str] = None
     temperature: Optional[float] = 0.6
     id: Optional[str] = None
+    time_created: Optional[str] = datetime.now().isoformat()
 
     def to_dict(self) -> dict:
         return {
@@ -1283,6 +1284,7 @@ class Driver:
             "model_id": self.model_id,
             "prompt_template": self.prompt_template,
             "id": self.id,
+            "time_created": self.time_created,
         }
 
 
