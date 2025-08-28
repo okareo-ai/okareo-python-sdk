@@ -219,15 +219,14 @@ class Okareo:
                 del data["models"][custom_model_str]["model_invoker"]
                 return data, model_invoker, None, None
         if (
-            "driver" in data["models"].keys()
-            and data["models"]["driver"]["target"]["type"] == "custom_target"
+            "custom_target" in data["models"].keys()
         ):
-            model_invoker = data["models"]["driver"]["target"]["model_invoker"]
-            session_starter = data["models"]["driver"]["target"]["session_starter"]
-            session_ender = data["models"]["driver"]["target"]["session_ender"]
-            del data["models"]["driver"]["target"]["model_invoker"]
-            data["models"]["driver"]["target"]["session_starter"] = True
-            data["models"]["driver"]["target"]["session_ender"] = True
+            model_invoker = data["models"]["custom_target"]["model_invoker"]
+            session_starter = data["models"]["custom_target"]["session_starter"]
+            session_ender = data["models"]["custom_target"]["session_ender"]
+            del data["models"]["custom_target"]["model_invoker"]
+            data["models"]["custom_target"]["session_starter"] = True
+            data["models"]["custom_target"]["session_ender"] = True
             return data, model_invoker, session_starter, session_ender
         return data, None, None, None
 
@@ -241,10 +240,10 @@ class Okareo:
         for custom_model_str in CUSTOM_MODEL_STRS:
             if custom_model_str in data.keys():
                 data[custom_model_str]["model_invoker"] = model_invoker
-        if "driver" in data.keys():
-            data["driver"]["target"]["model_invoker"] = model_invoker
-            data["driver"]["target"]["session_starter"] = session_starter
-            data["driver"]["target"]["session_ender"] = session_ender
+        if "custom_target" in data.keys():
+            data["custom_target"]["model_invoker"] = model_invoker
+            data["custom_target"]["session_starter"] = session_starter
+            data["custom_target"]["session_ender"] = session_ender
         return data
 
     def register_model(
@@ -1139,16 +1138,14 @@ class Okareo:
         session_ender = None
 
         data: dict[str, Any] = {
-            "models": {"driver": {}},
+            "models": {},
             "name": target.name,
             "tags": tags or [],
             "update": True,
             "sensitive_fields": sensitive_fields,
         }
-        model = target.target
-        data["models"]["driver"]["target"] = (
-            model if isinstance(model, dict) else model.params()
-        )
+        model = target.target if isinstance(target.target, dict) else target.target.params()
+        data["models"][model["type"]] = model
         data, model_invoker, session_starter, session_ender = (
             self._get_custom_model_invoker(data)
         )
@@ -1175,12 +1172,8 @@ class Okareo:
             "name": target.name,
             "id": response.id,
         }
-        assert (
-            isinstance(model_data, dict)
-            and "driver" in model_data
-            and "target" in model_data["driver"]
-        )
-        response_dict["target"] = model_data["driver"]["target"]
+        assert isinstance(model_data, dict)
+        response_dict["target"] = model_data[model["type"]]
 
         return Target(**response_dict)
 
@@ -1265,11 +1258,12 @@ class Okareo:
             tags=tags or [],
             time_created=datetime.datetime.now().isoformat(),
         )
+
         mut = ModelUnderTest(
             client=self.client,
             api_key=self.api_key,
             mut=dummy_response,
-            models=target_model.target,
+            models={target_model.target["type"]: target_model.target},
         )
 
         # run_test

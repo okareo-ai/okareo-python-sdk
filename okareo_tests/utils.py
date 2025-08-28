@@ -331,6 +331,6 @@ def create_dummy_mut(
         client=okareo.client,
         api_key=okareo.api_key,
         mut=dummy_response,
-        models={"driver": {"target": target.target}},
+        models={target.target["type"]: target.target},
     )
     return mut
