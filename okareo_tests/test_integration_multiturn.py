@@ -573,6 +573,7 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
             name=t_get.name,
             tags=[],
             time_created=datetime.datetime.now().isoformat(),
+            version=1,
         )
         mut = ModelUnderTest(
             client=okareo.client,

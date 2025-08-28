@@ -7,22 +7,26 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.driver_model_response import DriverModelResponse
 from ...models.http_validation_error import HTTPValidationError
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    project_id: str,
     *,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
+    params: Dict[str, Any] = {}
+    params["project_id"] = project_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     return {
         "method": "get",
-        "url": "/v0/all_drivers/{project_id}".format(
-            project_id=project_id,
-        ),
+        "url": "/v0/drivers",
+        "params": params,
         "headers": headers,
     }
 
@@ -61,9 +65,9 @@ def _build_response(
 
 
 def sync_detailed(
-    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
     """Get All Drivers
@@ -77,7 +81,7 @@ def sync_detailed(
         List of DriverModelResponse with all driver model details
 
     Args:
-        project_id (str):
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -101,9 +105,9 @@ def sync_detailed(
 
 
 def sync(
-    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
     """Get All Drivers
@@ -117,7 +121,7 @@ def sync(
         List of DriverModelResponse with all driver model details
 
     Args:
-        project_id (str):
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -129,16 +133,16 @@ def sync(
     """
 
     return sync_detailed(
-        project_id=project_id,
         client=client,
+        project_id=project_id,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
     """Get All Drivers
@@ -152,7 +156,7 @@ async def asyncio_detailed(
         List of DriverModelResponse with all driver model details
 
     Args:
-        project_id (str):
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -174,9 +178,9 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
     """Get All Drivers
@@ -190,7 +194,7 @@ async def asyncio(
         List of DriverModelResponse with all driver model details
 
     Args:
-        project_id (str):
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -203,8 +207,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            project_id=project_id,
             client=client,
+            project_id=project_id,
             api_key=api_key,
         )
     ).parsed

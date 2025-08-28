@@ -1257,6 +1257,7 @@ class Okareo:
             name=target_model.name,
             tags=tags or [],
             time_created=datetime.datetime.now().isoformat(),
+            version=1,
         )
 
         assert isinstance(target_model.target, dict)
