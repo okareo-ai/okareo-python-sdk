@@ -1269,7 +1269,7 @@ class Okareo:
             client=self.client,
             api_key=self.api_key,
             mut=dummy_response,
-            models={"driver": {"target": target_model.target}},
+            models=target_model.target,
         )
 
         # run_test
