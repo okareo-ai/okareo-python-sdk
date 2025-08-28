@@ -486,14 +486,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         msg: Any,
         nats_connection: Any,
         stop_event: Any,
-        active_tasks: set[asyncio.Task],
     ) -> None:
-        import time
-
-        start_time = time.time()
-        task_id = id(asyncio.current_task())
-        print(f"[DEBUG] Task {task_id}: Started processing message at {start_time}")
-
         try:
             data = json.loads(msg.data.decode())
             if data.get("close"):
@@ -508,10 +501,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             session_id = data.get("session_id", None)
             call_type = data.get("call_type", "invoke")
 
-            print(
-                f"[DEBUG] Task {task_id}: About to call model invoker. Active tasks: {len(active_tasks)}"
-            )
-
             if not self._has_async_custom_model():
                 result = self.call_custom_invoker(
                     args, message_history, scenario_input, session_id, call_type
@@ -520,11 +509,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                 result = await self.call_custom_invoker_async(
                     args, message_history, scenario_input, session_id, call_type
                 )
-
-            end_time = time.time()
-            print(
-                f"[DEBUG] Task {task_id}: Completed model invocation in {end_time - start_time:.2f}s"
-            )
 
             json_encodable_result = self.get_params_from_custom_result(result)
             await nats_connection.publish(
@@ -548,25 +532,15 @@ class ModelUnderTest(AsyncProcessorMixin):
         try:
 
             async def message_handler_custom_model(msg: Any) -> None:
-                # Log which worker received the message
-                print(
-                    f"[DEBUG] Worker received message. Current active tasks: {len(active_tasks)}"
-                )
-
                 # Create task and track it
                 task = asyncio.create_task(
-                    self.process_single_message(
-                        msg, nats_connection, stop_event, active_tasks
-                    )
+                    self.process_single_message(msg, nats_connection, stop_event)
                 )
                 active_tasks.add(task)
 
                 # Remove completed tasks from the set to prevent memory leaks
                 def task_done_callback(completed_task: asyncio.Task) -> None:
                     active_tasks.discard(completed_task)
-                    print(
-                        f"[DEBUG] Task completed. Remaining active tasks: {len(active_tasks)}"
-                    )
 
                 task.add_done_callback(task_done_callback)
 
