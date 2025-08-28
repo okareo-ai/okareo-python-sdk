@@ -1259,6 +1259,7 @@ class Okareo:
             time_created=datetime.datetime.now().isoformat(),
         )
 
+        assert isinstance(target_model.target, dict)
         mut = ModelUnderTest(
             client=self.client,
             api_key=self.api_key,
