@@ -1,32 +1,27 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.driver_model_schema import DriverModelSchema
 from ...models.error_response import ErrorResponse
 from ...types import Response
 
 
 def _get_kwargs(
-    driver_name: str,
+    driver_id: str,
     *,
-    json_body: DriverModelSchema,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
     return {
-        "method": "put",
-        "url": "/v0/driver/{driver_name}".format(
-            driver_name=driver_name,
+        "method": "delete",
+        "url": "/v0/driver/{driver_id}".format(
+            driver_id=driver_id,
         ),
-        "json": json_json_body,
         "headers": headers,
     }
 
@@ -34,9 +29,9 @@ def _get_kwargs(
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = response.json()
-        return response_200
+    if response.status_code == HTTPStatus.NO_CONTENT:
+        response_204 = cast(Any, None)
+        return response_204
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -71,23 +66,21 @@ def _build_response(
 
 
 def sync_detailed(
-    driver_name: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Update Driver Model
+    """Delete Driver Model
 
-     Update an existing driver model
+     Delete a driver model
 
     Returns:
-        The updated driver model
+        None (204 No Content)
 
     Args:
-        driver_name (str):
+        driver_id (str):
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -98,8 +91,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        driver_name=driver_name,
-        json_body=json_body,
+        driver_id=driver_id,
         api_key=api_key,
     )
 
@@ -111,23 +103,21 @@ def sync_detailed(
 
 
 def sync(
-    driver_name: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Update Driver Model
+    """Delete Driver Model
 
-     Update an existing driver model
+     Delete a driver model
 
     Returns:
-        The updated driver model
+        None (204 No Content)
 
     Args:
-        driver_name (str):
+        driver_id (str):
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -138,31 +128,28 @@ def sync(
     """
 
     return sync_detailed(
-        driver_name=driver_name,
+        driver_id=driver_id,
         client=client,
-        json_body=json_body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    driver_name: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
-    """Update Driver Model
+    """Delete Driver Model
 
-     Update an existing driver model
+     Delete a driver model
 
     Returns:
-        The updated driver model
+        None (204 No Content)
 
     Args:
-        driver_name (str):
+        driver_id (str):
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -173,8 +160,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        driver_name=driver_name,
-        json_body=json_body,
+        driver_id=driver_id,
         api_key=api_key,
     )
 
@@ -184,23 +170,21 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    driver_name: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
-    """Update Driver Model
+    """Delete Driver Model
 
-     Update an existing driver model
+     Delete a driver model
 
     Returns:
-        The updated driver model
+        None (204 No Content)
 
     Args:
-        driver_name (str):
+        driver_id (str):
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -212,9 +196,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            driver_name=driver_name,
+            driver_id=driver_id,
             client=client,
-            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

@@ -218,9 +218,7 @@ class Okareo:
                 model_invoker = data["models"][custom_model_str]["model_invoker"]
                 del data["models"][custom_model_str]["model_invoker"]
                 return data, model_invoker, None, None
-        if (
-            "custom_target" in data["models"].keys()
-        ):
+        if "custom_target" in data["models"].keys():
             model_invoker = data["models"]["custom_target"]["model_invoker"]
             session_starter = data["models"]["custom_target"]["session_starter"]
             session_ender = data["models"]["custom_target"]["session_ender"]
@@ -1144,7 +1142,9 @@ class Okareo:
             "update": True,
             "sensitive_fields": sensitive_fields,
         }
-        model = target.target if isinstance(target.target, dict) else target.target.params()
+        model = (
+            target.target if isinstance(target.target, dict) else target.target.params()
+        )
         data["models"][model["type"]] = model
         data, model_invoker, session_starter, session_ender = (
             self._get_custom_model_invoker(data)

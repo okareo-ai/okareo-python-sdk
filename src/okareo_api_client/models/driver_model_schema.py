@@ -17,6 +17,7 @@ class DriverModelSchema:
         prompt_template (str): Prompt template for the driver model
         id (Union[Unset, str]): ID of the driver model
         model_id (Union[Unset, str]): Model ID of the driver model
+        project_id (Union[Unset, str]): ID for project
     """
 
     name: str
@@ -24,6 +25,7 @@ class DriverModelSchema:
     prompt_template: str
     id: Union[Unset, str] = UNSET
     model_id: Union[Unset, str] = UNSET
+    project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -32,6 +34,7 @@ class DriverModelSchema:
         prompt_template = self.prompt_template
         id = self.id
         model_id = self.model_id
+        project_id = self.project_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -46,6 +49,8 @@ class DriverModelSchema:
             field_dict["id"] = id
         if model_id is not UNSET:
             field_dict["model_id"] = model_id
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
 
         return field_dict
 
@@ -62,12 +67,15 @@ class DriverModelSchema:
 
         model_id = d.pop("model_id", UNSET)
 
+        project_id = d.pop("project_id", UNSET)
+
         driver_model_schema = cls(
             name=name,
             temperature=temperature,
             prompt_template=prompt_template,
             id=id,
             model_id=model_id,
+            project_id=project_id,
         )
 
         driver_model_schema.additional_properties = d

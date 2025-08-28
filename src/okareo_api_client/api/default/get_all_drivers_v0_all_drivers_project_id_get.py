@@ -11,6 +11,7 @@ from ...types import Response
 
 
 def _get_kwargs(
+    project_id: str,
     *,
     api_key: str,
 ) -> Dict[str, Any]:
@@ -19,7 +20,9 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/driver",
+        "url": "/v0/all_drivers/{project_id}".format(
+            project_id=project_id,
+        ),
         "headers": headers,
     }
 
@@ -58,6 +61,7 @@ def _build_response(
 
 
 def sync_detailed(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -73,6 +77,7 @@ def sync_detailed(
         List of DriverModelResponse with all driver model details
 
     Args:
+        project_id (str):
         api_key (str):
 
     Raises:
@@ -84,6 +89,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -95,6 +101,7 @@ def sync_detailed(
 
 
 def sync(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -110,6 +117,7 @@ def sync(
         List of DriverModelResponse with all driver model details
 
     Args:
+        project_id (str):
         api_key (str):
 
     Raises:
@@ -121,12 +129,14 @@ def sync(
     """
 
     return sync_detailed(
+        project_id=project_id,
         client=client,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -142,6 +152,7 @@ async def asyncio_detailed(
         List of DriverModelResponse with all driver model details
 
     Args:
+        project_id (str):
         api_key (str):
 
     Raises:
@@ -153,6 +164,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -162,6 +174,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    project_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
@@ -177,6 +190,7 @@ async def asyncio(
         List of DriverModelResponse with all driver model details
 
     Args:
+        project_id (str):
         api_key (str):
 
     Raises:
@@ -189,6 +203,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
+            project_id=project_id,
             client=client,
             api_key=api_key,
         )
