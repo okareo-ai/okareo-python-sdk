@@ -216,8 +216,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
         if (
             "custom" not in model_names  # custom is a model without a key
-            and "driver"
-            not in model_names  # driver can have 2 keys for driver and target
+            and test_run_type != TestRunType.MULTI_TURN  # driver can have 2 keys for driver and target
             and len(model_names) != len(run_api_keys)
         ):
             raise MissingApiKeyError("Number of models and API keys does not match")
@@ -230,12 +229,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def _has_custom_model(self) -> bool:
         assert isinstance(self.models, dict)
-        if (
-            "driver" in self.models
-            and self.models["driver"]["target"]["type"] == "custom_target"
-        ):
-            return True
-        custom_model_strs = ["custom", "custom_batch"]
+        custom_model_strs = ["custom", "custom_batch", "custom_target"]
         assert isinstance(self.models, dict)
         return any(
             model_str in list(self.models.keys()) for model_str in custom_model_strs
@@ -373,7 +367,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         else:
             if call_type == "invoke":
                 messages = message_history if message_history is not None else args
-                invoker = self.models["driver"]["target"]["model_invoker"]
+                invoker = self.models["custom_target"]["model_invoker"]
                 sig = inspect.signature(invoker)
                 num_positional = sum(
                     1
@@ -388,9 +382,9 @@ class ModelUnderTest(AsyncProcessorMixin):
                     # legacy impl; first pos arg is message_history (named args)
                     return invoker(args)
             elif call_type == "start_session":
-                if "session_starter" in self.models["driver"]["target"]:
+                if "session_starter" in self.models["custom_target"]:
                     message_history if message_history is not None else args
-                    invoker = self.models["driver"]["target"]["session_starter"]
+                    invoker = self.models["custom_target"]["session_starter"]
                     result = invoker(scenario_input)
                     if not isinstance(result, tuple):
                         raise TypeError(
@@ -399,10 +393,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                     return result
             elif call_type == "end_session":
                 if (
-                    "session_ender" in self.models["driver"]["target"]
+                    "session_ender" in self.models["custom_target"]
                     and session_id is not None
                 ):
-                    return self.models["driver"]["target"]["session_ender"](session_id)
+                    return self.models["custom_target"]["session_ender"](session_id)
         return None
 
     def get_params_from_custom_result(self, result: Any) -> Any:
@@ -537,7 +531,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
 
             model_data: dict = {"model_data": {}}
-            if self._has_custom_model() and "driver" in self.models:
+            if self._has_custom_model() and test_run_type == TestRunType.MULTI_TURN:
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
                     client=self.client, api_key=self.api_key, mut_id=self.mut_id
                 )
@@ -593,10 +587,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             test_run_type == TestRunType.MULTI_TURN
             and self.models is not None
             and isinstance(self.models, dict)
-            and "driver" in self.models
-            and "target" in self.models["driver"]
-            and "type" in self.models["driver"]["target"]
-            and self.models["driver"]["target"]["type"] == "custom_target"
+            and "custom_target" in self.models
         ):
             return False
         return True
