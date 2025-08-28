@@ -1323,7 +1323,7 @@ class Simulation:
     def to_dict(self) -> dict:
         return {
             "driver": (
-                self.driver if isinstance(self.driver, dict) else self.driver.to_dict()
+                self.driver["id"] if isinstance(self.driver, dict) else self.driver.id
             ),
             "repeats": self.repeats,
             "max_turns": self.max_turns,
