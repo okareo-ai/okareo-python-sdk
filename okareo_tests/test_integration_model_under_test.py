@@ -13,6 +13,7 @@ from okareo.model_under_test import (
     CustomModel,
     GenerationModel,
     ModelInvocation,
+    ModelUnderTest,
     OpenAIAssistantModel,
     PineconeDb,
     QdrantDB,
@@ -854,9 +855,31 @@ def test_register_model_versions(
         )
 
 
-def test_register_model_versions_custom(
-    rnd: str, okareo: Okareo, single_line_scenario_set: ScenarioSetResponse
+def test_register_model_version_unchanged(
+    rnd: str,
+    okareo: Okareo,
 ) -> None:
+    """Expected behavior for identical Generation model registered multiple times: version should stay at 1"""
+    try:
+        mut = None
+        for _ in range(2):
+            mut = okareo.register_model(
+                name=f"test_register_model_version_unchanged_{rnd}",
+                model=GenerationModel(
+                    system_prompt_template=f"This is a test template {rnd}"
+                ),
+                update=True,
+            )
+            assert mut.version == 1
+    finally:
+        # Delete all versions of the model
+        if mut is not None and isinstance(mut, ModelUnderTest):
+            delete_model_under_test_v0_models_under_test_mut_id_delete.sync_detailed(
+                client=okareo.client, api_key=API_KEY, mut_id=mut.mut_id
+            )
+
+
+def test_register_model_versions_custom(rnd: str, okareo: Okareo) -> None:
     """Expected behavior for CustomModel: version should stay at 1, regardless of contents of 'invoke' method"""
     try:
 
