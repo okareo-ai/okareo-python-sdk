@@ -28,7 +28,7 @@ from okareo_api_client.api.default import (
     get_check_v0_check_check_id_get,
     get_datapoints_filter_v0_find_datapoints_filter_post,
     get_datapoints_v0_find_datapoints_post,
-    get_driver_by_name_v0_driver_driver_name_get,
+    get_driver_v0_driver_identifier_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_target_model_by_name_v0_target_target_model_name_get,
     register_driver_model_v0_driver_post,
@@ -1105,10 +1105,10 @@ class Okareo:
         Returns:
             The driver with the specified name.
         """
-        response = get_driver_by_name_v0_driver_driver_name_get.sync(
+        response = get_driver_v0_driver_identifier_get.sync(
             client=self.client,
             api_key=self.api_key,
-            driver_name=driver_name,
+            identifier=driver_name,
         )
         self.validate_response(response)
         if not response:
