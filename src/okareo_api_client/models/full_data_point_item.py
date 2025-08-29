@@ -6,6 +6,8 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
+    from ..models.full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
     from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
     from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
     from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
@@ -32,8 +34,10 @@ class FullDataPointItem:
         model_metadata (Union['FullDataPointItemModelMetadataType0', Any, Unset]):
         time_created (Union[Unset, str]):
         checks (Union[Unset, Any]):
+        checks_metadata (Union[Unset, FullDataPointItemChecksMetadata]):
         end_time (Union[Unset, Any]):
         driver_prompt (Union[Unset, str]):
+        baseline_metrics (Union[Unset, FullDataPointItemBaselineMetrics]):
     """
 
     id: str
@@ -49,8 +53,10 @@ class FullDataPointItem:
     model_metadata: Union["FullDataPointItemModelMetadataType0", Any, Unset] = UNSET
     time_created: Union[Unset, str] = UNSET
     checks: Union[Unset, Any] = UNSET
+    checks_metadata: Union[Unset, "FullDataPointItemChecksMetadata"] = UNSET
     end_time: Union[Unset, Any] = UNSET
     driver_prompt: Union[Unset, str] = UNSET
+    baseline_metrics: Union[Unset, "FullDataPointItemBaselineMetrics"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -118,8 +124,15 @@ class FullDataPointItem:
 
         time_created = self.time_created
         checks = self.checks
+        checks_metadata: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.checks_metadata, Unset):
+            checks_metadata = self.checks_metadata.to_dict()
+
         end_time = self.end_time
         driver_prompt = self.driver_prompt
+        baseline_metrics: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.baseline_metrics, Unset):
+            baseline_metrics = self.baseline_metrics.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -149,15 +162,21 @@ class FullDataPointItem:
             field_dict["time_created"] = time_created
         if checks is not UNSET:
             field_dict["checks"] = checks
+        if checks_metadata is not UNSET:
+            field_dict["checks_metadata"] = checks_metadata
         if end_time is not UNSET:
             field_dict["end_time"] = end_time
         if driver_prompt is not UNSET:
             field_dict["driver_prompt"] = driver_prompt
+        if baseline_metrics is not UNSET:
+            field_dict["baseline_metrics"] = baseline_metrics
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
+        from ..models.full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
         from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
         from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
         from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
@@ -262,9 +281,23 @@ class FullDataPointItem:
 
         checks = d.pop("checks", UNSET)
 
+        _checks_metadata = d.pop("checks_metadata", UNSET)
+        checks_metadata: Union[Unset, FullDataPointItemChecksMetadata]
+        if isinstance(_checks_metadata, Unset):
+            checks_metadata = UNSET
+        else:
+            checks_metadata = FullDataPointItemChecksMetadata.from_dict(_checks_metadata)
+
         end_time = d.pop("end_time", UNSET)
 
         driver_prompt = d.pop("driver_prompt", UNSET)
+
+        _baseline_metrics = d.pop("baseline_metrics", UNSET)
+        baseline_metrics: Union[Unset, FullDataPointItemBaselineMetrics]
+        if isinstance(_baseline_metrics, Unset):
+            baseline_metrics = UNSET
+        else:
+            baseline_metrics = FullDataPointItemBaselineMetrics.from_dict(_baseline_metrics)
 
         full_data_point_item = cls(
             id=id,
@@ -280,8 +313,10 @@ class FullDataPointItem:
             model_metadata=model_metadata,
             time_created=time_created,
             checks=checks,
+            checks_metadata=checks_metadata,
             end_time=end_time,
             driver_prompt=driver_prompt,
+            baseline_metrics=baseline_metrics,
         )
 
         full_data_point_item.additional_properties = d
