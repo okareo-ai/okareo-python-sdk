@@ -198,7 +198,7 @@ def _parse_checks_and_baseline_metrics(
     }
 
     for tdp in tdps:
-        assert isinstance(tdp, FullDataPointItem)
+        assert isinstance(tdp, FullDataPointItem) or isinstance(tdp, TestDataPointItem)
         for check in checks:
             meta_metrics = _parse_check_metrics(
                 tdp,
@@ -292,7 +292,7 @@ def assert_baseline_metrics(
     run_baseline_meta = test_run.model_metrics.additional_properties[  # type: ignore
         "aggregate_baseline_metrics"
     ]
-
+    print(tdps)
     (
         baseline_metrics,
         meta_metrics,
