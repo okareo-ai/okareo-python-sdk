@@ -426,6 +426,7 @@ class TestMultiturnErrors:
             "stop_check": self._create_basic_stop_check(),
         }
 
+        exception_str_match = exception_str_template.replace("{status_code}", "401")
         # Register the model with a custom endpoint that will fail.
         # Anticipate a redacted api-key
         self._register_and_expect_error(
