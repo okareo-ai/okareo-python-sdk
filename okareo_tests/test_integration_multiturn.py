@@ -324,7 +324,7 @@ class CustomScenarioInputModel(CustomMultiturnTarget):
     # async def start_session(self, scenario_input) -> tuple[str | None, ModelInvocation | None]:  # type: ignore
     def start_session(self, scenario_input) -> tuple[str | None, ModelInvocation | None]:  # type: ignore
         """Start a session for the custom multiturn model."""
-        self.session_id = random_string(5)  # Generate a random session ID
+        self.session_id = "random_string"  # Set a session ID
         if scenario_input == "Hello worlds":
             resp = ModelInvocation("Nice to meet you!", None, None)
         else:
@@ -589,7 +589,6 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
         assert_baseline_metrics(
             okareo, evaluation, mut, ["behavior_adherence"], False, True, 3
         )
-
 
 
 class OpenAIRequestsModel(CustomMultiturnTarget):

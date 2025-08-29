@@ -105,6 +105,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.tags = mut.tags
         self.models = models
         self.app_link = mut.app_link
+        self.model_key = None
         super().__init__(name="OkareoDatapointsProcessor")
 
     def get_client(self) -> Client:
@@ -231,7 +232,15 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def _has_custom_model(self) -> bool:
         assert isinstance(self.models, dict)
-        if any(model in self.models.keys() for model in ["custom_target", "custom_target_async", "custom", "custom_batch"]):
+        if any(
+            model in self.models.keys()
+            for model in [
+                "custom_target",
+                "custom_target_async",
+                "custom",
+                "custom_batch",
+            ]
+        ):
             return True
         return False
 
@@ -364,9 +373,24 @@ class ModelUnderTest(AsyncProcessorMixin):
         call_type: str = "invoke",
     ) -> Any:
         assert isinstance(self.models, dict)
+        if not self.model_key:
+            self.model_key = next(
+                (
+                    k
+                    for k in [
+                        "custom_target",
+                        "custom_target_async",
+                        "custom",
+                        "custom_batch",
+                    ]
+                    if k in self.models.keys()
+                ),
+                None,
+            )
+
         if call_type == "invoke":
             messages = message_history if message_history is not None else args
-            invoker = self.models["driver"]["target"]["model_invoker"]
+            invoker = self.models[self.model_key]["model_invoker"]
             sig = inspect.signature(invoker)
             num_positional = sum(
                 1
@@ -380,9 +404,9 @@ class ModelUnderTest(AsyncProcessorMixin):
                 # legacy impl; first pos arg is message_history (named args)
                 return await invoker(args)
         elif call_type == "start_session":
-            if "session_starter" in self.models["driver"]["target"]:
+            if "session_starter" in self.models[self.model_key]:
                 message_history if message_history is not None else args
-                invoker = self.models["driver"]["target"]["session_starter"]
+                invoker = self.models[self.model_key]["session_starter"]
                 result = await invoker(scenario_input)
                 if not isinstance(result, tuple):
                     raise TypeError(
@@ -391,12 +415,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                 return result
         elif call_type == "end_session":
             if (
-                "session_ender" in self.models["driver"]["target"]
+                "session_ender" in self.models[self.model_key]
                 and session_id is not None
             ):
-                return await self.models["driver"]["target"]["session_ender"](
-                    session_id
-                )
+                return await self.models[self.model_key]["session_ender"](session_id)
         return None
 
     def call_custom_invoker(
@@ -1510,7 +1532,8 @@ class MultiTurnDriver(BaseModel):
 
     def params(self) -> dict:
         target_params = self.target.params()
-        deprecated_params = {"deprecated_params":{
+        deprecated_params = {
+            "deprecated_params": {
                 "driver_model_id": self.driver_model_id,
                 "driver_temperature": self.driver_temperature,
                 "driver_prompt_template": self.driver_prompt_template,
@@ -1523,7 +1546,8 @@ class MultiTurnDriver(BaseModel):
                     else self.stop_check
                 ),
                 "checks_at_every_turn": self.checks_at_every_turn,
-            }}
+            }
+        }
         # add deprecated params to target
         return {**target_params, **deprecated_params}
 

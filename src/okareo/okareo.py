@@ -222,14 +222,15 @@ class Okareo:
                 model_invoker = data["models"][custom_model_str]["model_invoker"]
                 del data["models"][custom_model_str]["model_invoker"]
                 return data, model_invoker, None, None
-        if any(model in data["models"].keys() for model in ["custom_target", "custom_target_async"]):
-            model_invoker = data["models"]["custom_target"]["model_invoker"]
-            session_starter = data["models"]["custom_target"]["session_starter"]
-            session_ender = data["models"]["custom_target"]["session_ender"]
-            del data["models"]["custom_target"]["model_invoker"]
-            data["models"]["custom_target"]["session_starter"] = True
-            data["models"]["custom_target"]["session_ender"] = True
-            return data, model_invoker, session_starter, session_ender
+        for model_key in ["custom_target", "custom_target_async"]:
+            if model_key in data["models"].keys():
+                model_invoker = data["models"][model_key]["model_invoker"]
+                session_starter = data["models"][model_key]["session_starter"]
+                session_ender = data["models"][model_key]["session_ender"]
+                del data["models"][model_key]["model_invoker"]
+                data["models"][model_key]["session_starter"] = True
+                data["models"][model_key]["session_ender"] = True
+                return data, model_invoker, session_starter, session_ender
         return data, None, None, None
 
     def _set_custom_model_invoker(
@@ -242,10 +243,11 @@ class Okareo:
         for custom_model_str in CUSTOM_MODEL_STRS:
             if custom_model_str in data.keys():
                 data[custom_model_str]["model_invoker"] = model_invoker
-        if "custom_target" in data.keys():
-            data["custom_target"]["model_invoker"] = model_invoker
-            data["custom_target"]["session_starter"] = session_starter
-            data["custom_target"]["session_ender"] = session_ender
+        for model_key in ["custom_target", "custom_target_async"]:
+            if model_key in data.keys():
+                data[model_key]["model_invoker"] = model_invoker
+                data[model_key]["session_starter"] = session_starter
+                data[model_key]["session_ender"] = session_ender
         return data
 
     def register_model(
