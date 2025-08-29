@@ -182,6 +182,7 @@ def _parse_checks_and_baseline_metrics(
     }
 
     for tdp in tdps:
+        assert isinstance(tdp, FullDataPointItem)
         for check in checks:
             meta_metrics = _parse_check_metrics(
                 tdp,

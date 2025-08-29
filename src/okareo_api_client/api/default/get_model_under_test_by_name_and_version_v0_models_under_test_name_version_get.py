@@ -1,16 +1,18 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
+from ...models.model_under_test_response import ModelUnderTestResponse
 from ...types import Response
 
 
 def _get_kwargs(
-    mut_id: str,
+    name: str,
+    version: Union[int, str],
     *,
     api_key: str,
 ) -> Dict[str, Any]:
@@ -18,9 +20,10 @@ def _get_kwargs(
     headers["api-key"] = api_key
 
     return {
-        "method": "delete",
-        "url": "/v0/models_under_test/{mut_id}".format(
-            mut_id=mut_id,
+        "method": "get",
+        "url": "/v0/models_under_test/{name}/{version}".format(
+            name=name,
+            version=version,
         ),
         "headers": headers,
     }
@@ -28,10 +31,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.NO_CONTENT:
-        response_204 = cast(Any, None)
-        return response_204
+) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
+    if response.status_code == HTTPStatus.CREATED:
+        response_201 = ModelUnderTestResponse.from_dict(response.json())
+
+        return response_201
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -56,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,18 +70,23 @@ def _build_response(
 
 
 def sync_detailed(
-    mut_id: str,
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
-    """Delete Model Under Test
+) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
+    """Get Model Under Test By Name And Version
 
-     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
-    associated with all versions.
+     Get a model under test by name and version.
+    If no version is provided, then latest version will be returned.
+
+    Returns:
+        The requested model under test at the specified version.
 
     Args:
-        mut_id (str): The ID of the model under test
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -85,11 +94,12 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, ModelUnderTestResponse]]
     """
 
     kwargs = _get_kwargs(
-        mut_id=mut_id,
+        name=name,
+        version=version,
         api_key=api_key,
     )
 
@@ -101,18 +111,23 @@ def sync_detailed(
 
 
 def sync(
-    mut_id: str,
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
-    """Delete Model Under Test
+) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
+    """Get Model Under Test By Name And Version
 
-     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
-    associated with all versions.
+     Get a model under test by name and version.
+    If no version is provided, then latest version will be returned.
+
+    Returns:
+        The requested model under test at the specified version.
 
     Args:
-        mut_id (str): The ID of the model under test
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -120,29 +135,35 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, ModelUnderTestResponse]
     """
 
     return sync_detailed(
-        mut_id=mut_id,
+        name=name,
+        version=version,
         client=client,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    mut_id: str,
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
-    """Delete Model Under Test
+) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
+    """Get Model Under Test By Name And Version
 
-     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
-    associated with all versions.
+     Get a model under test by name and version.
+    If no version is provided, then latest version will be returned.
+
+    Returns:
+        The requested model under test at the specified version.
 
     Args:
-        mut_id (str): The ID of the model under test
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -150,11 +171,12 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, ModelUnderTestResponse]]
     """
 
     kwargs = _get_kwargs(
-        mut_id=mut_id,
+        name=name,
+        version=version,
         api_key=api_key,
     )
 
@@ -164,18 +186,23 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    mut_id: str,
+    name: str,
+    version: Union[int, str],
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
-    """Delete Model Under Test
+) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
+    """Get Model Under Test By Name And Version
 
-     Delete all versions of a model under test and cascade delete TestRun and TestDataPoint objects
-    associated with all versions.
+     Get a model under test by name and version.
+    If no version is provided, then latest version will be returned.
+
+    Returns:
+        The requested model under test at the specified version.
 
     Args:
-        mut_id (str): The ID of the model under test
+        name (str):
+        version (Union[int, str]):
         api_key (str):
 
     Raises:
@@ -183,12 +210,13 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, ModelUnderTestResponse]
     """
 
     return (
         await asyncio_detailed(
-            mut_id=mut_id,
+            name=name,
+            version=version,
             client=client,
             api_key=api_key,
         )

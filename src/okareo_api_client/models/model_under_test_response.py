@@ -19,6 +19,7 @@ class ModelUnderTestResponse:
         id (str):
         project_id (str):
         name (str):
+        version (int):
         tags (List[str]):
         time_created (str):
         models (Union[Unset, ModelUnderTestResponseModels]):
@@ -31,6 +32,7 @@ class ModelUnderTestResponse:
     id: str
     project_id: str
     name: str
+    version: int
     tags: List[str]
     time_created: str
     models: Union[Unset, "ModelUnderTestResponseModels"] = UNSET
@@ -44,6 +46,7 @@ class ModelUnderTestResponse:
         id = self.id
         project_id = self.project_id
         name = self.name
+        version = self.version
         tags = self.tags
 
         time_created = self.time_created
@@ -66,6 +69,7 @@ class ModelUnderTestResponse:
                 "id": id,
                 "project_id": project_id,
                 "name": name,
+                "version": version,
                 "tags": tags,
                 "time_created": time_created,
             }
@@ -94,6 +98,8 @@ class ModelUnderTestResponse:
 
         name = d.pop("name")
 
+        version = d.pop("version")
+
         tags = cast(List[str], d.pop("tags"))
 
         time_created = d.pop("time_created")
@@ -117,6 +123,7 @@ class ModelUnderTestResponse:
             id=id,
             project_id=project_id,
             name=name,
+            version=version,
             tags=tags,
             time_created=time_created,
             models=models,
