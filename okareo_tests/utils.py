@@ -14,9 +14,9 @@ from okareo_api_client.models.full_data_point_item_baseline_metrics import (
 from okareo_api_client.models.full_data_point_item_checks_metadata import (
     FullDataPointItemChecksMetadata,
 )
-from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
+from okareo_api_client.models.test_data_point_item import TestDataPointItem
 
 
 def assert_scores_geval(scores: dict) -> None:
@@ -198,6 +198,7 @@ def _parse_checks_and_baseline_metrics(
     }
 
     for tdp in tdps:
+        assert isinstance(tdp, FullDataPointItem)
         for check in checks:
             meta_metrics = _parse_check_metrics(
                 tdp,

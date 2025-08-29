@@ -8,7 +8,7 @@ import urllib
 from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Awaitable, Dict, List, Optional, Union
 
 import aiohttp
 from attrs import define
@@ -98,6 +98,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.client = client
         self.api_key = api_key
 
+        self.version = mut.version
         self.mut_id = mut.id
         self.project_id = mut.project_id
         self.name = mut.name
@@ -230,11 +231,13 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def _has_custom_model(self) -> bool:
         assert isinstance(self.models, dict)
-        custom_model_strs = ["custom", "custom_batch", "custom_target"]
+        if any(model in self.models.keys() for model in ["custom_target", "custom_target_async", "custom", "custom_batch"]):
+            return True
+        return False
+
+    def _has_async_custom_model(self) -> bool:
         assert isinstance(self.models, dict)
-        return any(
-            model_str in list(self.models.keys()) for model_str in custom_model_strs
-        )
+        return "custom_target_async" in self.models.keys()
 
     def _has_custom_batch_model(self) -> bool:
         assert isinstance(self.models, dict)
@@ -352,6 +355,50 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
         return nc
 
+    async def call_custom_invoker_async(
+        self,
+        args: Any,
+        message_history: Optional[list[dict[str, str]]] = None,
+        scenario_input: Optional[Union[str, dict, list]] = None,
+        session_id: Optional[str] = None,
+        call_type: str = "invoke",
+    ) -> Any:
+        assert isinstance(self.models, dict)
+        if call_type == "invoke":
+            messages = message_history if message_history is not None else args
+            invoker = self.models["driver"]["target"]["model_invoker"]
+            sig = inspect.signature(invoker)
+            num_positional = sum(
+                1
+                for param in sig.parameters.values()
+                if param.kind in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
+            )
+            if num_positional > 1 and scenario_input is not None:
+                # new impl; first pos arg is message_history, second is scenario_input
+                return await invoker(messages, scenario_input, session_id)
+            else:
+                # legacy impl; first pos arg is message_history (named args)
+                return await invoker(args)
+        elif call_type == "start_session":
+            if "session_starter" in self.models["driver"]["target"]:
+                message_history if message_history is not None else args
+                invoker = self.models["driver"]["target"]["session_starter"]
+                result = await invoker(scenario_input)
+                if not isinstance(result, tuple):
+                    raise TypeError(
+                        "session_starter must return a tuple (session_id, ModelInvocation)"
+                    )
+                return result
+        elif call_type == "end_session":
+            if (
+                "session_ender" in self.models["driver"]["target"]
+                and session_id is not None
+            ):
+                return await self.models["driver"]["target"]["session_ender"](
+                    session_id
+                )
+        return None
+
     def call_custom_invoker(
         self,
         args: Any,
@@ -426,48 +473,83 @@ class ModelUnderTest(AsyncProcessorMixin):
             result = [r["model_invocation"].params() for r in result]
         return result
 
+    async def process_single_message(
+        self,
+        msg: Any,
+        nats_connection: Any,
+        stop_event: Any,
+    ) -> None:
+        try:
+            data = json.loads(msg.data.decode())
+            if data.get("close"):
+                await nats_connection.publish(
+                    msg.reply, json.dumps({"status": "disconnected"}).encode()
+                )
+                stop_event.set()
+                return
+            args = data.get("args", [])
+            message_history = data.get("message_history", [])
+            scenario_input = data.get("scenario_input", None)
+            session_id = data.get("session_id", None)
+            call_type = data.get("call_type", "invoke")
+
+            if not self._has_async_custom_model():
+                result = self.call_custom_invoker(
+                    args, message_history, scenario_input, session_id, call_type
+                )
+            else:
+                result = await self.call_custom_invoker_async(
+                    args, message_history, scenario_input, session_id, call_type
+                )
+
+            json_encodable_result = self.get_params_from_custom_result(result)
+            await nats_connection.publish(
+                msg.reply, json.dumps(json_encodable_result).encode()
+            )
+
+        except Exception as e:
+            error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
+            print(error_msg)
+            await nats_connection.publish(
+                msg.reply, json.dumps({"error": error_msg}).encode()
+            )
+
     async def _internal_run_custom_model_listener(
         self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str
     ) -> None:
         nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
+        # Track active tasks for proper cleanup
+        active_tasks: set[asyncio.Task] = set()
+
         try:
 
             async def message_handler_custom_model(msg: Any) -> None:
-                try:
-                    data = json.loads(msg.data.decode())
-                    if data.get("close"):
-                        await nats_connection.publish(
-                            msg.reply, json.dumps({"status": "disconnected"}).encode()
-                        )
-                        stop_event.set()
-                        return
-                    args = data.get("args", [])
-                    message_history = data.get("message_history", [])
-                    scenario_input = data.get("scenario_input", None)
-                    session_id = data.get("session_id", None)
-                    call_type = data.get("call_type", "invoke")
-                    result = self.call_custom_invoker(
-                        args, message_history, scenario_input, session_id, call_type
-                    )
-                    json_encodable_result = self.get_params_from_custom_result(result)
-                    await nats_connection.publish(
-                        msg.reply, json.dumps(json_encodable_result).encode()
-                    )
-                except Exception as e:
-                    error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
-                    print(error_msg)
-                    await nats_connection.publish(
-                        msg.reply, json.dumps({"error": error_msg}).encode()
-                    )
+                # Create task and track it
+                task = asyncio.create_task(
+                    self.process_single_message(msg, nats_connection, stop_event)
+                )
+                active_tasks.add(task)
 
+                # Remove completed tasks from the set to prevent memory leaks
+                def task_done_callback(completed_task: asyncio.Task) -> None:
+                    active_tasks.discard(completed_task)
+
+                task.add_done_callback(task_done_callback)
+
+            # Create multiple subscribers for better concurrency
             await nats_connection.subscribe(
-                f"invoke.{self.mut_id}", cb=message_handler_custom_model
+                f"invoke.{self.mut_id}",
+                cb=message_handler_custom_model,
             )
             while not stop_event.is_set():
                 await asyncio.sleep(0.1)
+
         except Exception as e:
             print(f"An error occurred in the custom model invocation: {str(e)}")
         finally:
+            # Wait for all active tasks to complete before closing
+            if active_tasks:
+                await asyncio.gather(*active_tasks, return_exceptions=True)
             await nats_connection.close()
 
     def _internal_run_custom_model_thread(self, coro: Any) -> Any:
@@ -486,7 +568,10 @@ class ModelUnderTest(AsyncProcessorMixin):
             target=self._internal_run_custom_model_thread,
             args=(
                 self._internal_run_custom_model_listener(
-                    custom_model_thread_stop_event, nats_jwt, seed, local_nats
+                    custom_model_thread_stop_event,
+                    nats_jwt,
+                    seed,
+                    local_nats,
                 ),
             ),
         )
@@ -1071,6 +1156,62 @@ class CustomMultiturnTarget(BaseModel):
         }
 
 
+@_attrs_define
+class CustomMultiturnTargetAsync(BaseModel):
+    """A custom model definition for an Okareo multiturn evaluation that uses asynchronous methods.
+    Requires a valid `invoke` definition that operates on a single turn of a converstation.
+    """
+
+    type = "custom_target_async"
+    name: str
+
+    async def start_session(
+        self, scenario_input: str | None = None
+    ) -> tuple[str | None, ModelInvocation | None]:
+        """Method for starting a multiturn conversation with a custom model
+
+        Returns:
+            - str | None: session_id - the ID of the session started by the model.
+            - ModelInvocation | None: model output - the model's response to the session start, if any.
+        """
+        return None, None
+
+    async def end_session(self, session_id: str) -> None:
+        """Method for ending a multiturn conversation with a custom model
+
+        Arguments:
+            session_id: str - the ID of the session to end.
+        """
+
+    @abstractmethod
+    async def invoke(
+        self,
+        messages: List[dict[str, str]],
+        scenario_input: Optional[Union[dict, list, str]] = None,
+        session_id: Optional[str] = None,
+    ) -> Awaitable[Union[ModelInvocation, Any]]:
+        """Method for continuing a multiturn conversation with a custom model
+
+        Arguments:
+            messages: list - list of messages in the conversation
+            scenario_input: Optional[dict | list | str] - scenario input for the conversation
+
+        Returns:
+            Union[ModelInvocation, Any] - model output.
+            If the model returns a ModelInvocation, it should contain the model's prediction, input, and metadata.
+            If the model returns a tuple, the first element should be the model's prediction and the second element should be the metadata.
+        """
+
+    def params(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "model_invoker": self.invoke,
+            "session_starter": self.start_session,
+            "session_ender": self.end_session,
+        }
+
+
 @define
 class StopConfig:
     """
@@ -1348,7 +1489,11 @@ class MultiTurnDriver(BaseModel):
 
     type = "driver"
     target: Union[
-        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget
+        OpenAIModel,
+        CustomMultiturnTarget,
+        CustomMultiturnTargetAsync,
+        GenerationModel,
+        CustomEndpointTarget,
     ]
     stop_check: Union[StopConfig, dict, None] = None
     driver_model_id: Optional[str] = None

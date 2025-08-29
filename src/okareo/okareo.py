@@ -29,6 +29,7 @@ from okareo_api_client.api.default import (
     get_datapoints_filter_v0_find_datapoints_filter_post,
     get_datapoints_v0_find_datapoints_post,
     get_driver_v0_driver_identifier_get,
+    get_model_under_test_by_name_and_version_v0_models_under_test_name_version_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_target_model_by_name_v0_target_target_model_name_get,
     register_driver_model_v0_driver_post,
@@ -71,6 +72,9 @@ from okareo_api_client.models.find_test_data_point_payload import (
 )
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
+from okareo_api_client.models.model_under_test_response_models import (
+    ModelUnderTestResponseModels,
+)
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.project_schema import ProjectSchema
@@ -218,7 +222,7 @@ class Okareo:
                 model_invoker = data["models"][custom_model_str]["model_invoker"]
                 del data["models"][custom_model_str]["model_invoker"]
                 return data, model_invoker, None, None
-        if "custom_target" in data["models"].keys():
+        if any(model in data["models"].keys() for model in ["custom_target", "custom_target_async"]):
             model_invoker = data["models"]["custom_target"]["model_invoker"]
             session_starter = data["models"]["custom_target"]["session_starter"]
             session_ender = data["models"]["custom_target"]["session_ender"]
@@ -313,6 +317,35 @@ class Okareo:
             )
         if response.warning:
             print(response.warning)
+        return ModelUnderTest(
+            client=self.client,
+            api_key=self.api_key,
+            mut=response,
+            models=model_data,
+        )
+
+    def get_model(self, name: str, version: str | int = "latest") -> ModelUnderTest:
+        """Fetch a model under test based on the name and version.
+
+        Args:
+            name (str): The name of the model to fetch.
+            version (str | int, optional): The version of the model to fetch. Defaults to "latest".
+        """
+        response = get_model_under_test_by_name_and_version_v0_models_under_test_name_version_get.sync(
+            client=self.client, api_key=self.api_key, name=name, version=version
+        )
+
+        self.validate_response(response)
+        assert isinstance(response, ModelUnderTestResponse)
+
+        if isinstance(response.models, ModelUnderTestResponseModels):
+            model_data = response.models.to_dict()
+        else:
+            model_data = {}
+
+        if response.warning:
+            print(response.warning)
+
         return ModelUnderTest(
             client=self.client,
             api_key=self.api_key,

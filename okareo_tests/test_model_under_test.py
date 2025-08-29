@@ -41,6 +41,7 @@ def get_mut_fixture(name: Optional[str] = None) -> dict:
     return {
         "id": "1",
         "project_id": "1",
+        "version": 1,
         "name": name if name else f"CI-Test-Model-{rnd_str}",
         "tags": ["ci-testing"],
         "time_created": "foo",

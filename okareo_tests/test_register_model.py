@@ -7,6 +7,7 @@ def test_register_model(httpx_mock: HTTPXMock) -> None:
     fixture = {
         "id": "1",
         "project_id": "1",
+        "version": 1,
         "name": "NotebookModel",
         "tags": ["ci-testing"],
         "time_created": "foo",

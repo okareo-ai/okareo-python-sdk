@@ -19,9 +19,9 @@ class ModelUnderTestResponse:
         id (str):
         project_id (str):
         name (str):
-        version (int):
         tags (List[str]):
         time_created (str):
+        version (Union[Unset, int]):  Default: 1.
         models (Union[Unset, ModelUnderTestResponseModels]):
         sensitive_fields (Union[Unset, List[str]]):
         datapoint_count (Union[Unset, int]):
@@ -32,9 +32,9 @@ class ModelUnderTestResponse:
     id: str
     project_id: str
     name: str
-    version: int
     tags: List[str]
     time_created: str
+    version: Union[Unset, int] = 1
     models: Union[Unset, "ModelUnderTestResponseModels"] = UNSET
     sensitive_fields: Union[Unset, List[str]] = UNSET
     datapoint_count: Union[Unset, int] = UNSET
@@ -46,10 +46,10 @@ class ModelUnderTestResponse:
         id = self.id
         project_id = self.project_id
         name = self.name
-        version = self.version
         tags = self.tags
 
         time_created = self.time_created
+        version = self.version
         models: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.models, Unset):
             models = self.models.to_dict()
@@ -69,11 +69,12 @@ class ModelUnderTestResponse:
                 "id": id,
                 "project_id": project_id,
                 "name": name,
-                "version": version,
                 "tags": tags,
                 "time_created": time_created,
             }
         )
+        if version is not UNSET:
+            field_dict["version"] = version
         if models is not UNSET:
             field_dict["models"] = models
         if sensitive_fields is not UNSET:
@@ -98,11 +99,11 @@ class ModelUnderTestResponse:
 
         name = d.pop("name")
 
-        version = d.pop("version")
-
         tags = cast(List[str], d.pop("tags"))
 
         time_created = d.pop("time_created")
+
+        version = d.pop("version", UNSET)
 
         _models = d.pop("models", UNSET)
         models: Union[Unset, ModelUnderTestResponseModels]
@@ -123,9 +124,9 @@ class ModelUnderTestResponse:
             id=id,
             project_id=project_id,
             name=name,
-            version=version,
             tags=tags,
             time_created=time_created,
+            version=version,
             models=models,
             sensitive_fields=sensitive_fields,
             datapoint_count=datapoint_count,
