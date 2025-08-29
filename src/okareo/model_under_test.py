@@ -1363,6 +1363,31 @@ class MultiTurnDriver(BaseModel):
         if isinstance(self.stop_check, dict):
             self.stop_check = StopConfig(**self.stop_check)
 
+    # TODO: this will need to send data in new format for this to work with new version of register model
+    # TODO: will also need to update register_model on BE to do something with deprecated_params
+    """
+    Something along these lines:
+
+    def params(self) -> dict:
+        return {
+            self.target.params()["type"]: self.target.params(),
+            "deprecated_params": {
+                "driver_model_id": self.driver_model_id,
+                "driver_temperature": self.driver_temperature,
+                "driver_prompt_template": self.driver_prompt_template,
+                "repeats": self.repeats,
+                "max_turns": self.max_turns,
+                "first_turn": self.first_turn,
+                "stop_check": (
+                    self.stop_check.params()
+                    if isinstance(self.stop_check, StopConfig)
+                    else self.stop_check
+                ),
+                "checks_at_every_turn": self.checks_at_every_turn,
+            },
+        }
+
+    """
     def params(self) -> dict:
         return {
             "type": self.type,
