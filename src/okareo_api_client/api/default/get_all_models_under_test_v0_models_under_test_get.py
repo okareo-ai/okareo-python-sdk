@@ -13,6 +13,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     project_id: Union[Unset, None, str] = UNSET,
+    version: Union[Unset, None, str] = "all",
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
@@ -20,6 +21,8 @@ def _get_kwargs(
 
     params: Dict[str, Any] = {}
     params["project_id"] = project_id
+
+    params["version"] = version
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -80,6 +83,7 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
+    version: Union[Unset, None, str] = "all",
     api_key: str,
 ) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -91,6 +95,9 @@ def sync_detailed(
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
+        version (Union[Unset, None, str]): The version(s) of the mut to retrieve. 'latest' will
+            retrieve only the latest version for each mut name. 'all' will retrieve all versions for
+            all mut names. Default: 'all'.
         api_key (str):
 
     Raises:
@@ -103,6 +110,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         project_id=project_id,
+        version=version,
         api_key=api_key,
     )
 
@@ -117,6 +125,7 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
+    version: Union[Unset, None, str] = "all",
     api_key: str,
 ) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -128,6 +137,9 @@ def sync(
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
+        version (Union[Unset, None, str]): The version(s) of the mut to retrieve. 'latest' will
+            retrieve only the latest version for each mut name. 'all' will retrieve all versions for
+            all mut names. Default: 'all'.
         api_key (str):
 
     Raises:
@@ -141,6 +153,7 @@ def sync(
     return sync_detailed(
         client=client,
         project_id=project_id,
+        version=version,
         api_key=api_key,
     ).parsed
 
@@ -149,6 +162,7 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
+    version: Union[Unset, None, str] = "all",
     api_key: str,
 ) -> Response[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -160,6 +174,9 @@ async def asyncio_detailed(
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
+        version (Union[Unset, None, str]): The version(s) of the mut to retrieve. 'latest' will
+            retrieve only the latest version for each mut name. 'all' will retrieve all versions for
+            all mut names. Default: 'all'.
         api_key (str):
 
     Raises:
@@ -172,6 +189,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         project_id=project_id,
+        version=version,
         api_key=api_key,
     )
 
@@ -184,6 +202,7 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
+    version: Union[Unset, None, str] = "all",
     api_key: str,
 ) -> Optional[Union[ErrorResponse, List["ModelUnderTestResponse"]]]:
     """Get All Models Under Test
@@ -195,6 +214,9 @@ async def asyncio(
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
+        version (Union[Unset, None, str]): The version(s) of the mut to retrieve. 'latest' will
+            retrieve only the latest version for each mut name. 'all' will retrieve all versions for
+            all mut names. Default: 'all'.
         api_key (str):
 
     Raises:
@@ -209,6 +231,7 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             project_id=project_id,
+            version=version,
             api_key=api_key,
         )
     ).parsed

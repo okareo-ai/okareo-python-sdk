@@ -325,7 +325,6 @@ class CustomScenarioInputModel(CustomMultiturnTarget):
     def start_session(self, scenario_input) -> tuple[str | None, ModelInvocation | None]:  # type: ignore
         """Start a session for the custom multiturn model."""
         self.session_id = random_string(5)  # Generate a random session ID
-        print(scenario_input)
         if scenario_input == "Hello worlds":
             resp = ModelInvocation("Nice to meet you!", None, None)
         else:
@@ -481,7 +480,6 @@ class OpenAIRequestsModel(CustomMultiturnTarget):
     def invoke(self, messages: list[dict[str, str]]) -> ModelInvocation:  # type: ignore
         # Simple OpenAI API wrapper using requests
         # add artificial latency
-        print(f"messages: {messages}")
         time.sleep(3)
         try:
             headers = {
@@ -1619,7 +1617,6 @@ def test_multiturn_custom_endpoint_start_with_message(
     # Basic sanity: we should have a non-empty list and at least one assistant message inside.
     assert isinstance(generation_output, list) and len(generation_output) > 0
     assert any(msg.get("role") == "assistant" for msg in generation_output)
-    print(generation_output)
 
     # The first message after any optional system prompt should come from the assistant.
     first_non_system_idx = next(

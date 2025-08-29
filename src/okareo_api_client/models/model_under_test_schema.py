@@ -23,6 +23,8 @@ class ModelUnderTestSchema:
         tags (Union[Unset, List[str]]): Tags are strings that can be used to filter models in the Okareo app
         project_id (Union[Unset, str]): ID of the project
         update (Union[Unset, bool]): If set to true, the model will be updated instead of returning the existing model
+        version (Union[Unset, int]): Version of the model under test. Defaults to 1 if not provided. Default: 1.
+        int_ (Union[Unset, int]): Version of the model under test. Defaults to 1 if not provided. Default: 1.
     """
 
     name: Union[Unset, str] = UNSET
@@ -31,6 +33,8 @@ class ModelUnderTestSchema:
     tags: Union[Unset, List[str]] = UNSET
     project_id: Union[Unset, str] = UNSET
     update: Union[Unset, bool] = False
+    version: Union[Unset, int] = 1
+    int_: Union[Unset, int] = 1
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -49,6 +53,8 @@ class ModelUnderTestSchema:
 
         project_id = self.project_id
         update = self.update
+        version = self.version
+        int_ = self.int_
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -65,6 +71,10 @@ class ModelUnderTestSchema:
             field_dict["project_id"] = project_id
         if update is not UNSET:
             field_dict["update"] = update
+        if version is not UNSET:
+            field_dict["version"] = version
+        if int_ is not UNSET:
+            field_dict["int"] = int_
 
         return field_dict
 
@@ -90,6 +100,10 @@ class ModelUnderTestSchema:
 
         update = d.pop("update", UNSET)
 
+        version = d.pop("version", UNSET)
+
+        int_ = d.pop("int", UNSET)
+
         model_under_test_schema = cls(
             name=name,
             models=models,
@@ -97,6 +111,8 @@ class ModelUnderTestSchema:
             tags=tags,
             project_id=project_id,
             update=update,
+            version=version,
+            int_=int_,
         )
 
         model_under_test_schema.additional_properties = d

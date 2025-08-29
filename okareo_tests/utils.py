@@ -8,6 +8,12 @@ from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
+from okareo_api_client.models.full_data_point_item_baseline_metrics import (
+    FullDataPointItemBaselineMetrics,
+)
+from okareo_api_client.models.full_data_point_item_checks_metadata import (
+    FullDataPointItemChecksMetadata,
+)
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
 
@@ -105,15 +111,18 @@ def assert_baseline_metrics(
     }
 
     for tdp in tdps:
+        assert isinstance(tdp, FullDataPointItem)
         for check in checks:
-            meta = tdp.additional_properties["checks_metadata"][check]  # type: ignore[attr-defined]
+            assert isinstance(tdp.checks_metadata, FullDataPointItemChecksMetadata)
+            meta = tdp.checks_metadata[check]  # type: ignore[attr-defined]
             meta_metrics["latency"].append(meta[latency_key_meta])
             meta_metrics["input_tokens"].append(meta[input_tokens_key])
             meta_metrics["output_tokens"].append(meta[output_tokens_key])
             if cost:
                 meta_metrics["cost"].append(meta[cost_key])
 
-        baseline = tdp.additional_properties["baseline_metrics"]  # type: ignore[attr-defined]
+        assert isinstance(tdp.baseline_metrics, FullDataPointItemBaselineMetrics)
+        baseline = tdp.baseline_metrics  # type: ignore[attr-defined]
         baseline_metrics["latency"].append(baseline[latency_key_baseline])
         baseline_metrics["input_tokens"].append(baseline[input_tokens_key])
         baseline_metrics["output_tokens"].append(baseline[output_tokens_key])
