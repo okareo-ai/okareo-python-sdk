@@ -289,7 +289,11 @@ class Okareo:
             models = model if isinstance(model, list) else [model]
             data["models"] = {}
             for model in models:
-                data["models"][model.type] = model.params()
+                if model.type == "driver":
+                    params = model.params()
+                    data["models"][params["type"]] = params
+                else:
+                    data["models"][model.type] = model.params()
             data, model_invoker, session_starter, session_ender = (
                 self._get_custom_model_invoker(data)
             )
