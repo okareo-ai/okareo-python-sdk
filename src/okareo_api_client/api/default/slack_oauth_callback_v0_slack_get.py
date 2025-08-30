@@ -16,7 +16,11 @@ def _get_kwargs(
     *,
     code: str,
     state: str,
+    api_key: str,
 ) -> Dict[str, Any]:
+    headers = {}
+    headers["api-key"] = api_key
+
     params: Dict[str, Any] = {}
     params["code"] = code
 
@@ -28,6 +32,7 @@ def _get_kwargs(
         "method": "get",
         "url": "/v0/slack",
         "params": params,
+        "headers": headers,
     }
 
 
@@ -76,12 +81,14 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     code: str,
     state: str,
+    api_key: str,
 ) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
     """Slack Oauth Callback
 
     Args:
         code (str):
         state (str):
+        api_key (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -94,6 +101,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         code=code,
         state=state,
+        api_key=api_key,
     )
 
     response = client.get_httpx_client().request(
@@ -108,12 +116,14 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     code: str,
     state: str,
+    api_key: str,
 ) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
     """Slack Oauth Callback
 
     Args:
         code (str):
         state (str):
+        api_key (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -127,6 +137,7 @@ def sync(
         client=client,
         code=code,
         state=state,
+        api_key=api_key,
     ).parsed
 
 
@@ -135,12 +146,14 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     code: str,
     state: str,
+    api_key: str,
 ) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
     """Slack Oauth Callback
 
     Args:
         code (str):
         state (str):
+        api_key (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -153,6 +166,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         code=code,
         state=state,
+        api_key=api_key,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -165,12 +179,14 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     code: str,
     state: str,
+    api_key: str,
 ) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
     """Slack Oauth Callback
 
     Args:
         code (str):
         state (str):
+        api_key (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -185,5 +201,6 @@ async def asyncio(
             client=client,
             code=code,
             state=state,
+            api_key=api_key,
         )
     ).parsed

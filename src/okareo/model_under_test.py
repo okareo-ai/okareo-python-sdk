@@ -105,7 +105,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.tags = mut.tags
         self.models = models
         self.app_link = mut.app_link
-        self.model_key = None
+        self.model_key: Optional[str] = None
         super().__init__(name="OkareoDatapointsProcessor")
 
     def get_client(self) -> Client:
@@ -387,7 +387,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 ),
                 None,
             )
-
+        assert self.model_key is not None
         if call_type == "invoke":
             messages = message_history if message_history is not None else args
             invoker = self.models[self.model_key]["model_invoker"]
