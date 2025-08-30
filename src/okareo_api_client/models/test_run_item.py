@@ -9,6 +9,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
+    from ..models.test_run_item_simulation_params import TestRunItemSimulationParams
 
 
 T = TypeVar("T", bound="TestRunItem")
@@ -35,6 +36,7 @@ class TestRunItem:
         failure_message (Union[Unset, str]):
         progress (Union[Unset, int]): Number in percent of progress of test run
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this test run Default: ''.
+        simulation_params (Union[Unset, TestRunItemSimulationParams]):
     """
 
     id: str
@@ -54,6 +56,7 @@ class TestRunItem:
     failure_message: Union[Unset, str] = UNSET
     progress: Union[Unset, int] = 0
     app_link: Union[Unset, str] = ""
+    simulation_params: Union[Unset, "TestRunItemSimulationParams"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -89,6 +92,9 @@ class TestRunItem:
         failure_message = self.failure_message
         progress = self.progress
         app_link = self.app_link
+        simulation_params: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.simulation_params, Unset):
+            simulation_params = self.simulation_params.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -128,12 +134,15 @@ class TestRunItem:
             field_dict["progress"] = progress
         if app_link is not UNSET:
             field_dict["app_link"] = app_link
+        if simulation_params is not UNSET:
+            field_dict["simulation_params"] = simulation_params
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
+        from ..models.test_run_item_simulation_params import TestRunItemSimulationParams
 
         d = src_dict.copy()
         id = d.pop("id")
@@ -187,6 +196,13 @@ class TestRunItem:
 
         app_link = d.pop("app_link", UNSET)
 
+        _simulation_params = d.pop("simulation_params", UNSET)
+        simulation_params: Union[Unset, TestRunItemSimulationParams]
+        if isinstance(_simulation_params, Unset):
+            simulation_params = UNSET
+        else:
+            simulation_params = TestRunItemSimulationParams.from_dict(_simulation_params)
+
         test_run_item = cls(
             id=id,
             project_id=project_id,
@@ -205,6 +221,7 @@ class TestRunItem:
             failure_message=failure_message,
             progress=progress,
             app_link=app_link,
+            simulation_params=simulation_params,
         )
 
         test_run_item.additional_properties = d

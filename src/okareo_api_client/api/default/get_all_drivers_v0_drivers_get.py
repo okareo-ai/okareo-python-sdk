@@ -1,36 +1,31 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
-from ...models.slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_get import (
-    SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
-)
-from ...types import UNSET, Response
+from ...models.driver_model_response import DriverModelResponse
+from ...models.http_validation_error import HTTPValidationError
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    code: str,
-    state: str,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
     params: Dict[str, Any] = {}
-    params["code"] = code
-
-    params["state"] = state
+    params["project_id"] = project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
         "method": "get",
-        "url": "/v0/slack",
+        "url": "/v0/drivers",
         "params": params,
         "headers": headers,
     }
@@ -38,25 +33,18 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
+) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = DriverModelResponse.from_dict(response_200_item_data)
+
+            response_200.append(response_200_item)
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
-        response_401 = ErrorResponse.from_dict(response.json())
-
-        return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
-        response_404 = ErrorResponse.from_dict(response.json())
-
-        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -67,7 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
+) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -79,15 +67,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+    """Get All Drivers
+
+     Retrieve all driver models.
 
     Args:
-        code (str):
-        state (str):
+        request: FastAPI request object containing database session
+
+    Returns:
+        List of DriverModelResponse with all driver model details
+
+    Args:
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -95,12 +89,11 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]
+        Response[Union[HTTPValidationError, List['DriverModelResponse']]]
     """
 
     kwargs = _get_kwargs(
-        code=code,
-        state=state,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -114,15 +107,21 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+    """Get All Drivers
+
+     Retrieve all driver models.
 
     Args:
-        code (str):
-        state (str):
+        request: FastAPI request object containing database session
+
+    Returns:
+        List of DriverModelResponse with all driver model details
+
+    Args:
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -130,13 +129,12 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]
+        Union[HTTPValidationError, List['DriverModelResponse']]
     """
 
     return sync_detailed(
         client=client,
-        code=code,
-        state=state,
+        project_id=project_id,
         api_key=api_key,
     ).parsed
 
@@ -144,15 +142,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+    """Get All Drivers
+
+     Retrieve all driver models.
 
     Args:
-        code (str):
-        state (str):
+        request: FastAPI request object containing database session
+
+    Returns:
+        List of DriverModelResponse with all driver model details
+
+    Args:
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -160,12 +164,11 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]
+        Response[Union[HTTPValidationError, List['DriverModelResponse']]]
     """
 
     kwargs = _get_kwargs(
-        code=code,
-        state=state,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -177,15 +180,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    code: str,
-    state: str,
+    project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]]:
-    """Slack Oauth Callback
+) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+    """Get All Drivers
+
+     Retrieve all driver models.
 
     Args:
-        code (str):
-        state (str):
+        request: FastAPI request object containing database session
+
+    Returns:
+        List of DriverModelResponse with all driver model details
+
+    Args:
+        project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
 
     Raises:
@@ -193,14 +202,13 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet]
+        Union[HTTPValidationError, List['DriverModelResponse']]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            code=code,
-            state=state,
+            project_id=project_id,
             api_key=api_key,
         )
     ).parsed
