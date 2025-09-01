@@ -1281,7 +1281,6 @@ class Okareo:
 
         # create model with target
         simulation_params = Simulation(
-            driver=driver_model,
             stop_check=stop_check,
             repeats=repeats,
             max_turns=max_turns,
@@ -1319,4 +1318,5 @@ class Okareo:
             calculate_metrics=calculate_metrics,
             checks=checks,
             simulation_params=simulation_params,
+            driver_id=driver_model.id,
         )

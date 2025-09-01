@@ -303,6 +303,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         model_data: dict,
         checks: Optional[List[str]],
         simulation_params: Optional[Any],
+        driver_id: Optional[str],
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
@@ -325,6 +326,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             ),
             checks=checks if checks else UNSET,
             simulation_params=simulation_params if simulation_params else UNSET,
+            driver_id=driver_id if driver_id else UNSET,
         )
 
     async def connect_nats(self, user_jwt: str, seed: str, local_nats: str) -> Any:
@@ -622,6 +624,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         checks: Optional[List[str]] = None,
         run_test_method: Any = None,
         simulation_params: Optional[Any] = None,
+        driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
@@ -670,6 +673,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     model_data,
                     checks,
                     simulation_params,
+                    driver_id,
                 ),
             )
             if isinstance(response, ErrorResponse):
@@ -711,6 +715,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         simulation_params: Optional[Any] = None,
+        driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Asynchronous server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side asynchronously. For other models,
@@ -747,6 +752,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks,
             endpoint,
             simulation_params,
+            driver_id,
         )
 
     def run_test(
@@ -760,6 +766,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         simulation_params: Optional[Any] = None,
+        driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side. For other models,
@@ -790,6 +797,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 checks,
                 run_test_v0_test_run_post.sync,
                 simulation_params,
+                driver_id,
             )
         except Exception as e:
             raise TestRunError(str(e)) from e
@@ -1464,7 +1472,6 @@ class Target:
 @_attrs_define
 class Simulation:
 
-    driver: Union[Driver, dict]
     stop_check: Union[StopConfig, dict, None] = None
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
@@ -1477,9 +1484,6 @@ class Simulation:
 
     def to_dict(self) -> dict:
         return {
-            "driver": (
-                self.driver["id"] if isinstance(self.driver, dict) else self.driver.id
-            ),
             "repeats": self.repeats,
             "max_turns": self.max_turns,
             "first_turn": self.first_turn,

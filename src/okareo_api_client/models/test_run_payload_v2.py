@@ -32,6 +32,7 @@ class TestRunPayloadV2:
         model_results (Union[Unset, TestRunPayloadV2ModelResults]):
         checks (Union[Unset, List[str]]): List of checks to include in the test run.
         simulation_params (Union[Unset, TestRunPayloadV2SimulationParams]): Simulation parameters for the test run.
+        driver_id (Union[Unset, str]): ID of the driver model to use, if applicable.
     """
 
     mut_id: str
@@ -45,6 +46,7 @@ class TestRunPayloadV2:
     model_results: Union[Unset, "TestRunPayloadV2ModelResults"] = UNSET
     checks: Union[Unset, List[str]] = UNSET
     simulation_params: Union[Unset, "TestRunPayloadV2SimulationParams"] = UNSET
+    driver_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -80,6 +82,8 @@ class TestRunPayloadV2:
         if not isinstance(self.simulation_params, Unset):
             simulation_params = self.simulation_params.to_dict()
 
+        driver_id = self.driver_id
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -106,6 +110,8 @@ class TestRunPayloadV2:
             field_dict["checks"] = checks
         if simulation_params is not UNSET:
             field_dict["simulation_params"] = simulation_params
+        if driver_id is not UNSET:
+            field_dict["driver_id"] = driver_id
 
         return field_dict
 
@@ -164,6 +170,8 @@ class TestRunPayloadV2:
         else:
             simulation_params = TestRunPayloadV2SimulationParams.from_dict(_simulation_params)
 
+        driver_id = d.pop("driver_id", UNSET)
+
         test_run_payload_v2 = cls(
             mut_id=mut_id,
             scenario_id=scenario_id,
@@ -176,6 +184,7 @@ class TestRunPayloadV2:
             model_results=model_results,
             checks=checks,
             simulation_params=simulation_params,
+            driver_id=driver_id,
         )
 
         test_run_payload_v2.additional_properties = d
