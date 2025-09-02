@@ -1439,6 +1439,7 @@ class Driver:
     temperature: Optional[float] = 0.6
     id: Optional[str] = None
     time_created: Optional[str] = datetime.now().isoformat()
+    project_id: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {

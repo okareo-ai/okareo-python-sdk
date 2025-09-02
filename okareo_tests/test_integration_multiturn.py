@@ -1192,7 +1192,7 @@ def test_multiturn_driver_with_custom_endpoint_same_message(
     assert evaluation.status == "FINISHED"
 
     assert_baseline_metrics(
-        okareo, evaluation, multiturn_model, ["task_completed"], False, True, 1
+        okareo, evaluation, multiturn_model, ["task_completed"], False, True, 2
     )
 
 

@@ -18,6 +18,7 @@ class DriverModelResponse:
         prompt_template (str):
         time_created (str):
         model_id (Union[Unset, str]):
+        project_id (Union[Unset, str]):
     """
 
     id: str
@@ -26,6 +27,7 @@ class DriverModelResponse:
     prompt_template: str
     time_created: str
     model_id: Union[Unset, str] = UNSET
+    project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -35,6 +37,7 @@ class DriverModelResponse:
         prompt_template = self.prompt_template
         time_created = self.time_created
         model_id = self.model_id
+        project_id = self.project_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -49,6 +52,8 @@ class DriverModelResponse:
         )
         if model_id is not UNSET:
             field_dict["model_id"] = model_id
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
 
         return field_dict
 
@@ -67,6 +72,8 @@ class DriverModelResponse:
 
         model_id = d.pop("model_id", UNSET)
 
+        project_id = d.pop("project_id", UNSET)
+
         driver_model_response = cls(
             id=id,
             name=name,
@@ -74,6 +81,7 @@ class DriverModelResponse:
             prompt_template=prompt_template,
             time_created=time_created,
             model_id=model_id,
+            project_id=project_id,
         )
 
         driver_model_response.additional_properties = d

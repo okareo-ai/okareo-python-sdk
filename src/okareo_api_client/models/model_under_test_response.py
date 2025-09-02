@@ -6,6 +6,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
     from ..models.model_under_test_response_models import ModelUnderTestResponseModels
 
 
@@ -26,6 +27,8 @@ class ModelUnderTestResponse:
         sensitive_fields (Union[Unset, List[str]]):
         datapoint_count (Union[Unset, int]):
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this model Default: ''.
+        deprecated_params (Union[Unset, ModelUnderTestResponseDeprecatedParams]): Deprecated parameters for backward
+            compatibility.
         warning (Union[Unset, str]):
     """
 
@@ -39,6 +42,7 @@ class ModelUnderTestResponse:
     sensitive_fields: Union[Unset, List[str]] = UNSET
     datapoint_count: Union[Unset, int] = UNSET
     app_link: Union[Unset, str] = ""
+    deprecated_params: Union[Unset, "ModelUnderTestResponseDeprecatedParams"] = UNSET
     warning: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -60,6 +64,10 @@ class ModelUnderTestResponse:
 
         datapoint_count = self.datapoint_count
         app_link = self.app_link
+        deprecated_params: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.deprecated_params, Unset):
+            deprecated_params = self.deprecated_params.to_dict()
+
         warning = self.warning
 
         field_dict: Dict[str, Any] = {}
@@ -83,6 +91,8 @@ class ModelUnderTestResponse:
             field_dict["datapoint_count"] = datapoint_count
         if app_link is not UNSET:
             field_dict["app_link"] = app_link
+        if deprecated_params is not UNSET:
+            field_dict["deprecated_params"] = deprecated_params
         if warning is not UNSET:
             field_dict["warning"] = warning
 
@@ -90,6 +100,7 @@ class ModelUnderTestResponse:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
         from ..models.model_under_test_response_models import ModelUnderTestResponseModels
 
         d = src_dict.copy()
@@ -118,6 +129,13 @@ class ModelUnderTestResponse:
 
         app_link = d.pop("app_link", UNSET)
 
+        _deprecated_params = d.pop("deprecated_params", UNSET)
+        deprecated_params: Union[Unset, ModelUnderTestResponseDeprecatedParams]
+        if isinstance(_deprecated_params, Unset):
+            deprecated_params = UNSET
+        else:
+            deprecated_params = ModelUnderTestResponseDeprecatedParams.from_dict(_deprecated_params)
+
         warning = d.pop("warning", UNSET)
 
         model_under_test_response = cls(
@@ -131,6 +149,7 @@ class ModelUnderTestResponse:
             sensitive_fields=sensitive_fields,
             datapoint_count=datapoint_count,
             app_link=app_link,
+            deprecated_params=deprecated_params,
             warning=warning,
         )
 
