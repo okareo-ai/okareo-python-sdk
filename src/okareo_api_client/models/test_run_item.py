@@ -37,6 +37,7 @@ class TestRunItem:
         progress (Union[Unset, int]): Number in percent of progress of test run
         app_link (Union[Unset, str]): This URL links to the Okareo webpage for this test run Default: ''.
         simulation_params (Union[Unset, TestRunItemSimulationParams]):
+        driver_id (Union[Unset, str]): ID of the driver used for the run, if applicable.
     """
 
     id: str
@@ -57,6 +58,7 @@ class TestRunItem:
     progress: Union[Unset, int] = 0
     app_link: Union[Unset, str] = ""
     simulation_params: Union[Unset, "TestRunItemSimulationParams"] = UNSET
+    driver_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -95,6 +97,8 @@ class TestRunItem:
         simulation_params: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.simulation_params, Unset):
             simulation_params = self.simulation_params.to_dict()
+
+        driver_id = self.driver_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -136,6 +140,8 @@ class TestRunItem:
             field_dict["app_link"] = app_link
         if simulation_params is not UNSET:
             field_dict["simulation_params"] = simulation_params
+        if driver_id is not UNSET:
+            field_dict["driver_id"] = driver_id
 
         return field_dict
 
@@ -203,6 +209,8 @@ class TestRunItem:
         else:
             simulation_params = TestRunItemSimulationParams.from_dict(_simulation_params)
 
+        driver_id = d.pop("driver_id", UNSET)
+
         test_run_item = cls(
             id=id,
             project_id=project_id,
@@ -222,6 +230,7 @@ class TestRunItem:
             progress=progress,
             app_link=app_link,
             simulation_params=simulation_params,
+            driver_id=driver_id,
         )
 
         test_run_item.additional_properties = d
