@@ -10,7 +10,7 @@ from ...types import Response
 
 
 def _get_kwargs(
-    identifier: str,
+    driver_id: str,
     *,
     api_key: str,
 ) -> Dict[str, Any]:
@@ -19,8 +19,8 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/driver/{identifier}".format(
-            identifier=identifier,
+        "url": "/v0/driver_id/{driver_id}".format(
+            driver_id=driver_id,
         ),
         "headers": headers,
     }
@@ -54,14 +54,12 @@ def _build_response(
 
 
 def sync_detailed(
-    identifier: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
-    """Get Driver
-
-     Retrieve a driver model by either its name or ID.
+    """Get Driver By Id
 
      Retrieve a driver model by its name.
 
@@ -76,17 +74,7 @@ def sync_detailed(
         HTTPException: 404 if driver model is not found
 
     Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
-    Args:
-        identifier (str):
+        driver_id (str):
         api_key (str):
 
     Raises:
@@ -98,7 +86,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
+        driver_id=driver_id,
         api_key=api_key,
     )
 
@@ -110,14 +98,12 @@ def sync_detailed(
 
 
 def sync(
-    identifier: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
-    """Get Driver
-
-     Retrieve a driver model by either its name or ID.
+    """Get Driver By Id
 
      Retrieve a driver model by its name.
 
@@ -132,17 +118,7 @@ def sync(
         HTTPException: 404 if driver model is not found
 
     Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
-    Args:
-        identifier (str):
+        driver_id (str):
         api_key (str):
 
     Raises:
@@ -154,21 +130,19 @@ def sync(
     """
 
     return sync_detailed(
-        identifier=identifier,
+        driver_id=driver_id,
         client=client,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    identifier: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
-    """Get Driver
-
-     Retrieve a driver model by either its name or ID.
+    """Get Driver By Id
 
      Retrieve a driver model by its name.
 
@@ -183,17 +157,7 @@ async def asyncio_detailed(
         HTTPException: 404 if driver model is not found
 
     Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
-    Args:
-        identifier (str):
+        driver_id (str):
         api_key (str):
 
     Raises:
@@ -205,7 +169,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
+        driver_id=driver_id,
         api_key=api_key,
     )
 
@@ -215,14 +179,12 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    identifier: str,
+    driver_id: str,
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
-    """Get Driver
-
-     Retrieve a driver model by either its name or ID.
+    """Get Driver By Id
 
      Retrieve a driver model by its name.
 
@@ -237,17 +199,7 @@ async def asyncio(
         HTTPException: 404 if driver model is not found
 
     Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
-    Args:
-        identifier (str):
+        driver_id (str):
         api_key (str):
 
     Raises:
@@ -260,7 +212,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            identifier=identifier,
+            driver_id=driver_id,
             client=client,
             api_key=api_key,
         )

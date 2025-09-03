@@ -1,9 +1,10 @@
+import datetime
 from typing import List, Union
 
 from litellm import token_counter
 
 from okareo import Okareo
-from okareo.model_under_test import ModelUnderTest
+from okareo.model_under_test import ModelUnderTest, Target
 from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
@@ -13,6 +14,9 @@ from okareo_api_client.models.full_data_point_item_baseline_metrics import (
 )
 from okareo_api_client.models.full_data_point_item_checks_metadata import (
     FullDataPointItemChecksMetadata,
+)
+from okareo_api_client.models.model_under_test_response import (
+    ModelUnderTestResponse,
 )
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
@@ -308,3 +312,26 @@ def assert_baseline_metrics(
         run_baseline_meta,
         meta_metrics,
     )
+
+
+def create_dummy_mut(
+    target: Target, evaluation: TestRunItem, okareo: Okareo
+) -> ModelUnderTest:
+    """Create a dummy ModelUnderTest for testing purposes."""
+    assert isinstance(target, Target)
+    t_get = okareo.get_target_by_name(target.name)
+    assert isinstance(t_get, Target) and t_get.id is not None
+    dummy_response = ModelUnderTestResponse(
+        id=t_get.id,
+        project_id=evaluation.project_id,
+        name=t_get.name,
+        tags=[],
+        time_created=datetime.datetime.now().isoformat(),
+    )
+    mut = ModelUnderTest(
+        client=okareo.client,
+        api_key=okareo.api_key,
+        mut=dummy_response,
+        models={target.target["type"]: target.target},
+    )
+    return mut
