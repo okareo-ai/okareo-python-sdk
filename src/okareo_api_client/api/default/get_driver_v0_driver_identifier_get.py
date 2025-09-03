@@ -63,18 +63,6 @@ def sync_detailed(
 
      Retrieve a driver model by either its name or ID.
 
-     Retrieve a driver model by its name.
-
-    Args:
-        driver_name: The unique name of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
     Args:
         identifier: The unique name or ID of the driver model to retrieve
         request: FastAPI request object containing database session
@@ -119,18 +107,6 @@ def sync(
 
      Retrieve a driver model by either its name or ID.
 
-     Retrieve a driver model by its name.
-
-    Args:
-        driver_name: The unique name of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
     Args:
         identifier: The unique name or ID of the driver model to retrieve
         request: FastAPI request object containing database session
@@ -169,18 +145,6 @@ async def asyncio_detailed(
     """Get Driver
 
      Retrieve a driver model by either its name or ID.
-
-     Retrieve a driver model by its name.
-
-    Args:
-        driver_name: The unique name of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
 
     Args:
         identifier: The unique name or ID of the driver model to retrieve
@@ -223,18 +187,6 @@ async def asyncio(
     """Get Driver
 
      Retrieve a driver model by either its name or ID.
-
-     Retrieve a driver model by its name.
-
-    Args:
-        driver_name: The unique name of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
 
     Args:
         identifier: The unique name or ID of the driver model to retrieve
