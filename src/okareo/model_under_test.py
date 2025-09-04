@@ -218,7 +218,8 @@ class ModelUnderTest(AsyncProcessorMixin):
 
         if (
             "custom" not in model_names  # custom is a model without a key
-            and test_run_type != TestRunType.MULTI_TURN  # driver can have 2 keys for driver and target
+            and test_run_type
+            != TestRunType.MULTI_TURN  # driver can have 2 keys for driver and target
             and len(model_names) != len(run_api_keys)
         ):
             raise MissingApiKeyError("Number of models and API keys does not match")
@@ -1455,7 +1456,12 @@ class Driver:
 class Target:
     name: str
     target: Union[
-        OpenAIModel, CustomMultiturnTarget, GenerationModel, CustomEndpointTarget, dict
+        OpenAIModel,
+        CustomMultiturnTarget,
+        GenerationModel,
+        CustomEndpointTarget,
+        CustomMultiturnTargetAsync,
+        dict,
     ]
     id: Optional[str] = None
 

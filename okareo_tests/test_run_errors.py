@@ -283,9 +283,7 @@ class TestMultiturnErrors:
                     "temperature": "hot",
                     "name": f"Non-Numeric Temp {rnd}",
                 },  # Not a number
-                "error": re.escape(
-                    "error: [{'loc': ['body', 'temperature'], 'msg': 'value is not a valid float', 'type': 'type_error.float'}]"
-                ),
+                "error": "Invalid driver_temperature value: hot. Must be a number.",
                 "run_test": False,  # This case is for driver config only, no run test
             },
         ]

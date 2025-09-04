@@ -328,10 +328,13 @@ def create_dummy_mut(
         tags=[],
         time_created=datetime.datetime.now().isoformat(),
     )
+    target_type = (
+        target.target["type"] if isinstance(target.target, dict) else target.target.type
+    )
     mut = ModelUnderTest(
         client=okareo.client,
         api_key=okareo.api_key,
         mut=dummy_response,
-        models={target.target["type"]: target.target},
+        models={target_type: target.target},
     )
     return mut

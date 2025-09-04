@@ -1123,6 +1123,13 @@ class Okareo:
         Returns:
             The created or updated driver.
         """
+        try:
+            if driver.temperature is not None:
+                driver.temperature = float(driver.temperature)
+        except ValueError as e:
+            raise ValueError(
+                f"Invalid driver_temperature value: {driver.temperature}. Must be a number."
+            ) from e
         json_body = DriverModelSchema.from_dict(driver.to_dict())
         response = register_driver_model_v0_driver_post.sync(
             client=self.client,
