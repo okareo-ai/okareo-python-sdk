@@ -499,17 +499,17 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
     custom_model = DynamicResponseModel(name="dynamic_response_model")
 
     target = Target(
-        name="test_simulation_custom_with_dynamic_response", target=custom_model
+        name=f"test_simulation_custom_with_dynamic_response {rnd}", target=custom_model
     )
 
     target_after_create = okareo.create_or_update_target(target)
 
     target_after_get = okareo.get_target_by_name(
-        "test_simulation_custom_with_dynamic_response"
+        f"test_simulation_custom_with_dynamic_response {rnd}"
     )
 
     endpoint_driver = Driver(
-        name="test_simulation_custom_with_dynamic_response_driver",
+        name=f"test_simulation_custom_with_dynamic_response_driver {rnd}",
         prompt_template="{scenario_input}",
         temperature=0.7,
     )
@@ -528,7 +528,8 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
     ]
 
     scenario_set_create = ScenarioSetCreate(
-        name=f"Dynamic Response Test - {rnd}", seed_data=seeds
+        name=f"Dynamic Response Test - {rnd}",
+        seed_data=seeds,
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
@@ -536,7 +537,7 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
         target,
         target_after_create,
         target_after_get,
-        "test_simulation_custom_with_dynamic_response",
+        f"test_simulation_custom_with_dynamic_response {rnd}",
     ]:
         assert isinstance(t, (Target, str))
 
@@ -544,7 +545,7 @@ def test_simulation_custom_with_dynamic_response(rnd: str, okareo: Okareo) -> No
             evaluation = okareo.run_simulation(
                 scenario=scenario,
                 name=f"Dynamic Simulation Test - {rnd}",  # or maybe a default name
-                driver="test_simulation_custom_with_dynamic_response_driver",  # or pass whole driver object, or pass predefined driver name
+                driver=f"test_simulation_custom_with_dynamic_response_driver {rnd}",  # or pass whole driver object, or pass predefined driver name
                 target=t,  # or pass whole target object, or pass predefined target name
                 checks=["avg_turn_latency", "total_input_tokens", "total_cost"],
                 # optional

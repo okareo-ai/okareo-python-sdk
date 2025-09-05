@@ -478,7 +478,7 @@ class TestMultiturnErrors:
             "name": "Sensitive Fields Test " + rnd,
         }
 
-        exception_str_match = exception_str_template.replace("{status_code}", "401")
+        exception_str_match = exception_str_template.replace("{status_code}", "201")
         # Register the model with a custom endpoint that will fail.
         # Anticipate a redacted api-key
         self._register_and_expect_error(
