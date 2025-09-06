@@ -10,10 +10,11 @@ from okareo import Okareo
 from okareo.model_under_test import (
     CustomEndpointTarget,
     CustomMultiturnTarget,
+    Driver,
     ModelInvocation,
-    MultiTurnDriver,
     OpenAIModel,
     SessionConfig,
+    Target,
     TurnConfig,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
@@ -55,7 +56,7 @@ class CustomModelWithDict(CustomMultiturnTarget):
 
 
 class TestMultiturnErrors:
-    """Tests for error paths in the MultiTurnDriver implementation."""
+    """Tests for error paths in the run_simulation implementation."""
 
     def _create_basic_openai_target(self, temperature: float = 0) -> Any:
         """Helper method to create a basic OpenAI target model"""
@@ -76,9 +77,10 @@ class TestMultiturnErrors:
     def _register_and_expect_error(
         self,
         okareo: Any,
-        name: str,
-        model_config: Any,
+        target_config: Any,
         expected_error: str,
+        driver_config: Any = None,
+        run_config: Any = None,
         run_test: bool = False,
         basic_scenario: Any = None,
         api_keys: Any = None,
@@ -90,75 +92,82 @@ class TestMultiturnErrors:
 
         Args:
             okareo: Okareo instance
-            name: Model name
-            model_config: Configuration for MultiTurnDriver
+            target_config: Configuration for Target
             expected_error: Expected error message pattern
+            driver_config: Configuration for Driver
+            run_config: Configuration for test run
             run_test: Whether to run a test after registration
             basic_scenario: Scenario for test run
             api_keys: API keys for test run
             checks: Checks for test run
             sensitive_fields: Sensitive fields to redact in responses/error messages
         """
+
         if run_test:
-            # Register model first, then run test and expect error
-            mut = okareo.register_model(
-                name=name,
-                model=MultiTurnDriver(**model_config),
-                update=True,
-                sensitive_fields=sensitive_fields,
-            )
+            target = Target(**target_config)
+            driver = Driver(**driver_config) if driver_config else None
+            # Register target and driver
+            target_mut = okareo.create_or_update_target(target)
+            driver_mut = okareo.create_or_update_driver(driver) if driver else None
+
+            extra_run_config = {
+                "target": target_mut,
+                "driver": driver_mut,
+                "scenario": basic_scenario,
+                "api_keys": api_keys or self._create_basic_api_keys(),
+                "name": "Test Run",
+                "checks": checks or ["model_refusal"],
+                "sensitive_fields": sensitive_fields,
+            }
+
+            all_config = {**extra_run_config, **(run_config or {})}
 
             with pytest.raises(Exception, match=expected_error):
-                mut.run_test(
-                    scenario=basic_scenario,
-                    api_keys=api_keys or self._create_basic_api_keys(),
-                    name="Test Run",
-                    test_run_type=TestRunType.MULTI_TURN,
-                    checks=checks or ["model_refusal"],
-                )
+                okareo.run_simulation(**all_config)
         else:
             # Expect error during registration
             with pytest.raises(Exception, match=expected_error):
-                okareo.register_model(
-                    name=name,
-                    model=MultiTurnDriver(**model_config),
-                    update=True,
-                    sensitive_fields=sensitive_fields,
-                )
+                target = Target(**target_config)
+                driver = Driver(**driver_config) if driver_config else None
+                # Register target and driver
+                target_mut = okareo.create_or_update_target(target)
+                driver_mut = okareo.create_or_update_driver(driver) if driver else None
 
     def test_missing_target(self, rnd: str, okareo: Any) -> None:
         """Test failure when target is missing"""
-        model_config = {
-            "max_turns": 2,
-            "repeats": 1,
-            "stop_check": self._create_basic_stop_check(),
+        target_config = {
+            "name": f"Missing Target {rnd}"
             # target is missing
         }
 
         self._register_and_expect_error(
-            okareo,
-            f"Missing Target {rnd}",
-            model_config,
-            "missing 1 required positional argument: 'target'",
+            okareo=okareo,
+            target_config=target_config,
+            expected_error=re.escape(
+                "Target.__init__() missing 1 required positional argument: 'target'"
+            ),
         )
 
     def test_invalid_first_turn(
         self, rnd: str, basic_scenario: Any, okareo: Any
     ) -> None:
         """Test failure when first_turn is invalid"""
-        model_config = {
+        run_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": self._create_basic_openai_target(),
             "first_turn": "invalid",  # Should be 'driver' or 'target'
             "stop_check": self._create_basic_stop_check(),
+        }
+        target_config = {
+            "target": self._create_basic_openai_target(),
+            "name": f"Invalid First Turn {rnd}",
         }
 
         self._register_and_expect_error(
             okareo,
-            f"Invalid First Turn {rnd}",
-            model_config,
-            "Invalid 'first_turn' value: 'invalid'. Must be either 'target' or 'driver'",
+            target_config=target_config,
+            run_config=run_config,
+            expected_error="Invalid 'first_turn' value: 'invalid'. Must be either 'target' or 'driver'",
             run_test=True,
             basic_scenario=basic_scenario,
         )
@@ -167,19 +176,28 @@ class TestMultiturnErrors:
         self, rnd: str, okareo: Any, basic_scenario: Any
     ) -> None:
         """Test failure when driver API key is missing"""
-        model_config = {
+        run_config = {
             "max_turns": 2,
             "repeats": 1,
-            "driver_model_id": "gpt-4o",  # Specifying driver model but will miss API key
-            "target": self._create_basic_openai_target(),
             "stop_check": self._create_basic_stop_check(),
         }
 
+        target_config = {
+            "target": self._create_basic_openai_target(),
+            "name": f"Missing Driver API Key {rnd}",
+        }
+
+        driver_config = {
+            "model_id": "gpt-4o",  # Specifying driver model but will miss API key
+            "name": f"Missing Driver API Key {rnd}",
+        }
+
         self._register_and_expect_error(
-            okareo,
-            f"Missing Driver API Key {rnd}",
-            model_config,
-            "Missing 'driver' API key",
+            okareo=okareo,
+            target_config=target_config,
+            driver_config=driver_config,
+            run_config=run_config,
+            expected_error="Missing 'driver' API key",
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": "test-key"},  # Missing driver key
@@ -187,18 +205,22 @@ class TestMultiturnErrors:
 
     def test_empty_stop_check(self, rnd: str, okareo: Any, basic_scenario: Any) -> None:
         """Test failure when no checks are provided"""
-        model_config = {
+        run_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": self._create_basic_openai_target(),
             "stop_check": {"check_name": "", "stop_on": False},
         }
 
+        target_config = {
+            "target": self._create_basic_openai_target(),
+            "name": f"Missing Checks {rnd}",
+        }
+
         self._register_and_expect_error(
-            okareo,
-            f"Missing Checks {rnd}",
-            model_config,
-            "Invalid 'stop_check' configuration",
+            okareo=okareo,
+            target_config=target_config,
+            run_config=run_config,
+            expected_error="Invalid 'stop_check' configuration",
             run_test=True,
             basic_scenario=basic_scenario,
             checks=[],  # Empty list of checks
@@ -206,18 +228,23 @@ class TestMultiturnErrors:
 
     def test_invalid_stop_check(self, rnd: str, okareo: Any) -> None:
         """Test failure when stop_check is invalid"""
-        model_config = {
+        run_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": self._create_basic_openai_target(),
             "stop_check": {"invalid_field": "model_refusal"},  # Missing check_name
         }
 
+        target_config = {
+            "target": self._create_basic_openai_target(),
+            "name": f"Invalid Stop Check {rnd}",
+        }
+
         self._register_and_expect_error(
-            okareo,
-            f"Invalid Stop Check {rnd}",
-            model_config,
-            "got an unexpected keyword argument 'invalid_field'",
+            okareo=okareo,
+            target_config=target_config,
+            run_config=run_config,
+            expected_error="got an unexpected keyword argument 'invalid_field'",
+            run_test=True,
         )
 
     def test_invalid_temperature_values(
@@ -226,45 +253,55 @@ class TestMultiturnErrors:
         """Test failure when temperature values are invalid"""
         temperature_test_cases: Any = [
             {
-                "name": f"Invalid Driver Temp {rnd}",
-                "config": {"driver_temperature": 5.0},  # Outside valid range
-                "error": "Driver temperature must be between 0 and 2",
-            },
-            {
-                "name": f"Invalid Target Temp {rnd}",
-                "config": {
-                    "target": self._create_basic_openai_target(temperature=3.0)
+                "target_config": {
+                    "target": self._create_basic_openai_target(),
+                    "name": f"Invalid Driver Temp {rnd}",
+                },
+                "driver_config": {
+                    "temperature": 5.0,
+                    "name": f"Invalid Driver Temp {rnd}",
                 },  # Outside valid range
-                "error": "Target temperature must be between 0 and 2",
+                "error": "Driver temperature must be between 0 and 2",
+                "run_test": True,
             },
             {
-                "name": f"Non-Numeric Temp {rnd}",
-                "config": {"driver_temperature": "hot"},  # Not a number
-                "error": "Invalid driver_temperature value",
+                "target_config": {
+                    "name": f"Invalid Target Temp {rnd}",
+                    "target": self._create_basic_openai_target(
+                        temperature=3.0
+                    ),  # Outside valid range
+                },
+                "error": "Target temperature must be between 0 and 2",
+                "run_test": True,
+            },
+            {
+                "target_config": {
+                    "name": f"Non-Numeric Temp {rnd}",
+                    "target": self._create_basic_openai_target(),
+                },
+                "driver_config": {
+                    "temperature": "hot",
+                    "name": f"Non-Numeric Temp {rnd}",
+                },  # Not a number
+                "error": "Invalid driver_temperature value: hot. Must be a number.",
+                "run_test": False,  # This case is for driver config only, no run test
             },
         ]
 
         for test_case in temperature_test_cases:
-            base_config = {
+            run_config = {
                 "max_turns": 2,
                 "repeats": 1,
-                "target": self._create_basic_openai_target(),
                 "stop_check": self._create_basic_stop_check(),
             }
-            # Manually update the config to avoid type issues
-            if "driver_temperature" in test_case["config"]:
-                base_config["driver_temperature"] = test_case["config"][
-                    "driver_temperature"
-                ]
-            if "target" in test_case["config"]:
-                base_config["target"] = test_case["config"]["target"]
 
             self._register_and_expect_error(
-                okareo,
-                test_case["name"],  # type: ignore
-                base_config,
-                test_case["error"],  # type: ignore
-                run_test=True,
+                okareo=okareo,
+                target_config=test_case["target_config"],
+                run_config=run_config,
+                driver_config=test_case.get("driver_config"),
+                expected_error=test_case["error"],  # type: ignore
+                run_test=test_case["run_test"],
                 basic_scenario=basic_scenario,
             )
 
@@ -291,18 +328,23 @@ class TestMultiturnErrors:
         ]
 
         for test_case in max_turns_test_cases:
-            model_config = {
+
+            target_config = {
+                "name": test_case["name"],
+                "target": self._create_basic_openai_target(),
+            }
+
+            run_config = {
                 "max_turns": test_case["max_turns"],
                 "repeats": 1,
-                "target": self._create_basic_openai_target(),
                 "stop_check": self._create_basic_stop_check(),
             }
 
             self._register_and_expect_error(
-                okareo,
-                test_case["name"],
-                model_config,
-                test_case["error"],
+                okareo=okareo,
+                target_config=target_config,
+                run_config=run_config,
+                expected_error=test_case["error"],
                 run_test=True,
                 basic_scenario=basic_scenario,
             )
@@ -356,18 +398,22 @@ class TestMultiturnErrors:
             next_status_code=2000
         )  # Invalid status code
 
-        model_config = {
+        target_config = {
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
+            "name": f"Status Code Mismatch {rnd}",
+        }
+
+        run_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config, end_config),
             "stop_check": self._create_basic_stop_check(),
         }
 
         self._register_and_expect_error(
-            okareo,
-            f"Status Code Mismatch {rnd}",
-            model_config,
-            "did not match expected status code",
+            okareo=okareo,
+            target_config=target_config,
+            run_config=run_config,
+            expected_error="did not match expected status code",
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
@@ -384,14 +430,16 @@ class TestMultiturnErrors:
             start_status_code=2000
         )
 
-        model_config = {
+        run_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config, end_config),
             "stop_check": self._create_basic_stop_check(),
         }
 
-        model_name = "Sensitive Fields Test " + rnd
+        target_config = {
+            "name": "Sensitive Fields Test " + rnd,
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
+        }
         redacted_str = re.escape("*" * 16)
         exception_str_template = (
             "Response status code {status_code} did not match expected status code 2000. Response: .*. Request: [A-Z]+ https?://.*?, Headers: {'api-key': '"
@@ -403,10 +451,10 @@ class TestMultiturnErrors:
         # Register the model with a custom endpoint that will fail.
         # Anticipate a redacted api-key
         self._register_and_expect_error(
-            okareo,
-            model_name,
-            model_config,
-            exception_str_match,
+            okareo=okareo,
+            target_config=target_config,
+            run_config=run_config,
+            expected_error=exception_str_match,
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
@@ -419,21 +467,25 @@ class TestMultiturnErrors:
             start_status_code=2000, api_key="****************"
         )
 
-        model_config = {
+        run_config = {
             "max_turns": 2,
             "repeats": 1,
-            "target": CustomEndpointTarget(start_config, next_config, end_config),
             "stop_check": self._create_basic_stop_check(),
         }
 
-        exception_str_match = exception_str_template.replace("{status_code}", "401")
+        target_config = {
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
+            "name": "Sensitive Fields Test " + rnd,
+        }
+
+        exception_str_match = exception_str_template.replace("{status_code}", "201")
         # Register the model with a custom endpoint that will fail.
         # Anticipate a redacted api-key
         self._register_and_expect_error(
-            okareo,
-            model_name,
-            model_config,
-            exception_str_match,
+            okareo=okareo,
+            target_config=target_config,
+            run_config=run_config,
+            expected_error=exception_str_match,
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
@@ -444,10 +496,10 @@ class TestMultiturnErrors:
         # Anticipate an auth error failure due to bad api-key
         exception_str_match = exception_str_template.replace("{status_code}", "401")
         self._register_and_expect_error(
-            okareo,
-            model_name,
-            model_config,
-            exception_str_match,
+            okareo=okareo,
+            target_config=target_config,
+            run_config=run_config,
+            expected_error=exception_str_match,
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
@@ -527,17 +579,9 @@ class TestMultiturnErrors:
         # Create the model instance
         custom_model = ErrorRaisingModel(name=f"error_model_{rnd}")
 
-        # Register the model with MultiTurnDriver
-        model_under_test = okareo.register_model(
+        target = Target(
             name=f"Error Model Test {rnd}",
-            model=MultiTurnDriver(
-                driver_temperature=0.5,
-                max_turns=3,
-                repeats=1,
-                target=custom_model,
-                stop_check={"check_name": "model_refusal", "stop_on": False},
-            ),
-            update=True,
+            target=custom_model,
         )
 
         # Create a basic scenario
@@ -557,11 +601,14 @@ class TestMultiturnErrors:
         with pytest.raises(
             Exception, match="This is a deliberate error from the custom model"
         ):
-            model_under_test.run_test(
+            okareo.run_simulation(
+                target=target,
                 name=f"Error Model Test - {rnd}",
                 api_key=OPENAI_API_KEY,
                 scenario=scenario,
-                test_run_type=TestRunType.MULTI_TURN,
+                max_turns=3,
+                repeats=1,
+                stop_check={"check_name": "model_refusal", "stop_on": False},
                 checks=["task_completed"],
             )
 
@@ -579,17 +626,9 @@ class TestMultiturnErrors:
         # Create the model instance
         custom_model = ErrorRaisingModel(name=f"error_model_{rnd}")
 
-        # Register the model with MultiTurnDriver
-        model_under_test = okareo.register_model(
+        target = Target(
             name=f"Error Model Test {rnd}",
-            model=MultiTurnDriver(
-                driver_temperature=0.5,
-                max_turns=3,
-                repeats=1,
-                target=custom_model,
-                stop_check={"check_name": "model_refusal", "stop_on": False},
-            ),
-            update=True,
+            target=custom_model,
         )
 
         # Create a basic scenario
@@ -610,11 +649,14 @@ class TestMultiturnErrors:
             Exception,
             match="CustomModel did not return a response, or we were unable to parse it.",
         ):
-            model_under_test.run_test(
+            okareo.run_simulation(
+                target=target,
                 name=f"Error Model Test - {rnd}",
                 api_key=OPENAI_API_KEY,
                 scenario=scenario,
-                test_run_type=TestRunType.MULTI_TURN,
+                max_turns=3,
+                repeats=1,
+                stop_check={"check_name": "model_refusal", "stop_on": False},
                 checks=[
                     "contains_all_imports",
                     "compression_ratio",
@@ -632,21 +674,13 @@ class TestMultiturnErrors:
             check=Check(),
         )
 
-        # Create a basic multiturn model
-        model_under_test = okareo.register_model(
+        target = Target(
             name=f"Error Check MT {rnd}",
-            model=MultiTurnDriver(
-                driver_temperature=0.5,
-                max_turns=3,
-                repeats=1,
-                target=OpenAIModel(
-                    model_id="gpt-4o-mini",
-                    temperature=0,
-                    system_prompt_template="test prompt",
-                ),
-                stop_check={"check_name": "model_refusal", "stop_on": False},
+            target=OpenAIModel(
+                model_id="gpt-4o-mini",
+                temperature=0,
+                system_prompt_template="test prompt",
             ),
-            update=True,
         )
 
         # Create a basic scenario
@@ -664,10 +698,13 @@ class TestMultiturnErrors:
 
         # Run test with invalid check and expect error
         with pytest.raises(Exception, match="An error occurred while running checks"):
-            model_under_test.run_test(
+            okareo.run_simulation(
+                target=target,
                 scenario=scenario,
                 name="Test Run",
-                test_run_type=TestRunType.MULTI_TURN,
+                max_turns=3,
+                repeats=1,
+                stop_check={"check_name": "model_refusal", "stop_on": False},
                 api_keys={"openai": OPENAI_API_KEY},
                 checks=["error_check"],
             )
