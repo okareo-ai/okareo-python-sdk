@@ -105,6 +105,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.tags = mut.tags
         self.models = models
         self.app_link = mut.app_link
+        self.model_key: Optional[str] = None
         super().__init__(name="OkareoDatapointsProcessor")
 
     def get_client(self) -> Client:
@@ -217,8 +218,8 @@ class ModelUnderTest(AsyncProcessorMixin):
 
         if (
             "custom" not in model_names  # custom is a model without a key
-            and "driver"
-            not in model_names  # driver can have 2 keys for driver and target
+            and test_run_type
+            != TestRunType.MULTI_TURN  # driver can have 2 keys for driver and target
             and len(model_names) != len(run_api_keys)
         ):
             raise MissingApiKeyError("Number of models and API keys does not match")
@@ -231,23 +232,21 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def _has_custom_model(self) -> bool:
         assert isinstance(self.models, dict)
-        if "driver" in self.models and self.models["driver"]["target"]["type"] in [
-            "custom_target",
-            "custom_target_async",
-        ]:
+        if any(
+            model in self.models.keys()
+            for model in [
+                "custom_target",
+                "custom_target_async",
+                "custom",
+                "custom_batch",
+            ]
+        ):
             return True
-        custom_model_strs = ["custom", "custom_batch"]
-        assert isinstance(self.models, dict)
-        return any(
-            model_str in list(self.models.keys()) for model_str in custom_model_strs
-        )
+        return False
 
     def _has_async_custom_model(self) -> bool:
         assert isinstance(self.models, dict)
-        return (
-            "driver" in self.models
-            and self.models["driver"]["target"]["type"] == "custom_target_async"
-        )
+        return "custom_target_async" in self.models.keys()
 
     def _has_custom_batch_model(self) -> bool:
         assert isinstance(self.models, dict)
@@ -303,6 +302,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool,
         model_data: dict,
         checks: Optional[List[str]],
+        simulation_params: Optional[Any],
+        driver_id: Optional[str],
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
@@ -324,6 +325,8 @@ class ModelUnderTest(AsyncProcessorMixin):
                 else UNSET
             ),
             checks=checks if checks else UNSET,
+            simulation_params=simulation_params if simulation_params else UNSET,
+            driver_id=driver_id if driver_id else UNSET,
         )
 
     async def connect_nats(self, user_jwt: str, seed: str, local_nats: str) -> Any:
@@ -372,9 +375,24 @@ class ModelUnderTest(AsyncProcessorMixin):
         call_type: str = "invoke",
     ) -> Any:
         assert isinstance(self.models, dict)
+        if not self.model_key:
+            self.model_key = next(
+                (
+                    k
+                    for k in [
+                        "custom_target",
+                        "custom_target_async",
+                        "custom",
+                        "custom_batch",
+                    ]
+                    if k in self.models.keys()
+                ),
+                None,
+            )
+        assert self.model_key is not None
         if call_type == "invoke":
             messages = message_history if message_history is not None else args
-            invoker = self.models["driver"]["target"]["model_invoker"]
+            invoker = self.models[self.model_key]["model_invoker"]
             sig = inspect.signature(invoker)
             num_positional = sum(
                 1
@@ -388,9 +406,9 @@ class ModelUnderTest(AsyncProcessorMixin):
                 # legacy impl; first pos arg is message_history (named args)
                 return await invoker(args)
         elif call_type == "start_session":
-            if "session_starter" in self.models["driver"]["target"]:
+            if "session_starter" in self.models[self.model_key]:
                 message_history if message_history is not None else args
-                invoker = self.models["driver"]["target"]["session_starter"]
+                invoker = self.models[self.model_key]["session_starter"]
                 result = await invoker(scenario_input)
                 if not isinstance(result, tuple):
                     raise TypeError(
@@ -399,12 +417,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                 return result
         elif call_type == "end_session":
             if (
-                "session_ender" in self.models["driver"]["target"]
+                "session_ender" in self.models[self.model_key]
                 and session_id is not None
             ):
-                return await self.models["driver"]["target"]["session_ender"](
-                    session_id
-                )
+                return await self.models[self.model_key]["session_ender"](session_id)
         return None
 
     def call_custom_invoker(
@@ -423,7 +439,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         else:
             if call_type == "invoke":
                 messages = message_history if message_history is not None else args
-                invoker = self.models["driver"]["target"]["model_invoker"]
+                invoker = self.models["custom_target"]["model_invoker"]
                 sig = inspect.signature(invoker)
                 num_positional = sum(
                     1
@@ -438,9 +454,9 @@ class ModelUnderTest(AsyncProcessorMixin):
                     # legacy impl; first pos arg is message_history (named args)
                     return invoker(args)
             elif call_type == "start_session":
-                if "session_starter" in self.models["driver"]["target"]:
+                if "session_starter" in self.models["custom_target"]:
                     message_history if message_history is not None else args
-                    invoker = self.models["driver"]["target"]["session_starter"]
+                    invoker = self.models["custom_target"]["session_starter"]
                     result = invoker(scenario_input)
                     if not isinstance(result, tuple):
                         raise TypeError(
@@ -449,10 +465,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                     return result
             elif call_type == "end_session":
                 if (
-                    "session_ender" in self.models["driver"]["target"]
+                    "session_ender" in self.models["custom_target"]
                     and session_id is not None
                 ):
-                    return self.models["driver"]["target"]["session_ender"](session_id)
+                    return self.models["custom_target"]["session_ender"](session_id)
         return None
 
     def get_params_from_custom_result(self, result: Any) -> Any:
@@ -607,6 +623,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
         run_test_method: Any = None,
+        simulation_params: Optional[Any] = None,
+        driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
@@ -624,7 +642,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
 
             model_data: dict = {"model_data": {}}
-            if self._has_custom_model() and "driver" in self.models:
+            if self._has_custom_model() and test_run_type == TestRunType.MULTI_TURN:
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
                     client=self.client, api_key=self.api_key, mut_id=self.mut_id
                 )
@@ -654,6 +672,8 @@ class ModelUnderTest(AsyncProcessorMixin):
                     calculate_metrics,
                     model_data,
                     checks,
+                    simulation_params,
+                    driver_id,
                 ),
             )
             if isinstance(response, ErrorResponse):
@@ -679,10 +699,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             test_run_type == TestRunType.MULTI_TURN
             and self.models is not None
             and isinstance(self.models, dict)
-            and "driver" in self.models
-            and "target" in self.models["driver"]
-            and "type" in self.models["driver"]["target"]
-            and self.models["driver"]["target"]["type"] == "custom_target"
+            and "custom_target" in self.models
         ):
             return False
         return True
@@ -697,6 +714,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
+        simulation_params: Optional[Any] = None,
+        driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Asynchronous server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side asynchronously. For other models,
@@ -732,6 +751,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             calculate_metrics,
             checks,
             endpoint,
+            simulation_params,
+            driver_id,
         )
 
     def run_test(
@@ -744,6 +765,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_type: TestRunType = TestRunType.MULTI_CLASS_CLASSIFICATION,
         calculate_metrics: bool = True,
         checks: Optional[List[str]] = None,
+        simulation_params: Optional[Any] = None,
+        driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side. For other models,
@@ -773,6 +796,8 @@ class ModelUnderTest(AsyncProcessorMixin):
                 calculate_metrics,
                 checks,
                 run_test_v0_test_run_post.sync,
+                simulation_params,
+                driver_id,
             )
         except Exception as e:
             raise TestRunError(str(e)) from e
@@ -1407,6 +1432,77 @@ class CustomEndpointTarget(BaseModel):
 
 
 @_attrs_define
+class Driver:
+    name: str
+    prompt_template: str = "{scenario_input}"
+    model_id: Optional[str] = None
+    temperature: Optional[float] = 0.6
+    id: Optional[str] = None
+    time_created: Optional[str] = datetime.now().isoformat()
+    project_id: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "temperature": self.temperature,
+            "model_id": self.model_id,
+            "prompt_template": self.prompt_template,
+            "id": self.id,
+            "time_created": self.time_created,
+        }
+
+
+@_attrs_define
+class Target:
+    name: str
+    target: Union[
+        OpenAIModel,
+        CustomMultiturnTarget,
+        GenerationModel,
+        CustomEndpointTarget,
+        CustomMultiturnTargetAsync,
+        dict,
+    ]
+    id: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "target": (
+                self.target if isinstance(self.target, dict) else self.target.params()
+            ),
+            "id": self.id,
+        }
+
+
+@_attrs_define
+class Simulation:
+
+    stop_check: Union[StopConfig, dict, None] = None
+    repeats: Optional[int] = 1
+    max_turns: Optional[int] = 5
+    first_turn: Optional[str] = "target"
+    checks_at_every_turn: Optional[bool] = False
+
+    def __attrs_post_init__(self) -> None:
+        if isinstance(self.stop_check, dict):
+            self.stop_check = StopConfig(**self.stop_check)
+
+    def to_dict(self) -> dict:
+        return {
+            "repeats": self.repeats,
+            "max_turns": self.max_turns,
+            "first_turn": self.first_turn,
+            "stop_check": (
+                self.stop_check.params()
+                if isinstance(self.stop_check, StopConfig)
+                else self.stop_check
+            ),
+            "checks_at_every_turn": self.checks_at_every_turn,
+        }
+
+
+@_attrs_define
 class MultiTurnDriver(BaseModel):
     """
     A driver model for Okareo multiturn evaluation.
@@ -1445,22 +1541,25 @@ class MultiTurnDriver(BaseModel):
             self.stop_check = StopConfig(**self.stop_check)
 
     def params(self) -> dict:
-        return {
-            "type": self.type,
-            "target": self.target.params(),
-            "driver_model_id": self.driver_model_id,
-            "driver_temperature": self.driver_temperature,
-            "driver_prompt_template": self.driver_prompt_template,
-            "repeats": self.repeats,
-            "max_turns": self.max_turns,
-            "first_turn": self.first_turn,
-            "stop_check": (
-                self.stop_check.params()
-                if isinstance(self.stop_check, StopConfig)
-                else self.stop_check
-            ),
-            "checks_at_every_turn": self.checks_at_every_turn,
+        target_params = self.target.params()
+        deprecated_params = {
+            "deprecated_params": {
+                "driver_model_id": self.driver_model_id,
+                "driver_temperature": self.driver_temperature,
+                "driver_prompt_template": self.driver_prompt_template,
+                "repeats": self.repeats,
+                "max_turns": self.max_turns,
+                "first_turn": self.first_turn,
+                "stop_check": (
+                    self.stop_check.params()
+                    if isinstance(self.stop_check, StopConfig)
+                    else self.stop_check
+                ),
+                "checks_at_every_turn": self.checks_at_every_turn,
+            }
         }
+        # add deprecated params to target
+        return {**target_params, **deprecated_params}
 
 
 @_attrs_define

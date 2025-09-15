@@ -1,9 +1,10 @@
+import datetime
 from typing import List, Union
 
 from litellm import token_counter
 
 from okareo import Okareo
-from okareo.model_under_test import ModelUnderTest
+from okareo.model_under_test import ModelUnderTest, Target
 from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
@@ -13,6 +14,9 @@ from okareo_api_client.models.full_data_point_item_baseline_metrics import (
 )
 from okareo_api_client.models.full_data_point_item_checks_metadata import (
     FullDataPointItemChecksMetadata,
+)
+from okareo_api_client.models.model_under_test_response import (
+    ModelUnderTestResponse,
 )
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
@@ -129,6 +133,7 @@ def _parse_baseline_metrics(
     turns: int | None = None,
     cost: bool = False,
 ) -> dict:
+    baseline = None
     if isinstance(tdp, FullDataPointItem) and tdp.baseline_metrics:
         baseline = tdp.baseline_metrics  # type: ignore[attr-defined]
         if isinstance(baseline, FullDataPointItemBaselineMetrics):
@@ -143,11 +148,26 @@ def _parse_baseline_metrics(
                 tdp_baseline_metrics[output_tokens_key]
             )
 
+    elif isinstance(tdp, TestDataPointItem) and tdp.additional_properties.get(
+        "baseline_metrics"
+    ):
+        baseline = tdp.additional_properties["baseline_metrics"]
+        baseline_metrics["latency"].append(baseline[latency_key_baseline])
+        baseline_metrics["input_tokens"].append(baseline[input_tokens_key])
+        baseline_metrics["output_tokens"].append(baseline[output_tokens_key])
+
     if turns == 1:
-        assert isinstance(tdp, FullDataPointItem) and isinstance(tdp.model_result, str)
-        assert token_counter(text=tdp.model_result) == tdp_baseline_metrics[output_tokens_key]  # type: ignore
+        if isinstance(tdp, FullDataPointItem):
+            assert token_counter(text=tdp.model_result) == baseline[output_tokens_key]  # type: ignore
+        elif isinstance(tdp, TestDataPointItem) and isinstance(
+            tdp.additional_properties["model_result"], str
+        ):
+            assert token_counter(text=tdp.additional_properties["model_result"]) == baseline[output_tokens_key]  # type: ignore
     if cost:
-        baseline_metrics["cost"].append(baseline[cost_key])
+        if isinstance(baseline, dict) and cost_key in baseline:
+            baseline_metrics["cost"].append(baseline[cost_key])
+        elif isinstance(baseline, FullDataPointItemBaselineMetrics):
+            baseline_metrics["cost"].append(baseline.additional_properties[cost_key])
     return baseline_metrics
 
 
@@ -182,7 +202,7 @@ def _parse_checks_and_baseline_metrics(
     }
 
     for tdp in tdps:
-        assert isinstance(tdp, FullDataPointItem)
+        assert isinstance(tdp, FullDataPointItem) or isinstance(tdp, TestDataPointItem)
         for check in checks:
             meta_metrics = _parse_check_metrics(
                 tdp,
@@ -276,7 +296,7 @@ def assert_baseline_metrics(
     run_baseline_meta = test_run.model_metrics.additional_properties[  # type: ignore
         "aggregate_baseline_metrics"
     ]
-
+    print(tdps)
     (
         baseline_metrics,
         meta_metrics,
@@ -292,3 +312,29 @@ def assert_baseline_metrics(
         run_baseline_meta,
         meta_metrics,
     )
+
+
+def create_dummy_mut(
+    target: Target, evaluation: TestRunItem, okareo: Okareo
+) -> ModelUnderTest:
+    """Create a dummy ModelUnderTest for testing purposes."""
+    assert isinstance(target, Target)
+    t_get = okareo.get_target_by_name(target.name)
+    assert isinstance(t_get, Target) and t_get.id is not None
+    dummy_response = ModelUnderTestResponse(
+        id=t_get.id,
+        project_id=evaluation.project_id,
+        name=t_get.name,
+        tags=[],
+        time_created=datetime.datetime.now().isoformat(),
+    )
+    target_type = (
+        target.target["type"] if isinstance(target.target, dict) else target.target.type
+    )
+    mut = ModelUnderTest(
+        client=okareo.client,
+        api_key=okareo.api_key,
+        mut=dummy_response,
+        models={target_type: target.target},
+    )
+    return mut
