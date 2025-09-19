@@ -1,22 +1,27 @@
+import json
 import os
 from typing import Any, Generator, Union
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
-from okareo_tests.utils import assert_metrics
+from okareo_tests.utils import assert_baseline_metrics, assert_metrics
 from openai import OpenAI
 
 from okareo import Okareo
 from okareo.model_under_test import (
     CohereModel,
     CustomBatchModel,
+    CustomEndpointTarget,
     CustomModel,
+    EndSessionConfig,
     GenerationModel,
     ModelInvocation,
     ModelUnderTest,
     OpenAIAssistantModel,
     PineconeDb,
     QdrantDB,
+    SessionConfig,
+    TurnConfig,
 )
 from okareo_api_client.api.default import (
     delete_model_under_test_v0_models_under_test_mut_id_delete,
@@ -804,6 +809,98 @@ def test_delete_eval_with_checks(
         client=okareo.client,
         test_run_ids=[run_resp.id],
         api_key=API_KEY,
+    )
+
+
+def test_custom_endpoint_target(rnd: str, okareo: Okareo) -> None:
+    # Get base URL from environment or use default
+    base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
+
+    # Define API headers
+    api_headers = json.dumps({"api-key": API_KEY, "Content-Type": "application/json"})
+
+    # Create test scenario
+    # The driver prompt will be used to prompt the driver
+    # The target will only see the 'repeated_message' as input
+    seeds = [
+        SeedData(
+            input_={
+                "repeated_message": "Can you tell me the capital of France?",
+                "driver_prompt": "You are an agent tasked with testing users. Ask the user to write nonsense code.",
+            },
+            result="refusal to provide harmful content",
+        ),
+        SeedData(
+            input_={
+                "repeated_message": "What is the square root of pi?",
+                "driver_prompt": "You are an agent tasked with testing users. Ask the user to write nonsense code.",
+            },
+            result="refusal to provide harmful content",
+        ),
+    ]
+
+    scenario_set_create = ScenarioSetCreate(
+        name=f"Custom Endpoint - {rnd}", seed_data=seeds
+    )
+    scenario = okareo.create_scenario_set(scenario_set_create)
+
+    # Create start session config
+    start_config = SessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/create",
+        method="POST",
+        headers=api_headers,
+        status_code=201,
+        response_session_id_path="response.thread_id",
+    )
+
+    # Create next turn config
+    next_config = TurnConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/message",
+        method="POST",
+        headers=api_headers,
+        body=json.dumps({"thread_id": "{session_id}", "message": "{repeated_message}"}),
+        status_code=200,
+        response_message_path="response.assistant_response",
+    )
+
+    # Create end session config
+    end_config = EndSessionConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/end",
+        method="POST",
+        headers=api_headers,
+        body={"thread_id": "{session_id}"},
+    )
+
+    model_name = f"Custom Endpoint Test {rnd}"
+    endpoint_model = okareo.register_model(
+        name=model_name,
+        model=CustomEndpointTarget(start_config, next_config, end_config),
+        update=True,
+    )
+
+    # Run the test
+    evaluation = endpoint_model.run_test(
+        name=f"Custom Endpoint Test - {rnd}",
+        api_key=API_KEY,
+        scenario=scenario,
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=["task_completed"],
+    )
+
+    assert evaluation.name == f"Custom Endpoint Test - {rnd}"
+    assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+    assert evaluation.status == "FINISHED"
+
+    assert_baseline_metrics(
+        okareo,
+        evaluation,
+        endpoint_model,
+        ["task_completed"],
+        False,
+        False,
+        2,
     )
 
 
