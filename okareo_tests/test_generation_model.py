@@ -109,7 +109,7 @@ def test_cohere(
         rnd,
         okareo,
         article_scenario_set,
-        model_id="command-r",
+        model_id="command-r7b-12-2024",
         api_key=os.environ["COHERE_API_KEY"],
         system_prompt="You are an AI assistant with a flair for dramatic storytelling and exaggeration.",
         user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {scenario_input}",

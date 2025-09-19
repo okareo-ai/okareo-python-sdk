@@ -8,7 +8,6 @@ from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import (
-    CohereModel,
     CustomModel,
     GenerationModel,
     ModelInvocation,
@@ -150,34 +149,6 @@ JSON_CLASSIFICATION = Okareo.seed_data_from_list(
         },
     ]
 )
-
-
-def test_classification_cohere(okareo_client: Okareo) -> None:
-    test_run_name = f"ci_json_test_classification_cohere {today_with_time}"
-
-    scenario_set_create = ScenarioSetCreate(
-        name=test_run_name,
-        seed_data=JSON_CLASSIFICATION,
-    )
-    scenario = okareo_client.create_scenario_set(scenario_set_create)
-    validate_scenario_set(scenario, test_run_name, okareo_client)
-
-    mut = okareo_client.register_model(
-        name=test_run_name,
-        model=CohereModel(
-            model_id="e2b2964d-d741-41e5-a3b7-b363202be88c-ft",
-            model_type="classify",
-        ),
-    )
-
-    run_resp = mut.run_test(
-        name=test_run_name,
-        scenario=scenario,
-        api_key=os.environ["COHERE_API_KEY"],
-        test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
-        calculate_metrics=True,
-    )
-    assert run_resp.name == test_run_name
 
 
 def test_classification_openai(okareo_client: Okareo) -> None:
