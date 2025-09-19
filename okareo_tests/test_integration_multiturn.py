@@ -714,7 +714,7 @@ def test_run_multiturn_with_tools(rnd: str, okareo: Okareo) -> None:
     target = Target(
         name=f"MultiTurn Driver with Tools Test {rnd}",
         target=GenerationModel(
-            model_id="command-r-plus",
+            model_id="command-r7b-12-2024",
             temperature=0,
             system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
             tools=[
@@ -796,7 +796,7 @@ def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
 
     target = Target(
         target=GenerationModel(
-            model_id="command-r-plus",
+            model_id="command-r7b-12-2024",
             temperature=0,
             system_prompt_template="You are a travel agent that needs to help people with travel goals. Don't overdump information to the user",
             tools=[

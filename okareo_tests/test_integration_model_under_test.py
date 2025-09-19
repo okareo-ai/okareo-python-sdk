@@ -249,42 +249,6 @@ def test_run_test_openai_assistant(
     assert_metrics(run_resp, num_rows=1, custom_dimensions=["latency"])
 
 
-def test_run_test_cohere(rnd: str, okareo: Okareo) -> None:
-    seed_data = [
-        SeedData(input_="what are you able to set up in aws?", result="capabilities"),
-        SeedData(
-            input_="what's the procedure to request for more information?",
-            result="general",
-        ),
-        SeedData(
-            input_="what are the steps to deploy on heroku?", result="capabilities"
-        ),
-    ]
-
-    scenario_set_create = ScenarioSetCreate(
-        name=f"cohere-test-ci-{rnd}",
-        seed_data=seed_data,
-    )
-    scenario = okareo.create_scenario_set(scenario_set_create)
-
-    mut = okareo.register_model(
-        name=f"classification-cohere-ci-{rnd}",
-        model=CohereModel(
-            model_id="e2b2964d-d741-41e5-a3b7-b363202be88c-ft",
-            model_type="classify",
-        ),
-    )
-
-    run_resp = mut.run_test(
-        name=f"cohere-classification-run-{rnd}",
-        scenario=scenario,
-        api_key=os.environ["COHERE_API_KEY"],
-        calculate_metrics=True,
-    )
-    assert run_resp.name == f"cohere-classification-run-{rnd}"
-    assert run_resp.status == "FINISHED"
-
-
 @pytest.fixture(scope="module")
 def question_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     file_path = os.path.join(

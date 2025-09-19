@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: pip install openapi-python-client==0.16.0
+      - run: pip install openapi-python-client==0.16.0 click==8.2.1 typer==0.9.*
       - name: Check workflow files
         run: make openapi/generate
         shell: bash
