@@ -135,6 +135,9 @@ from .test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationPar
 from .test_run_type import TestRunType
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .validation_error import ValidationError
+from .voice_stream_request import VoiceStreamRequest
+from .voice_upload_request import VoiceUploadRequest
+from .voice_upload_response import VoiceUploadResponse
 
 __all__ = (
     "AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost",
@@ -252,4 +255,7 @@ __all__ = (
     "TestRunType",
     "UpdateTestDataPointPayload",
     "ValidationError",
+    "VoiceStreamRequest",
+    "VoiceUploadRequest",
+    "VoiceUploadResponse",
 )
