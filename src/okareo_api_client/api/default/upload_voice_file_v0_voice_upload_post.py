@@ -77,6 +77,8 @@ def sync_detailed(
 ) -> Response[Union[ErrorResponse, VoiceUploadResponse]]:
     """Upload Voice File
 
+     Upload a base64-encoded WAV audio file.
+
     Args:
         api_key (str):
         json_body (VoiceUploadRequest):
@@ -109,6 +111,8 @@ def sync(
 ) -> Optional[Union[ErrorResponse, VoiceUploadResponse]]:
     """Upload Voice File
 
+     Upload a base64-encoded WAV audio file.
+
     Args:
         api_key (str):
         json_body (VoiceUploadRequest):
@@ -135,6 +139,8 @@ async def asyncio_detailed(
     api_key: str,
 ) -> Response[Union[ErrorResponse, VoiceUploadResponse]]:
     """Upload Voice File
+
+     Upload a base64-encoded WAV audio file.
 
     Args:
         api_key (str):
@@ -165,6 +171,8 @@ async def asyncio(
     api_key: str,
 ) -> Optional[Union[ErrorResponse, VoiceUploadResponse]]:
     """Upload Voice File
+
+     Upload a base64-encoded WAV audio file.
 
     Args:
         api_key (str):

@@ -6,24 +6,29 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.voice_stream_request import VoiceStreamRequest
-from ...types import Response
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
     *,
-    json_body: VoiceStreamRequest,
+    project_id: str,
+    file_id: str,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
+    params: Dict[str, Any] = {}
+    params["project_id"] = project_id
+
+    params["file_id"] = file_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
-        "method": "post",
+        "method": "get",
         "url": "/v0/voice/stream",
-        "json": json_json_body,
+        "params": params,
         "headers": headers,
     }
 
@@ -58,16 +63,18 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: VoiceStreamRequest,
+    project_id: str,
+    file_id: str,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
     """Stream Voice File
 
-     Stream audio file with support for range requests.
+     Stream an uploaded audio file based on requested file_id.
 
     Args:
+        project_id (str):
+        file_id (str):
         api_key (str):
-        json_body (VoiceStreamRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -78,7 +85,8 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        project_id=project_id,
+        file_id=file_id,
         api_key=api_key,
     )
 
@@ -92,16 +100,18 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: VoiceStreamRequest,
+    project_id: str,
+    file_id: str,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
     """Stream Voice File
 
-     Stream audio file with support for range requests.
+     Stream an uploaded audio file based on requested file_id.
 
     Args:
+        project_id (str):
+        file_id (str):
         api_key (str):
-        json_body (VoiceStreamRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -113,7 +123,8 @@ def sync(
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
+        project_id=project_id,
+        file_id=file_id,
         api_key=api_key,
     ).parsed
 
@@ -121,16 +132,18 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: VoiceStreamRequest,
+    project_id: str,
+    file_id: str,
     api_key: str,
 ) -> Response[Union[Any, HTTPValidationError]]:
     """Stream Voice File
 
-     Stream audio file with support for range requests.
+     Stream an uploaded audio file based on requested file_id.
 
     Args:
+        project_id (str):
+        file_id (str):
         api_key (str):
-        json_body (VoiceStreamRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,7 +154,8 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        project_id=project_id,
+        file_id=file_id,
         api_key=api_key,
     )
 
@@ -153,16 +167,18 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: VoiceStreamRequest,
+    project_id: str,
+    file_id: str,
     api_key: str,
 ) -> Optional[Union[Any, HTTPValidationError]]:
     """Stream Voice File
 
-     Stream audio file with support for range requests.
+     Stream an uploaded audio file based on requested file_id.
 
     Args:
+        project_id (str):
+        file_id (str):
         api_key (str):
-        json_body (VoiceStreamRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -175,7 +191,8 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
+            project_id=project_id,
+            file_id=file_id,
             api_key=api_key,
         )
     ).parsed
