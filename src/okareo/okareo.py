@@ -1359,6 +1359,4 @@ class Okareo:
         self.validate_response(response)
         assert isinstance(response, VoiceUploadResponse)
 
-        # add api_key to file_url
-        response.file_url += f"?api-key={self.api_key}"
         return response
