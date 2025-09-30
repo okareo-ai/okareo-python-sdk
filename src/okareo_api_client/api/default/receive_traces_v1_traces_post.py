@@ -5,42 +5,44 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
-from ...types import UNSET, Response
+from ...models.error_response import ErrorResponse
+from ...types import Response
 
 
 def _get_kwargs(
     *,
-    project_id: str,
-    file_id: str,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["project_id"] = project_id
-
-    params["file_id"] = file_id
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
-
     return {
-        "method": "get",
-        "url": "/v0/voice/stream",
-        "params": params,
+        "method": "post",
+        "url": "/v1/traces",
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[Any, HTTPValidationError]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = response.json()
-        return response_200
+) -> Optional[Union[Any, ErrorResponse]]:
+    if response.status_code == HTTPStatus.CREATED:
+        response_201 = response.json()
+        return response_201
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = ErrorResponse.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.UNAUTHORIZED:
+        response_401 = ErrorResponse.from_dict(response.json())
+
+        return response_401
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        response_404 = ErrorResponse.from_dict(response.json())
+
+        return response_404
     if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-        response_422 = HTTPValidationError.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
     if client.raise_on_unexpected_status:
@@ -51,7 +53,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[Any, HTTPValidationError]]:
+) -> Response[Union[Any, ErrorResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -63,17 +65,11 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
-    file_id: str,
     api_key: str,
-) -> Response[Union[Any, HTTPValidationError]]:
-    """Stream Voice File
-
-     Stream an uploaded audio file based on requested file_id.
+) -> Response[Union[Any, ErrorResponse]]:
+    """Receive Traces
 
     Args:
-        project_id (str):
-        file_id (str):
         api_key (str):
 
     Raises:
@@ -81,12 +77,10 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, HTTPValidationError]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
-        project_id=project_id,
-        file_id=file_id,
         api_key=api_key,
     )
 
@@ -100,17 +94,11 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
-    file_id: str,
     api_key: str,
-) -> Optional[Union[Any, HTTPValidationError]]:
-    """Stream Voice File
-
-     Stream an uploaded audio file based on requested file_id.
+) -> Optional[Union[Any, ErrorResponse]]:
+    """Receive Traces
 
     Args:
-        project_id (str):
-        file_id (str):
         api_key (str):
 
     Raises:
@@ -118,13 +106,11 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, HTTPValidationError]
+        Union[Any, ErrorResponse]
     """
 
     return sync_detailed(
         client=client,
-        project_id=project_id,
-        file_id=file_id,
         api_key=api_key,
     ).parsed
 
@@ -132,17 +118,11 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
-    file_id: str,
     api_key: str,
-) -> Response[Union[Any, HTTPValidationError]]:
-    """Stream Voice File
-
-     Stream an uploaded audio file based on requested file_id.
+) -> Response[Union[Any, ErrorResponse]]:
+    """Receive Traces
 
     Args:
-        project_id (str):
-        file_id (str):
         api_key (str):
 
     Raises:
@@ -150,12 +130,10 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, HTTPValidationError]]
+        Response[Union[Any, ErrorResponse]]
     """
 
     kwargs = _get_kwargs(
-        project_id=project_id,
-        file_id=file_id,
         api_key=api_key,
     )
 
@@ -167,17 +145,11 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    project_id: str,
-    file_id: str,
     api_key: str,
-) -> Optional[Union[Any, HTTPValidationError]]:
-    """Stream Voice File
-
-     Stream an uploaded audio file based on requested file_id.
+) -> Optional[Union[Any, ErrorResponse]]:
+    """Receive Traces
 
     Args:
-        project_id (str):
-        file_id (str):
         api_key (str):
 
     Raises:
@@ -185,14 +157,12 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, HTTPValidationError]
+        Union[Any, ErrorResponse]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            project_id=project_id,
-            file_id=file_id,
             api_key=api_key,
         )
     ).parsed

@@ -58,6 +58,7 @@ from .evaluator_spec_request import EvaluatorSpecRequest
 from .feedback_range_summary import FeedbackRangeSummary
 from .filter_condition import FilterCondition
 from .find_test_data_point_payload import FindTestDataPointPayload
+from .find_traces_request import FindTracesRequest
 from .full_data_point_item import FullDataPointItem
 from .full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
 from .full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
@@ -191,6 +192,7 @@ __all__ = (
     "FeedbackRangeSummary",
     "FilterCondition",
     "FindTestDataPointPayload",
+    "FindTracesRequest",
     "FullDataPointItem",
     "FullDataPointItemBaselineMetrics",
     "FullDataPointItemChecksMetadata",

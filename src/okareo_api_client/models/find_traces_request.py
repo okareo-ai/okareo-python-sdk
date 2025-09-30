@@ -1,61 +1,55 @@
-import datetime
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
-T = TypeVar("T", bound="VoiceUploadResponse")
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="FindTracesRequest")
 
 
 @_attrs_define
-class VoiceUploadResponse:
+class FindTracesRequest:
     """
     Attributes:
-        file_id (str): Unique identifier for the uploaded audio.
-        file_url (str): Link to access the uploaded audio file.
-        time_created (datetime.datetime): Timestamp indicating when audio file was created.
+        project_id (str): Project UUID to fetch traces from
+        otel_trace_id (Union[Unset, str]): Trace ID to fetch
     """
 
-    file_id: str
-    file_url: str
-    time_created: datetime.datetime
+    project_id: str
+    otel_trace_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        file_id = self.file_id
-        file_url = self.file_url
-        time_created = self.time_created.isoformat()
+        project_id = self.project_id
+        otel_trace_id = self.otel_trace_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "file_id": file_id,
-                "file_url": file_url,
-                "time_created": time_created,
+                "project_id": project_id,
             }
         )
+        if otel_trace_id is not UNSET:
+            field_dict["otel_trace_id"] = otel_trace_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        file_id = d.pop("file_id")
+        project_id = d.pop("project_id")
 
-        file_url = d.pop("file_url")
+        otel_trace_id = d.pop("otel_trace_id", UNSET)
 
-        time_created = isoparse(d.pop("time_created"))
-
-        voice_upload_response = cls(
-            file_id=file_id,
-            file_url=file_url,
-            time_created=time_created,
+        find_traces_request = cls(
+            project_id=project_id,
+            otel_trace_id=otel_trace_id,
         )
 
-        voice_upload_response.additional_properties = d
-        return voice_upload_response
+        find_traces_request.additional_properties = d
+        return find_traces_request
 
     @property
     def additional_keys(self) -> List[str]:
