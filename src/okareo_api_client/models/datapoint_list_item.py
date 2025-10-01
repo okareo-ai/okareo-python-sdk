@@ -66,6 +66,8 @@ class DatapointListItem:
         resolved (Union[Unset, bool]): Manual marking from user on resolved status
         user_metadata (Union['DatapointListItemUserMetadataType0', Any, Unset]): User-provided metadata provided as
             context to the completion call.
+        otel_trace_id (Union[Unset, str]): OpenTelemetry Trace ID
+        otel_span_id (Union[Unset, str]): OpenTelemetry Span ID
     """
 
     id: str
@@ -108,6 +110,8 @@ class DatapointListItem:
     failed_checks: Union[Unset, List[str]] = UNSET
     resolved: Union[Unset, bool] = False
     user_metadata: Union["DatapointListItemUserMetadataType0", Any, Unset] = UNSET
+    otel_trace_id: Union[Unset, str] = UNSET
+    otel_span_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -230,6 +234,9 @@ class DatapointListItem:
         else:
             user_metadata = self.user_metadata
 
+        otel_trace_id = self.otel_trace_id
+        otel_span_id = self.otel_span_id
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -315,6 +322,10 @@ class DatapointListItem:
             field_dict["resolved"] = resolved
         if user_metadata is not UNSET:
             field_dict["user_metadata"] = user_metadata
+        if otel_trace_id is not UNSET:
+            field_dict["otel_trace_id"] = otel_trace_id
+        if otel_span_id is not UNSET:
+            field_dict["otel_span_id"] = otel_span_id
 
         return field_dict
 
@@ -504,6 +515,10 @@ class DatapointListItem:
 
         user_metadata = _parse_user_metadata(d.pop("user_metadata", UNSET))
 
+        otel_trace_id = d.pop("otel_trace_id", UNSET)
+
+        otel_span_id = d.pop("otel_span_id", UNSET)
+
         datapoint_list_item = cls(
             id=id,
             tags=tags,
@@ -545,6 +560,8 @@ class DatapointListItem:
             failed_checks=failed_checks,
             resolved=resolved,
             user_metadata=user_metadata,
+            otel_trace_id=otel_trace_id,
+            otel_span_id=otel_span_id,
         )
 
         datapoint_list_item.additional_properties = d

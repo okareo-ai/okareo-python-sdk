@@ -58,6 +58,7 @@ from .evaluator_spec_request import EvaluatorSpecRequest
 from .feedback_range_summary import FeedbackRangeSummary
 from .filter_condition import FilterCondition
 from .find_test_data_point_payload import FindTestDataPointPayload
+from .find_traces_request import FindTracesRequest
 from .full_data_point_item import FullDataPointItem
 from .full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
 from .full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
@@ -135,6 +136,8 @@ from .test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationPar
 from .test_run_type import TestRunType
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .validation_error import ValidationError
+from .voice_upload_request import VoiceUploadRequest
+from .voice_upload_response import VoiceUploadResponse
 
 __all__ = (
     "AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost",
@@ -189,6 +192,7 @@ __all__ = (
     "FeedbackRangeSummary",
     "FilterCondition",
     "FindTestDataPointPayload",
+    "FindTracesRequest",
     "FullDataPointItem",
     "FullDataPointItemBaselineMetrics",
     "FullDataPointItemChecksMetadata",
@@ -252,4 +256,6 @@ __all__ = (
     "TestRunType",
     "UpdateTestDataPointPayload",
     "ValidationError",
+    "VoiceUploadRequest",
+    "VoiceUploadResponse",
 )
