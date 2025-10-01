@@ -3,10 +3,13 @@ import os, io, json, time, wave, tempfile, base64, asyncio, requests, sys, uuid
 from typing import Optional, Union, Callable, Dict, Any, Tuple
 import websockets
 import numpy as np
-from google.cloud import storage
 from scipy.signal import resample_poly
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+
+from okareo_api_client.api.default import upload_voice_file_v0_voice_upload_post
+from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
+from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
 
 
 # --------------------- config ----------------------
@@ -67,35 +70,49 @@ def save_wav_pcm16(pcm: bytes, sr: int, prefix: str) -> str:
         w.writeframes(pcm)
     return path
 
-def upload_and_make_public(
+def upload_voice(
+    self,
+    file_path: Optional[str] = None,
+    file_bytes: Optional[bytes] = None,
+    project_id: Optional[str] = None,
+) -> VoiceUploadResponse:
+    audio_data = None
+    if file_bytes:
+        audio_data = file_bytes
+    elif file_path:
+        with open(file_path, "rb") as audio_file:
+            audio_data = audio_file.read()
+    else:
+        raise ValueError("Either file_path or file_bytes must be provided.")
+    audio_b64 = base64.b64encode(audio_data).decode("utf-8")
+
+    body = {"audio": audio_b64}
+    if project_id:
+        body["project_id"] = project_id
+    json_body = VoiceUploadRequest.from_dict(body)
+    response = upload_voice_file_v0_voice_upload_post.sync(
+        client=self.client, api_key=self.api_key, json_body=json_body
+    )
+
+    self.validate_response(response)
+    assert isinstance(response, VoiceUploadResponse)
+
+    return response
+
+#upload voice file to okareo and return url
+def upload_to_okareo(
     pcm: bytes,
     sr: int,
-    prefix: str,
-    bucket: str = "conv-wav-bucket",
-    blob_name: str = None,
-    content_type: str = "audio/wav",
-    cache_control: str = "public,max-age=31536000,immutable",
-) -> str:
-    """
-    Upload PCM16 audio data as WAV and make it publicly accessible. Returns GCS URL.
-    """
+    prefix: str
+):
+    """Upload PCM16 audio data and make it publicly accessible."""
+    # Create temporary WAV file from PCM data
     local_path = save_wav_pcm16(pcm, sr, prefix)
 
-    if blob_name is None:
-        filename = os.path.basename(local_path)
-        blob_name = f"voice/{filename}"
+    response = upload_voice(local_path)
+    logging.debug(f"🔈 Voice file uploaded to {response.file_url}")
+    return response.file_url
 
-    client = storage.Client()
-    b = client.bucket(bucket)
-    blob = b.blob(blob_name)
-
-    blob.upload_from_filename(local_path, content_type=content_type)
-    blob.cache_control = cache_control
-    blob.patch()
-    blob.make_public()
-
-    public_url = f"https://storage.googleapis.com/{bucket}/{blob_name}"
-    return public_url
 
 # ---------------- vendor/protocol abstraction ----------------
 
@@ -433,16 +450,12 @@ class RealtimeClient:
         api_sr: int = API_SR,
         chunk_ms: int = CHUNK_MS,
         asr_model: str = "gpt-4o-mini-transcribe",
-        gcs_bucket: Optional[str] = "conv-wav-bucket",
-        public_upload: bool = True
     ):
         self.edge = edge
         self.api_sr = int(api_sr)
         self.chunk_ms = int(chunk_ms)
         self.turn = 0
         self.asr_model = asr_model
-        self.gcs_bucket = gcs_bucket
-        self.public_upload = public_upload
 
     async def connect(self, **edge_kwargs):
         # For OpenAIRealtimeEdge: pass instructions/output_voice here. 
@@ -452,9 +465,7 @@ class RealtimeClient:
         await self.edge.close()
 
     def _store_wav(self, pcm: bytes, prefix: str) -> str:
-        if self.public_upload and self.gcs_bucket:
-            return upload_and_make_public(pcm, self.api_sr, prefix=prefix, bucket=self.gcs_bucket)
-        return save_wav_pcm16(pcm, self.api_sr, prefix=prefix)
+        return upload_to_okareo(pcm, self.api_sr, prefix=prefix)
 
     async def send_utterance(self, text: str, tts_voice: str = "echo", pace_realtime: bool = True, timeout_s: float = 60.0):
         assert self.edge.is_connected(), "Call connect() first."
