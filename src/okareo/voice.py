@@ -11,6 +11,8 @@ from okareo_api_client.api.default import upload_voice_file_v0_voice_upload_post
 from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
 from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
 
+logger = logging.getLogger(__name__)
+
 
 # --------------------- config ----------------------
 
@@ -110,7 +112,7 @@ def upload_to_okareo(
     local_path = save_wav_pcm16(pcm, sr, prefix)
 
     response = upload_voice(local_path)
-    logging.debug(f"🔈 Voice file uploaded to {response.file_url}")
+    logger.debug(f"🔈 Voice file uploaded to {response.file_url}")
     return response.file_url
 
 
@@ -263,7 +265,7 @@ class OpenAIRealtimeEdge(VoiceEdge):
                 resp_finalized = True
 
             elif t == "error":
-                logging.error("OpenAI Realtime error:", evt, file=sys.stderr)
+                logger.error("OpenAI Realtime error:", evt, file=sys.stderr)
                 resp_finalized = True
 
             if audio_finalized and resp_finalized:
@@ -347,7 +349,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
             try:
                 while not stop_event.is_set():
                     await asyncio.sleep(5)
-                    logging.debug("Keep alive!")
+                    logger.debug("Keep alive!")
                     await self.ws.send(json.dumps({"type": "KeepAlive"}))
             except websockets.exceptions.ConnectionClosed:
                 pass
@@ -372,11 +374,11 @@ class DeepgramRealtimeEdge(VoiceEdge):
                 raw = await self.ws.recv()
                 if isinstance(raw, str):
                     try:
-                        logging.debug(raw)
+                        logger.debug(raw)
                         evt = json.loads(raw)
                         self._handle_message_event(evt)
                     except json.JSONDecodeError:
-                        logging.warning(f"[WARN] non-JSON frame: {raw!r}", file=sys.stderr)
+                        logger.warning(f"[WARN] non-JSON frame: {raw!r}", file=sys.stderr)
                 elif isinstance(raw, bytes):
                     self._audio_buf.extend(raw)
 
@@ -409,7 +411,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
             await asyncio.wait_for(self._agent_turn_complete.wait(), timeout=timeout_s)
         except asyncio.TimeoutError:
             # Deepgram isn't consistently sending the AgentAudioDone event
-            logging.warning("Timeout: Agent turn did not complete within timeout")
+            logger.warning("Timeout: Agent turn did not complete within timeout")
         
         pcm_result = bytes(self._audio_buf)
         self._audio_buf = bytearray()
@@ -489,7 +491,7 @@ class RealtimeClient:
             try:
                 agent_asr = await asr_openai_from_pcm16(agent_pcm, self.api_sr, model=self.asr_model)
             except Exception as e:
-                logging.error(f"[ASR ERR] {e}", file=sys.stderr)
+                logger.error(f"[ASR ERR] {e}", file=sys.stderr)
 
         self.turn = turn_id
         return {
@@ -557,7 +559,7 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
 
         # For OpenAIRealtimeEdge: you can pass output_voice via edge_connect_kwargs
         await self.sessions.start(session_id)
-        logging.debug("✅ Session started:", session_id)
+        logger.debug("✅ Session started:", session_id)
         return session_id, None
 
     async def end_session(self, session_id: str) -> None:
@@ -580,8 +582,8 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
                 tts_voice=tts_voice,
             )
 
-            logging.debug(f"user message: {messages[-1]['content']}")
-            logging.debug(res)
+            logger.debug(f"user message: {messages[-1]['content']}")
+            logger.debug(res)
 
             return ModelInvocation(
                 res.get("agent_asr", ""),
