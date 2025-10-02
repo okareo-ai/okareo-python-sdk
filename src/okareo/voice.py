@@ -7,9 +7,7 @@ from scipy.signal import resample_poly
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from okareo_api_client.api.default import upload_voice_file_v0_voice_upload_post
-from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
-from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
+from okareo import Okareo
 
 logger = logging.getLogger(__name__)
 
@@ -71,49 +69,6 @@ def save_wav_pcm16(pcm: bytes, sr: int, prefix: str) -> str:
         w.setframerate(sr)
         w.writeframes(pcm)
     return path
-
-def upload_voice(
-    self,
-    file_path: Optional[str] = None,
-    file_bytes: Optional[bytes] = None,
-    project_id: Optional[str] = None,
-) -> VoiceUploadResponse:
-    audio_data = None
-    if file_bytes:
-        audio_data = file_bytes
-    elif file_path:
-        with open(file_path, "rb") as audio_file:
-            audio_data = audio_file.read()
-    else:
-        raise ValueError("Either file_path or file_bytes must be provided.")
-    audio_b64 = base64.b64encode(audio_data).decode("utf-8")
-
-    body = {"audio": audio_b64}
-    if project_id:
-        body["project_id"] = project_id
-    json_body = VoiceUploadRequest.from_dict(body)
-    response = upload_voice_file_v0_voice_upload_post.sync(
-        client=self.client, api_key=self.api_key, json_body=json_body
-    )
-
-    self.validate_response(response)
-    assert isinstance(response, VoiceUploadResponse)
-
-    return response
-
-#upload voice file to okareo and return url
-def upload_to_okareo(
-    pcm: bytes,
-    sr: int,
-    prefix: str
-):
-    """Upload PCM16 audio data and make it publicly accessible."""
-    # Create temporary WAV file from PCM data
-    local_path = save_wav_pcm16(pcm, sr, prefix)
-
-    response = upload_voice(local_path)
-    logger.debug(f"🔈 Voice file uploaded to {response.file_url}")
-    return response.file_url
 
 
 # ---------------- vendor/protocol abstraction ----------------
@@ -265,7 +220,7 @@ class OpenAIRealtimeEdge(VoiceEdge):
                 resp_finalized = True
 
             elif t == "error":
-                logger.error("OpenAI Realtime error:", evt, file=sys.stderr)
+                logger.error("OpenAI Realtime error: %s", evt)
                 resp_finalized = True
 
             if audio_finalized and resp_finalized:
@@ -378,7 +333,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
                         evt = json.loads(raw)
                         self._handle_message_event(evt)
                     except json.JSONDecodeError:
-                        logger.warning(f"[WARN] non-JSON frame: {raw!r}", file=sys.stderr)
+                        logger.warning(f"[WARN] non-JSON frame: {raw!r}")
                 elif isinstance(raw, bytes):
                     self._audio_buf.extend(raw)
 
@@ -449,11 +404,13 @@ class RealtimeClient:
     def __init__(
         self,
         edge: VoiceEdge,
+        okareo: Okareo,
         api_sr: int = API_SR,
         chunk_ms: int = CHUNK_MS,
         asr_model: str = "gpt-4o-mini-transcribe",
     ):
         self.edge = edge
+        self.okareo = okareo
         self.api_sr = int(api_sr)
         self.chunk_ms = int(chunk_ms)
         self.turn = 0
@@ -467,7 +424,13 @@ class RealtimeClient:
         await self.edge.close()
 
     def _store_wav(self, pcm: bytes, prefix: str) -> str:
-        return upload_to_okareo(pcm, self.api_sr, prefix=prefix)
+        """Upload PCM16 audio data and make it publicly accessible."""
+        # Create temporary WAV file from PCM data
+        local_path = save_wav_pcm16(pcm, self.api_sr, prefix)
+
+        response = self.okareo.upload_voice(local_path)
+        logger.debug(f"🔈 Voice file uploaded to {response.file_url}")
+        return response.file_url
 
     async def send_utterance(self, text: str, tts_voice: str = "echo", pace_realtime: bool = True, timeout_s: float = 60.0):
         assert self.edge.is_connected(), "Call connect() first."
@@ -491,7 +454,7 @@ class RealtimeClient:
             try:
                 agent_asr = await asr_openai_from_pcm16(agent_pcm, self.api_sr, model=self.asr_model)
             except Exception as e:
-                logger.error(f"[ASR ERR] {e}", file=sys.stderr)
+                logger.error(f"[ASR ERR] {e}")
 
         self.turn = turn_id
         return {
@@ -505,16 +468,16 @@ class RealtimeClient:
 
 # ---------------- SessionManager: session_id -> RealtimeClient ----------------
 class SessionManager:
-    def __init__(self, cfg: EdgeConfig):
+    def __init__(self, cfg: EdgeConfig, okareo: Okareo):
         self.cfg = cfg
+        self.okareo = okareo
         self.sessions: dict[str, RealtimeClient] = {}
-    
 
     async def start(self, session_id: str, **edge_connect_kwargs) -> RealtimeClient:
         c = self.sessions.get(session_id)
         if c is None or not c.edge.is_connected():
             edge = self.cfg.create()                       # explicit, typed build
-            c = RealtimeClient(edge=edge)
+            c = RealtimeClient(edge=edge, okareo=self.okareo)
             await c.connect(**edge_connect_kwargs)
             self.sessions[session_id] = c
         return c
@@ -538,9 +501,7 @@ class SessionManager:
 # ---------------- Okareo integration: VoiceMultiturnTarget ----------------
 from okareo.model_under_test import (
     CustomMultiturnTargetAsync,
-    Driver,
     ModelInvocation,
-    Target,
 )
 
 class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
@@ -551,15 +512,20 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
     def __init__(self, name: str, edgeConfig: EdgeConfig):
         super().__init__(name=name)
         self.cfg = edgeConfig
-        self.sessions = SessionManager(edgeConfig)
+        self.sessions = None  # Initialize sessions as None
+
+    def set_okareo(self, okareo: Okareo):
+        """Set the Okareo instance and create a SessionManager with it."""
+        self.sessions = SessionManager(self.cfg, okareo)
 
 
     async def start_session(self, scenario_input: Optional[Union[dict, list, str]] = None) -> tuple[Optional[str], Optional[ModelInvocation]]:
+        assert self.sessions, "SessionManager not initialized with Okareo instance"
         session_id = str(uuid.uuid4())
 
         # For OpenAIRealtimeEdge: you can pass output_voice via edge_connect_kwargs
         await self.sessions.start(session_id)
-        logger.debug("✅ Session started:", session_id)
+        logger.debug(f"✅ Session started: {session_id}")
         return session_id, None
 
     async def end_session(self, session_id: str) -> None:

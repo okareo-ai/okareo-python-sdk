@@ -36,6 +36,7 @@ from okareo_api_client.api.default import (
     register_driver_model_v0_driver_post,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
+    upload_voice_file_v0_voice_upload_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
 from okareo_api_client.models.body_check_delete_v0_check_check_id_delete import (
@@ -90,6 +91,8 @@ from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
+from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
+from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
 from okareo_api_client.types import UNSET, File, Unset
 
 from .common import BASE_URL, HTTPX_TIME_OUT
@@ -1276,6 +1279,12 @@ class Okareo:
                     raise TypeError(
                         "Cannot retrieve Target by name for CustomMultiturnTarget"
                     )
+
+            # simplify the API for end users, to not have to pass Okareo instance to the target
+            from okareo.voice import VoiceMultiturnTarget
+            if isinstance(target.target, VoiceMultiturnTarget):
+                target.target.set_okareo(self)
+
             target_model = self.create_or_update_target(
                 target, tags or [], project_id, sensitive_fields
             )
@@ -1329,3 +1338,31 @@ class Okareo:
             driver_id=driver_model.id,
         )
 
+    def upload_voice(
+        self,
+        file_path: Optional[str] = None,
+        file_bytes: Optional[bytes] = None,
+        project_id: Optional[str] = None,
+    ) -> VoiceUploadResponse:
+        audio_data = None
+        if file_bytes:
+            audio_data = file_bytes
+        elif file_path:
+            with open(file_path, "rb") as audio_file:
+                audio_data = audio_file.read()
+        else:
+            raise ValueError("Either file_path or file_bytes must be provided.")
+        audio_b64 = base64.b64encode(audio_data).decode("utf-8")
+
+        body = {"audio": audio_b64}
+        if project_id:
+            body["project_id"] = project_id
+        json_body = VoiceUploadRequest.from_dict(body)
+        response = upload_voice_file_v0_voice_upload_post.sync(
+            client=self.client, api_key=self.api_key, json_body=json_body
+        )
+
+        self.validate_response(response)
+        assert isinstance(response, VoiceUploadResponse)
+
+        return response
