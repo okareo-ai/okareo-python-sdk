@@ -279,6 +279,14 @@ class OpenAIRealtimeEdge(VoiceEdge):
         await self.ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
         await self.ws.send(json.dumps({"type": "response.create", "response": {}}))
 
+    def update_turn_taking_latency(self) -> None:
+        if self._time_request_ended is not None:
+            self._turn_taking_latency = (
+                time.time() - self._time_request_ended
+            ) * 1000.0  # ms
+        else:
+            self._turn_taking_latency = 0.0
+
     async def _collect_response(
         self, timeout_s: float
     ) -> tuple[bytes, Dict[str, Any], Dict[str, Any]]:
@@ -308,12 +316,7 @@ class OpenAIRealtimeEdge(VoiceEdge):
                     audio_buf += base64.b64decode(b64)
                     if not self._response_started:
                         self._response_started = True
-                        if self._time_request_ended is not None:
-                            self._turn_taking_latency = (
-                                time.time() - self._time_request_ended
-                            ) * 1000.0  # ms
-                        else:
-                            self._turn_taking_latency = 0.0
+                        self.update_turn_taking_latency()
 
             elif event_type in self.AUDIO_DONE_TYPES:
                 audio_finalized = True
