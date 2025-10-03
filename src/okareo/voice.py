@@ -127,7 +127,7 @@ class VoiceEdge(ABC):
     @abstractmethod
     async def send_pcm(
         self, pcm16: bytes, pace_realtime: bool = True, timeout_s: float = 20.0
-    ) -> tuple[bytes, Dict[str, Any]]: ...
+    ) -> tuple[bytes, Dict[str, Any], Dict[str, Any]]: ...
 
     @abstractmethod
     async def close(self) -> None: ...
@@ -191,6 +191,11 @@ class OpenAIRealtimeEdge(VoiceEdge):
         self.ws_url = f"wss://api.openai.com/v1/realtime?model={self.edge_config.model}"
         self._connected = False
 
+        # timing information for realtime metrics
+        self._time_request_ended = None
+        self._response_started = False
+        self._turn_taking_latency = 0.0
+
     async def connect(self, **kwargs: Any) -> None:
         headers = [("Authorization", f"Bearer {self.edge_config.api_key}")]
         self.ws = await websockets.connect(
@@ -241,11 +246,14 @@ class OpenAIRealtimeEdge(VoiceEdge):
 
     async def send_pcm(
         self, pcm16: bytes, pace_realtime: bool = True, timeout_s: float = 30.0
-    ) -> tuple[bytes, Dict[str, Any]]:
+    ) -> tuple[bytes, Dict[str, Any], Dict[str, Any]]:
         assert self.ws and self._connected, "Call connect() first."
 
         # Stream audio chunks
         await self._send_audio_chunks(pcm16, pace_realtime)
+        self._turn_taking_latency = 0.0
+        self._time_request_ended = time.time()
+        self._response_started = False
 
         # Collect response
         return await self._collect_response(timeout_s)
@@ -271,7 +279,9 @@ class OpenAIRealtimeEdge(VoiceEdge):
         await self.ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
         await self.ws.send(json.dumps({"type": "response.create", "response": {}}))
 
-    async def _collect_response(self, timeout_s: float) -> tuple[bytes, Dict[str, Any]]:
+    async def _collect_response(
+        self, timeout_s: float
+    ) -> tuple[bytes, Dict[str, Any], Dict[str, Any]]:
         """Collect audio response from OpenAI Realtime API."""
         assert self.ws is not None, "WebSocket not connected"
         audio_buf = bytearray()
@@ -296,6 +306,11 @@ class OpenAIRealtimeEdge(VoiceEdge):
                 b64 = evt.get("delta") or evt.get("audio")
                 if b64:
                     audio_buf += base64.b64decode(b64)
+                    if not self._response_started:
+                        self._response_started = True
+                        self._turn_taking_latency = (
+                            time.time() - self._time_request_ended
+                        ) * 1000.0  # ms
 
             elif event_type in self.AUDIO_DONE_TYPES:
                 audio_finalized = True
@@ -310,7 +325,8 @@ class OpenAIRealtimeEdge(VoiceEdge):
             if audio_finalized and resp_finalized:
                 break
 
-        return bytes(audio_buf), {"events": event_count}
+        realtime_metrics = {"turn_taking_latency": self._turn_taking_latency}
+        return bytes(audio_buf), {"events": event_count}, realtime_metrics
 
     async def close(self) -> None:
         if self.ws:
@@ -331,11 +347,16 @@ class DeepgramRealtimeEdge(VoiceEdge):
         self.ws_url = "wss://agent.deepgram.com/v1/agent/converse"
         self._connected = False
         self._audio_buf = bytearray()
+        self._agent_turn_started = asyncio.Event()
         self._agent_turn_complete = asyncio.Event()
         self._recv_task: Optional[asyncio.Task[None]] = None
         self._stop_recv = asyncio.Event()
         self._keepalive_task: Optional[asyncio.Task[None]] = None
         self._keepalive_stop_event = asyncio.Event()
+
+        # timing information for realtime metrics
+        self._time_request_ended = None
+        self._turn_taking_latency = 0.0
 
     async def connect(self, **kwargs: Any) -> None:
         self.ws = await websockets.connect(
@@ -430,7 +451,20 @@ class DeepgramRealtimeEdge(VoiceEdge):
     def _handle_message_event(self, evt: Dict[str, Any]) -> None:
         etype = evt.get("type")
         if etype == "AgentAudioDone":
+            self._agent_turn_started.set()  # if somehow we missed the start event, then proceed
             self._agent_turn_complete.set()
+        if (
+            etype
+            == "ConversationText"  # this is the first response event we see from the agent
+            and not self._agent_turn_started.is_set()
+            and self._time_request_ended
+            is not None  # Only track latency if we have a start time
+        ):
+            # mark start of agent turn
+            self._agent_turn_started.set()
+            self._turn_taking_latency = (
+                time.time() - self._time_request_ended
+            ) * 1000.0  # ms
 
     async def send_pcm(
         self,
@@ -438,7 +472,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
         pace_realtime: bool = True,
         timeout_s: float = 30.0,
         add_silence_ms: int = 400,
-    ) -> tuple[bytes, Dict[str, Any]]:
+    ) -> tuple[bytes, Dict[str, Any], Dict[str, Any]]:
         assert self.ws and self._connected, "Call connect() first."
         self._audio_buf = bytearray()
         self._agent_turn_complete.clear()
@@ -447,6 +481,9 @@ class DeepgramRealtimeEdge(VoiceEdge):
             return pcm + (b"\x00\x00" * int(sr * ms / 1000))
 
         pcm16 = add_silence(pcm16, self.edge_config.sr, add_silence_ms)
+        self._turn_taking_latency = 0.0
+        self._time_request_ended = time.time()
+        self._agent_turn_started.clear()
 
         chunks = chunk_bytes(pcm16, self.edge_config.chunk_ms, self.edge_config.sr)
         bytes_per_sec = self.edge_config.sr * 2
@@ -463,7 +500,10 @@ class DeepgramRealtimeEdge(VoiceEdge):
 
         pcm_result = bytes(self._audio_buf)
         self._audio_buf = bytearray()
-        return pcm_result, {}
+        # Metric handling
+        self._time_request_ended = None  # reset timing info
+        realtime_metrics = {"turn_taking_latency": self._turn_taking_latency}
+        return pcm_result, {}, realtime_metrics
 
     async def close(self) -> None:
         if self.ws:
@@ -516,14 +556,14 @@ class RealtimeClient:
     async def close(self) -> None:
         await self.edge.close()
 
-    def _store_wav(self, pcm: bytes, prefix: str) -> str:
+    def _store_wav(self, pcm: bytes, prefix: str) -> tuple[str, float]:
         """Upload PCM16 audio data and make it publicly accessible."""
         # Create temporary WAV file from PCM data
         local_path = save_wav_pcm16(pcm, self.api_sr, prefix)
 
         response = self.okareo.upload_voice(local_path)
         logger.debug(f"🔈 Voice file uploaded to {response.file_url}")
-        return response.file_url
+        return response.file_url, response.file_duration
 
     async def send_utterance(
         self,
@@ -537,17 +577,18 @@ class RealtimeClient:
 
         # 1) TTS -> PCM16
         user_pcm = await asyncio.to_thread(tts_pcm16, text, tts_voice, self.api_sr)
-        user_wav_path = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
+        user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
         # 2) Stream to edge and collect agent PCM
-        agent_pcm, vendor_meta = await self.edge.send_pcm(
+        agent_pcm, vendor_meta, realtime_metrics = await self.edge.send_pcm(
             user_pcm, pace_realtime=pace_realtime, timeout_s=timeout_s
         )
 
         # 3) Save agent WAV
         assistant_wav_path = None
+        assistant_wav_duration = 0.0
         if agent_pcm:
-            assistant_wav_path = self._store_wav(
+            assistant_wav_path, assistant_wav_duration = self._store_wav(
                 agent_pcm, prefix=f"agent_turn_{turn_id:03d}_"
             )
 
@@ -561,6 +602,10 @@ class RealtimeClient:
             except Exception:
                 logger.exception("[ASR ERR] Failed to transcribe agent audio")
 
+        num_words = len(agent_asr.split(" ")) if agent_asr else 0
+        duration_minutes = (assistant_wav_duration or 0) / 1000 / 60
+        assistant_wpm = num_words / duration_minutes if duration_minutes > 0 else 0.0
+
         self.turn = turn_id
         return {
             "turn": turn_id,
@@ -569,6 +614,8 @@ class RealtimeClient:
             "agent_asr": agent_asr,
             "bytes": len(agent_pcm) if agent_pcm else 0,
             "vendor_meta": vendor_meta,
+            "turn_taking_latency": realtime_metrics.get("turn_taking_latency", 0.0),
+            "words_per_minute": assistant_wpm,
         }
 
 
@@ -670,6 +717,8 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
                 {
                     "user_wav_path": res.get("user_wav_path"),
                     "assistant_wav_path": res.get("assistant_wav_path"),
+                    "turn_taking_latency": res.get("turn_taking_latency"),
+                    "words_per_minute": res.get("words_per_minute"),
                 },
             )
         except Exception as e:
