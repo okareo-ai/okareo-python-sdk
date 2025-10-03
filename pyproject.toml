@@ -54,7 +54,7 @@ openai = {version = "^1.20.0", optional = true}
 litellm = {version = "^1.29.5", optional = true}
 autogen-agentchat = { version = "^0.2.36", optional = true }
 scipy = { version = "^1.10.0", optional = true }
-numpy = { version = ">=1.19.5,<1.27.0", optional = true }
+numpy = { version = ">=1.21.0,<2.0", optional = true }
 websockets = { version = "^15.0.1", optional = true }
 
 [tool.poetry.extras]
