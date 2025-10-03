@@ -135,7 +135,7 @@ def run_voice_multiturn_test(
 
     scenario = okareo.create_scenario_set(
         ScenarioSetCreate(
-            name=f"Product Returns — Conversation Context",
+            name="Product Returns — Conversation Context",
             seed_data=seed_data,
         )
     )
