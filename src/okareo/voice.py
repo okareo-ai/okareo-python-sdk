@@ -192,7 +192,7 @@ class OpenAIRealtimeEdge(VoiceEdge):
         self._connected = False
 
         # timing information for realtime metrics
-        self._time_request_ended = None
+        self._time_request_ended: float | None = None
         self._response_started = False
         self._turn_taking_latency = 0.0
 
@@ -308,9 +308,12 @@ class OpenAIRealtimeEdge(VoiceEdge):
                     audio_buf += base64.b64decode(b64)
                     if not self._response_started:
                         self._response_started = True
-                        self._turn_taking_latency = (
-                            time.time() - self._time_request_ended
-                        ) * 1000.0  # ms
+                        if self._time_request_ended is not None:
+                            self._turn_taking_latency = (
+                                time.time() - self._time_request_ended
+                            ) * 1000.0  # ms
+                        else:
+                            self._turn_taking_latency = 0.0
 
             elif event_type in self.AUDIO_DONE_TYPES:
                 audio_finalized = True
@@ -355,7 +358,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
         self._keepalive_stop_event = asyncio.Event()
 
         # timing information for realtime metrics
-        self._time_request_ended = None
+        self._time_request_ended: float | None = None
         self._turn_taking_latency = 0.0
 
     async def connect(self, **kwargs: Any) -> None:
