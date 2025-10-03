@@ -1279,6 +1279,13 @@ class Okareo:
                     raise TypeError(
                         "Cannot retrieve Target by name for CustomMultiturnTarget"
                     )
+
+            # simplify the API for end users, to not have to pass Okareo instance to the target
+            from okareo.voice import VoiceMultiturnTarget
+
+            if isinstance(target.target, VoiceMultiturnTarget):
+                target.target.set_okareo(self)
+
             target_model = self.create_or_update_target(
                 target, tags or [], project_id, sensitive_fields
             )

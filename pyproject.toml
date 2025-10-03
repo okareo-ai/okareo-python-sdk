@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okareo"
-version = "0.0.107"
+version = "0.0.108"
 description = "Python SDK for interacting with Okareo Cloud APIs"
 authors = [
     "Okareo <info@okareo.com>",
@@ -18,7 +18,9 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
@@ -30,7 +32,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.13"
+python = ">=3.10, <3.13"
 httpx = ">=0.23"
 types-python-dateutil = "^2.8.19.14"
 python-dateutil = "^2.8.2"
@@ -51,10 +53,14 @@ langchain = {version = "^0.0.321", optional = true}
 openai = {version = "^1.20.0", optional = true}
 litellm = {version = "^1.29.5", optional = true}
 autogen-agentchat = { version = "^0.2.36", optional = true }
+scipy = { version = "^1.10.0", optional = true }
+numpy = { version = ">=1.21.0,<2.0", optional = true }
+websockets = { version = "^15.0.1", optional = true }
 
 [tool.poetry.extras]
 langchain = ["langchain", "openai", "litellm"]
 autogen = ["autogen-agentchat"]
+voice = ["scipy", "numpy", "websockets"]
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"
@@ -87,6 +93,8 @@ litellm = {version = "^1.29.5"}
 ipykernel = "^6.25.2"
 setuptools = "*"
 pytest-xdist = "*"
+types-requests = "*"
+scipy-stubs = "*"
 
 [tool.pydoc-markdown]
 loaders = [{ type = "python", search_path = ["src"], modules = ["okareo.model_under_test", "okareo.checks", "okareo.async_utils", "okareo.autogen_logger", "okareo.callbacks", "okareo.crewai_logger", "okareo.litellm_logger", "okareo.okareo", "okareo.reporter"] }]
