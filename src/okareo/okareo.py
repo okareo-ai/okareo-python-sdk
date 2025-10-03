@@ -1282,6 +1282,7 @@ class Okareo:
 
             # simplify the API for end users, to not have to pass Okareo instance to the target
             from okareo.voice import VoiceMultiturnTarget
+
             if isinstance(target.target, VoiceMultiturnTarget):
                 target.target.set_okareo(self)
 
