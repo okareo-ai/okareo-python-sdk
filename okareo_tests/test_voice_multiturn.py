@@ -209,7 +209,7 @@ def run_voice_multiturn_test_audio_check(
             "avg_turn_taking_latency",
             "avg_words_per_minute",
             "total_turn_count",
-            "user_emotion",
+            "empathy",
         ],
     )
 
