@@ -5,6 +5,8 @@ import logging
 import ssl
 import threading
 import urllib
+import random
+import string
 from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
@@ -304,6 +306,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         checks: Optional[List[str]],
         simulation_params: Optional[Any],
         driver_id: Optional[str],
+        nats_invoke_id: Optional[str],
     ) -> TestRunPayloadV2:
         return TestRunPayloadV2(
             mut_id=self.mut_id,
@@ -327,6 +330,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks=checks if checks else UNSET,
             simulation_params=simulation_params if simulation_params else UNSET,
             driver_id=driver_id if driver_id else UNSET,
+            nats_invoke_id=nats_invoke_id if nats_invoke_id else UNSET,
         )
 
     async def connect_nats(self, user_jwt: str, seed: str, local_nats: str) -> Any:
@@ -539,7 +543,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
 
     async def _internal_run_custom_model_listener(
-        self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str
+        self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str, invoke_id: str
     ) -> None:
         nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
         # Track active tasks for proper cleanup
@@ -562,7 +566,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
             # Create multiple subscribers for better concurrency
             await nats_connection.subscribe(
-                f"invoke.{self.mut_id}",
+                f"invoke.{invoke_id}",
                 cb=message_handler_custom_model,
             )
             while not stop_event.is_set():
@@ -585,7 +589,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             loop.close()
 
     def _internal_start_custom_model_thread(
-        self, nats_jwt: str, seed: str, local_nats: str
+        self, nats_jwt: str, seed: str, local_nats: str, invoke_id: str
     ) -> tuple:
         custom_model_thread_stop_event = threading.Event()
         custom_model_thread = threading.Thread(
@@ -596,6 +600,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     nats_jwt,
                     seed,
                     local_nats,
+                    invoke_id,
                 ),
             ),
         )
@@ -642,18 +647,25 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
 
             model_data: dict = {"model_data": {}}
+            nats_invoke_id = None
             if self._has_custom_model() and test_run_type == TestRunType.MULTI_TURN:
+                # random 8 character string to make nats channel unique
+                # allows multiple clients with same target to run in parallel
+                nats_invoke_id = "".join(
+                    random.choices(string.ascii_lowercase + string.digits, k=8)
+                )
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
-                    client=self.client, api_key=self.api_key, mut_id=self.mut_id
+                    client=self.client, api_key=self.api_key, mut_id=self.mut_id, nats_invoke_id=nats_invoke_id
                 )
                 assert isinstance(creds, dict)
                 nats_jwt = creds["jwt"]
                 seed = creds["seed"]
                 local_nats = creds["local_nats"]
+                invoke_id = f"{self.mut_id}_{nats_invoke_id}"
                 (
                     self.custom_model_thread,
                     self.custom_model_thread_stop_event,
-                ) = self._internal_start_custom_model_thread(nats_jwt, seed, local_nats)
+                ) = self._internal_start_custom_model_thread(nats_jwt, seed, local_nats, invoke_id)
                 self.custom_model_thread.start()
             elif self._has_custom_model():
                 self._custom_exec(scenario_id, model_data)
@@ -674,6 +686,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     checks,
                     simulation_params,
                     driver_id,
+                    nats_invoke_id,
                 ),
             )
             if isinstance(response, ErrorResponse):
