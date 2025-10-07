@@ -2,11 +2,11 @@ import asyncio
 import inspect
 import json
 import logging
+import random
 import ssl
+import string
 import threading
 import urllib
-import random
-import string
 from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
@@ -655,7 +655,10 @@ class ModelUnderTest(AsyncProcessorMixin):
                     random.choices(string.ascii_lowercase + string.digits, k=8)
                 )
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
-                    client=self.client, api_key=self.api_key, mut_id=self.mut_id, nats_invoke_id=nats_invoke_id
+                    client=self.client,
+                    api_key=self.api_key,
+                    mut_id=self.mut_id,
+                    nats_invoke_id=nats_invoke_id,
                 )
                 assert isinstance(creds, dict)
                 nats_jwt = creds["jwt"]
@@ -665,7 +668,9 @@ class ModelUnderTest(AsyncProcessorMixin):
                 (
                     self.custom_model_thread,
                     self.custom_model_thread_stop_event,
-                ) = self._internal_start_custom_model_thread(nats_jwt, seed, local_nats, invoke_id)
+                ) = self._internal_start_custom_model_thread(
+                    nats_jwt, seed, local_nats, invoke_id
+                )
                 self.custom_model_thread.start()
             elif self._has_custom_model():
                 self._custom_exec(scenario_id, model_data)
