@@ -1284,7 +1284,7 @@ class Okareo:
             from okareo.voice import VoiceMultiturnTarget
 
             if isinstance(target.target, VoiceMultiturnTarget):
-                target.target.set_okareo(self)
+                target.target.set_okareo(self, driver=driver_model)
 
             target_model = self.create_or_update_target(
                 target, tags or [], project_id, sensitive_fields

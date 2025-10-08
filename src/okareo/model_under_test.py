@@ -1440,6 +1440,7 @@ class Driver:
     id: Optional[str] = None
     time_created: Optional[str] = datetime.now().isoformat()
     project_id: Optional[str] = None
+    voice_instructions: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -1449,6 +1450,7 @@ class Driver:
             "prompt_template": self.prompt_template,
             "id": self.id,
             "time_created": self.time_created,
+            "voice_instructions": self.voice_instructions,
         }
 
 

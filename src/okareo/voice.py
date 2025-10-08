@@ -21,6 +21,7 @@ from scipy.signal import resample_poly
 from okareo import Okareo
 from okareo.model_under_test import (
     CustomMultiturnTargetAsync,
+    Driver,
     ModelInvocation,
 )
 
@@ -66,7 +67,12 @@ class PCMResponse:
 
 
 # ---------------- utils: TTS + ASR + WAV + chunking ----------------
-def tts_pcm16(text: str, voice: str = "echo", target_sr: int = API_SR) -> bytes:
+def tts_pcm16(
+    text: str,
+    voice: str = "echo",
+    target_sr: int = API_SR,
+    voice_instructions: str | None = None,
+) -> bytes:
     url = "https://api.openai.com/v1/audio/speech"
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
@@ -78,6 +84,8 @@ def tts_pcm16(text: str, voice: str = "echo", target_sr: int = API_SR) -> bytes:
         "input": text,
         "response_format": "pcm",
     }
+    if voice_instructions is not None:
+        payload["instructions"] = voice_instructions
     r = requests.post(url, headers=headers, json=payload, timeout=60)
     r.raise_for_status()
     native_sr = 24000
@@ -184,6 +192,7 @@ class EdgeConfig(ABC):
     model: str = ""
     instructions: str = "Be brief and helpful."
     output_voice: str = ""
+    driver_instructions: Optional[str] = None
 
     @abstractmethod
     def create(self) -> VoiceEdge: ...
@@ -589,12 +598,14 @@ class RealtimeClient:
         self,
         edge: VoiceEdge,
         okareo: Okareo,
+        driver: Driver,
         api_sr: int = API_SR,
         chunk_ms: int = CHUNK_MS,
         asr_model: str = "gpt-4o-mini-transcribe",
     ):
         self.edge = edge
         self.okareo = okareo
+        self.driver = driver
         self.api_sr = int(api_sr)
         self.chunk_ms = int(chunk_ms)
         self.turn = 0
@@ -627,7 +638,9 @@ class RealtimeClient:
         turn_id = self.turn + 1
 
         # 1) TTS -> PCM16
-        user_pcm = await asyncio.to_thread(tts_pcm16, text, tts_voice, self.api_sr)
+        user_pcm = await asyncio.to_thread(
+            tts_pcm16, text, tts_voice, self.api_sr, self.driver.voice_instructions
+        )
         user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
         # 2) Stream to edge and collect agent PCM
@@ -677,9 +690,10 @@ class RealtimeClient:
 
 # ---------------- SessionManager: session_id -> RealtimeClient ----------------
 class SessionManager:
-    def __init__(self, cfg: EdgeConfig, okareo: Okareo):
+    def __init__(self, cfg: EdgeConfig, okareo: Okareo, driver: Driver):
         self.cfg = cfg
         self.okareo = okareo
+        self.driver = driver
         self.sessions: dict[str, RealtimeClient] = {}
 
     async def start(
@@ -688,7 +702,7 @@ class SessionManager:
         c = self.sessions.get(session_id)
         if c is None or not c.edge.is_connected():
             edge = self.cfg.create()  # explicit, typed build
-            c = RealtimeClient(edge=edge, okareo=self.okareo)
+            c = RealtimeClient(edge=edge, okareo=self.okareo, driver=self.driver)
             await c.connect(**edge_connect_kwargs)
             self.sessions[session_id] = c
         return c
@@ -726,9 +740,9 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
         self.cfg = edge_config
         self.sessions: Optional[SessionManager] = None  # Initialize sessions as None
 
-    def set_okareo(self, okareo: Okareo) -> None:
+    def set_okareo(self, okareo: Okareo, driver: Driver) -> None:
         """Set the Okareo instance and create a SessionManager with it."""
-        self.sessions = SessionManager(self.cfg, okareo)
+        self.sessions = SessionManager(self.cfg, okareo, driver)
 
     async def start_session(
         self, scenario_input: Optional[Union[dict, list, str]] = None
