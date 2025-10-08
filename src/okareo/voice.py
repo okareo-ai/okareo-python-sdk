@@ -28,19 +28,17 @@ logger = logging.getLogger(__name__)
 
 # --------------------- config ----------------------
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-assert OPENAI_API_KEY, "Set OPENAI_API_KEY"
-
-
 API_SR = 24000  # 24 kHz PCM16 mono
 CHUNK_MS = 120  # stream in ~120ms chunks
 
 
 # ---------------- utils: TTS + ASR + WAV + chunking ----------------
-def tts_pcm16(text: str, voice: str = "echo", target_sr: int = API_SR) -> bytes:
+def tts_pcm16(
+    text: str, api_key: str, voice: str = "echo", target_sr: int = API_SR
+) -> bytes:
     url = "https://api.openai.com/v1/audio/speech"
     headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     payload = {
@@ -77,11 +75,11 @@ def wav_from_pcm16(pcm_bytes: bytes, sr: int) -> bytes:
 
 
 async def asr_openai_from_pcm16(
-    pcm_bytes: bytes, sr: int, model: str = "gpt-4o-mini-transcribe"
+    pcm_bytes: bytes, sr: int, api_key: str, model: str = "gpt-4o-mini-transcribe"
 ) -> str:
     """Async wrapper around /v1/audio/transcriptions."""
     url = "https://api.openai.com/v1/audio/transcriptions"
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
+    headers = {"Authorization": f"Bearer {api_key}"}
     wav_bytes = wav_from_pcm16(pcm_bytes, sr)
 
     def _post() -> requests.Response:
@@ -498,12 +496,14 @@ class RealtimeClient:
         self,
         edge: VoiceEdge,
         okareo: Okareo,
+        asr_tts_api_key: str,
         api_sr: int = API_SR,
         chunk_ms: int = CHUNK_MS,
         asr_model: str = "gpt-4o-mini-transcribe",
     ):
         self.edge = edge
         self.okareo = okareo
+        self.asr_tts_api_key = asr_tts_api_key
         self.api_sr = int(api_sr)
         self.chunk_ms = int(chunk_ms)
         self.turn = 0
@@ -536,7 +536,9 @@ class RealtimeClient:
         turn_id = self.turn + 1
 
         # 1) TTS -> PCM16
-        user_pcm = await asyncio.to_thread(tts_pcm16, text, tts_voice, self.api_sr)
+        user_pcm = await asyncio.to_thread(
+            tts_pcm16, text, self.asr_tts_api_key, tts_voice, self.api_sr
+        )
         user_wav_path = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
         # 2) Stream to edge and collect agent PCM
@@ -556,7 +558,7 @@ class RealtimeClient:
         if agent_pcm:
             try:
                 agent_asr = await asr_openai_from_pcm16(
-                    agent_pcm, self.api_sr, model=self.asr_model
+                    agent_pcm, self.api_sr, self.asr_tts_api_key, model=self.asr_model
                 )
             except Exception:
                 logger.exception("[ASR ERR] Failed to transcribe agent audio")
@@ -574,9 +576,10 @@ class RealtimeClient:
 
 # ---------------- SessionManager: session_id -> RealtimeClient ----------------
 class SessionManager:
-    def __init__(self, cfg: EdgeConfig, okareo: Okareo):
+    def __init__(self, cfg: EdgeConfig, okareo: Okareo, asr_tts_api_key: str):
         self.cfg = cfg
         self.okareo = okareo
+        self.asr_tts_api_key = asr_tts_api_key
         self.sessions: dict[str, RealtimeClient] = {}
 
     async def start(
@@ -585,7 +588,9 @@ class SessionManager:
         c = self.sessions.get(session_id)
         if c is None or not c.edge.is_connected():
             edge = self.cfg.create()  # explicit, typed build
-            c = RealtimeClient(edge=edge, okareo=self.okareo)
+            c = RealtimeClient(
+                edge=edge, okareo=self.okareo, asr_tts_api_key=self.asr_tts_api_key
+            )
             await c.connect(**edge_connect_kwargs)
             self.sessions[session_id] = c
         return c
@@ -618,14 +623,15 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
     Owns a SessionManager and creates a RealtimeClient per session.
     """
 
-    def __init__(self, name: str, edge_config: EdgeConfig):
+    def __init__(self, name: str, edge_config: EdgeConfig, asr_tts_api_key: str):
         super().__init__(name=name)
         self.cfg = edge_config
+        self.asr_tts_api_key = asr_tts_api_key
         self.sessions: Optional[SessionManager] = None  # Initialize sessions as None
 
     def set_okareo(self, okareo: Okareo) -> None:
         """Set the Okareo instance and create a SessionManager with it."""
-        self.sessions = SessionManager(self.cfg, okareo)
+        self.sessions = SessionManager(self.cfg, okareo, self.asr_tts_api_key)
 
     async def start_session(
         self, scenario_input: Optional[Union[dict, list, str]] = None
