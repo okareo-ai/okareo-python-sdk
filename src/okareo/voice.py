@@ -147,6 +147,7 @@ class VoiceEdge(ABC):
     def __init__(self, edge_config: "EdgeConfig"):
         self.edge_config = edge_config
         self.ws: Any = None
+        self._time_request_ended: float | None = None
 
     @abstractmethod
     async def connect(self, **kwargs: Any) -> None: ...
@@ -171,6 +172,14 @@ class VoiceEdge(ABC):
 
     def is_connected(self) -> bool:
         return self.ws is not None
+
+    def update_turn_taking_latency(self) -> None:
+        if self._time_request_ended is not None:
+            self._turn_taking_latency = (
+                time.time() - self._time_request_ended
+            ) * 1000.0  # ms
+        else:
+            self._turn_taking_latency = 0.0
 
 
 class EdgeConfig(ABC):
@@ -229,7 +238,6 @@ class OpenAIRealtimeEdge(VoiceEdge):
         self._connected = False
 
         # timing information for realtime metrics
-        self._time_request_ended: float | None = None
         self._response_started = False
         self._turn_taking_latency = 0.0
 
@@ -402,7 +410,6 @@ class DeepgramRealtimeEdge(VoiceEdge):
         self._keepalive_stop_event = asyncio.Event()
 
         # timing information for realtime metrics
-        self._time_request_ended: float | None = None
         self._turn_taking_latency = 0.0
 
     async def connect(self, **kwargs: Any) -> None:
@@ -497,9 +504,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
                     ):
                         # mark start of agent turn
                         self._agent_turn_started.set()
-                        self._turn_taking_latency = (
-                            time.time() - self._time_request_ended
-                        ) * 1000.0  # ms
+                        self.update_turn_taking_latency()
 
         except websockets.exceptions.ConnectionClosed:
             pass
@@ -630,7 +635,7 @@ class RealtimeClient:
         user_pcm = await asyncio.to_thread(
             tts_pcm16, text, self.asr_tts_api_key, tts_voice, self.api_sr
         )
-        user_wav_path = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
+        user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
         # 2) Stream to edge and collect agent PCM
         pcm_response = await self.edge.send_pcm(
