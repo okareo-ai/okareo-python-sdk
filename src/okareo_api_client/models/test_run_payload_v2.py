@@ -33,6 +33,7 @@ class TestRunPayloadV2:
         checks (Union[Unset, List[str]]): List of checks to include in the test run.
         simulation_params (Union[Unset, TestRunPayloadV2SimulationParams]): Simulation parameters for the test run.
         driver_id (Union[Unset, str]): ID of the driver model to use, if applicable.
+        nats_invoke_id (Union[Unset, str]): Optional custom NATS invoke ID for the mut evaluation.
     """
 
     mut_id: str
@@ -47,6 +48,7 @@ class TestRunPayloadV2:
     checks: Union[Unset, List[str]] = UNSET
     simulation_params: Union[Unset, "TestRunPayloadV2SimulationParams"] = UNSET
     driver_id: Union[Unset, str] = UNSET
+    nats_invoke_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -83,6 +85,7 @@ class TestRunPayloadV2:
             simulation_params = self.simulation_params.to_dict()
 
         driver_id = self.driver_id
+        nats_invoke_id = self.nats_invoke_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -112,6 +115,8 @@ class TestRunPayloadV2:
             field_dict["simulation_params"] = simulation_params
         if driver_id is not UNSET:
             field_dict["driver_id"] = driver_id
+        if nats_invoke_id is not UNSET:
+            field_dict["nats_invoke_id"] = nats_invoke_id
 
         return field_dict
 
@@ -172,6 +177,8 @@ class TestRunPayloadV2:
 
         driver_id = d.pop("driver_id", UNSET)
 
+        nats_invoke_id = d.pop("nats_invoke_id", UNSET)
+
         test_run_payload_v2 = cls(
             mut_id=mut_id,
             scenario_id=scenario_id,
@@ -185,6 +192,7 @@ class TestRunPayloadV2:
             checks=checks,
             simulation_params=simulation_params,
             driver_id=driver_id,
+            nats_invoke_id=nats_invoke_id,
         )
 
         test_run_payload_v2.additional_properties = d
