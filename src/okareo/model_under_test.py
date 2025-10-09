@@ -2,15 +2,14 @@ import asyncio
 import inspect
 import json
 import logging
-import random
 import ssl
-import string
 import threading
 import urllib
 from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
 from typing import Any, Awaitable, Dict, List, Optional, Union
+from uuid import uuid4
 
 import aiohttp
 from attrs import define
@@ -649,11 +648,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_data: dict = {"model_data": {}}
             nats_invoke_id = None
             if self._has_custom_model() and test_run_type == TestRunType.MULTI_TURN:
-                # random 8 character string to make nats channel unique
+                # concat UUID to mut_id to make nats channel unique while maintaining like to mut
                 # allows multiple clients with same target to run in parallel
-                nats_invoke_id = "".join(
-                    random.choices(string.ascii_lowercase + string.digits, k=8)
-                )
+                nats_invoke_id = f"{self.mut_id}_{str(uuid4())}"
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
                     client=self.client,
                     api_key=self.api_key,
@@ -664,12 +661,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                 nats_jwt = creds["jwt"]
                 seed = creds["seed"]
                 local_nats = creds["local_nats"]
-                invoke_id = f"{self.mut_id}_{nats_invoke_id}"
                 (
                     self.custom_model_thread,
                     self.custom_model_thread_stop_event,
                 ) = self._internal_start_custom_model_thread(
-                    nats_jwt, seed, local_nats, invoke_id
+                    nats_jwt, seed, local_nats, nats_invoke_id
                 )
                 self.custom_model_thread.start()
             elif self._has_custom_model():
