@@ -643,7 +643,12 @@ class RealtimeClient:
 
         # 1) TTS -> PCM16
         user_pcm = await asyncio.to_thread(
-            tts_pcm16, text, self.asr_tts_api_key, tts_voice, self.api_sr, self.driver.voice_instructions
+            tts_pcm16,
+            text,
+            self.asr_tts_api_key,
+            tts_voice,
+            self.api_sr,
+            self.driver.voice_instructions,
         )
         user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
@@ -694,7 +699,9 @@ class RealtimeClient:
 
 # ---------------- SessionManager: session_id -> RealtimeClient ----------------
 class SessionManager:
-    def __init__(self, cfg: EdgeConfig, okareo: Okareo, driver: Driver, asr_tts_api_key: str):
+    def __init__(
+        self, cfg: EdgeConfig, okareo: Okareo, driver: Driver, asr_tts_api_key: str
+    ):
         self.cfg = cfg
         self.okareo = okareo
         self.driver = driver
@@ -708,7 +715,10 @@ class SessionManager:
         if c is None or not c.edge.is_connected():
             edge = self.cfg.create()  # explicit, typed build
             c = RealtimeClient(
-                edge=edge, okareo=self.okareo, driver=self.driver, asr_tts_api_key=self.asr_tts_api_key
+                edge=edge,
+                okareo=self.okareo,
+                driver=self.driver,
+                asr_tts_api_key=self.asr_tts_api_key,
             )
             await c.connect(**edge_connect_kwargs)
             self.sessions[session_id] = c
