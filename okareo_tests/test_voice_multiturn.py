@@ -84,6 +84,7 @@ def deepgram_voice_target() -> VoiceMultiturnTarget:
             api_key=DEEPGRAM_API_KEY,  # type: ignore
             instructions=PERSISTENT_PROMPT,
         ),
+        asr_tts_api_key=OPENAI_API_KEY,  # type: ignore
     )
 
 
@@ -96,6 +97,7 @@ def openai_voice_target() -> VoiceMultiturnTarget:
             model="gpt-realtime",
             instructions=PERSISTENT_PROMPT,
         ),
+        asr_tts_api_key=OPENAI_API_KEY,  # type: ignore
     )
 
 
