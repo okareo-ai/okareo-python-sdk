@@ -17,6 +17,7 @@ class DriverModelSchema:
         prompt_template (str): Prompt template for the driver model
         id (Union[Unset, str]): ID of the driver model
         model_id (Union[Unset, str]): Model ID of the driver model
+        voice_instructions (Union[Unset, str]): Voice instructions for the driver model
         project_id (Union[Unset, str]): ID for project
     """
 
@@ -25,6 +26,7 @@ class DriverModelSchema:
     prompt_template: str
     id: Union[Unset, str] = UNSET
     model_id: Union[Unset, str] = UNSET
+    voice_instructions: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -34,6 +36,7 @@ class DriverModelSchema:
         prompt_template = self.prompt_template
         id = self.id
         model_id = self.model_id
+        voice_instructions = self.voice_instructions
         project_id = self.project_id
 
         field_dict: Dict[str, Any] = {}
@@ -49,6 +52,8 @@ class DriverModelSchema:
             field_dict["id"] = id
         if model_id is not UNSET:
             field_dict["model_id"] = model_id
+        if voice_instructions is not UNSET:
+            field_dict["voice_instructions"] = voice_instructions
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
 
@@ -67,6 +72,8 @@ class DriverModelSchema:
 
         model_id = d.pop("model_id", UNSET)
 
+        voice_instructions = d.pop("voice_instructions", UNSET)
+
         project_id = d.pop("project_id", UNSET)
 
         driver_model_schema = cls(
@@ -75,6 +82,7 @@ class DriverModelSchema:
             prompt_template=prompt_template,
             id=id,
             model_id=model_id,
+            voice_instructions=voice_instructions,
             project_id=project_id,
         )
 

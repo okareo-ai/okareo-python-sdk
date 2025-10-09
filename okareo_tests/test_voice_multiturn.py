@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import pytest
 
@@ -81,23 +82,25 @@ def okareo() -> Okareo:
 @pytest.fixture(scope="module")
 def deepgram_voice_target() -> VoiceMultiturnTarget:
     return VoiceMultiturnTarget(
-        name="Voice Sim Target (Deepgram)",
+        name=f"Voice Sim Target (Deepgram) {uuid.uuid4()}",
         edge_config=DeepgramEdgeConfig(
             api_key=DEEPGRAM_API_KEY,  # type: ignore
             instructions=PERSISTENT_PROMPT,
         ),
+        asr_tts_api_key=OPENAI_API_KEY,  # type: ignore
     )
 
 
 @pytest.fixture(scope="module")
 def openai_voice_target() -> VoiceMultiturnTarget:
     return VoiceMultiturnTarget(
-        name="Voice Sim Target (OpenAI)",
+        name=f"Voice Sim Target (OpenAI) {uuid.uuid4()}",
         edge_config=OpenAIEdgeConfig(
             api_key=OPENAI_API_KEY,  # type: ignore
             model="gpt-realtime",
             instructions=PERSISTENT_PROMPT,
         ),
+        asr_tts_api_key=OPENAI_API_KEY,  # type: ignore
     )
 
 

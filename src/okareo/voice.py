@@ -30,10 +30,6 @@ logger = logging.getLogger(__name__)
 
 # --------------------- config ----------------------
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-assert OPENAI_API_KEY, "Set OPENAI_API_KEY"
-
-
 API_SR = 24000  # 24 kHz PCM16 mono
 CHUNK_MS = 120  # stream in ~120ms chunks
 
@@ -69,13 +65,14 @@ class PCMResponse:
 # ---------------- utils: TTS + ASR + WAV + chunking ----------------
 def tts_pcm16(
     text: str,
+    api_key: str,
     voice: str = "echo",
     target_sr: int = API_SR,
     voice_instructions: str | None = None,
 ) -> bytes:
     url = "https://api.openai.com/v1/audio/speech"
     headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     payload = {
@@ -114,11 +111,11 @@ def wav_from_pcm16(pcm_bytes: bytes, sr: int) -> bytes:
 
 
 async def asr_openai_from_pcm16(
-    pcm_bytes: bytes, sr: int, model: str = "gpt-4o-mini-transcribe"
+    pcm_bytes: bytes, sr: int, api_key: str, model: str = "gpt-4o-mini-transcribe"
 ) -> str:
     """Async wrapper around /v1/audio/transcriptions."""
     url = "https://api.openai.com/v1/audio/transcriptions"
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
+    headers = {"Authorization": f"Bearer {api_key}"}
     wav_bytes = wav_from_pcm16(pcm_bytes, sr)
 
     def _post() -> requests.Response:
@@ -157,6 +154,7 @@ class VoiceEdge(ABC):
     def __init__(self, edge_config: "EdgeConfig"):
         self.edge_config = edge_config
         self.ws: Any = None
+        self._time_request_ended: float | None = None
 
     @abstractmethod
     async def connect(self, **kwargs: Any) -> None: ...
@@ -181,6 +179,14 @@ class VoiceEdge(ABC):
 
     def is_connected(self) -> bool:
         return self.ws is not None
+
+    def update_turn_taking_latency(self) -> None:
+        if self._time_request_ended is not None:
+            self._turn_taking_latency = (
+                time.time() - self._time_request_ended
+            ) * 1000.0  # ms
+        else:
+            self._turn_taking_latency = 0.0
 
 
 class EdgeConfig(ABC):
@@ -240,7 +246,6 @@ class OpenAIRealtimeEdge(VoiceEdge):
         self._connected = False
 
         # timing information for realtime metrics
-        self._time_request_ended: float | None = None
         self._response_started = False
         self._turn_taking_latency = 0.0
 
@@ -413,7 +418,6 @@ class DeepgramRealtimeEdge(VoiceEdge):
         self._keepalive_stop_event = asyncio.Event()
 
         # timing information for realtime metrics
-        self._time_request_ended: float | None = None
         self._turn_taking_latency = 0.0
 
     async def connect(self, **kwargs: Any) -> None:
@@ -508,9 +512,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
                     ):
                         # mark start of agent turn
                         self._agent_turn_started.set()
-                        self._turn_taking_latency = (
-                            time.time() - self._time_request_ended
-                        ) * 1000.0  # ms
+                        self.update_turn_taking_latency()
 
         except websockets.exceptions.ConnectionClosed:
             pass
@@ -599,6 +601,7 @@ class RealtimeClient:
         edge: VoiceEdge,
         okareo: Okareo,
         driver: Driver,
+        asr_tts_api_key: str,
         api_sr: int = API_SR,
         chunk_ms: int = CHUNK_MS,
         asr_model: str = "gpt-4o-mini-transcribe",
@@ -606,6 +609,7 @@ class RealtimeClient:
         self.edge = edge
         self.okareo = okareo
         self.driver = driver
+        self.asr_tts_api_key = asr_tts_api_key
         self.api_sr = int(api_sr)
         self.chunk_ms = int(chunk_ms)
         self.turn = 0
@@ -639,7 +643,7 @@ class RealtimeClient:
 
         # 1) TTS -> PCM16
         user_pcm = await asyncio.to_thread(
-            tts_pcm16, text, tts_voice, self.api_sr, self.driver.voice_instructions
+            tts_pcm16, text, self.asr_tts_api_key, tts_voice, self.api_sr, self.driver.voice_instructions
         )
         user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
@@ -664,7 +668,7 @@ class RealtimeClient:
         if agent_pcm:
             try:
                 agent_asr = await asr_openai_from_pcm16(
-                    agent_pcm, self.api_sr, model=self.asr_model
+                    agent_pcm, self.api_sr, self.asr_tts_api_key, model=self.asr_model
                 )
             except Exception:
                 logger.exception("[ASR ERR] Failed to transcribe agent audio")
@@ -690,10 +694,11 @@ class RealtimeClient:
 
 # ---------------- SessionManager: session_id -> RealtimeClient ----------------
 class SessionManager:
-    def __init__(self, cfg: EdgeConfig, okareo: Okareo, driver: Driver):
+    def __init__(self, cfg: EdgeConfig, okareo: Okareo, driver: Driver, asr_tts_api_key: str):
         self.cfg = cfg
         self.okareo = okareo
         self.driver = driver
+        self.asr_tts_api_key = asr_tts_api_key
         self.sessions: dict[str, RealtimeClient] = {}
 
     async def start(
@@ -702,7 +707,9 @@ class SessionManager:
         c = self.sessions.get(session_id)
         if c is None or not c.edge.is_connected():
             edge = self.cfg.create()  # explicit, typed build
-            c = RealtimeClient(edge=edge, okareo=self.okareo, driver=self.driver)
+            c = RealtimeClient(
+                edge=edge, okareo=self.okareo, driver=self.driver, asr_tts_api_key=self.asr_tts_api_key
+            )
             await c.connect(**edge_connect_kwargs)
             self.sessions[session_id] = c
         return c
@@ -735,14 +742,15 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
     Owns a SessionManager and creates a RealtimeClient per session.
     """
 
-    def __init__(self, name: str, edge_config: EdgeConfig):
+    def __init__(self, name: str, edge_config: EdgeConfig, asr_tts_api_key: str):
         super().__init__(name=name)
         self.cfg = edge_config
+        self.asr_tts_api_key = asr_tts_api_key
         self.sessions: Optional[SessionManager] = None  # Initialize sessions as None
 
     def set_okareo(self, okareo: Okareo, driver: Driver) -> None:
         """Set the Okareo instance and create a SessionManager with it."""
-        self.sessions = SessionManager(self.cfg, okareo, driver)
+        self.sessions = SessionManager(self.cfg, okareo, driver, self.asr_tts_api_key)
 
     async def start_session(
         self, scenario_input: Optional[Union[dict, list, str]] = None
