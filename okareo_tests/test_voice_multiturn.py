@@ -7,6 +7,7 @@ from okareo import Okareo
 from okareo.model_under_test import Driver, Target
 from okareo.voice import DeepgramEdgeConfig, OpenAIEdgeConfig, VoiceMultiturnTarget
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
+from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 
 # Constants
 FRUSTRATED_PROMPT = open(
@@ -205,7 +206,7 @@ def run_voice_multiturn_test_audio_check(
         target=Target(name="Voice Sim Target - Frustrated User", target=voice_target),
         name="Voice Simulation Run - Frustrated User",
         scenario=scenario,
-        max_turns=2,
+        max_turns=1,
         repeats=1,
         first_turn="driver",
         checks=[
@@ -220,5 +221,21 @@ def run_voice_multiturn_test_audio_check(
     assert evaluation.name == "Voice Simulation Run - Frustrated User"
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
+    assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
+    metrics_dict = evaluation.model_metrics.to_dict()
+    assert isinstance(metrics_dict, dict)
+    assert metrics_dict.get("mean_scores") is not None
+    scores = metrics_dict.get("mean_scores")
+    assert scores
+    assert (
+        scores.get("empathy_score") is not None
+        and scores.get("empathy_score") >= 1.0
+        and scores.get("empathy_score") <= 5.0
+    )
+    assert (
+        scores.get("automated_resolution") is not None
+        and scores.get("automated_resolution") >= 0
+        and scores.get("automated_resolution") <= 1
+    )
     assert evaluation.app_link is not None
     print(evaluation.app_link)
