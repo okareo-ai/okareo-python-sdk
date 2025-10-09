@@ -71,7 +71,7 @@ def sync_detailed(
 ) -> Response[Union[AssistantThreadResponse, ErrorResponse]]:
     """Create Assistant Thread
 
-     Creates a new OpenAI Assistant thread with an initial system message.
+     Creates a new Assistant thread with an initial system message.
 
     Returns:
         AssistantThreadResponse: Contains the thread_id for future messages
@@ -105,7 +105,7 @@ def sync(
 ) -> Optional[Union[AssistantThreadResponse, ErrorResponse]]:
     """Create Assistant Thread
 
-     Creates a new OpenAI Assistant thread with an initial system message.
+     Creates a new Assistant thread with an initial system message.
 
     Returns:
         AssistantThreadResponse: Contains the thread_id for future messages
@@ -134,7 +134,7 @@ async def asyncio_detailed(
 ) -> Response[Union[AssistantThreadResponse, ErrorResponse]]:
     """Create Assistant Thread
 
-     Creates a new OpenAI Assistant thread with an initial system message.
+     Creates a new Assistant thread with an initial system message.
 
     Returns:
         AssistantThreadResponse: Contains the thread_id for future messages
@@ -166,7 +166,7 @@ async def asyncio(
 ) -> Optional[Union[AssistantThreadResponse, ErrorResponse]]:
     """Create Assistant Thread
 
-     Creates a new OpenAI Assistant thread with an initial system message.
+     Creates a new Assistant thread with an initial system message.
 
     Returns:
         AssistantThreadResponse: Contains the thread_id for future messages
