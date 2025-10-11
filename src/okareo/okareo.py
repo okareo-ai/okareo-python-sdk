@@ -55,6 +55,7 @@ from okareo_api_client.models.create_group_v0_groups_post_source import (
 from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
+from okareo_api_client.models.driver_model_response import DriverModelResponse
 from okareo_api_client.models.driver_model_schema import DriverModelSchema
 from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.evaluation_payload import EvaluationPayload
@@ -73,6 +74,7 @@ from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
+from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_response_models import (
     ModelUnderTestResponseModels,
@@ -88,9 +90,13 @@ from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
+from okareo_api_client.models.target_model_response import TargetModelResponse
 from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
+from okareo_api_client.models.voice_driver_model_response import (
+    VoiceDriverModelResponse,
+)
 from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
 from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
 from okareo_api_client.types import UNSET, File, Unset
@@ -1143,8 +1149,19 @@ class Okareo:
         self.validate_response(response)
         if not response:
             print("Empty response from API")
-        assert response is not None and isinstance(response, dict)
-        return Driver(**response)
+        assert (
+            response is not None
+            and not isinstance(response, HTTPValidationError)
+            and not isinstance(response, ErrorResponse)
+            and any(
+                isinstance(response, r)
+                for r in [DriverModelResponse, VoiceDriverModelResponse]
+            )
+        )
+        assert response.name
+
+        # Explicitly construct driver response to avoid backwards compatibility issues
+        return Driver.from_response(response)
 
     def get_driver_by_name(self, driver_name: str) -> Driver:
         """Get a driver by its name.
@@ -1163,8 +1180,19 @@ class Okareo:
         self.validate_response(response)
         if not response:
             print("Empty response from API")
-        assert response is not None and isinstance(response, dict)
-        return Driver(**response)
+        assert (
+            response is not None
+            and not isinstance(response, HTTPValidationError)
+            and not isinstance(response, ErrorResponse)
+            and any(
+                isinstance(response, r)
+                for r in [DriverModelResponse, VoiceDriverModelResponse]
+            )
+            and response.name
+        )
+
+        # Explicitly construct driver response to avoid backwards compatibility issues
+        return Driver.from_response(response)
 
     def create_or_update_target(
         self,
@@ -1207,7 +1235,7 @@ class Okareo:
         )
 
         self.validate_response(response)
-        assert isinstance(response, ModelUnderTestResponse)
+        assert isinstance(response, ModelUnderTestResponse) and response.name
         if response.warning:
             print(response.warning)
 
@@ -1217,15 +1245,12 @@ class Okareo:
                 model_data, model_invoker, session_starter, session_ender
             )
 
-        # Update the response with the model data
-        response_dict: dict[str, Any] = {
-            "name": target.name,
-            "id": response.id,
-        }
+        # Explicitly construct target response to avoid backwards compatibility issues
         assert isinstance(model_data, dict)
-        response_dict["target"] = model_data[model["type"]]
+        target_data = model_data[model["type"]]
+        assert isinstance(target_data, dict)
 
-        return Target(**response_dict)
+        return Target.from_response(response, target_data)
 
     def get_target_by_name(self, target_name: str) -> Target:
         response = get_target_model_by_name_v0_target_target_model_name_get.sync(
@@ -1236,8 +1261,10 @@ class Okareo:
         self.validate_response(response)
         if not response:
             print("Empty response from API")
-        assert response is not None and isinstance(response, dict)
-        return Target(**response)
+        assert response is not None and isinstance(response, TargetModelResponse)
+
+        # Explicitly construct target response to avoid backwards compatibility issues
+        return Target.from_response(response)
 
     def run_simulation(
         self,
@@ -1284,7 +1311,7 @@ class Okareo:
             from okareo.voice import VoiceMultiturnTarget
 
             if isinstance(target.target, VoiceMultiturnTarget):
-                target.target.set_okareo(self)
+                target.target.set_okareo(self, driver=driver_model)
 
             target_model = self.create_or_update_target(
                 target, tags or [], project_id, sensitive_fields

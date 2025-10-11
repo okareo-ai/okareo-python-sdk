@@ -5,89 +5,95 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="DriverModelSchema")
+T = TypeVar("T", bound="VoiceDriverModelResponse")
 
 
 @_attrs_define
-class DriverModelSchema:
+class VoiceDriverModelResponse:
     """
     Attributes:
-        name (str): Name of the driver model
-        temperature (float): Temperature of the driver model
-        prompt_template (str): Prompt template for the driver model
-        id (Union[Unset, str]): ID of the driver model
-        model_id (Union[Unset, str]): Model ID of the driver model
-        voice_instructions (Union[Unset, str]): Voice instructions for the driver model
-        project_id (Union[Unset, str]): ID for project
+        id (str):
+        name (str):
+        temperature (float):
+        prompt_template (str):
+        time_created (str):
+        model_id (Union[Unset, str]):
+        project_id (Union[Unset, str]):
+        voice_instructions (Union[Unset, str]):
     """
 
+    id: str
     name: str
     temperature: float
     prompt_template: str
-    id: Union[Unset, str] = UNSET
+    time_created: str
     model_id: Union[Unset, str] = UNSET
-    voice_instructions: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
+    voice_instructions: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        id = self.id
         name = self.name
         temperature = self.temperature
         prompt_template = self.prompt_template
-        id = self.id
+        time_created = self.time_created
         model_id = self.model_id
-        voice_instructions = self.voice_instructions
         project_id = self.project_id
+        voice_instructions = self.voice_instructions
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
+                "id": id,
                 "name": name,
                 "temperature": temperature,
                 "prompt_template": prompt_template,
+                "time_created": time_created,
             }
         )
-        if id is not UNSET:
-            field_dict["id"] = id
         if model_id is not UNSET:
             field_dict["model_id"] = model_id
-        if voice_instructions is not UNSET:
-            field_dict["voice_instructions"] = voice_instructions
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if voice_instructions is not UNSET:
+            field_dict["voice_instructions"] = voice_instructions
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
+        id = d.pop("id")
+
         name = d.pop("name")
 
         temperature = d.pop("temperature")
 
         prompt_template = d.pop("prompt_template")
 
-        id = d.pop("id", UNSET)
+        time_created = d.pop("time_created")
 
         model_id = d.pop("model_id", UNSET)
 
-        voice_instructions = d.pop("voice_instructions", UNSET)
-
         project_id = d.pop("project_id", UNSET)
 
-        driver_model_schema = cls(
+        voice_instructions = d.pop("voice_instructions", UNSET)
+
+        voice_driver_model_response = cls(
+            id=id,
             name=name,
             temperature=temperature,
             prompt_template=prompt_template,
-            id=id,
+            time_created=time_created,
             model_id=model_id,
-            voice_instructions=voice_instructions,
             project_id=project_id,
+            voice_instructions=voice_instructions,
         )
 
-        driver_model_schema.additional_properties = d
-        return driver_model_schema
+        voice_driver_model_response.additional_properties = d
+        return voice_driver_model_response
 
     @property
     def additional_keys(self) -> List[str]:

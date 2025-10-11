@@ -7,6 +7,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.driver_model_response import DriverModelResponse
 from ...models.http_validation_error import HTTPValidationError
+from ...models.voice_driver_model_response import VoiceDriverModelResponse
 from ...types import UNSET, Response, Unset
 
 
@@ -33,12 +34,28 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     if response.status_code == HTTPStatus.OK:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
-            response_200_item = DriverModelResponse.from_dict(response_200_item_data)
+
+            def _parse_response_200_item(data: object) -> Union["DriverModelResponse", "VoiceDriverModelResponse"]:
+                try:
+                    if not isinstance(data, dict):
+                        raise TypeError()
+                    response_200_item_type_0 = DriverModelResponse.from_dict(data)
+
+                    return response_200_item_type_0
+                except:  # noqa: E722
+                    pass
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_200_item_type_1 = VoiceDriverModelResponse.from_dict(data)
+
+                return response_200_item_type_1
+
+            response_200_item = _parse_response_200_item(response_200_item_data)
 
             response_200.append(response_200_item)
 
@@ -55,7 +72,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -69,7 +86,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
 
      Retrieve all driver models.
@@ -78,7 +95,7 @@ def sync_detailed(
         request: FastAPI request object containing database session
 
     Returns:
-        List of DriverModelResponse with all driver model details
+        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
@@ -89,7 +106,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List['DriverModelResponse']]]
+        Response[Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]]
     """
 
     kwargs = _get_kwargs(
@@ -109,7 +126,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
 
      Retrieve all driver models.
@@ -118,7 +135,7 @@ def sync(
         request: FastAPI request object containing database session
 
     Returns:
-        List of DriverModelResponse with all driver model details
+        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
@@ -129,7 +146,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List['DriverModelResponse']]
+        Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
     """
 
     return sync_detailed(
@@ -144,7 +161,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Response[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
 
      Retrieve all driver models.
@@ -153,7 +170,7 @@ async def asyncio_detailed(
         request: FastAPI request object containing database session
 
     Returns:
-        List of DriverModelResponse with all driver model details
+        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
@@ -164,7 +181,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List['DriverModelResponse']]]
+        Response[Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]]
     """
 
     kwargs = _get_kwargs(
@@ -182,7 +199,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     project_id: Union[Unset, None, str] = UNSET,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List["DriverModelResponse"]]]:
+) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
 
      Retrieve all driver models.
@@ -191,7 +208,7 @@ async def asyncio(
         request: FastAPI request object containing database session
 
     Returns:
-        List of DriverModelResponse with all driver model details
+        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
@@ -202,7 +219,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List['DriverModelResponse']]
+        Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
     """
 
     return (

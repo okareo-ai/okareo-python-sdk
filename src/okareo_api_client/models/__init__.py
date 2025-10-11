@@ -112,6 +112,8 @@ from .slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_g
     SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
 )
 from .summary_datapoint_search import SummaryDatapointSearch
+from .target_model_response import TargetModelResponse
+from .target_model_response_target import TargetModelResponseTarget
 from .test_custom_endpoint_request import TestCustomEndpointRequest
 from .test_custom_endpoint_request_end_session_params import TestCustomEndpointRequestEndSessionParams
 from .test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
@@ -136,6 +138,7 @@ from .test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationPar
 from .test_run_type import TestRunType
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .validation_error import ValidationError
+from .voice_driver_model_response import VoiceDriverModelResponse
 from .voice_upload_request import VoiceUploadRequest
 from .voice_upload_response import VoiceUploadResponse
 
@@ -232,6 +235,8 @@ __all__ = (
     "SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost",
     "SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet",
     "SummaryDatapointSearch",
+    "TargetModelResponse",
+    "TargetModelResponseTarget",
     "TestCustomEndpointRequest",
     "TestCustomEndpointRequestEndSessionParams",
     "TestCustomEndpointRequestNextMessageParams",
@@ -256,6 +261,7 @@ __all__ = (
     "TestRunType",
     "UpdateTestDataPointPayload",
     "ValidationError",
+    "VoiceDriverModelResponse",
     "VoiceUploadRequest",
     "VoiceUploadResponse",
 )

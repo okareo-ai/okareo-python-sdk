@@ -5,8 +5,10 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.driver_model_response import DriverModelResponse
 from ...models.driver_model_schema import DriverModelSchema
 from ...models.error_response import ErrorResponse
+from ...models.voice_driver_model_response import VoiceDriverModelResponse
 from ...types import Response
 
 
@@ -33,9 +35,26 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = response.json()
+
+        def _parse_response_200(data: object) -> Union["DriverModelResponse", "VoiceDriverModelResponse"]:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_200_type_0 = DriverModelResponse.from_dict(data)
+
+                return response_200_type_0
+            except:  # noqa: E722
+                pass
+            if not isinstance(data, dict):
+                raise TypeError()
+            response_200_type_1 = VoiceDriverModelResponse.from_dict(data)
+
+            return response_200_type_1
+
+        response_200 = _parse_response_200(response.json())
+
         return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
@@ -61,7 +80,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -76,7 +95,7 @@ def sync_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: DriverModelSchema,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
 
      Update an existing driver model by ID
@@ -102,7 +121,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -124,7 +143,7 @@ def sync(
     client: Union[AuthenticatedClient, Client],
     json_body: DriverModelSchema,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
 
      Update an existing driver model by ID
@@ -150,7 +169,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]
     """
 
     return sync_detailed(
@@ -167,7 +186,7 @@ async def asyncio_detailed(
     client: Union[AuthenticatedClient, Client],
     json_body: DriverModelSchema,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
 
      Update an existing driver model by ID
@@ -193,7 +212,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
     """
 
     kwargs = _get_kwargs(
@@ -213,7 +232,7 @@ async def asyncio(
     client: Union[AuthenticatedClient, Client],
     json_body: DriverModelSchema,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
 
      Update an existing driver model by ID
@@ -239,7 +258,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]
     """
 
     return (
