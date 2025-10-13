@@ -1477,6 +1477,8 @@ class Driver:
         cls, response: Union[DriverModelResponse, VoiceDriverModelResponse]
     ) -> "Driver":
         inst = cls(response.name)
+        if response.id:
+            inst.id = response.id
         if response.prompt_template:
             inst.prompt_template = response.prompt_template
         if response.model_id:
