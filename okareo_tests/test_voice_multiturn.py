@@ -179,6 +179,7 @@ def run_voice_multiturn_test_audio_check(
         name="Voice Simulation Driver",
         temperature=0.5,
         prompt_template=FRUSTRATED_PROMPT,
+        voice_instructions="Speak with a frustrated and impatient tone.",
     )
 
     seed_data = Okareo.seed_data_from_list(
