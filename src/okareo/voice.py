@@ -9,8 +9,9 @@ import time
 import uuid
 import wave
 from abc import ABC, abstractmethod
+from collections import deque
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Any, Deque, Dict, Optional, Union
 
 import numpy as np
 import requests
@@ -184,19 +185,23 @@ class TwilioEdgeConfig(EdgeConfig):
     Args:
         account_sid: Twilio Account SID (for verification)
         auth_token: Twilio Auth Token (for verification)
-        phone_number: Your Twilio phone number (e.g., +1234567890)
+        from_phone_number: Your Twilio phone number to call from (e.g., +1234567890)
+        to_phone_number: Phone number to call (for outbound calls, e.g., +1234567890)
         sr: Sample rate (defaults to 8000 for Twilio)
         chunk_ms: Chunk size in milliseconds
-        server_port: Port for the WebSocket server (default 8080)
+        server_port: Port for the WebSocket server (default 5000)
         use_ngrok: Whether to automatically expose via ngrok (default True for testing)
+        max_response_duration_s: Maximum time to wait for complete response (default 10.0)
     """
     account_sid: str = ""
     auth_token: str = ""
-    phone_number: str = ""
+    from_phone_number: Optional[str] = None
+    to_phone_number: Optional[str] = None
     sr: int = 8000  # Twilio uses 8kHz
     chunk_ms: int = 20  # Twilio typically uses 20ms chunks
-    server_port: int = 8080
+    server_port: int = 5000
     use_ngrok: bool = True
+    max_response_duration_s: float = 40.0  # Maximum time to wait for complete response
     
     def create(self) -> VoiceEdge:
         return TwilioRealtimeEdge(self)
@@ -514,7 +519,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
 # ---------------- Twilio VoiceEdge implementation ----------------
 class TwilioRealtimeEdge(VoiceEdge):
     """
-    Twilio Media Streams integration for real-time phone audio.
+    Twilio Media Streams integration for real-time phone audio with VAD-based turn detection.
     
     Twilio is just the phone audio transport layer - no LLM involved.
     The actual AI/agent logic runs separately (e.g., OpenAI, Deepgram).
@@ -523,6 +528,16 @@ class TwilioRealtimeEdge(VoiceEdge):
     1. Receiving WebSocket connection from Twilio
     2. Audio format conversion (mulaw <-> PCM16)
     3. Bidirectional audio streaming
+    4. Voice Activity Detection (VAD) for turn completion
+    
+    Turn detection strategy:
+    - Twilio sends continuous audio from phone side
+    - 'mark' event signals end of outbound playback (not user speech)
+    - VAD detects when user finishes speaking via:
+      * Energy-based speech detection
+      * Silence threshold (1.5s default)
+      * Minimum speech duration (300ms default)
+      * Rolling window for smoothing
     
     For testing, it can automatically start an aiohttp server + ngrok.
     For production, you'd integrate with your existing server infrastructure.
@@ -536,12 +551,29 @@ class TwilioRealtimeEdge(VoiceEdge):
         self._call_sid: Optional[str] = None
         self._recv_task: Optional[asyncio.Task[None]] = None
         self._stop_recv = asyncio.Event()
-        self._audio_ready = asyncio.Event()
+        self._audio_ready = asyncio.Event()  # Signals 'mark' received (playback done)
         self.ws: Optional[Any] = None
         self._server_app: Optional[Any] = None
-        self._server_runner: Optional[Any] = None  # Add this
+        self._server_runner: Optional[Any] = None
         self._server_task: Optional[asyncio.Task[None]] = None
         self._ngrok_url: Optional[str] = None
+        
+        # VAD state management
+        self._listening_for_response = False
+        self._speech_started = False
+        self._last_speech_time: Optional[float] = None
+        self._utterance_complete = asyncio.Event()
+        self._speech_start_time: Optional[float] = None
+        
+        # VAD configuration (tunable)
+        self._vad_silence_threshold_ms = 1500  # 1.5s silence = utterance complete
+        self._vad_min_speech_duration_ms = 300  # Minimum 300ms of speech
+        self._vad_energy_threshold = 400  # RMS energy threshold
+        self._vad_speech_ratio_threshold = 0.3  # 30% of frames must have speech
+        
+        # Rolling window for smoothing VAD decisions
+        self._vad_window_size = 10  # frames
+        self._vad_window: Deque[bool] = deque(maxlen=self._vad_window_size)
         
     def _mulaw_to_pcm16(self, mulaw_bytes: bytes) -> bytes:
         """Convert mulaw audio to PCM16."""
@@ -566,18 +598,126 @@ class TwilioRealtimeEdge(VoiceEdge):
         resampled = resample_poly(audio, up, down).astype(np.int16)
         return resampled.tobytes()
     
-    async def connect(self, websocket: Optional[Any] = None, to_number: Optional[str] = None, **kwargs: Any) -> None:
+    def _has_speech_energy(self, pcm16_bytes: bytes) -> bool:
+        """
+        Simple energy-based VAD.
+        Returns True if audio chunk contains speech-like energy.
+        """
+        if not pcm16_bytes or len(pcm16_bytes) < 2:
+            return False
+        
+        try:
+            audio = np.frombuffer(pcm16_bytes, dtype=np.int16)
+            
+            # Calculate RMS energy
+            rms_energy = np.sqrt(np.mean(audio.astype(np.float32) ** 2))
+            
+            # Check against threshold
+            has_speech = rms_energy > self._vad_energy_threshold
+            
+            # Add to rolling window for smoothing
+            self._vad_window.append(has_speech)
+            
+            # Smooth decision: require certain % of recent frames to have speech
+            if len(self._vad_window) >= 3:
+                speech_ratio = sum(self._vad_window) / len(self._vad_window)
+                return speech_ratio >= self._vad_speech_ratio_threshold
+            
+            return has_speech
+            
+        except Exception as e:
+            logger.debug(f"VAD error: {e}")
+            return False
+    
+    def _reset_vad_state(self) -> None:
+        """Reset VAD state for new utterance detection."""
+        self._speech_started = False
+        self._last_speech_time = None
+        self._speech_start_time = None
+        self._utterance_complete.clear()
+        self._vad_window.clear()
+        logger.debug("VAD state reset")
+    
+    def _start_listening_for_response(self) -> None:
+        """
+        Called when 'mark' event is received (playback complete).
+        Clears buffer and starts listening for user response.
+        """
+        logger.debug("Playback complete, now listening for user response...")
+        
+        # Clear buffer to discard any audio received during playback
+        self._audio_buf = bytearray()
+        
+        # Reset VAD state
+        self._reset_vad_state()
+        
+        # Enable response listening
+        self._listening_for_response = True
+    
+    def _process_incoming_audio_vad(self, pcm16_bytes: bytes) -> None:
+        """
+        Process incoming audio with VAD for utterance detection.
+        Called for each audio chunk received from Twilio (at 8kHz).
+        Note: VAD operates on 8kHz audio directly for efficiency.
+        """
+        # If not listening for response, skip (audio during playback gets discarded anyway)
+        if not self._listening_for_response:
+            # Not in listening mode, just accumulate
+            self._audio_buf.extend(pcm16_bytes)
+            return
+        
+        # Listening for response - use VAD to filter noise
+        has_speech = self._has_speech_energy(pcm16_bytes)
+        current_time = time.time()
+        
+        if has_speech:
+            # Speech detected
+            if not self._speech_started:
+                # Utterance started
+                logger.debug("🎤 Speech detected - utterance started")
+                self._speech_started = True
+                self._speech_start_time = current_time
+            
+            # Update last speech time
+            self._last_speech_time = current_time
+            
+            # Accumulate speech audio
+            self._audio_buf.extend(pcm16_bytes)
+            
+        elif self._speech_started:
+            # Currently in an utterance, but this frame has no speech (silence)
+            # Still accumulate (natural pauses within utterance)
+            self._audio_buf.extend(pcm16_bytes)
+            
+            silence_duration_ms = (current_time - self._last_speech_time) * 1000
+            
+            # Check if silence threshold exceeded
+            if silence_duration_ms > self._vad_silence_threshold_ms:
+                # Check minimum speech duration
+                speech_duration_ms = (self._last_speech_time - self._speech_start_time) * 1000
+                
+                if speech_duration_ms >= self._vad_min_speech_duration_ms:
+                    logger.debug(f"✅ Utterance complete: {speech_duration_ms:.0f}ms speech, {silence_duration_ms:.0f}ms silence")
+                    self._utterance_complete.set()
+                    self._listening_for_response = False
+                else:
+                    logger.debug(f"⚠️ Speech too short ({speech_duration_ms:.0f}ms < {self._vad_min_speech_duration_ms}ms), ignoring")
+                    self._reset_vad_state()
+        else:
+            # No speech yet - don't accumulate pre-utterance noise
+            pass
+    
+    async def connect(self, websocket: Optional[Any] = None, **kwargs: Any) -> None:
         """
         Connect to Twilio Media Stream.
         
         Three modes:
         1. Pass existing websocket from your server: connect(websocket=ws)
         2. Auto-start server for incoming calls: connect()
-        3. Auto-start server and make outbound call: connect(to_number="+15555551234")
+        3. Auto-start server and make outbound call: Set to_phone_number in TwilioEdgeConfig
         
         Args:
             websocket: Optional WebSocket from Twilio (if you're running your own server)
-            to_number: Phone number to call (for outbound calls, e.g., "+15555551234")
             **kwargs: Additional options
         """
         if websocket:
@@ -593,16 +733,18 @@ class TwilioRealtimeEdge(VoiceEdge):
             # Mode 2 or 3: Auto-start server
             await self._start_test_server()
             
-            # If to_number provided, initiate outbound call
-            if to_number:
-                await self._initiate_outbound_call(to_number)
+            # If to_phone_number configured, initiate outbound call
+            if self.edge_config.to_phone_number:
+                await self._initiate_outbound_call()
     
-    async def _initiate_outbound_call(self, to_number: str) -> None:
+    async def _initiate_outbound_call(self) -> None:
         """Initiate an outbound call via Twilio API."""
         cfg = self.edge_config
-        if not cfg.account_sid or not cfg.auth_token or not cfg.phone_number:
+        to_number = cfg.to_phone_number
+        
+        if not cfg.account_sid or not cfg.auth_token or not cfg.from_phone_number:
             raise ValueError(
-                "Outbound calls require account_sid, auth_token, and phone_number. "
+                "Outbound calls require account_sid, auth_token, and from_phone_number. "
                 "Set these in TwilioEdgeConfig."
             )
         
@@ -641,7 +783,7 @@ class TwilioRealtimeEdge(VoiceEdge):
         call = client.calls.create(
             twiml=twiml,
             to=to_number,
-            from_=cfg.phone_number,
+            from_=cfg.from_phone_number,
             status_callback_event=['initiated', 'ringing', 'answered', 'completed'],
             status_callback_method='POST'
         )
@@ -845,17 +987,18 @@ class TwilioRealtimeEdge(VoiceEdge):
             
             if mulaw_b64:
                 mulaw_bytes = base64.b64decode(mulaw_b64)
-                pcm16_bytes = self._mulaw_to_pcm16(mulaw_bytes)
+                pcm16_bytes_8k = self._mulaw_to_pcm16(mulaw_bytes)
                 
-                # if self.edge_config.sr != 8000:
-                #     pcm16_bytes = self._resample_pcm16(pcm16_bytes, 8000, self.edge_config.sr)
-                pcm16_bytes = self._resample_pcm16(pcm16_bytes, 8000, 24000) # TODO clean up configuration/constants
-                
-                self._audio_buf.extend(pcm16_bytes)
+                # Run VAD on 8kHz audio - VAD handles buffer accumulation
+                # Audio stays at 8kHz until turn is complete, then resampled once
+                self._process_incoming_audio_vad(pcm16_bytes_8k)
                 
         elif event_type == "mark":
             logger.debug(f"Mark received: {evt}")
             self._audio_ready.set()
+            
+            # Start listening for user response NOW
+            self._start_listening_for_response()
             
         elif event_type == "stop":
             logger.info("Stream stopped by Twilio")
@@ -865,13 +1008,32 @@ class TwilioRealtimeEdge(VoiceEdge):
         self,
         pcm16: bytes,
         pace_realtime: bool = True,
-        timeout_s: float = 30.0
+        timeout_s: float = 30.0,
     ) -> tuple[bytes, Dict[str, Any]]:
-        """Send PCM16 audio to Twilio and receive response."""
+        """
+        Send PCM16 audio to Twilio and receive response with VAD-based turn detection.
+        
+        Process:
+        1. Send audio chunks to phone
+        2. Wait for 'mark' event (playback complete)
+        3. Use VAD to detect complete user utterance
+        4. Return collected audio
+        
+        Args:
+            pcm16: Audio to send (PCM16 format at 24kHz)
+            pace_realtime: Whether to pace sending at real-time speed
+            timeout_s: Timeout for mark event
+        
+        Returns:
+            Tuple of (received_audio_bytes, metadata_dict)
+        """
         assert self.ws and self._connected, "Call connect() first"
         
+        # Reset state
         self._audio_buf = bytearray()
         self._audio_ready.clear()
+        self._listening_for_response = False
+        self._reset_vad_state()
         
         # Resample to 8kHz if needed
         # if self.edge_config.sr != 8000:
@@ -881,10 +1043,11 @@ class TwilioRealtimeEdge(VoiceEdge):
         # Convert to mulaw
         mulaw_bytes = self._pcm16_to_mulaw(pcm16)
         
-        # Send chunks
+        # Send chunks TODO - Twilio seems to accept the whole audio at once, right now 320byte tiny chunks
         chunks = chunk_bytes(mulaw_bytes, self.edge_config.chunk_ms, 8000)
         bytes_per_sec = 8000
         
+        send_start = time.time()
         for chunk in chunks:
             mulaw_b64 = base64.b64encode(chunk).decode("ascii")
             media_msg = {
@@ -897,27 +1060,67 @@ class TwilioRealtimeEdge(VoiceEdge):
             if pace_realtime:
                 await asyncio.sleep(max(0.001, len(chunk) / bytes_per_sec))
         
-        logger.info(f"Sent {len(chunks)} chunks, first chunk size: {len(chunks[0]) if chunks else 0} bytes")
-        # Send mark
+        send_duration = time.time() - send_start
+        logger.info(f"Sent {len(chunks)} chunks in {send_duration:.2f}s")
+        
+        # Send mark to signal end of playback
         mark_msg = {
             "event": "mark",
             "streamSid": self._stream_sid,
             "mark": {"name": f"end_{uuid.uuid4().hex[:8]}"}
         }
         await self.ws.send_json(mark_msg)
-        logger.debug(f"Mark message sent {mark_msg}")
+        logger.debug(f"Mark sent: {mark_msg['mark']['name']}")
         
-        # Wait for response
+        # Phase 1: Wait for mark (playback complete)
         try:
             await asyncio.wait_for(self._audio_ready.wait(), timeout=timeout_s)
+            logger.debug("Mark received, buffer cleared, now listening...")
         except asyncio.TimeoutError:
-            logger.warning(f"Timeout waiting for audio after {timeout_s}s")
+            logger.warning(f"Timeout waiting for mark after {timeout_s}s")
+            return bytes(self._audio_buf), {"error": "mark_timeout"}
         
-        pcm_result = bytes(self._audio_buf)
+        # Phase 2: Wait for utterance completion via VAD
+        # Use multiple exit conditions
+        response_start = time.time()
+        
+        try:
+            # Wait for VAD to detect utterance completion
+            await asyncio.wait_for(
+                self._utterance_complete.wait(),
+                timeout=self.edge_config.max_response_duration_s
+            )
+            
+            response_duration = time.time() - response_start
+            logger.info(f"Response captured in {response_duration:.2f}s via VAD")
+            
+        except asyncio.TimeoutError:
+            # Max duration reached
+            response_duration = time.time() - response_start
+            logger.warning(f"Response timeout after {self.edge_config.max_response_duration_s}s")
+            
+            # Check if we got any speech at all
+            if not self._speech_started:
+                logger.warning("No speech detected during response window")
+            else:
+                logger.info(f"Using partial response (speech was detected)")
+        
+        # Resample entire turn from 8kHz to 24kHz ONCE (eliminates all artifacts)
+        pcm_result_8k = bytes(self._audio_buf)
+        if len(pcm_result_8k) > 0:
+            # TODO clean up configuration/constants parallel to sent chunks 24kHz -> 8kHz (if input is different)
+            logger.debug(f"Resampling complete turn: {len(pcm_result_8k)} bytes at 8kHz -> 24kHz")
+            pcm_result = self._resample_pcm16(pcm_result_8k, 8000, 24000)  
+        else:
+            pcm_result = pcm_result_8k
+        
         return pcm_result, {
             "stream_sid": self._stream_sid,
             "call_sid": self._call_sid,
-            "bytes_received": len(pcm_result)
+            "bytes_received": len(pcm_result),
+            "response_duration_s": response_duration,
+            "speech_detected": self._speech_started,
+            "vad_completed": self._utterance_complete.is_set(),
         }
     
     async def close(self) -> None:
@@ -1095,9 +1298,9 @@ class RealtimeClient:
         """Upload PCM16 audio data and make it publicly accessible."""
         # Create temporary WAV file from PCM data
         local_path = save_wav_pcm16(pcm, self.api_sr, prefix)
-
+        
         response = self.okareo.upload_voice(local_path)
-        logger.debug(f"Voice file uploaded to {response.file_url}")
+        logger.debug(f"Voice file saved to {local_path} and uploaded to {response.file_url}")
         return response.file_url
 
     async def send_utterance(
