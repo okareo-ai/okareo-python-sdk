@@ -198,7 +198,6 @@ class EdgeConfig(ABC):
     model: str = ""
     instructions: str = "Be brief and helpful."
     output_voice: str = ""
-    driver_instructions: Optional[str] = None
 
     @abstractmethod
     def create(self) -> VoiceEdge: ...
