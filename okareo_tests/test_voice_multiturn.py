@@ -7,8 +7,12 @@ from okareo import Okareo
 from okareo.model_under_test import Driver, Target
 from okareo.voice import DeepgramEdgeConfig, OpenAIEdgeConfig, VoiceMultiturnTarget
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
+from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 
 # Constants
+FRUSTRATED_PROMPT = open(
+    os.path.join(os.path.dirname(__file__), "prompts", "frustrated_driver.txt")
+).read()
 DRIVER_PROMPT_TEMPLATE = """
 ## Persona
 
@@ -157,5 +161,82 @@ def run_voice_multiturn_test(
     assert evaluation.name == f"Voice Simulation Run ({vendor})"
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
+    assert evaluation.app_link is not None
+    print(evaluation.app_link)
+
+
+def test_voice_multiturn_audio_check(
+    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget
+) -> None:
+    run_voice_multiturn_test_audio_check(okareo, openai_voice_target)
+
+
+def run_voice_multiturn_test_audio_check(
+    okareo: Okareo, voice_target: VoiceMultiturnTarget
+) -> None:
+
+    driver = Driver(
+        name="Voice Simulation Driver",
+        temperature=0.5,
+        prompt_template=FRUSTRATED_PROMPT,
+        voice_instructions="Speak with a frustrated and impatient tone.",
+    )
+
+    seed_data = Okareo.seed_data_from_list(
+        [
+            {
+                "input": {
+                    "name": "James Taylor",
+                    "productType": "iPhone 17",
+                    "voice": "ash",
+                },
+                "result": "Receive an exchange or refund for malfunctioning iPhone 17.",
+            }
+        ]
+    )
+
+    scenario = okareo.create_scenario_set(
+        ScenarioSetCreate(
+            name="Product Returns — Broken Product",
+            seed_data=seed_data,
+        )
+    )
+
+    evaluation = okareo.run_simulation(
+        driver=driver,
+        target=Target(name="Voice Sim Target - Frustrated User", target=voice_target),
+        name="Voice Simulation Run - Frustrated User",
+        scenario=scenario,
+        max_turns=1,
+        repeats=1,
+        first_turn="driver",
+        checks=[
+            "avg_turn_taking_latency",
+            "avg_words_per_minute",
+            "total_turn_count",
+            "empathy_score",
+            "automated_resolution",
+        ],
+    )
+
+    assert evaluation.name == "Voice Simulation Run - Frustrated User"
+    assert evaluation.status == "FINISHED"
+    assert evaluation.model_metrics is not None
+    assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
+    metrics_dict = evaluation.model_metrics.to_dict()
+    assert isinstance(metrics_dict, dict)
+    assert metrics_dict.get("mean_scores") is not None
+    scores = metrics_dict.get("mean_scores")
+    assert scores
+    assert (
+        scores.get("empathy_score") is not None
+        and scores.get("empathy_score") >= 1.0
+        and scores.get("empathy_score") <= 5.0
+    )
+    assert (
+        scores.get("automated_resolution") is not None
+        and scores.get("automated_resolution") >= 0
+        and scores.get("automated_resolution") <= 1
+    )
     assert evaluation.app_link is not None
     print(evaluation.app_link)

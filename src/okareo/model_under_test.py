@@ -37,8 +37,10 @@ from okareo_api_client.models import (
     TestRunItem,
     TestRunType,
 )
+from okareo_api_client.models.driver_model_response import DriverModelResponse
 from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
+from okareo_api_client.models.target_model_response import TargetModelResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
 from okareo_api_client.models.test_run_payload_v2_api_keys import (
     TestRunPayloadV2ApiKeys,
@@ -48,6 +50,9 @@ from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
 )
 from okareo_api_client.models.test_run_payload_v2_model_results import (
     TestRunPayloadV2ModelResults,
+)
+from okareo_api_client.models.voice_driver_model_response import (
+    VoiceDriverModelResponse,
 )
 from okareo_api_client.types import UNSET, Unset
 
@@ -1454,6 +1459,7 @@ class Driver:
     id: Optional[str] = None
     time_created: Optional[str] = datetime.now().isoformat()
     project_id: Optional[str] = None
+    voice_instructions: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -1463,7 +1469,32 @@ class Driver:
             "prompt_template": self.prompt_template,
             "id": self.id,
             "time_created": self.time_created,
+            "voice_instructions": self.voice_instructions,
         }
+
+    @classmethod
+    def from_response(
+        cls, response: Union[DriverModelResponse, VoiceDriverModelResponse]
+    ) -> "Driver":
+        inst = cls(response.name)
+        if response.id:
+            inst.id = response.id
+        if response.prompt_template:
+            inst.prompt_template = response.prompt_template
+        if response.model_id:
+            inst.model_id = response.model_id
+        if response.temperature:
+            inst.temperature = response.temperature
+        if response.time_created:
+            inst.time_created = response.time_created
+        if response.project_id:
+            inst.project_id = response.project_id
+        if (
+            isinstance(response, VoiceDriverModelResponse)
+            and response.voice_instructions
+        ):
+            inst.voice_instructions = response.voice_instructions
+        return inst
 
 
 @_attrs_define
@@ -1487,6 +1518,26 @@ class Target:
             ),
             "id": self.id,
         }
+
+    @classmethod
+    def from_response(
+        cls,
+        response: ModelUnderTestResponse | TargetModelResponse,
+        target_data: Optional[dict] = None,
+    ) -> "Target":
+        target: dict | None = None
+        if isinstance(response, ModelUnderTestResponse):
+            assert (
+                target_data is not None
+            ), "Target constructed from ModelUnderTestResponse must have target_data"
+            target = target_data
+        if isinstance(response, TargetModelResponse):
+            target = response.target.to_dict()
+        assert target is not None
+        inst = cls(response.name, target)
+        if response.id:
+            inst.id = response.id
+        return inst
 
 
 @_attrs_define
