@@ -728,7 +728,7 @@ class TwilioRealtimeEdge(VoiceEdge):
             
             await asyncio.wait_for(self._wait_for_connected(), timeout=10.0)
             self._connected = True
-            logger.info(f"Connected to Twilio Media Stream: {self._stream_sid}")
+            logger.debug(f"Connected to Twilio Media Stream: {self._stream_sid}")
         else:
             # Mode 2 or 3: Auto-start server
             await self._start_test_server()
@@ -748,7 +748,7 @@ class TwilioRealtimeEdge(VoiceEdge):
                 "Set these in TwilioEdgeConfig."
             )
         
-        logger.info(f"Initiating outbound call to {to_number}...")
+        logger.debug(f"Initiating outbound call to {to_number}...")
         
         # Determine the stream URL
         if not self._ngrok_url:
@@ -758,7 +758,7 @@ class TwilioRealtimeEdge(VoiceEdge):
         stream_url = self._ngrok_url.replace("https://", "wss://").replace("http://", "ws://")
         stream_url = f"{stream_url}/media-stream"
         
-        logger.info(f"Stream URL: {stream_url}")
+        logger.debug(f"Stream URL: {stream_url}")
         
         # Create TwiML with Stream
         twiml = f'''<?xml version="1.0" encoding="UTF-8"?>
@@ -789,25 +789,19 @@ class TwilioRealtimeEdge(VoiceEdge):
         )
         
         self._call_sid = call.sid
-        logger.info(f"Call initiated: {call.sid}")
-        logger.info(f"Calling {to_number}...")
-        logger.info("Waiting for call to be answered and stream to connect...")
-        logger.info("(This may take 30-60 seconds depending on answer time)")
+        logger.debug(f"Call initiated: {call.sid}")
+        logger.debug(f"Calling {to_number}...")
+        logger.debug("Waiting for call to be answered and stream to connect...")
+        logger.debug("(This may take 30-60 seconds depending on answer time)")
         
         # Wait for the call to connect and stream to start
         timeout = 60.0  # Increase timeout to 60 seconds
         try:
             await asyncio.wait_for(self._wait_for_connected(), timeout=timeout)
             self._connected = True
-            logger.info(f"✅ Call connected! Stream: {self._stream_sid}")
+            logger.debug(f"✅ Call connected! Stream: {self._stream_sid}")
         except asyncio.TimeoutError:
             logger.error(f"❌ Call did not connect within {timeout}s.")
-            logger.error("\nPossible issues:")
-            logger.error("1. The number did not answer the call")
-            logger.error("2. Ngrok free tier is blocking WebSocket connections")
-            logger.error("   → Try using ngrok's paid tier or deploy to a public server")
-            logger.error("3. Firewall or network issues preventing WebSocket connection")
-            logger.error(f"4. Check Twilio call logs: https://console.twilio.com/us1/monitor/logs/calls/{call.sid}")
             
             # Try to get call status
             try:
@@ -825,7 +819,7 @@ class TwilioRealtimeEdge(VoiceEdge):
         """Start aiohttp server + ngrok for testing."""
         from aiohttp import web
         
-        logger.info("Starting test server for Twilio...")
+        logger.debug("Starting test server for Twilio...")
         
         # Store reference to this edge so handlers can access it
         edge_instance = self
@@ -850,7 +844,7 @@ class TwilioRealtimeEdge(VoiceEdge):
             ws = web.WebSocketResponse()
             await ws.prepare(request)
             
-            logger.info("Twilio Media Stream connected")
+            logger.debug("Twilio Media Stream connected")
             edge_instance.ws = ws
             edge_instance._stop_recv.clear()
             edge_instance._recv_task = asyncio.create_task(edge_instance._recv_loop())
@@ -858,7 +852,7 @@ class TwilioRealtimeEdge(VoiceEdge):
             try:
                 await asyncio.wait_for(edge_instance._wait_for_connected(), timeout=10.0)
                 edge_instance._connected = True
-                logger.info(f"Stream ready: {edge_instance._stream_sid}")
+                logger.debug(f"Stream ready: {edge_instance._stream_sid}")
                 
                 # Keep connection alive
                 while edge_instance.is_connected():
@@ -886,7 +880,7 @@ class TwilioRealtimeEdge(VoiceEdge):
         self._server_runner = runner
         
         local_url = f"http://localhost:{self.edge_config.server_port}"
-        logger.info(f"Server started on {local_url}")
+        logger.debug(f"Server started on {local_url}")
         
         # Start ngrok if enabled
         if self.edge_config.use_ngrok:
@@ -906,8 +900,8 @@ class TwilioRealtimeEdge(VoiceEdge):
                     bind_tls=True  # Force HTTPS
                 )
                 self._ngrok_url = tunnel.public_url
-                logger.info(f"Public URL (ngrok): {self._ngrok_url}")
-                logger.info(f"WebSocket URL: {self._ngrok_url.replace('https://', 'wss://')}/media-stream")
+                logger.debug(f"Public URL (ngrok): {self._ngrok_url}")
+                logger.debug(f"WebSocket URL: {self._ngrok_url.replace('https://', 'wss://')}/media-stream")
                 
                 # Give ngrok a moment to fully initialize
                 await asyncio.sleep(2)
@@ -922,16 +916,12 @@ class TwilioRealtimeEdge(VoiceEdge):
                 
             except ImportError:
                 logger.warning("pyngrok not installed. Install with: pip install pyngrok")
-                logger.info(f"Configure Twilio webhook to: {local_url}/voice")
             except Exception as e:
                 logger.error(f"Could not start ngrok: {e}")
-                logger.info(f"Configure Twilio webhook to: {local_url}/voice")
-                logger.error("\n⚠️ IMPORTANT: Ngrok free tier may block WebSocket connections with an interstitial page.")
-                logger.error("   For outbound calls, consider using ngrok's paid tier or deploy to a public server.")
                 raise
         
         if not self.edge_config.use_ngrok:
-            logger.info(f"Configure Twilio webhook to: {local_url}/voice")
+            logger.debug(f"Configure Twilio webhook to: {local_url}/voice")
     
     async def _wait_for_connected(self) -> None:
         """Wait for Twilio 'connected' or 'start' event."""
@@ -1001,7 +991,7 @@ class TwilioRealtimeEdge(VoiceEdge):
             self._start_listening_for_response()
             
         elif event_type == "stop":
-            logger.info("Stream stopped by Twilio")
+            logger.debug("Stream stopped by Twilio")
             self._stop_recv.set()
     
     async def send_pcm(
@@ -1061,7 +1051,7 @@ class TwilioRealtimeEdge(VoiceEdge):
                 await asyncio.sleep(max(0.001, len(chunk) / bytes_per_sec))
         
         send_duration = time.time() - send_start
-        logger.info(f"Sent {len(chunks)} chunks in {send_duration:.2f}s")
+        logger.debug(f"Sent {len(chunks)} chunks in {send_duration:.2f}s")
         
         # Send mark to signal end of playback
         mark_msg = {
@@ -1092,7 +1082,7 @@ class TwilioRealtimeEdge(VoiceEdge):
             )
             
             response_duration = time.time() - response_start
-            logger.info(f"Response captured in {response_duration:.2f}s via VAD")
+            logger.debug(f"Response captured in {response_duration:.2f}s via VAD")
             
         except asyncio.TimeoutError:
             # Max duration reached
@@ -1103,7 +1093,7 @@ class TwilioRealtimeEdge(VoiceEdge):
             if not self._speech_started:
                 logger.warning("No speech detected during response window")
             else:
-                logger.info(f"Using partial response (speech was detected)")
+                logger.debug(f"Using partial response (speech was detected)")
         
         # Resample entire turn from 8kHz to 24kHz ONCE (eliminates all artifacts)
         pcm_result_8k = bytes(self._audio_buf)
@@ -1125,7 +1115,7 @@ class TwilioRealtimeEdge(VoiceEdge):
     
     async def close(self) -> None:
         """Close connection and cleanup."""
-        logger.info("Closing Twilio connection...")
+        logger.debug("Closing Twilio connection...")
         
         # Set connected to False FIRST to unblock media_stream_handler
         self._connected = False
@@ -1170,7 +1160,7 @@ class TwilioRealtimeEdge(VoiceEdge):
             try:
                 logger.debug("Shutting down aiohttp server...")
                 await self._server_runner.cleanup()
-                logger.info("Server shut down")
+                logger.debug("Server shut down")
             except Exception as e:
                 logger.warning(f"Error shutting down server: {e}")
             finally:
@@ -1184,13 +1174,13 @@ class TwilioRealtimeEdge(VoiceEdge):
                 logger.debug("Disconnecting ngrok tunnel...")
                 # Kill all tunnels instead of just disconnecting one
                 ngrok.kill()
-                logger.info("Ngrok tunnels closed")
+                logger.debug("Ngrok tunnels closed")
             except Exception as e:
                 logger.debug(f"Error disconnecting ngrok: {e}")
             finally:
                 self._ngrok_url = None
         
-        logger.info("✅ Cleanup complete")
+        logger.debug("✅ Cleanup complete")
 
     def is_connected(self) -> bool:
         return self._connected
@@ -1218,32 +1208,13 @@ class TwilioRealtimeEdge(VoiceEdge):
                     is_html = 'text/html' in content_type.lower()
                     
                     if is_html and 'ngrok' in response_text.lower():
-                        logger.error("❌ NGROK FREE TIER DETECTED!")
-                        logger.error("="*60)
-                        logger.error("Ngrok's free tier shows an interstitial warning page that")
-                        logger.error("blocks automated WebSocket connections from Twilio.")
-                        logger.error("")
-                        logger.error("Solutions:")
-                        logger.error("1. Upgrade to ngrok's paid tier ($8/month)")
-                        logger.error("   → No interstitial page, reliable connections")
-                        logger.error("")
-                        logger.error("2. Use ngrok authtoken with bypass:")
-                        logger.error("   → ngrok config add-authtoken <your-token>")
-                        logger.error("   → Some accounts support --authtoken flag")
-                        logger.error("")
-                        logger.error("3. Deploy to a public server (recommended for production):")
-                        logger.error("   → AWS, GCP, Heroku, Railway, etc.")
-                        logger.error("")
-                        logger.error("4. For testing, use INCOMING calls instead:")
-                        logger.error("   → Don't pass to_number to connect()")
-                        logger.error("   → Manually call your Twilio number")
-                        logger.error("="*60)
+                        logger.error("❌ Ngrok tunnel test failed")
                         return False
                     
                     # Check if it's actually returning TwiML
                     if response.status == 200:
                         if 'xml' in content_type.lower() or '<Response>' in response_text:
-                            logger.info(f"✅ Ngrok tunnel verified (status: {response.status})")
+                            logger.debug(f"✅ Ngrok tunnel verified (status: {response.status})")
                             return True
                         else:
                             logger.warning(f"⚠️ Unexpected response from /voice endpoint")
@@ -1256,11 +1227,9 @@ class TwilioRealtimeEdge(VoiceEdge):
                         
         except asyncio.TimeoutError:
             logger.warning("⚠️ Timeout connecting to ngrok tunnel")
-            logger.warning("   The tunnel might be slow or not working correctly")
             return False
         except Exception as e:
             logger.warning(f"⚠️ Could not verify ngrok tunnel: {e}")
-            logger.warning("   Proceeding anyway, but connection may fail")
             return True  # Don't block on verification errors
 
 
