@@ -144,6 +144,7 @@ class VoiceEdge(ABC):
     - connect(): set up WSS and any session state
     - send_pcm(): stream user PCM -> receive agent PCM
     - close(): close socket
+    - get_greeting(): return initial greeting PCM if any
     """
 
     def __init__(self, edge_config: "EdgeConfig"):
@@ -160,6 +161,9 @@ class VoiceEdge(ABC):
 
     @abstractmethod
     async def close(self) -> None: ...
+
+    @abstractmethod
+    def get_greeting(self) -> Optional[bytes]: ...
 
     def is_connected(self) -> bool:
         return self.ws is not None
@@ -249,6 +253,7 @@ class OpenAIRealtimeEdge(VoiceEdge):
 
         self.ws_url = f"wss://api.openai.com/v1/realtime?model={self.edge_config.model}"
         self._connected = False
+        self._greeting_pcm: Optional[bytes] = None
 
     async def connect(self, **kwargs: Any) -> None:
         headers = [("Authorization", f"Bearer {self.edge_config.api_key}")]
@@ -297,6 +302,15 @@ class OpenAIRealtimeEdge(VoiceEdge):
             )
         )
         self._connected = True
+        
+        # Capture greeting by requesting initial response
+        try:
+            await self.ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
+            await self.ws.send(json.dumps({"type": "response.create", "response": {}}))
+            self._greeting_pcm, _ = await self._collect_response(timeout_s=10.0)
+        except Exception as e:
+            logger.debug(f"No greeting from OpenAI: {e}")
+            self._greeting_pcm = None
 
     async def send_pcm(
         self, pcm16: bytes, pace_realtime: bool = True, timeout_s: float = 30.0
@@ -379,6 +393,10 @@ class OpenAIRealtimeEdge(VoiceEdge):
 
     def is_connected(self) -> bool:
         return self._connected
+    
+    def get_greeting(self) -> Optional[bytes]:
+        """Return greeting PCM if available."""
+        return self._greeting_pcm
 
 
 # ---------------- Deepgram VoiceEdge implementation ----------------
@@ -395,6 +413,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
         self._stop_recv = asyncio.Event()
         self._keepalive_task: Optional[asyncio.Task[None]] = None
         self._keepalive_stop_event = asyncio.Event()
+        self._greeting_pcm: Optional[bytes] = None
 
     async def connect(self, **kwargs: Any) -> None:
         self.ws = await websockets.connect(
@@ -467,6 +486,10 @@ class DeepgramRealtimeEdge(VoiceEdge):
             await asyncio.sleep(0.05)
         self._agent_turn_complete.clear()
         self._connected = True
+        
+        # Capture greeting from buffer
+        self._greeting_pcm = bytes(self._audio_buf) if self._audio_buf else None
+        self._audio_buf = bytearray()  # Clear buffer
 
     async def _recv_loop(self) -> None:
         try:
@@ -543,6 +566,10 @@ class DeepgramRealtimeEdge(VoiceEdge):
 
     def is_connected(self) -> bool:
         return self._connected
+    
+    def get_greeting(self) -> Optional[bytes]:
+        """Return greeting PCM if available."""
+        return self._greeting_pcm
 
 # ---------------- Twilio VoiceEdge implementation ----------------
 class TwilioRealtimeEdge(VoiceEdge):
@@ -585,6 +612,7 @@ class TwilioRealtimeEdge(VoiceEdge):
         self._server_runner: Optional[Any] = None
         self._server_task: Optional[asyncio.Task[None]] = None
         self._ngrok_url: Optional[str] = None
+        self._greeting_pcm: Optional[bytes] = None
         
         # VAD state management
         self._listening_for_response = False
@@ -652,6 +680,31 @@ class TwilioRealtimeEdge(VoiceEdge):
         self._utterance_complete.clear()
         self._vad_window.clear()
         logger.debug("VAD state reset")
+    
+    async def _capture_greeting(self) -> None:
+        """
+        Capture initial greeting using VAD to detect completion.
+        Waits for speech to start and complete, or timeout if no speech.
+        """
+        logger.debug("Listening for initial greeting...")
+        
+        # Start listening for response
+        self._start_listening_for_response()
+        
+        # Wait for utterance completion or timeout
+        try:
+            await asyncio.wait_for(
+                self._utterance_complete.wait(),
+                timeout=self.edge_config.max_response_duration_s
+            )
+            logger.debug("Greeting captured via VAD")
+        except asyncio.TimeoutError:
+            logger.debug("No greeting detected (timeout)")
+        
+        # Store greeting and stop listening
+        self._listening_for_response = False
+        self._greeting_pcm = bytes(self._audio_buf) if self._speech_started else None
+        self._audio_buf = bytearray()  # Clear buffer for normal operation
     
     def _start_listening_for_response(self) -> None:
         """
@@ -751,6 +804,9 @@ class TwilioRealtimeEdge(VoiceEdge):
             # If to_phone_number configured, initiate outbound call
             if self.edge_config.to_phone_number:
                 await self._initiate_outbound_call()
+        
+        # Capture any initial greeting using VAD
+        await self._capture_greeting()
     
     async def _initiate_outbound_call(self) -> None:
         """Initiate an outbound call via Twilio API."""
@@ -1189,6 +1245,10 @@ class TwilioRealtimeEdge(VoiceEdge):
 
     def is_connected(self) -> bool:
         return self._connected
+    
+    def get_greeting(self) -> Optional[bytes]:
+        """Return greeting PCM if available."""
+        return self._greeting_pcm
 
     async def _verify_ngrok_tunnel(self) -> bool:
         """
@@ -1277,6 +1337,45 @@ class RealtimeClient:
         logger.debug(f"Voice file saved to {local_path} and uploaded to {response.file_url}")
         return response.file_url
 
+    async def get_greeting(self) -> Optional[Dict[str, Any]]:
+        """
+        Get and process any greeting captured by the edge during connection.
+        
+        Returns:
+            Dict with greeting audio and transcription, or None if no greeting.
+        """
+        greeting_pcm_edge = self.edge.get_greeting()
+        if not greeting_pcm_edge:
+            return None
+        
+        edge_sr = self.edge.edge_config.sr
+        
+        # Resample to API_SR
+        greeting_pcm_api = resample_pcm16(greeting_pcm_edge, edge_sr, self.api_sr)
+        
+        # Save greeting WAV
+        greeting_wav_path = self._store_wav(
+            greeting_pcm_api, prefix=f"greeting_turn_000_"
+        )
+        
+        # Transcribe greeting
+        greeting_asr = ""
+        try:
+            greeting_asr = await asr_openai_from_pcm16(
+                greeting_pcm_api, self.api_sr, model=self.asr_model
+            )
+        except Exception:
+            logger.exception("[ASR ERR] Failed to transcribe greeting audio")
+        
+        return {
+            "turn": 0,
+            "user_wav_path": None,
+            "assistant_wav_path": greeting_wav_path,
+            "agent_asr": greeting_asr,
+            "bytes": len(greeting_pcm_api),
+            "vendor_meta": {},
+        }
+
     async def send_utterance(
         self,
         text: str,
@@ -1342,13 +1441,23 @@ class SessionManager:
     async def start(
         self, session_id: str, **edge_connect_kwargs: Any
     ) -> RealtimeClient:
+        """Start a new session."""
         c = self.sessions.get(session_id)
+        
         if c is None or not c.edge.is_connected():
             edge = self.cfg.create()  # explicit, typed build
             c = RealtimeClient(edge=edge, okareo=self.okareo)
             await c.connect(**edge_connect_kwargs)
             self.sessions[session_id] = c
+        
         return c
+
+    async def get_greeting(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Get greeting from a session's RealtimeClient."""
+        c = self.sessions.get(session_id)
+        if c:
+            return await c.get_greeting()
+        return None
 
     async def send(
         self, session_id: str, text: str, **send_kwargs: Any
@@ -1393,9 +1502,9 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
         assert self.sessions, "SessionManager not initialized with Okareo instance"
         session_id = str(uuid.uuid4())
 
-        # For OpenAIRealtimeEdge: you can pass output_voice via edge_connect_kwargs
         await self.sessions.start(session_id)
         logger.debug(f"Session started: {session_id}")
+        
         return session_id, None
 
     async def end_session(self, session_id: str) -> None:
@@ -1411,17 +1520,51 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
         try:
             assert self.sessions, "SessionManager not initialized with Okareo instance"
             assert session_id, "Session ID is required"
+            
+            # Check for initial greeting when messages is empty (target goes first)
+            if not messages:
+                greeting = await self.sessions.get_greeting(session_id)
+                if greeting:
+                    logger.debug("Returning initial greeting from invoke()")
+                    return ModelInvocation(
+                        greeting.get("agent_asr", ""),
+                        [],  # Empty messages for initial greeting
+                        {
+                            "user_wav_path": greeting.get("user_wav_path"),
+                            "assistant_wav_path": greeting.get("assistant_wav_path"),
+                        },
+                    )
+                else:
+                    logger.warning("invoke() called with empty messages and no greeting")
+                    return ModelInvocation(
+                        "",
+                        messages,
+                        {"error": "No messages to process"}
+                    )
+            
+            # Get the last user message
+            last_message = messages[-1]
+            user_content = last_message.get("content", "")
+            
+            if not user_content:
+                logger.warning("invoke() called with empty user message content")
+                return ModelInvocation(
+                    "",
+                    messages,
+                    {"error": "Empty user message content"}
+                )
+            
             tts_voice = "echo"
             if isinstance(scenario_input, dict):
                 tts_voice = scenario_input.get("voice", tts_voice)
 
             res = await self.sessions.send(
                 session_id,
-                messages[-1]["content"],
+                user_content,
                 tts_voice=tts_voice,
             )
 
-            logger.debug(f"user message: {messages[-1]['content']}")
+            logger.debug(f"user message: {user_content}")
             logger.debug(res)
 
             return ModelInvocation(
