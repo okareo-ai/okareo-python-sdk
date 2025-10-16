@@ -33,7 +33,8 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 assert OPENAI_API_KEY, "Set OPENAI_API_KEY"
 
 
-API_SR = 24000  # 24 kHz PCM16 mono
+API_SR = 24000  # 24 kHz PCM16 mono - internal processing sample rate
+TTS_NATIVE_SR = 24000  # OpenAI TTS native output sample rate
 CHUNK_MS = 120  # stream in ~120ms chunks
 
 
@@ -52,11 +53,10 @@ def tts_pcm16(text: str, voice: str = "echo", target_sr: int = API_SR) -> bytes:
     }
     r = requests.post(url, headers=headers, json=payload, timeout=60)
     r.raise_for_status()
-    native_sr = 24000
-    audio = np.frombuffer(r.content, dtype=np.int16)
-    if target_sr != native_sr:
-        audio = resample_poly(audio, target_sr, native_sr).astype(np.int16)
-    return audio.tobytes()
+    audio_bytes = r.content
+    if target_sr != TTS_NATIVE_SR:
+        audio_bytes = resample_pcm16(audio_bytes, TTS_NATIVE_SR, target_sr)
+    return audio_bytes
 
 
 def chunk_bytes(pcm_bytes: bytes, ms: int, sr: int) -> list[bytes]:
@@ -64,6 +64,34 @@ def chunk_bytes(pcm_bytes: bytes, ms: int, sr: int) -> list[bytes]:
     bytes_per_ms = sr * 2 // 1000  # 2 bytes/sample, mono
     step = max(2, bytes_per_ms * ms)
     return [pcm_bytes[i : i + step] for i in range(0, len(pcm_bytes), step)]
+
+
+def resample_pcm16(pcm_bytes: bytes, from_sr: int, to_sr: int) -> bytes:
+    """
+    Resample PCM16 audio between sample rates.
+    Uses GCD optimization for efficiency.
+    
+    Args:
+        pcm_bytes: Raw PCM16 audio bytes
+        from_sr: Source sample rate
+        to_sr: Target sample rate
+    
+    Returns:
+        Resampled PCM16 audio bytes
+    """
+    if from_sr == to_sr:
+        return pcm_bytes
+    
+    if not pcm_bytes:
+        return pcm_bytes
+    
+    audio = np.frombuffer(pcm_bytes, dtype=np.int16)
+    from math import gcd
+    ratio_gcd = gcd(to_sr, from_sr)
+    up = to_sr // ratio_gcd
+    down = from_sr // ratio_gcd
+    resampled = resample_poly(audio, up, down).astype(np.int16)
+    return resampled.tobytes()
 
 
 def wav_from_pcm16(pcm_bytes: bytes, sr: int) -> bytes:
@@ -585,19 +613,6 @@ class TwilioRealtimeEdge(VoiceEdge):
         import audioop
         return audioop.lin2ulaw(pcm16_bytes, 2)
     
-    def _resample_pcm16(self, pcm_bytes: bytes, from_sr: int, to_sr: int) -> bytes:
-        """Resample PCM16 audio."""
-        if from_sr == to_sr:
-            return pcm_bytes
-        
-        audio = np.frombuffer(pcm_bytes, dtype=np.int16)
-        from math import gcd
-        ratio_gcd = gcd(to_sr, from_sr)
-        up = to_sr // ratio_gcd
-        down = from_sr // ratio_gcd
-        resampled = resample_poly(audio, up, down).astype(np.int16)
-        return resampled.tobytes()
-    
     def _has_speech_energy(self, pcm16_bytes: bytes) -> bool:
         """
         Simple energy-based VAD.
@@ -1025,17 +1040,13 @@ class TwilioRealtimeEdge(VoiceEdge):
         self._listening_for_response = False
         self._reset_vad_state()
         
-        # Resample to 8kHz if needed
-        # if self.edge_config.sr != 8000:
-        #     pcm16 = self._resample_pcm16(pcm16, self.edge_config.sr, 8000)
-        pcm16 = self._resample_pcm16(pcm16, 24000, 8000) # TODO clean up configuration/constants
-        
+        # Note: pcm16 is already at edge_config.sr (8kHz for Twilio) thanks to RealtimeClient
         # Convert to mulaw
         mulaw_bytes = self._pcm16_to_mulaw(pcm16)
         
         # Send chunks TODO - Twilio seems to accept the whole audio at once, right now 320byte tiny chunks
-        chunks = chunk_bytes(mulaw_bytes, self.edge_config.chunk_ms, 8000)
-        bytes_per_sec = 8000
+        chunks = chunk_bytes(mulaw_bytes, self.edge_config.chunk_ms, self.edge_config.sr)
+        bytes_per_sec = self.edge_config.sr
         
         send_start = time.time()
         for chunk in chunks:
@@ -1095,14 +1106,8 @@ class TwilioRealtimeEdge(VoiceEdge):
             else:
                 logger.debug(f"Using partial response (speech was detected)")
         
-        # Resample entire turn from 8kHz to 24kHz ONCE (eliminates all artifacts)
-        pcm_result_8k = bytes(self._audio_buf)
-        if len(pcm_result_8k) > 0:
-            # TODO clean up configuration/constants parallel to sent chunks 24kHz -> 8kHz (if input is different)
-            logger.debug(f"Resampling complete turn: {len(pcm_result_8k)} bytes at 8kHz -> 24kHz")
-            pcm_result = self._resample_pcm16(pcm_result_8k, 8000, 24000)  
-        else:
-            pcm_result = pcm_result_8k
+        # Return audio at edge_config.sr (RealtimeClient will resample to API_SR)
+        pcm_result = bytes(self._audio_buf)
         
         return pcm_result, {
             "stream_sid": self._stream_sid,
@@ -1281,29 +1286,37 @@ class RealtimeClient:
     ) -> Dict[str, Any]:
         assert self.edge.is_connected(), "Call connect() first."
         turn_id = self.turn + 1
+        
+        edge_sr = self.edge.edge_config.sr
 
-        # 1) TTS -> PCM16
-        user_pcm = await asyncio.to_thread(tts_pcm16, text, tts_voice, self.api_sr)
-        user_wav_path = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
+        # 1) TTS -> PCM16 at API_SR
+        user_pcm_api = await asyncio.to_thread(tts_pcm16, text, tts_voice, self.api_sr)
+        user_wav_path = self._store_wav(user_pcm_api, prefix=f"user_turn_{turn_id:03d}_")
 
-        # 2) Stream to edge and collect agent PCM
-        agent_pcm, vendor_meta = await self.edge.send_pcm(
-            user_pcm, pace_realtime=pace_realtime, timeout_s=timeout_s
+        # 2) Resample to edge transport sample rate
+        user_pcm_edge = resample_pcm16(user_pcm_api, self.api_sr, edge_sr)
+        
+        # 3) Stream to edge and collect agent PCM (at edge SR)
+        agent_pcm_edge, vendor_meta = await self.edge.send_pcm(
+            user_pcm_edge, pace_realtime=pace_realtime, timeout_s=timeout_s
         )
 
-        # 3) Save agent WAV
+        # 4) Resample agent response back to API_SR
+        agent_pcm_api = resample_pcm16(agent_pcm_edge, edge_sr, self.api_sr) if agent_pcm_edge else b""
+
+        # 5) Save agent WAV at API_SR
         assistant_wav_path = None
-        if agent_pcm:
+        if agent_pcm_api:
             assistant_wav_path = self._store_wav(
-                agent_pcm, prefix=f"agent_turn_{turn_id:03d}_"
+                agent_pcm_api, prefix=f"agent_turn_{turn_id:03d}_"
             )
 
-        # 4) Run ASR on agent audio
+        # 6) Run ASR on agent audio at API_SR
         agent_asr = ""
-        if agent_pcm:
+        if agent_pcm_api:
             try:
                 agent_asr = await asr_openai_from_pcm16(
-                    agent_pcm, self.api_sr, model=self.asr_model
+                    agent_pcm_api, self.api_sr, model=self.asr_model
                 )
             except Exception:
                 logger.exception("[ASR ERR] Failed to transcribe agent audio")
@@ -1314,7 +1327,7 @@ class RealtimeClient:
             "user_wav_path": user_wav_path,
             "assistant_wav_path": assistant_wav_path,
             "agent_asr": agent_asr,
-            "bytes": len(agent_pcm) if agent_pcm else 0,
+            "bytes": len(agent_pcm_api) if agent_pcm_api else 0,
             "vendor_meta": vendor_meta,
         }
 
