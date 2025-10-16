@@ -70,23 +70,24 @@ def resample_pcm16(pcm_bytes: bytes, from_sr: int, to_sr: int) -> bytes:
     """
     Resample PCM16 audio between sample rates.
     Uses GCD optimization for efficiency.
-    
+
     Args:
         pcm_bytes: Raw PCM16 audio bytes
         from_sr: Source sample rate
         to_sr: Target sample rate
-    
+
     Returns:
         Resampled PCM16 audio bytes
     """
     if from_sr == to_sr:
         return pcm_bytes
-    
+
     if not pcm_bytes:
         return pcm_bytes
-    
+
     audio = np.frombuffer(pcm_bytes, dtype=np.int16)
     from math import gcd
+
     ratio_gcd = gcd(to_sr, from_sr)
     up = to_sr // ratio_gcd
     down = from_sr // ratio_gcd
@@ -207,13 +208,14 @@ class DeepgramEdgeConfig(EdgeConfig):
     def create(self) -> VoiceEdge:
         return DeepgramRealtimeEdge(self)
 
+
 @dataclass
 class TwilioEdgeConfig(EdgeConfig):
     """Configuration for Twilio Media Streams integration.
-    
+
     Twilio is just audio transport over phone lines - no LLM involved.
     Audio is mulaw-encoded at 8kHz.
-    
+
     Args:
         account_sid: Twilio Account SID (for verification)
         auth_token: Twilio Auth Token (for verification)
@@ -225,6 +227,7 @@ class TwilioEdgeConfig(EdgeConfig):
         use_ngrok: Whether to automatically expose via ngrok (default True for testing)
         max_response_duration_s: Maximum time to wait for complete response (default 10.0)
     """
+
     account_sid: str = ""
     auth_token: str = ""
     from_phone_number: Optional[str] = None
@@ -234,9 +237,10 @@ class TwilioEdgeConfig(EdgeConfig):
     server_port: int = 5000
     use_ngrok: bool = True
     max_response_duration_s: float = 40.0  # Maximum time to wait for complete response
-    
+
     def create(self) -> VoiceEdge:
         return TwilioRealtimeEdge(self)
+
 
 # ---------------- OpenAI Realtime implementation ----------------
 class OpenAIRealtimeEdge(VoiceEdge):
@@ -302,7 +306,7 @@ class OpenAIRealtimeEdge(VoiceEdge):
             )
         )
         self._connected = True
-        
+
         # Capture greeting by requesting initial response
         try:
             await self.ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
@@ -393,7 +397,7 @@ class OpenAIRealtimeEdge(VoiceEdge):
 
     def is_connected(self) -> bool:
         return self._connected
-    
+
     def get_greeting(self) -> Optional[bytes]:
         """Return greeting PCM if available."""
         return self._greeting_pcm
@@ -486,7 +490,7 @@ class DeepgramRealtimeEdge(VoiceEdge):
             await asyncio.sleep(0.05)
         self._agent_turn_complete.clear()
         self._connected = True
-        
+
         # Capture greeting from buffer
         self._greeting_pcm = bytes(self._audio_buf) if self._audio_buf else None
         self._audio_buf = bytearray()  # Clear buffer
@@ -566,25 +570,26 @@ class DeepgramRealtimeEdge(VoiceEdge):
 
     def is_connected(self) -> bool:
         return self._connected
-    
+
     def get_greeting(self) -> Optional[bytes]:
         """Return greeting PCM if available."""
         return self._greeting_pcm
+
 
 # ---------------- Twilio VoiceEdge implementation ----------------
 class TwilioRealtimeEdge(VoiceEdge):
     """
     Twilio Media Streams integration for real-time phone audio with VAD-based turn detection.
-    
+
     Twilio is just the phone audio transport layer - no LLM involved.
     The actual AI/agent logic runs separately (e.g., OpenAI, Deepgram).
-    
+
     This edge handles:
     1. Receiving WebSocket connection from Twilio
     2. Audio format conversion (mulaw <-> PCM16)
     3. Bidirectional audio streaming
     4. Voice Activity Detection (VAD) for turn completion
-    
+
     Turn detection strategy:
     - Twilio sends continuous audio from phone side
     - 'mark' event signals end of outbound playback (not user speech)
@@ -593,11 +598,13 @@ class TwilioRealtimeEdge(VoiceEdge):
       * Silence threshold (1.5s default)
       * Minimum speech duration (300ms default)
       * Rolling window for smoothing
-    
+
     For testing, it can automatically start an aiohttp server + ngrok.
     For production, you'd integrate with your existing server infrastructure.
     """
-    
+
+    edge_config: TwilioEdgeConfig
+
     def __init__(self, cfg: TwilioEdgeConfig):
         super().__init__(cfg)
         self._connected = False
@@ -613,34 +620,36 @@ class TwilioRealtimeEdge(VoiceEdge):
         self._server_task: Optional[asyncio.Task[None]] = None
         self._ngrok_url: Optional[str] = None
         self._greeting_pcm: Optional[bytes] = None
-        
+
         # VAD state management
         self._listening_for_response = False
         self._speech_started = False
         self._last_speech_time: Optional[float] = None
         self._utterance_complete = asyncio.Event()
         self._speech_start_time: Optional[float] = None
-        
+
         # VAD configuration (tunable)
         self._vad_silence_threshold_ms = 1500  # 1.5s silence = utterance complete
         self._vad_min_speech_duration_ms = 300  # Minimum 300ms of speech
         self._vad_energy_threshold = 400  # RMS energy threshold
         self._vad_speech_ratio_threshold = 0.3  # 30% of frames must have speech
-        
+
         # Rolling window for smoothing VAD decisions
         self._vad_window_size = 10  # frames
         self._vad_window: Deque[bool] = deque(maxlen=self._vad_window_size)
-        
+
     def _mulaw_to_pcm16(self, mulaw_bytes: bytes) -> bytes:
         """Convert mulaw audio to PCM16."""
         import audioop
+
         return audioop.ulaw2lin(mulaw_bytes, 2)
-    
+
     def _pcm16_to_mulaw(self, pcm16_bytes: bytes) -> bytes:
         """Convert PCM16 audio to mulaw."""
         import audioop
+
         return audioop.lin2ulaw(pcm16_bytes, 2)
-    
+
     def _has_speech_energy(self, pcm16_bytes: bytes) -> bool:
         """
         Simple energy-based VAD.
@@ -648,30 +657,30 @@ class TwilioRealtimeEdge(VoiceEdge):
         """
         if not pcm16_bytes or len(pcm16_bytes) < 2:
             return False
-        
+
         try:
             audio = np.frombuffer(pcm16_bytes, dtype=np.int16)
-            
+
             # Calculate RMS energy
             rms_energy = np.sqrt(np.mean(audio.astype(np.float32) ** 2))
-            
+
             # Check against threshold
-            has_speech = rms_energy > self._vad_energy_threshold
-            
+            has_speech = bool(rms_energy > self._vad_energy_threshold)
+
             # Add to rolling window for smoothing
             self._vad_window.append(has_speech)
-            
+
             # Smooth decision: require certain % of recent frames to have speech
             if len(self._vad_window) >= 3:
                 speech_ratio = sum(self._vad_window) / len(self._vad_window)
                 return speech_ratio >= self._vad_speech_ratio_threshold
-            
+
             return has_speech
-            
+
         except Exception as e:
             logger.debug(f"VAD error: {e}")
             return False
-    
+
     def _reset_vad_state(self) -> None:
         """Reset VAD state for new utterance detection."""
         self._speech_started = False
@@ -680,48 +689,48 @@ class TwilioRealtimeEdge(VoiceEdge):
         self._utterance_complete.clear()
         self._vad_window.clear()
         logger.debug("VAD state reset")
-    
+
     async def _capture_greeting(self) -> None:
         """
         Capture initial greeting using VAD to detect completion.
         Waits for speech to start and complete, or timeout if no speech.
         """
         logger.debug("Listening for initial greeting...")
-        
+
         # Start listening for response
         self._start_listening_for_response()
-        
+
         # Wait for utterance completion or timeout
         try:
             await asyncio.wait_for(
                 self._utterance_complete.wait(),
-                timeout=self.edge_config.max_response_duration_s
+                timeout=self.edge_config.max_response_duration_s,
             )
             logger.debug("Greeting captured via VAD")
         except asyncio.TimeoutError:
             logger.debug("No greeting detected (timeout)")
-        
+
         # Store greeting and stop listening
         self._listening_for_response = False
         self._greeting_pcm = bytes(self._audio_buf) if self._speech_started else None
         self._audio_buf = bytearray()  # Clear buffer for normal operation
-    
+
     def _start_listening_for_response(self) -> None:
         """
         Called when 'mark' event is received (playback complete).
         Clears buffer and starts listening for user response.
         """
         logger.debug("Playback complete, now listening for user response...")
-        
+
         # Clear buffer to discard any audio received during playback
         self._audio_buf = bytearray()
-        
+
         # Reset VAD state
         self._reset_vad_state()
-        
+
         # Enable response listening
         self._listening_for_response = True
-    
+
     def _process_incoming_audio_vad(self, pcm16_bytes: bytes) -> None:
         """
         Process incoming audio with VAD for utterance detection.
@@ -733,11 +742,11 @@ class TwilioRealtimeEdge(VoiceEdge):
             # Not in listening mode, just accumulate
             self._audio_buf.extend(pcm16_bytes)
             return
-        
+
         # Listening for response - use VAD to filter noise
         has_speech = self._has_speech_energy(pcm16_bytes)
         current_time = time.time()
-        
+
         if has_speech:
             # Speech detected
             if not self._speech_started:
@@ -745,45 +754,55 @@ class TwilioRealtimeEdge(VoiceEdge):
                 logger.debug("🎤 Speech detected - utterance started")
                 self._speech_started = True
                 self._speech_start_time = current_time
-            
+
             # Update last speech time
             self._last_speech_time = current_time
-            
+
             # Accumulate speech audio
             self._audio_buf.extend(pcm16_bytes)
-            
+
         elif self._speech_started:
             # Currently in an utterance, but this frame has no speech (silence)
             # Still accumulate (natural pauses within utterance)
             self._audio_buf.extend(pcm16_bytes)
-            
+
+            # Type narrowing: if _speech_started is True, these timestamps must be set
+            assert self._last_speech_time is not None
+            assert self._speech_start_time is not None
+
             silence_duration_ms = (current_time - self._last_speech_time) * 1000
-            
+
             # Check if silence threshold exceeded
             if silence_duration_ms > self._vad_silence_threshold_ms:
                 # Check minimum speech duration
-                speech_duration_ms = (self._last_speech_time - self._speech_start_time) * 1000
-                
+                speech_duration_ms = (
+                    self._last_speech_time - self._speech_start_time
+                ) * 1000
+
                 if speech_duration_ms >= self._vad_min_speech_duration_ms:
-                    logger.debug(f"✅ Utterance complete: {speech_duration_ms:.0f}ms speech, {silence_duration_ms:.0f}ms silence")
+                    logger.debug(
+                        f"✅ Utterance complete: {speech_duration_ms:.0f}ms speech, {silence_duration_ms:.0f}ms silence"
+                    )
                     self._utterance_complete.set()
                     self._listening_for_response = False
                 else:
-                    logger.debug(f"⚠️ Speech too short ({speech_duration_ms:.0f}ms < {self._vad_min_speech_duration_ms}ms), ignoring")
+                    logger.debug(
+                        f"⚠️ Speech too short ({speech_duration_ms:.0f}ms < {self._vad_min_speech_duration_ms}ms), ignoring"
+                    )
                     self._reset_vad_state()
         else:
             # No speech yet - don't accumulate pre-utterance noise
             pass
-    
+
     async def connect(self, websocket: Optional[Any] = None, **kwargs: Any) -> None:
         """
         Connect to Twilio Media Stream.
-        
+
         Three modes:
         1. Pass existing websocket from your server: connect(websocket=ws)
         2. Auto-start server for incoming calls: connect()
         3. Auto-start server and make outbound call: Set to_phone_number in TwilioEdgeConfig
-        
+
         Args:
             websocket: Optional WebSocket from Twilio (if you're running your own server)
             **kwargs: Additional options
@@ -793,278 +812,305 @@ class TwilioRealtimeEdge(VoiceEdge):
             self.ws = websocket
             self._stop_recv.clear()
             self._recv_task = asyncio.create_task(self._recv_loop())
-            
+
             await asyncio.wait_for(self._wait_for_connected(), timeout=10.0)
             self._connected = True
             logger.debug(f"Connected to Twilio Media Stream: {self._stream_sid}")
         else:
             # Mode 2 or 3: Auto-start server
             await self._start_test_server()
-            
+
             # If to_phone_number configured, initiate outbound call
             if self.edge_config.to_phone_number:
                 await self._initiate_outbound_call()
-        
+
         # Capture any initial greeting using VAD
         await self._capture_greeting()
-    
+
     async def _initiate_outbound_call(self) -> None:
         """Initiate an outbound call via Twilio API."""
         cfg = self.edge_config
         to_number = cfg.to_phone_number
-        
+
         if not cfg.account_sid or not cfg.auth_token or not cfg.from_phone_number:
             raise ValueError(
                 "Outbound calls require account_sid, auth_token, and from_phone_number. "
                 "Set these in TwilioEdgeConfig."
             )
-        
+
         logger.debug(f"Initiating outbound call to {to_number}...")
-        
+
         # Determine the stream URL
         if not self._ngrok_url:
             logger.error("Ngrok URL not available. Cannot make outbound call.")
-            raise ValueError("Ngrok tunnel required for outbound calls. Set use_ngrok=True in TwilioEdgeConfig.")
-        
-        stream_url = self._ngrok_url.replace("https://", "wss://").replace("http://", "ws://")
+            raise ValueError(
+                "Ngrok tunnel required for outbound calls. Set use_ngrok=True in TwilioEdgeConfig."
+            )
+
+        stream_url = self._ngrok_url.replace("https://", "wss://").replace(
+            "http://", "ws://"
+        )
         stream_url = f"{stream_url}/media-stream"
-        
+
         logger.debug(f"Stream URL: {stream_url}")
-        
+
         # Create TwiML with Stream
-        twiml = f'''<?xml version="1.0" encoding="UTF-8"?>
+        twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
         <Stream url="{stream_url}" />
     </Connect>
-</Response>'''
-        
+</Response>"""
+
         # Call Twilio API
         try:
-            from twilio.rest import Client
-        except ImportError:
+            from twilio.rest import Client  # type: ignore[import-not-found]
+        except ImportError as e:
             raise ImportError(
                 "Outbound calls require the twilio package. "
                 "Install with: pip install twilio"
-            )
-        
+            ) from e
+
         client = Client(cfg.account_sid, cfg.auth_token)
-        
+
         # Make the call
         call = client.calls.create(
             twiml=twiml,
             to=to_number,
             from_=cfg.from_phone_number,
-            status_callback_event=['initiated', 'ringing', 'answered', 'completed'],
-            status_callback_method='POST'
+            status_callback_event=["initiated", "ringing", "answered", "completed"],
+            status_callback_method="POST",
         )
-        
+
         self._call_sid = call.sid
         logger.debug(f"Call initiated: {call.sid}")
         logger.debug(f"Calling {to_number}...")
         logger.debug("Waiting for call to be answered and stream to connect...")
         logger.debug("(This may take 30-60 seconds depending on answer time)")
-        
+
         # Wait for the call to connect and stream to start
         timeout = 60.0  # Increase timeout to 60 seconds
         try:
             await asyncio.wait_for(self._wait_for_connected(), timeout=timeout)
             self._connected = True
             logger.debug(f"✅ Call connected! Stream: {self._stream_sid}")
-        except asyncio.TimeoutError:
-            logger.error(f"❌ Call did not connect within {timeout}s.")
-            
+        except asyncio.TimeoutError as e:
+            logger.exception("❌ Call did not connect within %ss.", timeout)
+
             # Try to get call status
             try:
                 call_status = client.calls(call.sid).fetch()
-                logger.error(f"   Call status: {call_status.status}")
-                logger.error(f"   Call duration: {call_status.duration}")
+                logger.error("   Call status: %s", call_status.status)  # noqa: TRY400
+                logger.error(  # noqa: TRY400
+                    "   Call duration: %s", call_status.duration
+                )
             except Exception:
-                pass
-            
+                logger.debug("Could not fetch call status", exc_info=True)
+
             raise TimeoutError(
                 f"Call did not connect within {timeout}s. See logs above for troubleshooting."
-            )
+            ) from e
 
-    async def _start_test_server(self) -> None:
+    async def _start_test_server(self) -> None:  # noqa: C901
         """Start aiohttp server + ngrok for testing."""
         from aiohttp import web
-        
+
         logger.debug("Starting test server for Twilio...")
-        
+
         # Store reference to this edge so handlers can access it
         edge_instance = self
-        
+
         async def voice_webhook(request: Any) -> Any:
             """HTTP webhook that returns TwiML."""
             host = request.host
-            protocol = "wss" if edge_instance._ngrok_url and "https" in edge_instance._ngrok_url else "ws"
-            stream_url = edge_instance._ngrok_url.replace("https://", "wss://").replace("http://", "ws://") if edge_instance._ngrok_url else f"{protocol}://{host}"
+            protocol = (
+                "wss"
+                if edge_instance._ngrok_url and "https" in edge_instance._ngrok_url
+                else "ws"
+            )
+            stream_url = (
+                edge_instance._ngrok_url.replace("https://", "wss://").replace(
+                    "http://", "ws://"
+                )
+                if edge_instance._ngrok_url
+                else f"{protocol}://{host}"
+            )
             stream_url = f"{stream_url}/media-stream"
-            
-            twiml = f'''<?xml version="1.0" encoding="UTF-8"?>
+
+            twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
         <Stream url="{stream_url}" />
     </Connect>
-</Response>'''
+</Response>"""
             return web.Response(text=twiml, content_type="application/xml")
-        
+
         async def media_stream_handler(request: Any) -> Any:
             """WebSocket handler."""
             ws = web.WebSocketResponse()
             await ws.prepare(request)
-            
+
             logger.debug("Twilio Media Stream connected")
             edge_instance.ws = ws
             edge_instance._stop_recv.clear()
             edge_instance._recv_task = asyncio.create_task(edge_instance._recv_loop())
-            
+
             try:
-                await asyncio.wait_for(edge_instance._wait_for_connected(), timeout=10.0)
+                await asyncio.wait_for(
+                    edge_instance._wait_for_connected(), timeout=10.0
+                )
                 edge_instance._connected = True
                 logger.debug(f"Stream ready: {edge_instance._stream_sid}")
-                
+
                 # Keep connection alive
                 while edge_instance.is_connected():
                     await asyncio.sleep(0.1)
-            except Exception as e:
-                logger.error(f"Error in media stream: {e}")
-            
+            except Exception:
+                logger.exception("Error in media stream")
+
             return ws
-        
+
         # Create app
         app = web.Application()
-        app.router.add_post('/voice', voice_webhook)
-        app.router.add_get('/media-stream', media_stream_handler)
-        
+        app.router.add_post("/voice", voice_webhook)
+        app.router.add_get("/media-stream", media_stream_handler)
+
         self._server_app = app
-        
+
         # Start server in background
         from aiohttp.web_runner import AppRunner, TCPSite
+
         runner = AppRunner(app)
         await runner.setup()
-        site = TCPSite(runner, '0.0.0.0', self.edge_config.server_port)
+        site = TCPSite(runner, "0.0.0.0", self.edge_config.server_port)
         await site.start()
-        
+
         # Store runner so we can clean it up later
         self._server_runner = runner
-        
+
         local_url = f"http://localhost:{self.edge_config.server_port}"
         logger.debug(f"Server started on {local_url}")
-        
+
         # Start ngrok if enabled
         if self.edge_config.use_ngrok:
             try:
-                from pyngrok import ngrok
-                
+                from pyngrok import ngrok  # type: ignore[import-not-found]
+
                 # Kill any existing tunnels to avoid conflicts
                 try:
                     ngrok.kill()
                 except Exception:
-                    pass
-                
+                    logger.debug("Could not kill existing ngrok tunnels", exc_info=True)
+
                 # Start ngrok with explicit configuration
                 tunnel = ngrok.connect(
-                    self.edge_config.server_port, 
-                    "http",
-                    bind_tls=True  # Force HTTPS
+                    self.edge_config.server_port, "http", bind_tls=True  # Force HTTPS
                 )
                 self._ngrok_url = tunnel.public_url
                 logger.debug(f"Public URL (ngrok): {self._ngrok_url}")
-                logger.debug(f"WebSocket URL: {self._ngrok_url.replace('https://', 'wss://')}/media-stream")
-                
+                logger.debug(
+                    f"WebSocket URL: {self._ngrok_url.replace('https://', 'wss://')}/media-stream"
+                )
+
                 # Give ngrok a moment to fully initialize
                 await asyncio.sleep(2)
-                
+
                 # Verify tunnel is working and not blocked by free tier
                 tunnel_ok = await self._verify_ngrok_tunnel()
                 if not tunnel_ok:
                     # Don't raise here, just warn - user might want to proceed anyway
                     logger.warning("")
-                    logger.warning("⚠️ Continuing anyway, but outbound calls will likely fail...")
+                    logger.warning(
+                        "⚠️ Continuing anyway, but outbound calls will likely fail..."
+                    )
                     logger.warning("")
-                
+
             except ImportError:
-                logger.warning("pyngrok not installed. Install with: pip install pyngrok")
-            except Exception as e:
-                logger.error(f"Could not start ngrok: {e}")
+                logger.warning(
+                    "pyngrok not installed. Install with: pip install pyngrok"
+                )
+            except Exception:
+                logger.exception("Could not start ngrok")
                 raise
-        
+
         if not self.edge_config.use_ngrok:
             logger.debug(f"Configure Twilio webhook to: {local_url}/voice")
-    
+
     async def _wait_for_connected(self) -> None:
         """Wait for Twilio 'connected' or 'start' event."""
         while not self._stream_sid:
             await asyncio.sleep(0.05)
-    
+
     async def _recv_loop(self) -> None:
         """Receive messages from Twilio."""
         from aiohttp import web
-        
+
         try:
             assert self.ws is not None
             while not self._stop_recv.is_set():
                 msg = await self.ws.receive()
-                
+
                 # Check if connection is closed
-                if msg.type in (web.WSMsgType.CLOSE, web.WSMsgType.CLOSED, web.WSMsgType.CLOSING):
+                if msg.type in (
+                    web.WSMsgType.CLOSE,
+                    web.WSMsgType.CLOSED,
+                    web.WSMsgType.CLOSING,
+                ):
                     logger.debug("WebSocket closed by peer")
                     break
-                
+
                 if msg.type == web.WSMsgType.ERROR:
                     logger.error(f"WebSocket error: {self.ws.exception()}")
                     break
-                
+
                 if msg.type == web.WSMsgType.TEXT:
                     try:
                         evt = json.loads(msg.data)
                         await self._handle_twilio_event(evt)
                     except json.JSONDecodeError:
                         logger.warning(f"Non-JSON frame: {msg.data!r}")
-                        
+
         except Exception as e:
             if not self._stop_recv.is_set():
                 logger.debug(f"Receive loop ended: {e}")
-    
+
     async def _handle_twilio_event(self, evt: Dict[str, Any]) -> None:
         """Handle Twilio Media Stream events."""
         event_type = evt.get("event")
-        
+
         if event_type == "connected":
             self._stream_sid = evt.get("streamSid")
             logger.debug(f"Stream connected: {self._stream_sid}")
-            
+
         elif event_type == "start":
             start_data = evt.get("start", {})
             self._call_sid = start_data.get("callSid")
             self._stream_sid = start_data.get("streamSid")
             logger.debug(f"Call started: {self._call_sid}")
-            
+
         elif event_type == "media":
             payload = evt.get("media", {})
             mulaw_b64 = payload.get("payload", "")
-            
+
             if mulaw_b64:
                 mulaw_bytes = base64.b64decode(mulaw_b64)
                 pcm16_bytes_8k = self._mulaw_to_pcm16(mulaw_bytes)
-                
+
                 # Run VAD on 8kHz audio - VAD handles buffer accumulation
                 # Audio stays at 8kHz until turn is complete, then resampled once
                 self._process_incoming_audio_vad(pcm16_bytes_8k)
-                
+
         elif event_type == "mark":
             logger.debug(f"Mark received: {evt}")
             self._audio_ready.set()
-            
+
             # Start listening for user response NOW
             self._start_listening_for_response()
-            
+
         elif event_type == "stop":
             logger.debug("Stream stopped by Twilio")
             self._stop_recv.set()
-    
+
     async def send_pcm(
         self,
         pcm16: bytes,
@@ -1073,62 +1119,65 @@ class TwilioRealtimeEdge(VoiceEdge):
     ) -> tuple[bytes, Dict[str, Any]]:
         """
         Send PCM16 audio to Twilio and receive response with VAD-based turn detection.
-        
+
         Process:
         1. Send audio chunks to phone
         2. Wait for 'mark' event (playback complete)
         3. Use VAD to detect complete user utterance
         4. Return collected audio
-        
+
         Args:
             pcm16: Audio to send (PCM16 format at 24kHz)
             pace_realtime: Whether to pace sending at real-time speed
             timeout_s: Timeout for mark event
-        
+
         Returns:
             Tuple of (received_audio_bytes, metadata_dict)
         """
         assert self.ws and self._connected, "Call connect() first"
-        
+
         # Reset state
         self._audio_buf = bytearray()
         self._audio_ready.clear()
         self._listening_for_response = False
         self._reset_vad_state()
-        
+
         # Note: pcm16 is already at edge_config.sr (8kHz for Twilio) thanks to RealtimeClient
         # Convert to mulaw
         mulaw_bytes = self._pcm16_to_mulaw(pcm16)
-        
+
         # Send chunks TODO - Twilio seems to accept the whole audio at once, right now 320byte tiny chunks
-        chunks = chunk_bytes(mulaw_bytes, self.edge_config.chunk_ms, self.edge_config.sr)
+        chunks = chunk_bytes(
+            mulaw_bytes, self.edge_config.chunk_ms, self.edge_config.sr
+        )
         bytes_per_sec = self.edge_config.sr
-        
+
         send_start = time.time()
         for chunk in chunks:
             mulaw_b64 = base64.b64encode(chunk).decode("ascii")
             media_msg = {
                 "event": "media",
                 "streamSid": self._stream_sid,
-                "media": {"payload": mulaw_b64}
+                "media": {"payload": mulaw_b64},
             }
             await self.ws.send_json(media_msg)
-            
+
             if pace_realtime:
                 await asyncio.sleep(max(0.001, len(chunk) / bytes_per_sec))
-        
+
         send_duration = time.time() - send_start
         logger.debug(f"Sent {len(chunks)} chunks in {send_duration:.2f}s")
-        
+
         # Send mark to signal end of playback
+        mark_name = f"end_{uuid.uuid4().hex[:8]}"
         mark_msg = {
             "event": "mark",
             "streamSid": self._stream_sid,
-            "mark": {"name": f"end_{uuid.uuid4().hex[:8]}"}
+            "mark": {"name": mark_name},
         }
         await self.ws.send_json(mark_msg)
-        logger.debug(f"Mark sent: {mark_msg['mark']['name']}")
-        
+        logger.debug(f"Mark sent: {mark_name}")
+
         # Phase 1: Wait for mark (playback complete)
         try:
             await asyncio.wait_for(self._audio_ready.wait(), timeout=timeout_s)
@@ -1136,35 +1185,37 @@ class TwilioRealtimeEdge(VoiceEdge):
         except asyncio.TimeoutError:
             logger.warning(f"Timeout waiting for mark after {timeout_s}s")
             return bytes(self._audio_buf), {"error": "mark_timeout"}
-        
+
         # Phase 2: Wait for utterance completion via VAD
         # Use multiple exit conditions
         response_start = time.time()
-        
+
         try:
             # Wait for VAD to detect utterance completion
             await asyncio.wait_for(
                 self._utterance_complete.wait(),
-                timeout=self.edge_config.max_response_duration_s
+                timeout=self.edge_config.max_response_duration_s,
             )
-            
+
             response_duration = time.time() - response_start
             logger.debug(f"Response captured in {response_duration:.2f}s via VAD")
-            
+
         except asyncio.TimeoutError:
             # Max duration reached
             response_duration = time.time() - response_start
-            logger.warning(f"Response timeout after {self.edge_config.max_response_duration_s}s")
-            
+            logger.warning(
+                f"Response timeout after {self.edge_config.max_response_duration_s}s"
+            )
+
             # Check if we got any speech at all
             if not self._speech_started:
                 logger.warning("No speech detected during response window")
             else:
-                logger.debug(f"Using partial response (speech was detected)")
-        
+                logger.debug("Using partial response (speech was detected)")
+
         # Return audio at edge_config.sr (RealtimeClient will resample to API_SR)
         pcm_result = bytes(self._audio_buf)
-        
+
         return pcm_result, {
             "stream_sid": self._stream_sid,
             "call_sid": self._call_sid,
@@ -1173,19 +1224,19 @@ class TwilioRealtimeEdge(VoiceEdge):
             "speech_detected": self._speech_started,
             "vad_completed": self._utterance_complete.is_set(),
         }
-    
-    async def close(self) -> None:
+
+    async def close(self) -> None:  # noqa: C901
         """Close connection and cleanup."""
         logger.debug("Closing Twilio connection...")
-        
+
         # Set connected to False FIRST to unblock media_stream_handler
         self._connected = False
-        
+
         # Close WebSocket
         if self.ws:
             # Signal stop to receive loop
             self._stop_recv.set()
-            
+
             # Send stop message to Twilio
             if self._stream_sid:
                 try:
@@ -1193,13 +1244,13 @@ class TwilioRealtimeEdge(VoiceEdge):
                     await self.ws.send_json(stop_msg)
                 except Exception as e:
                     logger.debug(f"Error sending stop message: {e}")
-            
+
             # Close WebSocket connection (this will unblock the receive loop)
             try:
                 await self.ws.close()
             except Exception as e:
                 logger.debug(f"Error closing WebSocket: {e}")
-            
+
             # Wait for receive task with short timeout, then cancel if needed
             if self._recv_task:
                 try:
@@ -1213,9 +1264,9 @@ class TwilioRealtimeEdge(VoiceEdge):
                         pass
                 except Exception as e:
                     logger.debug(f"Error waiting for recv task: {e}")
-            
+
             self.ws = None
-        
+
         # Shutdown aiohttp server BEFORE disconnecting ngrok
         if self._server_runner:
             try:
@@ -1227,11 +1278,12 @@ class TwilioRealtimeEdge(VoiceEdge):
             finally:
                 self._server_runner = None
                 self._server_app = None
-        
+
         # Disconnect ngrok - kill all tunnels to ensure cleanup
         if self._ngrok_url:
             try:
-                from pyngrok import ngrok
+                from pyngrok import ngrok  # type: ignore[import-not-found]
+
                 logger.debug("Disconnecting ngrok tunnel...")
                 # Kill all tunnels instead of just disconnecting one
                 ngrok.kill()
@@ -1240,12 +1292,12 @@ class TwilioRealtimeEdge(VoiceEdge):
                 logger.debug(f"Error disconnecting ngrok: {e}")
             finally:
                 self._ngrok_url = None
-        
+
         logger.debug("✅ Cleanup complete")
 
     def is_connected(self) -> bool:
         return self._connected
-    
+
     def get_greeting(self) -> Optional[bytes]:
         """Return greeting PCM if available."""
         return self._greeting_pcm
@@ -1257,39 +1309,52 @@ class TwilioRealtimeEdge(VoiceEdge):
         """
         if not self._ngrok_url:
             return True  # No ngrok, nothing to check
-        
+
         import aiohttp
-        
+
         try:
             # Test the voice webhook endpoint with POST (as Twilio does)
             print(f"Testing ngrok tunnel: {self._ngrok_url}/voice")
             async with aiohttp.ClientSession() as session:
-                async with session.post(f"{self._ngrok_url}/voice", timeout=aiohttp.ClientTimeout(total=5)) as response:
+                async with session.post(
+                    f"{self._ngrok_url}/voice", timeout=aiohttp.ClientTimeout(total=5)
+                ) as response:
                     response_text = await response.text()
-                    logger.debug(f"Ngrok tunnel test response: status={response.status}, content-type={response.headers.get('content-type', '')}, body={response_text[:100]}...")
-                    
+                    logger.debug(
+                        f"Ngrok tunnel test response: status={response.status}, content-type={response.headers.get('content-type', '')}, body={response_text[:100]}..."
+                    )
+
                     # If we get HTML back, it's likely the ngrok interstitial page
-                    content_type = response.headers.get('content-type', '')
-                    is_html = 'text/html' in content_type.lower()
-                    
-                    if is_html and 'ngrok' in response_text.lower():
+                    content_type = response.headers.get("content-type", "")
+                    is_html = "text/html" in content_type.lower()
+
+                    if is_html and "ngrok" in response_text.lower():
                         logger.error("❌ Ngrok tunnel test failed")
                         return False
-                    
+
                     # Check if it's actually returning TwiML
                     if response.status == 200:
-                        if 'xml' in content_type.lower() or '<Response>' in response_text:
-                            logger.debug(f"✅ Ngrok tunnel verified (status: {response.status})")
+                        if (
+                            "xml" in content_type.lower()
+                            or "<Response>" in response_text
+                        ):
+                            logger.debug(
+                                f"✅ Ngrok tunnel verified (status: {response.status})"
+                            )
                             return True
                         else:
-                            logger.warning(f"⚠️ Unexpected response from /voice endpoint")
-                            logger.warning(f"   Content-Type: {content_type}")
-                            logger.warning(f"   First 200 chars: {response_text[:200]}")
+                            logger.warning("⚠️ Unexpected response from /voice endpoint")
+                            logger.warning("   Content-Type: %s", content_type)
+                            logger.warning(
+                                "   First 200 chars: %s", response_text[:200]
+                            )
                             return False
                     else:
-                        logger.warning(f"⚠️ Got HTTP {response.status} from /voice endpoint")
+                        logger.warning(
+                            f"⚠️ Got HTTP {response.status} from /voice endpoint"
+                        )
                         return False
-                        
+
         except asyncio.TimeoutError:
             logger.warning("⚠️ Timeout connecting to ngrok tunnel")
             return False
@@ -1332,32 +1397,34 @@ class RealtimeClient:
         """Upload PCM16 audio data and make it publicly accessible."""
         # Create temporary WAV file from PCM data
         local_path = save_wav_pcm16(pcm, self.api_sr, prefix)
-        
+
         response = self.okareo.upload_voice(local_path)
-        logger.debug(f"Voice file saved to {local_path} and uploaded to {response.file_url}")
+        logger.debug(
+            f"Voice file saved to {local_path} and uploaded to {response.file_url}"
+        )
         return response.file_url
 
     async def get_greeting(self) -> Optional[Dict[str, Any]]:
         """
         Get and process any greeting captured by the edge during connection.
-        
+
         Returns:
             Dict with greeting audio and transcription, or None if no greeting.
         """
         greeting_pcm_edge = self.edge.get_greeting()
         if not greeting_pcm_edge:
             return None
-        
+
         edge_sr = self.edge.edge_config.sr
-        
+
         # Resample to API_SR
         greeting_pcm_api = resample_pcm16(greeting_pcm_edge, edge_sr, self.api_sr)
-        
+
         # Save greeting WAV
         greeting_wav_path = self._store_wav(
-            greeting_pcm_api, prefix=f"greeting_turn_000_"
+            greeting_pcm_api, prefix="greeting_turn_000_"
         )
-        
+
         # Transcribe greeting
         greeting_asr = ""
         try:
@@ -1366,7 +1433,7 @@ class RealtimeClient:
             )
         except Exception:
             logger.exception("[ASR ERR] Failed to transcribe greeting audio")
-        
+
         return {
             "turn": 0,
             "user_wav_path": None,
@@ -1385,23 +1452,29 @@ class RealtimeClient:
     ) -> Dict[str, Any]:
         assert self.edge.is_connected(), "Call connect() first."
         turn_id = self.turn + 1
-        
+
         edge_sr = self.edge.edge_config.sr
 
         # 1) TTS -> PCM16 at API_SR
         user_pcm_api = await asyncio.to_thread(tts_pcm16, text, tts_voice, self.api_sr)
-        user_wav_path = self._store_wav(user_pcm_api, prefix=f"user_turn_{turn_id:03d}_")
+        user_wav_path = self._store_wav(
+            user_pcm_api, prefix=f"user_turn_{turn_id:03d}_"
+        )
 
         # 2) Resample to edge transport sample rate
         user_pcm_edge = resample_pcm16(user_pcm_api, self.api_sr, edge_sr)
-        
+
         # 3) Stream to edge and collect agent PCM (at edge SR)
         agent_pcm_edge, vendor_meta = await self.edge.send_pcm(
             user_pcm_edge, pace_realtime=pace_realtime, timeout_s=timeout_s
         )
 
         # 4) Resample agent response back to API_SR
-        agent_pcm_api = resample_pcm16(agent_pcm_edge, edge_sr, self.api_sr) if agent_pcm_edge else b""
+        agent_pcm_api = (
+            resample_pcm16(agent_pcm_edge, edge_sr, self.api_sr)
+            if agent_pcm_edge
+            else b""
+        )
 
         # 5) Save agent WAV at API_SR
         assistant_wav_path = None
@@ -1443,13 +1516,13 @@ class SessionManager:
     ) -> RealtimeClient:
         """Start a new session."""
         c = self.sessions.get(session_id)
-        
+
         if c is None or not c.edge.is_connected():
             edge = self.cfg.create()  # explicit, typed build
             c = RealtimeClient(edge=edge, okareo=self.okareo)
             await c.connect(**edge_connect_kwargs)
             self.sessions[session_id] = c
-        
+
         return c
 
     async def get_greeting(self, session_id: str) -> Optional[Dict[str, Any]]:
@@ -1504,7 +1577,7 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
 
         await self.sessions.start(session_id)
         logger.debug(f"Session started: {session_id}")
-        
+
         return session_id, None
 
     async def end_session(self, session_id: str) -> None:
@@ -1520,7 +1593,7 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
         try:
             assert self.sessions, "SessionManager not initialized with Okareo instance"
             assert session_id, "Session ID is required"
-            
+
             # Check for initial greeting when messages is empty (target goes first)
             if not messages:
                 greeting = await self.sessions.get_greeting(session_id)
@@ -1535,25 +1608,23 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
                         },
                     )
                 else:
-                    logger.warning("invoke() called with empty messages and no greeting")
-                    return ModelInvocation(
-                        "",
-                        messages,
-                        {"error": "No messages to process"}
+                    logger.warning(
+                        "invoke() called with empty messages and no greeting"
                     )
-            
+                    return ModelInvocation(
+                        "", messages, {"error": "No messages to process"}
+                    )
+
             # Get the last user message
             last_message = messages[-1]
             user_content = last_message.get("content", "")
-            
+
             if not user_content:
                 logger.warning("invoke() called with empty user message content")
                 return ModelInvocation(
-                    "",
-                    messages,
-                    {"error": "Empty user message content"}
+                    "", messages, {"error": "Empty user message content"}
                 )
-            
+
             tts_voice = "echo"
             if isinstance(scenario_input, dict):
                 tts_voice = scenario_input.get("voice", tts_voice)

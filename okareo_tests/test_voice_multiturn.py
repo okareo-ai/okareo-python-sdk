@@ -6,6 +6,7 @@ import pytest
 from okareo import Okareo
 from okareo.model_under_test import Driver, Target
 from okareo.voice import DeepgramEdgeConfig, OpenAIEdgeConfig, VoiceMultiturnTarget
+from okareo_api_client.models import FindTestDataPointPayload, TestRunItem
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 
 # Constants
@@ -111,8 +112,17 @@ def test_voice_multiturn_openai(
     run_voice_multiturn_test(okareo, openai_voice_target, "OpenAI")
 
 
+def test_voice_multiturn_openai_target_first(
+    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget
+) -> None:
+    run_voice_multiturn_test(okareo, openai_voice_target, "OpenAI", first_turn="target")
+
+
 def run_voice_multiturn_test(
-    okareo: Okareo, voice_target: VoiceMultiturnTarget, vendor: str
+    okareo: Okareo,
+    voice_target: VoiceMultiturnTarget,
+    vendor: str,
+    first_turn: str = "driver",
 ) -> None:
 
     driver = Driver(
@@ -136,24 +146,84 @@ def run_voice_multiturn_test(
 
     scenario = okareo.create_scenario_set(
         ScenarioSetCreate(
-            name="Product Returns — Conversation Context",
+            name="Product Returns — Voice Test",
             seed_data=seed_data,
         )
     )
 
+    run_name = vendor + " - " + first_turn + " first"
+
     evaluation = okareo.run_simulation(
         driver=driver,
-        target=Target(name=f"Voice Sim Target ({vendor})", target=voice_target),
-        name=f"Voice Simulation Run ({vendor})",
+        target=Target(name=f"Voice Sim Target ({run_name})", target=voice_target),
+        name=f"Voice Simulation Run ({run_name})",
         scenario=scenario,
         max_turns=2,
         repeats=1,
-        first_turn="driver",
+        first_turn=first_turn,
         checks=["avg_turn_latency"],
     )
 
-    assert evaluation.name == f"Voice Simulation Run ({vendor})"
+    assert evaluation.name == f"Voice Simulation Run ({run_name})"
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
     print(evaluation.app_link)
+
+    # Verify that the first_turn parameter is respected
+    assert_first_turn(okareo, evaluation, first_turn)
+
+
+def assert_first_turn(okareo: Okareo, evaluation: TestRunItem, first_turn: str) -> None:
+    """
+    Validates that the first_turn parameter is respected in the conversation.
+
+    Args:
+        okareo: Okareo client instance
+        evaluation: The test run evaluation result
+        first_turn: Expected first speaker ("driver" or "target")
+    """
+    # Fetch test data points for the evaluation
+    tdp = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=evaluation.id, full_data_point=True)
+    )
+    assert isinstance(tdp, list), "Expected test data points to be a list"
+    assert len(tdp) >= 1, "Expected at least one test data point"
+
+    # Check the conversation messages
+    td = tdp[0]
+    assert (
+        td.metric_type == "MULTI_TURN"
+    ), f"Expected MULTI_TURN metric type, got {td.metric_type}"
+
+    # Extract the conversation from generation_output
+    generation_output = None
+    if hasattr(td, "metric_value") and td.metric_value is not None:
+        generation_output = td.metric_value.additional_properties.get("generation_output")  # type: ignore[attr-defined]
+
+    assert (
+        isinstance(generation_output, list) and len(generation_output) > 0
+    ), "Expected generation_output to be a non-empty list"
+
+    # Find the first non-system message
+    first_non_system_idx = next(
+        (
+            idx
+            for idx, msg in enumerate(generation_output)
+            if msg.get("role") != "system"
+        ),
+        None,
+    )
+    assert (
+        first_non_system_idx is not None
+    ), "No non-system messages found in generation_output"
+
+    # Verify the first speaker based on first_turn parameter
+    # "driver" maps to "user" role, "target" maps to "assistant" role
+    expected_role = "assistant" if first_turn == "target" else "user"
+    actual_role = generation_output[first_non_system_idx]["role"]
+
+    assert actual_role == expected_role, (
+        f"Expected {expected_role} to speak first (first_turn={first_turn}), "
+        f"but {actual_role} spoke first"
+    )

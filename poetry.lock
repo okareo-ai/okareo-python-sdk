@@ -1156,21 +1156,6 @@ eradicate = ">=2.0,<3.0"
 flake8 = ">5"
 
 [[package]]
-name = "flake8-logging-format"
-version = "2024.24.12"
-description = ""
-optional = false
-python-versions = "*"
-groups = ["dev"]
-files = [
-    {file = "flake8_logging_format-2024.24.12-py3-none-any.whl", hash = "sha256:7d93c2107354b10a05b1a0d8ccd3a9bfb793aee108007765114c958a7541d674"},
-]
-
-[package.extras]
-lint = ["flake8"]
-test = ["PyHamcrest", "pytest", "pytest-cov"]
-
-[[package]]
 name = "flaml"
 version = "2.3.5"
 description = "A fast library for automated machine learning and tuning"
@@ -5416,4 +5401,4 @@ voice = ["numpy", "scipy", "websockets"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.13"
-content-hash = "cb970702c6366e25cd28bf8184ffa3bf5a70b6c78357413034d3623703df45f2"
+content-hash = "4233d072e70b9d82f334bcdfeae5d1c4d261a52548060a6a04c73ffac2ebfd2b"
