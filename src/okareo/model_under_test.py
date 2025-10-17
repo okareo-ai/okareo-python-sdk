@@ -1460,6 +1460,8 @@ class Driver:
     time_created: Optional[str] = datetime.now().isoformat()
     project_id: Optional[str] = None
     voice_instructions: Optional[str] = None
+    voice_profile: Optional[str] = None
+    voice: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -1470,6 +1472,7 @@ class Driver:
             "id": self.id,
             "time_created": self.time_created,
             "voice_instructions": self.voice_instructions,
+            "voice_profile": self.voice_profile,
         }
 
     @classmethod
@@ -1489,11 +1492,11 @@ class Driver:
             inst.time_created = response.time_created
         if response.project_id:
             inst.project_id = response.project_id
-        if (
-            isinstance(response, VoiceDriverModelResponse)
-            and response.voice_instructions
-        ):
-            inst.voice_instructions = response.voice_instructions
+        if isinstance(response, VoiceDriverModelResponse):
+            if response.voice_instructions:
+                inst.voice_instructions = response.voice_instructions
+            if response.voice_profile:
+                inst.voice_profile = response.voice_profile
         return inst
 
 

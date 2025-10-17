@@ -20,6 +20,7 @@ class VoiceDriverModelResponse:
         model_id (Union[Unset, str]):
         project_id (Union[Unset, str]):
         voice_instructions (Union[Unset, str]):
+        voice_profile (Union[Unset, str]):
     """
 
     id: str
@@ -30,6 +31,7 @@ class VoiceDriverModelResponse:
     model_id: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     voice_instructions: Union[Unset, str] = UNSET
+    voice_profile: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -41,6 +43,7 @@ class VoiceDriverModelResponse:
         model_id = self.model_id
         project_id = self.project_id
         voice_instructions = self.voice_instructions
+        voice_profile = self.voice_profile
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -59,6 +62,8 @@ class VoiceDriverModelResponse:
             field_dict["project_id"] = project_id
         if voice_instructions is not UNSET:
             field_dict["voice_instructions"] = voice_instructions
+        if voice_profile is not UNSET:
+            field_dict["voice_profile"] = voice_profile
 
         return field_dict
 
@@ -81,6 +86,8 @@ class VoiceDriverModelResponse:
 
         voice_instructions = d.pop("voice_instructions", UNSET)
 
+        voice_profile = d.pop("voice_profile", UNSET)
+
         voice_driver_model_response = cls(
             id=id,
             name=name,
@@ -90,6 +97,7 @@ class VoiceDriverModelResponse:
             model_id=model_id,
             project_id=project_id,
             voice_instructions=voice_instructions,
+            voice_profile=voice_profile,
         )
 
         voice_driver_model_response.additional_properties = d
