@@ -1461,7 +1461,6 @@ class Driver:
     project_id: Optional[str] = None
     voice_instructions: Optional[str] = None
     voice_profile: Optional[str] = None
-    voice: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {

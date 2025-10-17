@@ -16,7 +16,6 @@ import numpy as np
 import requests
 import websockets
 from attrs import define as _attrs_define
-from requests.exceptions import HTTPError
 from scipy.signal import resample_poly
 
 from okareo import Okareo
@@ -37,361 +36,8 @@ CHUNK_MS = 120  # stream in ~120ms chunks
 AZURE_TTS_KEY = os.environ.get("AZURE_TTS_KEY")
 AZURE_TTS_ENDPOINT = os.environ.get("AZURE_TTS_ENDPOINT")
 
+
 # --------------------- schemas ----------------------
-
-PROFILE_TO_INSTRUCTIONS = {
-    "calm": """Voice Affect: Calm, composed, and reassuring; project quiet authority and confidence.
-    
-Tone: Sincere, empathetic, and gently authoritative—express genuine apology while conveying competence.
-
-Pacing: Steady and moderate; unhurried enough to communicate care, yet efficient enough to demonstrate professionalism.
-
-Emotion: Genuine empathy and understanding; speak with warmth, especially during apologies ("I'm very sorry for any disruption...").
-
-Pronunciation: Clear and precise, emphasizing key reassurances ("smoothly," "quickly," "promptly") to reinforce confidence.
-
-Pauses: Brief pauses after offering assistance or requesting details, highlighting willingness to listen and support.""",
-    "angry": """Voice Affect: Firm, tense, and intense; convey controlled frustration or indignation without shouting or hostility. Maintain emotional weight while keeping professionalism intact.
-
-Tone: Sharp and assertive—express dissatisfaction or urgency clearly. The tone should carry authority and conviction, signaling that something is unacceptable or needs immediate attention.
-
-Pacing: Slightly quicker than normal, reflecting agitation or impatience, but remain deliberate enough to ensure every word lands with impact.
-
-Emotion: Controlled anger and frustration—let the listener feel the seriousness and pressure of the moment without losing composure. Subtle edge in the delivery communicates determination and demand for resolution.
-
-Pronunciation: Strong and deliberate articulation; emphasize critical or corrective words (“unacceptable,” “immediate,” “must,” “now”) to underscore seriousness and resolve.
-
-Pauses: Short and pointed, often used to heighten tension or give weight to key phrases, allowing silence to emphasize disapproval or urgency.""",
-    "confident": """Voice Affect: Steady, composed, and self-assured; convey authority and expertise with ease and natural control.
-
-Tone: Clear, assertive, and poised—sound knowledgeable and trustworthy without arrogance. The tone should inspire confidence in both message and delivery.
-
-Pacing: Even and deliberate; speak at a measured pace that projects certainty and control while allowing information to land effectively.
-
-Emotion: Subtle conviction and enthusiasm—demonstrate belief in what is being said, maintaining a balanced sense of professionalism and approachability.
-
-Pronunciation: Precise and articulate; emphasize key statements or calls to action (“absolutely,” “clearly,” “without question”) to reinforce leadership and decisiveness.
-
-Pauses: Intentional and strategic, allowing important points to resonate and giving the impression of thoughtfulness and mastery.""",
-    "confused": """Voice Affect: Hesitant, uncertain, and slightly puzzled; convey genuine effort to understand while maintaining a polite and approachable demeanor.
-
-Tone: Soft and questioning—express curiosity and mild bewilderment rather than frustration. Sound open to clarification and eager to make sense of the situation.
-
-Pacing: Uneven or slightly halting at times, with natural breaks as if thinking through the situation; avoid excessive pauses that disrupt flow.
-
-Emotion: Mild uncertainty and curiosity—capture the sense of someone trying to piece things together while staying engaged and sincere.
-
-Pronunciation: Clear but occasionally tentative; some words may trail slightly or rise in pitch at the end of sentences to signal questioning (“Wait, so you mean…?” “I’m not sure I follow…”).
-
-Pauses: Frequent but brief; use them to convey processing or reconsideration, giving the sense of someone thinking aloud or seeking confirmation.""",
-    "cheerful": """Voice Affect: Bright, lively, and upbeat; convey warmth and friendliness that instantly lifts the listener’s mood.
-
-Tone: Playful, enthusiastic, and positive—sound genuinely happy to speak, with a natural sparkle that feels effortless and sincere.
-
-Pacing: Quick but smooth; energetic enough to show excitement while maintaining clarity and ease of understanding.
-
-Emotion: Genuine joy and optimism—let happiness come through naturally, especially in greetings and encouraging remarks (“That’s fantastic!” “You’re doing great!”).
-
-Pronunciation: Clear and expressive; emphasize uplifting words (“amazing,” “wonderful,” “so happy”) to enhance the joyful tone.
-
-Pauses: Light and minimal; keep momentum flowing, but allow quick, upbeat pauses for laughter, smiles, or playful emphasis.""",
-    "sad": """Voice Affect: Soft, subdued, and reflective; convey a sense of heaviness or sorrow while maintaining sincerity and composure.
-
-Tone: Gentle and compassionate—express empathy, regret, or emotional pain in a way that feels authentic and heartfelt, not dramatic.
-
-Pacing: Slow and deliberate; allow words to linger slightly, giving space for the weight of emotion to be felt.
-
-Emotion: Deep sadness and empathy—communicate care and understanding, especially when offering comfort or sharing bad news (“I’m truly sorry to hear that…”).
-
-Pronunciation: Clear but muted; avoid sharpness, letting consonants soften slightly to match the subdued affect.
-
-Pauses: Slightly longer than usual; use them to convey thoughtfulness, restraint, and emotional depth, allowing silence to speak as part of the feeling.""",
-    "whispering": """Voice Affect: Soft, intimate, and secretive; convey closeness and discretion, as if sharing something private or important.
-
-Tone: Gentle and cautious—speak with care, keeping the voice low but clear enough to be understood. The tone should feel personal and confidential, not strained or eerie.
-
-Pacing: Slow and measured; avoid rushing, letting each word flow smoothly and quietly to preserve the whisper’s natural rhythm.
-
-Emotion: Calm focus and intimacy—suggest trust, curiosity, or quiet excitement without intensity or fear.
-
-Pronunciation: Precise but softened; emphasize breath over volume, keeping sibilants and plosives gentle to prevent harshness.
-
-Pauses: Slightly extended, enhancing suspense or secrecy while maintaining a natural, fluid delivery that draws the listener in.""",
-    "shouting": """Voice Affect: Intense, forceful, and urgent; project strong emotion and volume without losing clarity or control.
-
-Tone: Commanding and emphatic—convey urgency, anger, or excitement depending on context. The tone should grab attention immediately and carry authority or passion.
-
-Pacing: Fast and driven; reflect heightened emotion or energy, but ensure each word remains distinct and purposeful.
-
-Emotion: High intensity—express powerful feelings such as alarm, outrage, or elation (“Stop right there!” “We did it!”). Maintain authenticity without becoming chaotic or unintelligible.
-
-Pronunciation: Sharp and crisp; over-enunciate slightly to preserve clarity under raised volume, emphasizing key words that carry the emotional weight.
-
-Pauses: Brief and dramatic; use them to punctuate key phrases or to allow impact between bursts of intensity.""",
-    "friendly": """Voice Affect: Warm, approachable, and inviting; sound like someone who’s easy to talk to and genuinely happy to connect.
-
-Tone: Conversational and kind—express interest, patience, and positivity in every interaction. Maintain a natural balance between professionalism and casual charm.
-
-Pacing: Moderate and relaxed; smooth and steady, giving the impression of attentiveness and openness without feeling rushed or overly formal.
-
-Emotion: Genuine warmth and goodwill—let a smile be heard in the voice, especially when greeting, thanking, or encouraging (“It’s great to see you!” “I’d love to help with that!”).
-
-Pronunciation: Clear and expressive; round out words slightly to maintain a soft, approachable tone that feels easy on the ear.
-
-Pauses: Natural and light; use brief pauses to show engagement, as if listening actively and giving space for a friendly back-and-forth.""",
-    "unfriendly": """Voice Affect: Cold, detached, and curt; convey disinterest or mild irritation without overt hostility or aggression.
-
-Tone: Flat and dismissive—sound distant or unimpressed, avoiding warmth or emotional engagement. Keep delivery controlled and slightly aloof.
-
-Pacing: Brisk and efficient; move through words quickly, giving the sense of impatience or a desire to end the interaction.
-
-Emotion: Minimal and restrained—hint at annoyance, boredom, or indifference, but avoid overt anger. Maintain professionalism while clearly signaling a lack of enthusiasm.
-
-Pronunciation: Sharp and clipped; emphasize consonants slightly to create a firm, detached edge to speech.
-
-Pauses: Short and abrupt; use them to underline disinterest or finality, leaving little room for further conversation.""",
-    "annoyed": """Voice Affect: Frustrated, sharp, and slightly tense; convey irritation without aggression.
-
-Tone: Curt and exasperated—sound impatient or fed-up, signaling that the situation is bothersome.
-
-Pacing: Slightly faster than normal, reflecting agitation; words may be clipped or abrupt.
-
-Emotion: Mild frustration or impatience; avoid sounding angry, but let irritation be evident.
-
-Pronunciation: Clear but clipped; emphasize words that convey displeasure (“again,” “really,” “enough”).
-
-Pauses: Short and abrupt; often used to underline frustration or emphasize a point, leaving little room for response.""",
-    "mocking": """Voice Affect: Teasing, playful, and slightly contemptuous; convey a light-hearted but pointed ridicule.
-
-Tone: Slightly exaggerated and playful—sound amused while subtly highlighting the target’s flaw or mistake.
-
-Pacing: Varied; stretch or shorten words to accentuate mockery or mimic the other person’s speech patterns.
-
-Emotion: Mischievous amusement; convey humor mixed with subtle criticism without hostility.
-
-Pronunciation: Over-articulate certain words or phrases for comedic effect (“Oh, genius…” “Nice job…”).
-
-Pauses: Frequent, timed to let the teasing sink in or to mimic the rhythm of playful ridicule.""",
-    "urgent": """Voice Affect: Intense, energetic, and pressing; convey the need for immediate attention.
-
-Tone: Direct and commanding—sound serious and important without sounding panicked or chaotic.
-
-Pacing: Quick but controlled; words should flow rapidly enough to convey urgency while remaining clear.
-
-Emotion: High alertness and insistence; subtle tension in pitch and volume to communicate immediacy.
-
-Pronunciation: Crisp and emphatic; stress critical words (“now,” “immediately,” “attention”) to highlight priority.
-
-Pauses: Short and purposeful; brief pauses can emphasize critical points and maintain momentum.""",
-    "sarcastic": """Voice Affect: Dry, witty, and slightly exaggerated; convey irony without overt hostility.
-
-Tone: Playful yet pointed—sound as if the speaker means the opposite of what is being said, with subtle emphasis on key words.
-
-Pacing: Slightly uneven or drawn-out in places to highlight irony; use rhythm to reinforce the contrast between literal and intended meaning.
-
-Emotion: Mild amusement combined with skepticism; express cleverness or disbelief without sounding angry.
-
-Pronunciation: Clear but slightly exaggerated on certain words to signal the sarcastic intent (“Oh, really?” “Well, that’s perfect…”).
-
-Pauses: Strategic, often before or after the punchline or ironic remark to let the listener catch the subtext."""
-}
-
-def resolve_voice_instructions(driver, tts_voice):
-    # profile = getattr(driver, "voice_profile", None)
-    # For the time being, we parameterize with the scenario 'voice' param.
-    # This is in lieu of a parameterized driver.voice_profile param.
-    if tts_voice and tts_voice in PROFILE_TO_INSTRUCTIONS:
-        return PROFILE_TO_INSTRUCTIONS[tts_voice]
-    if hasattr(driver, "instructions") and driver.instructions:
-        return driver.instructions
-    return "Be brief and helpful."
-
-# PROFILE_TO_VOICE = {
-    # "en-US-M1": (
-        # "en-US-DavisNeural",
-        # [
-            # "angry",
-            # "chat",
-            # "cheerful",
-            # "excited",
-            # "friendly",
-            # "hopeful",
-            # "sad",
-            # "shouting",
-            # "unfriendly",
-            # "whispering",
-        # ],
-    # ),
-    # "en-US-M2": (
-        # "en-US-GuyNeural",
-        # [
-            # "angry",
-            # "cheerful",
-            # "excited",
-            # "friendly",
-            # "hopeful",
-            # "newscast",
-            # "sad",
-            # "shouting",
-            # "unfriendly",
-            # "whispering",
-        # ],
-    # ),
-    # "en-US-M3": (
-        # "en-US-JasonNeural",
-        # [
-            # "angry",
-            # "cheerful",
-            # "excited",
-            # "friendly",
-            # "hopeful",
-            # "sad",
-            # "shouting",
-            # "terrified",
-            # "unfriendly",
-            # "whispering",
-        # ],
-    # ),
-    # "en-US-F1": (
-        # "en-US-JennyNeural",
-        # [
-            # "angry",
-            # "assistant",
-            # "chat",
-            # "cheerful",
-            # "customerservice",
-            # "excited",
-            # "friendly",
-            # "hopeful",
-            # "sad",
-            # "shouting",
-            # "terrified",
-            # "unfriendly",
-            # "whispering",
-        # ],
-    # ),
-    # "en-US-F2": (
-        # "en-US-AriaNeural",
-        # [
-            # "angry",
-            # "chat",
-            # "cheerful",
-            # "customerservice",
-            # "empathetic",
-            # "excited",
-            # "friendly",
-            # "hopeful",
-            # "narration-professional",
-            # "newscast-casual",
-            # "newscast-formal",
-            # "sad",
-            # "shouting",
-            # "terrified",
-            # "unfriendly",
-            # "whispering",
-        # ],
-    # ),
-    # "en-US-F3": (
-        # "en-US-JaneNeural",
-        # [
-            # "angry",
-            # "cheerful",
-            # "excited",
-            # "friendly",
-            # "hopeful",
-            # "sad",
-            # "shouting",
-            # "terrified",
-            # "unfriendly",
-            # "whispering",
-        # ],
-    # ),
-    # "zh-CN-F1": (
-        # "zh-CN-XiaoxiaoNeural",
-        # [
-            # "angry",
-            # "cheerful",
-            # "excited",
-            # "friendly",
-            # "hopeful",
-            # "sad",
-            # "shouting",
-            # "terrified",
-            # "unfriendly",
-            # "whispering",
-        # ],
-    # ),
-    # "en-GB-M1": ("en-GB-RyanNeural", ["cheerful", "chat"]),
-    # "en-GB-F1": (
-        # "en-GB-SoniaNeural",
-        # [
-            # "cheerful",
-            # "sad",
-        # ],
-    # ),
-    # "en-IN-M1": ("en-IN-PrabhatNeural", []),
-    # "en-IN-F1": ("en-IN-NeerjaNeural", ["newscast", "cheerful", "empathetic"]),
-    # "zh-CN-F1": (
-        # "zh-CN-XiaoxiaoNeural",
-        # [
-            # "affectionate",
-            # "angry",
-            # "assistant",
-            # "calm",
-            # "chat",
-            # "chat-casual",
-            # "cheerful",
-            # "customerservice",
-            # "excited",
-            # "friendly",
-            # "gentle",
-            # "hopeful",
-            # "lyrical",
-            # "newscast",
-            # "poetry-reading",
-            # "sad",
-            # "serious",
-            # "sorry",
-            # "whispering",
-        # ],
-    # ),
-    # "zh-CN-M1": (
-        # "zh-CN-YunxiNeural",
-        # [
-            # "angry",
-            # "assistant",
-            # "chat",
-            # "cheerful",
-            # "depressed",
-            # "disgruntled",
-            # "embarrassed",
-            # "fearful",
-            # "narration-relaxed",
-            # "sad",
-            # "serious",
-        # ],
-    # ),
-    # "en-AU-M1": ("en-AU-WilliamNeural", []),
-    # "en-AU-F1": ("en-AU-AnnetteNeural", []),
-    # "en-CA-M1": ("en-CA-LiamNeural", []),
-    # "en-CA-F1": ("en-CA-ClaraNeural", []),
-    # "en-KE-M1": ("en-KE-ChilembaNeural", []),
-    # "en-KE-F1": ("en-KE-AsiliaNeural", []),
-    # "en-NG-M1": ("en-NG-AbeoNeural", []),
-    # "en-NG-F1": ("en-NG-EzinneNeural", []),
-    # "en-NZ-M1": ("en-NZ-MitchellNeural", []),
-    # "en-NZ-F1": ("en-NZ-MollyNeural", []),
-    # "en-PH-M1": ("en-PH-JamesNeural", []),
-    # "en-PH-F1": ("en-PH-RosaNeural", []),
-    # "en-SG-M1": ("en-SG-WayneNeural", []),
-    # "en-SG-F1": ("en-SG-LunaNeural", []),
-    # "en-TZ-M1": ("en-TZ-ElimuNeural", []),
-    # "en-TZ-F1": ("en-TZ-ImaniNeural", []),
-    # "en-ZA-M1": ("en-ZA-LukeNeural", []),
-    # "en-ZA-F1": ("en-ZA-LeahNeural", []),
-# }
-
-
 @_attrs_define
 class RealtimeMetrics:
     """Response object for realtime metrics to render as checks.
@@ -446,96 +92,6 @@ def tts_pcm16(
     if target_sr != native_sr:
         audio = resample_poly(audio, target_sr, native_sr).astype(np.int16)
     return audio.tobytes()
-
-
-def get_voice_params_by_profile(
-    voice_profile: str = "en-US-M1",
-) -> tuple[str, Optional[str]]:
-    """Return voice parameters based on the selected profile."""
-    # remove last portion of the profile that contains the style
-    if voice_profile.count("-") > 2:
-        style = voice_profile.split("-")[-1]
-        profile_base = "-".join(voice_profile.split("-")[:-1])
-    else:
-        style = None
-        profile_base = voice_profile
-    azure_profile, styles = PROFILE_TO_VOICE.get(
-        profile_base, PROFILE_TO_VOICE["en-US-M1"]
-    )
-    print(f"azure_profile: {azure_profile}, styles: {styles}, style: {style}")
-    if style and style in styles:
-        return azure_profile, style
-    return azure_profile, None
-
-
-def apply_style_roles(text, style=None, style_degree=None, role=None):
-    """Apply style and role tags to text in SSML format.
-    Args:
-        text (str): The text to be styled.
-        style (str): The style to apply (e.g., 'cheerful', 'sad')
-        style_degree (float): The degree of the style (0.01 to 2 inclusive)
-        role (str): The role to apply (e.g., 'newscaster', 'assistant')
-
-    Returns:
-        str: The text wrapped in appropriate SSML tags if style or role is provided, else the original text.
-    """
-    if any([style, style_degree, role]):
-        style_attr = f" style='{style}'" if style else ""
-        style_degree_attr = f" styledegree='{style_degree}'" if style_degree else ""
-        role_attr = f" role='{role}'" if role else ""
-        return f"<mstts:express-as{style_attr}{style_degree_attr}{role_attr}>{text}</mstts:express-as>"
-    return text
-
-
-# Voices: https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support#text-to-speech
-
-
-def tts_pcm16_azure(
-    text,
-    tts_api_key=AZURE_TTS_KEY,
-    voice_profile="en-US-M1",
-):
-    print(f"tts_api_key: {tts_api_key}")
-    # TODO: track metadata/usage statistics
-    voice_name, style = get_voice_params_by_profile(voice_profile=voice_profile)
-    print(f"Got voice_name: {voice_name}, style: {style}")
-
-    # Example SSML payload
-    ssml = f"""
-    <speak version='1.0' xml:lang='en-US' xmlns:mstts="http://www.w3.org/2001/mstts" xmlns="http://www.w3.org/2001/10/synthesis">
-    <voice name='{voice_name}'>
-        {apply_style_roles(text, style, 2.0)}
-    </voice>
-    </speak>
-    """
-
-    headers = {
-        "Content-Type": "application/ssml+xml",
-        "X-Microsoft-OutputFormat": "raw-24khz-16bit-mono-pcm",
-        "User-Agent": "okareo-tts",
-    }
-
-    if not tts_api_key:
-        raise ValueError("tts_api_key must be set for key authentication")
-    headers["Ocp-Apim-Subscription-Key"] = tts_api_key
-
-    try:
-        resp = requests.post(
-            AZURE_TTS_ENDPOINT, headers=headers, data=ssml.encode("utf-8"), timeout=30
-        )
-        resp.raise_for_status()
-        audio_bytes = resp.content
-        # parse the pcm bytes from the response
-        return audio_bytes
-    except HTTPError as e:
-        resp_text = None
-        try:
-            resp_text = e.response.text if e.response is not None else None
-        except Exception:
-            resp_text = None
-        print(f"HTTP error: {e} - Response content: {resp_text}")
-    except Exception as e:
-        print("Request failed:", e)
 
 
 def chunk_bytes(pcm_bytes: bytes, ms: int, sr: int) -> list[bytes]:
@@ -1080,6 +636,7 @@ class RealtimeClient:
         self,
         text: str,
         tts_voice: str = "echo",
+        tts_instructions: Optional[str] = None,
         pace_realtime: bool = True,
         timeout_s: float = 60.0,
     ) -> Dict[str, Any]:
@@ -1087,22 +644,13 @@ class RealtimeClient:
         turn_id = self.turn + 1
 
         # 1) TTS -> PCM16
-        # user_pcm = await asyncio.to_thread(
-            # tts_pcm16_azure,
-            # text,
-            # AZURE_TTS_KEY,
-            # tts_voice,
-            # # self.asr_tts_api_key,
-        # )
-        voice_instructions = resolve_voice_instructions(self.driver, tts_voice)
-        print(f"-> using voice_instructions: {voice_instructions}")
         user_pcm = await asyncio.to_thread(
             tts_pcm16,
             text,
             self.asr_tts_api_key,
-            "coral", # tts_voice,
+            tts_voice,
             self.api_sr,
-            voice_instructions,
+            tts_instructions or getattr(self.driver, "voice_instructions", None),
         )
         user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
@@ -1241,13 +789,16 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
             assert self.sessions, "SessionManager not initialized with Okareo instance"
             assert session_id, "Session ID is required"
             tts_voice = "echo"
+            tts_instructions = None
             if isinstance(scenario_input, dict):
                 tts_voice = scenario_input.get("voice", tts_voice)
+                tts_instructions = scenario_input.get("voice_instructions")
 
             res = await self.sessions.send(
                 session_id,
                 messages[-1]["content"],
                 tts_voice=tts_voice,
+                tts_instructions=tts_instructions,
             )
 
             logger.debug(f"user message: {messages[-1]['content']}")
