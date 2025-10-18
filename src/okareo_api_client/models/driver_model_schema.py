@@ -18,6 +18,9 @@ class DriverModelSchema:
         id (Union[Unset, str]): ID of the driver model
         model_id (Union[Unset, str]): Model ID of the driver model
         voice_instructions (Union[Unset, str]): Voice instructions for the driver model
+        voice_profile (Union[Unset, str]): Voice profile for the driver model. Select from the following list of
+            options: calm, angry, confident, confused, cheerful, sad, whispering, shouting, friendly, unfriendly, annoyed,
+            mocking, urgent, sarcastic.
         project_id (Union[Unset, str]): ID for project
     """
 
@@ -27,6 +30,7 @@ class DriverModelSchema:
     id: Union[Unset, str] = UNSET
     model_id: Union[Unset, str] = UNSET
     voice_instructions: Union[Unset, str] = UNSET
+    voice_profile: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -37,6 +41,7 @@ class DriverModelSchema:
         id = self.id
         model_id = self.model_id
         voice_instructions = self.voice_instructions
+        voice_profile = self.voice_profile
         project_id = self.project_id
 
         field_dict: Dict[str, Any] = {}
@@ -54,6 +59,8 @@ class DriverModelSchema:
             field_dict["model_id"] = model_id
         if voice_instructions is not UNSET:
             field_dict["voice_instructions"] = voice_instructions
+        if voice_profile is not UNSET:
+            field_dict["voice_profile"] = voice_profile
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
 
@@ -74,6 +81,8 @@ class DriverModelSchema:
 
         voice_instructions = d.pop("voice_instructions", UNSET)
 
+        voice_profile = d.pop("voice_profile", UNSET)
+
         project_id = d.pop("project_id", UNSET)
 
         driver_model_schema = cls(
@@ -83,6 +92,7 @@ class DriverModelSchema:
             id=id,
             model_id=model_id,
             voice_instructions=voice_instructions,
+            voice_profile=voice_profile,
             project_id=project_id,
         )
 

@@ -74,6 +74,7 @@ from .generate_slack_auth_url_v0_generate_slack_auth_url_post_response_generate_
     GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
 )
 from .generation_tone import GenerationTone
+from .get_available_models_response import GetAvailableModelsResponse
 from .get_datapoint_counts_v0_filter_counts_post_response_get_datapoint_counts_v0_filter_counts_post import (
     GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost,
 )
@@ -207,6 +208,7 @@ __all__ = (
     "GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData",
     "GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost",
     "GenerationTone",
+    "GetAvailableModelsResponse",
     "GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost",
     "GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item",
     "GetGroupsV0GroupsGetResponse200Item",

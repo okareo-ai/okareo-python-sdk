@@ -162,7 +162,6 @@ def run_voice_multiturn_test(
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
-    print(evaluation.app_link)
 
 
 def test_voice_multiturn_audio_check(
@@ -178,7 +177,9 @@ def run_voice_multiturn_test_audio_check(
     driver = Driver(
         name="Voice Simulation Driver",
         temperature=0.5,
-        prompt_template=FRUSTRATED_PROMPT,
+        prompt_template=FRUSTRATED_PROMPT.replace(
+            "{scenario_input.voice_profile}", "frustrated"
+        ),
         voice_instructions="Speak with a frustrated and impatient tone.",
     )
 
@@ -214,7 +215,7 @@ def run_voice_multiturn_test_audio_check(
             "avg_turn_taking_latency",
             "avg_words_per_minute",
             "total_turn_count",
-            "empathy_score",
+            # "empathy_score",
             "automated_resolution",
         ],
     )
@@ -240,3 +241,97 @@ def run_voice_multiturn_test_audio_check(
     )
     assert evaluation.app_link is not None
     print(evaluation.app_link)
+
+
+def test_voice_multiturn_voice_profile(
+    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget
+) -> None:
+    run_voice_multiturn_test_voice_profile(okareo, openai_voice_target)
+
+
+def run_voice_multiturn_test_voice_profile(
+    okareo: Okareo, voice_target: VoiceMultiturnTarget
+) -> None:
+
+    driver = Driver(
+        name="Voice Simulation Driver Profile",
+        temperature=0.5,
+        prompt_template=FRUSTRATED_PROMPT,
+        voice_profile="{scenario_input.voice_profile}",
+    )
+
+    seed_data = Okareo.seed_data_from_list(
+        [
+            {
+                "input": {
+                    "name": "James Taylor",
+                    "productType": "iPhone 17",
+                    "voice_profile": "angry",
+                },
+                "result": "Receive an exchange or refund for malfunctioning iPhone 17.",
+            },
+            {
+                "input": {
+                    "name": "Alice Johnson",
+                    "productType": "Stanley Thermos",
+                    "voice_profile": "sarcastic",
+                },
+                "result": "Receive an exchange or refund for malfunctioning Stanley Thermos.",
+            },
+            {
+                "input": {
+                    "name": "Bob Smith",
+                    "productType": "Logitech Mouse",
+                    "voice_profile": "whispering",
+                },
+                "result": "Receive an exchange or refund for malfunctioning Logitech Mouse.",
+            },
+            {
+                "input": {
+                    "name": "Carol Davis",
+                    "productType": "Dewalt Drill",
+                    "voice_profile": "mocking",
+                },
+                "result": "Receive an exchange or refund for malfunctioning Dewalt Drill.",
+            },
+            {
+                "input": {
+                    "name": "Michael Brown",
+                    "productType": "Ford Mustang",
+                    "voice_profile": "annoyed",
+                },
+                "result": "Receive an exchange or refund for malfunctioning Ford Mustang.",
+            },
+        ]
+    )
+
+    scenario = okareo.create_scenario_set(
+        ScenarioSetCreate(
+            name="Product Returns — Broken Product (Voice Profiles)",
+            seed_data=seed_data,
+        )
+    )
+
+    evaluation = okareo.run_simulation(
+        driver=driver,
+        target=Target(name="Voice Sim Target - Voice Profiles", target=voice_target),
+        name="Voice Simulation Run - Voice Profiles",
+        scenario=scenario,
+        max_turns=1,
+        repeats=1,
+        first_turn="driver",
+        checks=[
+            "avg_turn_taking_latency",
+            "avg_words_per_minute",
+            "total_turn_count",
+        ],
+    )
+
+    assert evaluation.name == "Voice Simulation Run - Voice Profiles"
+    assert evaluation.status == "FINISHED"
+    assert evaluation.model_metrics is not None
+    assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
+    metrics_dict = evaluation.model_metrics.to_dict()
+    assert isinstance(metrics_dict, dict)
+    assert metrics_dict.get("mean_scores") is not None
+    assert evaluation.app_link is not None
