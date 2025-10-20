@@ -1461,6 +1461,7 @@ class Driver:
     project_id: Optional[str] = None
     voice_instructions: Optional[str] = None
     voice_profile: Optional[str] = None
+    voice: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -1472,6 +1473,7 @@ class Driver:
             "time_created": self.time_created,
             "voice_instructions": self.voice_instructions,
             "voice_profile": self.voice_profile,
+            "voice": self.voice,
         }
 
     @classmethod
@@ -1496,6 +1498,8 @@ class Driver:
                 inst.voice_instructions = response.voice_instructions
             if response.voice_profile:
                 inst.voice_profile = response.voice_profile
+            if response.voice:
+                inst.voice = response.voice
         return inst
 
 

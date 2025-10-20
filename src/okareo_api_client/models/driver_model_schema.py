@@ -21,6 +21,8 @@ class DriverModelSchema:
         voice_profile (Union[Unset, str]): Voice profile for the driver model. Select from the following list of
             options: calm, angry, confident, confused, cheerful, sad, whispering, shouting, friendly, unfriendly, annoyed,
             mocking, urgent, sarcastic.
+        voice (Union[Unset, str]): Voice setting for the driver model. Select from following available voices: Oscar,
+            Olivia, Oliver, Ophelia, Owen, Opal.
         project_id (Union[Unset, str]): ID for project
     """
 
@@ -31,6 +33,7 @@ class DriverModelSchema:
     model_id: Union[Unset, str] = UNSET
     voice_instructions: Union[Unset, str] = UNSET
     voice_profile: Union[Unset, str] = UNSET
+    voice: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -42,6 +45,7 @@ class DriverModelSchema:
         model_id = self.model_id
         voice_instructions = self.voice_instructions
         voice_profile = self.voice_profile
+        voice = self.voice
         project_id = self.project_id
 
         field_dict: Dict[str, Any] = {}
@@ -61,6 +65,8 @@ class DriverModelSchema:
             field_dict["voice_instructions"] = voice_instructions
         if voice_profile is not UNSET:
             field_dict["voice_profile"] = voice_profile
+        if voice is not UNSET:
+            field_dict["voice"] = voice
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
 
@@ -83,6 +89,8 @@ class DriverModelSchema:
 
         voice_profile = d.pop("voice_profile", UNSET)
 
+        voice = d.pop("voice", UNSET)
+
         project_id = d.pop("project_id", UNSET)
 
         driver_model_schema = cls(
@@ -93,6 +101,7 @@ class DriverModelSchema:
             model_id=model_id,
             voice_instructions=voice_instructions,
             voice_profile=voice_profile,
+            voice=voice,
             project_id=project_id,
         )
 

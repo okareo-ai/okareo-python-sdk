@@ -87,6 +87,7 @@ from .get_notification_history_v0_notification_history_get_response_200_item imp
 )
 from .group_schema import GroupSchema
 from .http_validation_error import HTTPValidationError
+from .model_info import ModelInfo
 from .model_under_test_response import ModelUnderTestResponse
 from .model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
 from .model_under_test_response_models import ModelUnderTestResponseModels
@@ -215,6 +216,7 @@ __all__ = (
     "GetNotificationHistoryV0NotificationHistoryGetResponse200Item",
     "GroupSchema",
     "HTTPValidationError",
+    "ModelInfo",
     "ModelUnderTestResponse",
     "ModelUnderTestResponseDeprecatedParams",
     "ModelUnderTestResponseModels",

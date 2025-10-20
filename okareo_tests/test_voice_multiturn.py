@@ -215,7 +215,7 @@ def run_voice_multiturn_test_audio_check(
             "avg_turn_taking_latency",
             "avg_words_per_minute",
             "total_turn_count",
-            # "empathy_score",
+            "empathy_score",
             "automated_resolution",
         ],
     )
@@ -258,6 +258,7 @@ def run_voice_multiturn_test_voice_profile(
         temperature=0.5,
         prompt_template=FRUSTRATED_PROMPT,
         voice_profile="{scenario_input.voice_profile}",
+        voice="{scenario_input.voice_name}",
     )
 
     seed_data = Okareo.seed_data_from_list(
@@ -267,6 +268,7 @@ def run_voice_multiturn_test_voice_profile(
                     "name": "James Taylor",
                     "productType": "iPhone 17",
                     "voice_profile": "angry",
+                    "voice_name": "Oscar",
                 },
                 "result": "Receive an exchange or refund for malfunctioning iPhone 17.",
             },
@@ -274,7 +276,8 @@ def run_voice_multiturn_test_voice_profile(
                 "input": {
                     "name": "Alice Johnson",
                     "productType": "Stanley Thermos",
-                    "voice_profile": "sarcastic",
+                    "voice_profile": "confused",
+                    "voice_name": "Ophelia",
                 },
                 "result": "Receive an exchange or refund for malfunctioning Stanley Thermos.",
             },
@@ -283,6 +286,7 @@ def run_voice_multiturn_test_voice_profile(
                     "name": "Bob Smith",
                     "productType": "Logitech Mouse",
                     "voice_profile": "whispering",
+                    "voice_name": "Oliver",
                 },
                 "result": "Receive an exchange or refund for malfunctioning Logitech Mouse.",
             },
@@ -290,7 +294,8 @@ def run_voice_multiturn_test_voice_profile(
                 "input": {
                     "name": "Carol Davis",
                     "productType": "Dewalt Drill",
-                    "voice_profile": "mocking",
+                    "voice_profile": "shouting",
+                    "voice_name": "Olivia",
                 },
                 "result": "Receive an exchange or refund for malfunctioning Dewalt Drill.",
             },
@@ -299,6 +304,7 @@ def run_voice_multiturn_test_voice_profile(
                     "name": "Michael Brown",
                     "productType": "Ford Mustang",
                     "voice_profile": "annoyed",
+                    "voice_name": "Owen",
                 },
                 "result": "Receive an exchange or refund for malfunctioning Ford Mustang.",
             },
@@ -307,15 +313,15 @@ def run_voice_multiturn_test_voice_profile(
 
     scenario = okareo.create_scenario_set(
         ScenarioSetCreate(
-            name="Product Returns — Broken Product (Voice Profiles)",
+            name="Product Returns — Broken Product (Voices + Voice Profiles)",
             seed_data=seed_data,
         )
     )
 
     evaluation = okareo.run_simulation(
         driver=driver,
-        target=Target(name="Voice Sim Target - Voice Profiles", target=voice_target),
-        name="Voice Simulation Run - Voice Profiles",
+        target=Target(name="Voice Sim Target - Voices + Voice Profiles", target=voice_target),
+        name="Voice Simulation Run - Voices + Voice Profiles",
         scenario=scenario,
         max_turns=1,
         repeats=1,
@@ -327,7 +333,7 @@ def run_voice_multiturn_test_voice_profile(
         ],
     )
 
-    assert evaluation.name == "Voice Simulation Run - Voice Profiles"
+    assert evaluation.name == "Voice Simulation Run - Voices + Voice Profiles"
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
     assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)

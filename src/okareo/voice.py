@@ -793,6 +793,7 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
             if isinstance(scenario_input, dict):
                 tts_voice = scenario_input.get("voice", tts_voice)
                 tts_instructions = scenario_input.get("voice_instructions")
+            print(f"Using TTS voice: {tts_voice}")
 
             res = await self.sessions.send(
                 session_id,

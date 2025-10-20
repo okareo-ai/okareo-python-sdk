@@ -1,12 +1,11 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.get_available_models_response import GetAvailableModelsResponse
 from ...types import Response
 
 
@@ -19,16 +18,16 @@ def _get_kwargs(
 
     return {
         "method": "get",
-        "url": "/v0/available_models",
+        "url": "/v0/driver_voices",
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, GetAvailableModelsResponse]]:
+) -> Optional[Union[ErrorResponse, List[str]]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = GetAvailableModelsResponse.from_dict(response.json())
+        response_200 = cast(List[str], response.json())
 
         return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
@@ -55,7 +54,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, GetAvailableModelsResponse]]:
+) -> Response[Union[ErrorResponse, List[str]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,16 +67,13 @@ def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, GetAvailableModelsResponse]]:
-    r"""Get Available Models
+) -> Response[Union[ErrorResponse, List[str]]]:
+    """Get Driver Voices
 
-     Get a list of available models from the model configuration registry.
+     Get the list of available voices for driver models.
 
-    Returns models in provider/name format (e.g., \"azure/gpt-4o-mini\") that can be used
-    in driver_model_id, target_model, or other model configuration fields.
-
-    These models have pre-configured api_base and api_version settings that will be
-    automatically applied when the model is used.
+    Returns:
+        List of available voice names.
 
     Args:
         api_key (str):
@@ -87,7 +83,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, GetAvailableModelsResponse]]
+        Response[Union[ErrorResponse, List[str]]]
     """
 
     kwargs = _get_kwargs(
@@ -105,16 +101,13 @@ def sync(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, GetAvailableModelsResponse]]:
-    r"""Get Available Models
+) -> Optional[Union[ErrorResponse, List[str]]]:
+    """Get Driver Voices
 
-     Get a list of available models from the model configuration registry.
+     Get the list of available voices for driver models.
 
-    Returns models in provider/name format (e.g., \"azure/gpt-4o-mini\") that can be used
-    in driver_model_id, target_model, or other model configuration fields.
-
-    These models have pre-configured api_base and api_version settings that will be
-    automatically applied when the model is used.
+    Returns:
+        List of available voice names.
 
     Args:
         api_key (str):
@@ -124,7 +117,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, GetAvailableModelsResponse]
+        Union[ErrorResponse, List[str]]
     """
 
     return sync_detailed(
@@ -137,16 +130,13 @@ async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Response[Union[ErrorResponse, GetAvailableModelsResponse]]:
-    r"""Get Available Models
+) -> Response[Union[ErrorResponse, List[str]]]:
+    """Get Driver Voices
 
-     Get a list of available models from the model configuration registry.
+     Get the list of available voices for driver models.
 
-    Returns models in provider/name format (e.g., \"azure/gpt-4o-mini\") that can be used
-    in driver_model_id, target_model, or other model configuration fields.
-
-    These models have pre-configured api_base and api_version settings that will be
-    automatically applied when the model is used.
+    Returns:
+        List of available voice names.
 
     Args:
         api_key (str):
@@ -156,7 +146,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, GetAvailableModelsResponse]]
+        Response[Union[ErrorResponse, List[str]]]
     """
 
     kwargs = _get_kwargs(
@@ -172,16 +162,13 @@ async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
     api_key: str,
-) -> Optional[Union[ErrorResponse, GetAvailableModelsResponse]]:
-    r"""Get Available Models
+) -> Optional[Union[ErrorResponse, List[str]]]:
+    """Get Driver Voices
 
-     Get a list of available models from the model configuration registry.
+     Get the list of available voices for driver models.
 
-    Returns models in provider/name format (e.g., \"azure/gpt-4o-mini\") that can be used
-    in driver_model_id, target_model, or other model configuration fields.
-
-    These models have pre-configured api_base and api_version settings that will be
-    automatically applied when the model is used.
+    Returns:
+        List of available voice names.
 
     Args:
         api_key (str):
@@ -191,7 +178,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, GetAvailableModelsResponse]
+        Union[ErrorResponse, List[str]]
     """
 
     return (

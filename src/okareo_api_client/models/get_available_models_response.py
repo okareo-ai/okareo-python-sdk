@@ -1,7 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+
+if TYPE_CHECKING:
+    from ..models.model_info import ModelInfo
+
 
 T = TypeVar("T", bound="GetAvailableModelsResponse")
 
@@ -10,14 +14,18 @@ T = TypeVar("T", bound="GetAvailableModelsResponse")
 class GetAvailableModelsResponse:
     """
     Attributes:
-        available_models (List[str]): List of models in format 'provider/name' (e.g., 'azure/gpt-4o-mini').
+        available_models (List['ModelInfo']): List of available models with provider and display information.
     """
 
-    available_models: List[str]
+    available_models: List["ModelInfo"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        available_models = self.available_models
+        available_models = []
+        for available_models_item_data in self.available_models:
+            available_models_item = available_models_item_data.to_dict()
+
+            available_models.append(available_models_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -31,8 +39,15 @@ class GetAvailableModelsResponse:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.model_info import ModelInfo
+
         d = src_dict.copy()
-        available_models = cast(List[str], d.pop("available_models"))
+        available_models = []
+        _available_models = d.pop("available_models")
+        for available_models_item_data in _available_models:
+            available_models_item = ModelInfo.from_dict(available_models_item_data)
+
+            available_models.append(available_models_item)
 
         get_available_models_response = cls(
             available_models=available_models,
