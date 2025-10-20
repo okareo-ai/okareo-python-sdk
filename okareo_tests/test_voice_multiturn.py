@@ -320,7 +320,9 @@ def run_voice_multiturn_test_voice_profile(
 
     evaluation = okareo.run_simulation(
         driver=driver,
-        target=Target(name="Voice Sim Target - Voices + Voice Profiles", target=voice_target),
+        target=Target(
+            name="Voice Sim Target - Voices + Voice Profiles", target=voice_target
+        ),
         name="Voice Simulation Run - Voices + Voice Profiles",
         scenario=scenario,
         max_turns=1,
