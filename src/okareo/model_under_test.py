@@ -1476,30 +1476,37 @@ class Driver:
             "voice": self.voice,
         }
 
+    def _get_driver_fields(
+        self, response: Union[DriverModelResponse, VoiceDriverModelResponse]
+    ) -> None:
+        self.id = response.id
+        if response.prompt_template:
+            self.prompt_template = response.prompt_template
+        if response.model_id:
+            self.model_id = response.model_id
+        if response.temperature:
+            self.temperature = response.temperature
+        if response.time_created:
+            self.time_created = response.time_created
+        if response.project_id:
+            self.project_id = response.project_id
+
+    def _get_voice_driver_fields(self, response: VoiceDriverModelResponse) -> None:
+        if response.voice_instructions:
+            self.voice_instructions = response.voice_instructions
+        if response.voice_profile:
+            self.voice_profile = response.voice_profile
+        if response.voice:
+            self.voice = response.voice
+
     @classmethod
     def from_response(
         cls, response: Union[DriverModelResponse, VoiceDriverModelResponse]
     ) -> "Driver":
         inst = cls(response.name)
-        if response.id:
-            inst.id = response.id
-        if response.prompt_template:
-            inst.prompt_template = response.prompt_template
-        if response.model_id:
-            inst.model_id = response.model_id
-        if response.temperature:
-            inst.temperature = response.temperature
-        if response.time_created:
-            inst.time_created = response.time_created
-        if response.project_id:
-            inst.project_id = response.project_id
+        inst._get_driver_fields(response)
         if isinstance(response, VoiceDriverModelResponse):
-            if response.voice_instructions:
-                inst.voice_instructions = response.voice_instructions
-            if response.voice_profile:
-                inst.voice_profile = response.voice_profile
-            if response.voice:
-                inst.voice = response.voice
+            inst._get_driver_fields(response)
         return inst
 
 
