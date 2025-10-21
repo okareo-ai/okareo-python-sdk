@@ -257,7 +257,7 @@ def run_voice_multiturn_test_voice_profile(
         name="Voice Simulation Driver Profile",
         temperature=0.5,
         prompt_template=FRUSTRATED_PROMPT,
-        voice_profile="{scenario_input.voice_profile}",
+        voice_instructions="Speak in a {scenario_input.voice_profile} tone.",
         voice="{scenario_input.voice_name}",
     )
 
