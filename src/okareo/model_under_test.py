@@ -1494,8 +1494,6 @@ class Driver:
     def _get_voice_driver_fields(self, response: VoiceDriverModelResponse) -> None:
         if response.voice_instructions:
             self.voice_instructions = response.voice_instructions
-        if response.voice_profile:
-            self.voice_profile = response.voice_profile
         if response.voice:
             self.voice = response.voice
 

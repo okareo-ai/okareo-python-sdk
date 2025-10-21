@@ -33,9 +33,6 @@ logger = logging.getLogger(__name__)
 API_SR = 24000  # 24 kHz PCM16 mono
 CHUNK_MS = 120  # stream in ~120ms chunks
 
-AZURE_TTS_KEY = os.environ.get("AZURE_TTS_KEY")
-AZURE_TTS_ENDPOINT = os.environ.get("AZURE_TTS_ENDPOINT")
-
 
 # --------------------- schemas ----------------------
 @_attrs_define
