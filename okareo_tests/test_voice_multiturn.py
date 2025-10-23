@@ -2,6 +2,7 @@ import os
 import uuid
 
 import pytest
+from okareo_tests.common import random_string
 
 from okareo import Okareo
 from okareo.model_under_test import Driver, Target
@@ -73,6 +74,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 assert DEEPGRAM_API_KEY, "Set DEEPGRAM_API_KEY"
 assert OPENAI_API_KEY, "Set OPENAI_API_KEY"
+
+
+@pytest.fixture(scope="module")
+def rnd() -> str:
+    return random_string(5)
 
 
 @pytest.fixture(scope="module")
@@ -243,23 +249,37 @@ def run_voice_multiturn_test_audio_check(
     print(evaluation.app_link)
 
 
-def test_voice_multiturn_voice_profile(
-    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget
-) -> None:
-    run_voice_multiturn_test_voice_profile(okareo, openai_voice_target)
+def voice_profile_fixed_driver() -> Driver:
+    return Driver(
+        name="Voice Simulation Driver Profile (fixed)",
+        temperature=0.5,
+        prompt_template=FRUSTRATED_PROMPT,
+        voice_profile="angry",
+        voice="ophelia",
+    )
 
 
-def run_voice_multiturn_test_voice_profile(
-    okareo: Okareo, voice_target: VoiceMultiturnTarget
-) -> None:
-
-    driver = Driver(
-        name="Voice Simulation Driver Profile",
+def voice_profile_templated_driver() -> Driver:
+    return Driver(
+        name="Voice Simulation Driver Profile (templated)",
         temperature=0.5,
         prompt_template=FRUSTRATED_PROMPT,
         voice_instructions="Speak in a {scenario_input.voice_profile} tone.",
         voice="{scenario_input.voice_name}",
     )
+
+
+def test_voice_multiturn_voice_profile(
+    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget, rnd: str
+) -> None:
+    run_voice_multiturn_test_voice_profile(okareo, openai_voice_target, rnd)
+
+
+def run_voice_multiturn_test_voice_profile(
+    okareo: Okareo,
+    voice_target: VoiceMultiturnTarget,
+    rnd: str,
+) -> None:
 
     seed_data = Okareo.seed_data_from_list(
         [
@@ -281,65 +301,43 @@ def run_voice_multiturn_test_voice_profile(
                 },
                 "result": "Receive an exchange or refund for malfunctioning Stanley Thermos.",
             },
-            {
-                "input": {
-                    "name": "Bob Smith",
-                    "productType": "Logitech Mouse",
-                    "voice_profile": "whispering",
-                    "voice_name": "oliver",
-                },
-                "result": "Receive an exchange or refund for malfunctioning Logitech Mouse.",
-            },
-            {
-                "input": {
-                    "name": "Carol Davis",
-                    "productType": "Dewalt Drill",
-                    "voice_profile": "shouting",
-                    "voice_name": "olivia",
-                },
-                "result": "Receive an exchange or refund for malfunctioning Dewalt Drill.",
-            },
-            {
-                "input": {
-                    "name": "Michael Brown",
-                    "productType": "Ford Mustang",
-                    "voice_profile": "annoyed",
-                    "voice_name": "owen",
-                },
-                "result": "Receive an exchange or refund for malfunctioning Ford Mustang.",
-            },
         ]
     )
 
     scenario = okareo.create_scenario_set(
         ScenarioSetCreate(
-            name="Product Returns — Broken Product (Voices + Voice Profiles)",
+            name=f"Product Returns — Broken Product (Voices + Voice Profiles) - {rnd}",
             seed_data=seed_data,
         )
     )
 
-    evaluation = okareo.run_simulation(
-        driver=driver,
-        target=Target(
-            name="Voice Sim Target - Voices + Voice Profiles", target=voice_target
-        ),
-        name="Voice Simulation Run - Voices + Voice Profiles",
-        scenario=scenario,
-        max_turns=1,
-        repeats=1,
-        first_turn="driver",
-        checks=[
-            "avg_turn_taking_latency",
-            "avg_words_per_minute",
-            "total_turn_count",
-        ],
-    )
+    drivers = [voice_profile_fixed_driver(), voice_profile_templated_driver()]
+    eval_names = ["Fixed", "Templated"]
+    for driver, name in zip(drivers, eval_names):
+        eval_name = f"Voice Simulation Run - Voices + Voice Profiles ({name}) - {rnd}"
+        evaluation = okareo.run_simulation(
+            driver=driver,
+            target=Target(
+                name=f"Voice Sim Target - Voices + Voice Profiles ({name}) - {rnd}",
+                target=voice_target,
+            ),
+            name=eval_name,
+            scenario=scenario,
+            max_turns=1,
+            repeats=1,
+            first_turn="driver",
+            checks=[
+                "avg_turn_taking_latency",
+                "avg_words_per_minute",
+                "total_turn_count",
+            ],
+        )
 
-    assert evaluation.name == "Voice Simulation Run - Voices + Voice Profiles"
-    assert evaluation.status == "FINISHED"
-    assert evaluation.model_metrics is not None
-    assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
-    metrics_dict = evaluation.model_metrics.to_dict()
-    assert isinstance(metrics_dict, dict)
-    assert metrics_dict.get("mean_scores") is not None
-    assert evaluation.app_link is not None
+        assert evaluation.name == eval_name
+        assert evaluation.status == "FINISHED"
+        assert evaluation.model_metrics is not None
+        assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
+        metrics_dict = evaluation.model_metrics.to_dict()
+        assert isinstance(metrics_dict, dict)
+        assert metrics_dict.get("mean_scores") is not None
+        assert evaluation.app_link is not None

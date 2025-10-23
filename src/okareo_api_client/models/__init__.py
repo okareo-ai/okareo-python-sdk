@@ -46,6 +46,8 @@ from .datapoint_summary_item_user_metadata_type_0 import DatapointSummaryItemUse
 from .datapoint_tags_schema import DatapointTagsSchema
 from .driver_model_response import DriverModelResponse
 from .driver_model_schema import DriverModelSchema
+from .driver_prompt_request import DriverPromptRequest
+from .driver_prompt_response import DriverPromptResponse
 from .error_response import ErrorResponse
 from .evaluation_payload import EvaluationPayload
 from .evaluation_payload_metrics_kwargs import EvaluationPayloadMetricsKwargs
@@ -141,6 +143,7 @@ from .test_run_type import TestRunType
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .validation_error import ValidationError
 from .voice_driver_model_response import VoiceDriverModelResponse
+from .voice_profile_response import VoiceProfileResponse
 from .voice_upload_request import VoiceUploadRequest
 from .voice_upload_response import VoiceUploadResponse
 
@@ -185,6 +188,8 @@ __all__ = (
     "DatapointTagsSchema",
     "DriverModelResponse",
     "DriverModelSchema",
+    "DriverPromptRequest",
+    "DriverPromptResponse",
     "ErrorResponse",
     "EvaluationPayload",
     "EvaluationPayloadMetricsKwargs",
@@ -266,6 +271,7 @@ __all__ = (
     "UpdateTestDataPointPayload",
     "ValidationError",
     "VoiceDriverModelResponse",
+    "VoiceProfileResponse",
     "VoiceUploadRequest",
     "VoiceUploadResponse",
 )

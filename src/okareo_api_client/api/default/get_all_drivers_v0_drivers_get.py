@@ -44,14 +44,14 @@ def _parse_response(
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()
-                    response_200_item_type_0 = DriverModelResponse.from_dict(data)
+                    response_200_item_type_0 = VoiceDriverModelResponse.from_dict(data)
 
                     return response_200_item_type_0
                 except:  # noqa: E722
                     pass
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_item_type_1 = VoiceDriverModelResponse.from_dict(data)
+                response_200_item_type_1 = DriverModelResponse.from_dict(data)
 
                 return response_200_item_type_1
 
@@ -89,14 +89,6 @@ def sync_detailed(
 ) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
 
-     Retrieve all driver models.
-
-    Args:
-        request: FastAPI request object containing database session
-
-    Returns:
-        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
-
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
@@ -129,14 +121,6 @@ def sync(
 ) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
 
-     Retrieve all driver models.
-
-    Args:
-        request: FastAPI request object containing database session
-
-    Returns:
-        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
-
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
         api_key (str):
@@ -163,14 +147,6 @@ async def asyncio_detailed(
     api_key: str,
 ) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
-
-     Retrieve all driver models.
-
-    Args:
-        request: FastAPI request object containing database session
-
-    Returns:
-        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
@@ -201,14 +177,6 @@ async def asyncio(
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
     """Get All Drivers
-
-     Retrieve all driver models.
-
-    Args:
-        request: FastAPI request object containing database session
-
-    Returns:
-        List of DriverModelResponse/VoiceDriverModelResponse with all driver model details
 
     Args:
         project_id (Union[Unset, None, str]): The ID of the project
