@@ -1482,7 +1482,7 @@ class Driver:
             "voice_profile": self.voice_profile,
             "voice": self.voice,
         }
-        result.update({k: v for k, v in self._extra_fields.items()})
+        result.update(self._extra_fields)
         return result
 
     @classmethod
