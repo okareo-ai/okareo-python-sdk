@@ -1504,7 +1504,7 @@ class Driver:
         inst = cls(response.name)
         inst._get_driver_fields(response)
         if isinstance(response, VoiceDriverModelResponse):
-            inst._get_driver_fields(response)
+            inst._get_voice_driver_fields(response)
         return inst
 
 
