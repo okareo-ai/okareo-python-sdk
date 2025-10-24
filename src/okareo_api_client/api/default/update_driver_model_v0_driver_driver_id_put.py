@@ -42,14 +42,14 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_0 = DriverModelResponse.from_dict(data)
+                response_200_type_0 = VoiceDriverModelResponse.from_dict(data)
 
                 return response_200_type_0
             except:  # noqa: E722
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
-            response_200_type_1 = VoiceDriverModelResponse.from_dict(data)
+            response_200_type_1 = DriverModelResponse.from_dict(data)
 
             return response_200_type_1
 
@@ -98,19 +98,6 @@ def sync_detailed(
 ) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
 
-     Update an existing driver model by ID
-
-    Args:
-        driver_id: UUID of the driver model to update
-        request: FastAPI request object containing database session and organization info
-        payload: Updated driver model data
-
-    Returns:
-        The updated driver model
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
     Args:
         driver_id (str):
         api_key (str):
@@ -146,19 +133,6 @@ def sync(
 ) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
 
-     Update an existing driver model by ID
-
-    Args:
-        driver_id: UUID of the driver model to update
-        request: FastAPI request object containing database session and organization info
-        payload: Updated driver model data
-
-    Returns:
-        The updated driver model
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
     Args:
         driver_id (str):
         api_key (str):
@@ -188,19 +162,6 @@ async def asyncio_detailed(
     api_key: str,
 ) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
-
-     Update an existing driver model by ID
-
-    Args:
-        driver_id: UUID of the driver model to update
-        request: FastAPI request object containing database session and organization info
-        payload: Updated driver model data
-
-    Returns:
-        The updated driver model
-
-    Raises:
-        HTTPException: 404 if driver model is not found
 
     Args:
         driver_id (str):
@@ -234,19 +195,6 @@ async def asyncio(
     api_key: str,
 ) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Update Driver Model
-
-     Update an existing driver model by ID
-
-    Args:
-        driver_id: UUID of the driver model to update
-        request: FastAPI request object containing database session and organization info
-        payload: Updated driver model data
-
-    Returns:
-        The updated driver model
-
-    Raises:
-        HTTPException: 404 if driver model is not found
 
     Args:
         driver_id (str):

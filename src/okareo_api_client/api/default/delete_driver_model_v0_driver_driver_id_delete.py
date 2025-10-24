@@ -73,11 +73,6 @@ def sync_detailed(
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Driver Model
 
-     Delete a driver model
-
-    Returns:
-        None (204 No Content)
-
     Args:
         driver_id (str):
         api_key (str):
@@ -110,11 +105,6 @@ def sync(
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Driver Model
 
-     Delete a driver model
-
-    Returns:
-        None (204 No Content)
-
     Args:
         driver_id (str):
         api_key (str):
@@ -141,11 +131,6 @@ async def asyncio_detailed(
     api_key: str,
 ) -> Response[Union[Any, ErrorResponse]]:
     """Delete Driver Model
-
-     Delete a driver model
-
-    Returns:
-        None (204 No Content)
 
     Args:
         driver_id (str):
@@ -176,11 +161,6 @@ async def asyncio(
     api_key: str,
 ) -> Optional[Union[Any, ErrorResponse]]:
     """Delete Driver Model
-
-     Delete a driver model
-
-    Returns:
-        None (204 No Content)
 
     Args:
         driver_id (str):

@@ -37,14 +37,14 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_0 = DriverModelResponse.from_dict(data)
+                response_200_type_0 = VoiceDriverModelResponse.from_dict(data)
 
                 return response_200_type_0
             except:  # noqa: E722
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
-            response_200_type_1 = VoiceDriverModelResponse.from_dict(data)
+            response_200_type_1 = DriverModelResponse.from_dict(data)
 
             return response_200_type_1
 
@@ -80,18 +80,6 @@ def sync_detailed(
 ) -> Response[Union[HTTPValidationError, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Get Driver
 
-     Retrieve a driver model by either its name or ID.
-
-    Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse/VoiceDriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
     Args:
         identifier (str):
         api_key (str):
@@ -124,18 +112,6 @@ def sync(
 ) -> Optional[Union[HTTPValidationError, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Get Driver
 
-     Retrieve a driver model by either its name or ID.
-
-    Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse/VoiceDriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
-
     Args:
         identifier (str):
         api_key (str):
@@ -162,18 +138,6 @@ async def asyncio_detailed(
     api_key: str,
 ) -> Response[Union[HTTPValidationError, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Get Driver
-
-     Retrieve a driver model by either its name or ID.
-
-    Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse/VoiceDriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
 
     Args:
         identifier (str):
@@ -204,18 +168,6 @@ async def asyncio(
     api_key: str,
 ) -> Optional[Union[HTTPValidationError, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
     """Get Driver
-
-     Retrieve a driver model by either its name or ID.
-
-    Args:
-        identifier: The unique name or ID of the driver model to retrieve
-        request: FastAPI request object containing database session
-
-    Returns:
-        DriverModelResponse/VoiceDriverModelResponse with the driver model details
-
-    Raises:
-        HTTPException: 404 if driver model is not found
 
     Args:
         identifier (str):

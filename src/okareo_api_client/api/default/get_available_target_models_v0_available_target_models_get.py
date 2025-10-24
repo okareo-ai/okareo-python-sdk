@@ -5,54 +5,32 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.driver_model_response import DriverModelResponse
-from ...models.driver_model_schema import DriverModelSchema
 from ...models.error_response import ErrorResponse
-from ...models.voice_driver_model_response import VoiceDriverModelResponse
+from ...models.get_available_models_response import GetAvailableModelsResponse
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    json_body: DriverModelSchema,
     api_key: str,
 ) -> Dict[str, Any]:
     headers = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
     return {
-        "method": "post",
-        "url": "/v0/driver",
-        "json": json_json_body,
+        "method": "get",
+        "url": "/v0/available_target_models",
         "headers": headers,
     }
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
-    if response.status_code == HTTPStatus.CREATED:
+) -> Optional[Union[ErrorResponse, GetAvailableModelsResponse]]:
+    if response.status_code == HTTPStatus.OK:
+        response_200 = GetAvailableModelsResponse.from_dict(response.json())
 
-        def _parse_response_201(data: object) -> Union["DriverModelResponse", "VoiceDriverModelResponse"]:
-            try:
-                if not isinstance(data, dict):
-                    raise TypeError()
-                response_201_type_0 = VoiceDriverModelResponse.from_dict(data)
-
-                return response_201_type_0
-            except:  # noqa: E722
-                pass
-            if not isinstance(data, dict):
-                raise TypeError()
-            response_201_type_1 = DriverModelResponse.from_dict(data)
-
-            return response_201_type_1
-
-        response_201 = _parse_response_201(response.json())
-
-        return response_201
+        return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
         response_400 = ErrorResponse.from_dict(response.json())
 
@@ -77,7 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
+) -> Response[Union[ErrorResponse, GetAvailableModelsResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -89,25 +67,30 @@ def _build_response(
 def sync_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
-) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
-    """Register Driver Model
+) -> Response[Union[ErrorResponse, GetAvailableModelsResponse]]:
+    r"""Get Available Target Models
+
+     Get a list of available target models from the model configuration registry.
+
+    Returns models from the target_models section in provider/name format (e.g., \"azure/gpt-4o-mini\")
+    that can be used in driver_model_id, target_model, or other model configuration fields.
+
+    These models have pre-configured api_base and api_version settings that will be
+    automatically applied when the model is used.
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
+        Response[Union[ErrorResponse, GetAvailableModelsResponse]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
         api_key=api_key,
     )
 
@@ -121,26 +104,31 @@ def sync_detailed(
 def sync(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
-) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
-    """Register Driver Model
+) -> Optional[Union[ErrorResponse, GetAvailableModelsResponse]]:
+    r"""Get Available Target Models
+
+     Get a list of available target models from the model configuration registry.
+
+    Returns models from the target_models section in provider/name format (e.g., \"azure/gpt-4o-mini\")
+    that can be used in driver_model_id, target_model, or other model configuration fields.
+
+    These models have pre-configured api_base and api_version settings that will be
+    automatically applied when the model is used.
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]
+        Union[ErrorResponse, GetAvailableModelsResponse]
     """
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
         api_key=api_key,
     ).parsed
 
@@ -148,25 +136,30 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
-) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
-    """Register Driver Model
+) -> Response[Union[ErrorResponse, GetAvailableModelsResponse]]:
+    r"""Get Available Target Models
+
+     Get a list of available target models from the model configuration registry.
+
+    Returns models from the target_models section in provider/name format (e.g., \"azure/gpt-4o-mini\")
+    that can be used in driver_model_id, target_model, or other model configuration fields.
+
+    These models have pre-configured api_base and api_version settings that will be
+    automatically applied when the model is used.
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
+        Response[Union[ErrorResponse, GetAvailableModelsResponse]]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
         api_key=api_key,
     )
 
@@ -178,27 +171,32 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
     api_key: str,
-) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
-    """Register Driver Model
+) -> Optional[Union[ErrorResponse, GetAvailableModelsResponse]]:
+    r"""Get Available Target Models
+
+     Get a list of available target models from the model configuration registry.
+
+    Returns models from the target_models section in provider/name format (e.g., \"azure/gpt-4o-mini\")
+    that can be used in driver_model_id, target_model, or other model configuration fields.
+
+    These models have pre-configured api_base and api_version settings that will be
+    automatically applied when the model is used.
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]
+        Union[ErrorResponse, GetAvailableModelsResponse]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
             api_key=api_key,
         )
     ).parsed

@@ -33,9 +33,8 @@ logger = logging.getLogger(__name__)
 API_SR = 24000  # 24 kHz PCM16 mono
 CHUNK_MS = 120  # stream in ~120ms chunks
 
+
 # --------------------- schemas ----------------------
-
-
 @_attrs_define
 class RealtimeMetrics:
     """Response object for realtime metrics to render as checks.
@@ -634,6 +633,7 @@ class RealtimeClient:
         self,
         text: str,
         tts_voice: str = "echo",
+        tts_instructions: Optional[str] = None,
         pace_realtime: bool = True,
         timeout_s: float = 60.0,
     ) -> Dict[str, Any]:
@@ -647,7 +647,7 @@ class RealtimeClient:
             self.asr_tts_api_key,
             tts_voice,
             self.api_sr,
-            self.driver.voice_instructions,
+            tts_instructions or getattr(self.driver, "voice_instructions", None),
         )
         user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
@@ -786,13 +786,16 @@ class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
             assert self.sessions, "SessionManager not initialized with Okareo instance"
             assert session_id, "Session ID is required"
             tts_voice = "echo"
+            tts_instructions = None
             if isinstance(scenario_input, dict):
                 tts_voice = scenario_input.get("voice", tts_voice)
+                tts_instructions = scenario_input.get("voice_instructions")
 
             res = await self.sessions.send(
                 session_id,
                 messages[-1]["content"],
                 tts_voice=tts_voice,
+                tts_instructions=tts_instructions,
             )
 
             logger.debug(f"user message: {messages[-1]['content']}")

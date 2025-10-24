@@ -46,6 +46,8 @@ from .datapoint_summary_item_user_metadata_type_0 import DatapointSummaryItemUse
 from .datapoint_tags_schema import DatapointTagsSchema
 from .driver_model_response import DriverModelResponse
 from .driver_model_schema import DriverModelSchema
+from .driver_prompt_request import DriverPromptRequest
+from .driver_prompt_response import DriverPromptResponse
 from .error_response import ErrorResponse
 from .evaluation_payload import EvaluationPayload
 from .evaluation_payload_metrics_kwargs import EvaluationPayloadMetricsKwargs
@@ -74,6 +76,7 @@ from .generate_slack_auth_url_v0_generate_slack_auth_url_post_response_generate_
     GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
 )
 from .generation_tone import GenerationTone
+from .get_available_models_response import GetAvailableModelsResponse
 from .get_datapoint_counts_v0_filter_counts_post_response_get_datapoint_counts_v0_filter_counts_post import (
     GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost,
 )
@@ -86,6 +89,7 @@ from .get_notification_history_v0_notification_history_get_response_200_item imp
 )
 from .group_schema import GroupSchema
 from .http_validation_error import HTTPValidationError
+from .model_info import ModelInfo
 from .model_under_test_response import ModelUnderTestResponse
 from .model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
 from .model_under_test_response_models import ModelUnderTestResponseModels
@@ -126,6 +130,8 @@ from .test_data_point_item import TestDataPointItem
 from .test_data_point_item_metric_value import TestDataPointItemMetricValue
 from .test_data_point_payload import TestDataPointPayload
 from .test_data_point_response import TestDataPointResponse
+from .test_driver_request import TestDriverRequest
+from .test_driver_response import TestDriverResponse
 from .test_run_item import TestRunItem
 from .test_run_item_model_metrics import TestRunItemModelMetrics
 from .test_run_item_simulation_params import TestRunItemSimulationParams
@@ -139,6 +145,7 @@ from .test_run_type import TestRunType
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .validation_error import ValidationError
 from .voice_driver_model_response import VoiceDriverModelResponse
+from .voice_profile_response import VoiceProfileResponse
 from .voice_upload_request import VoiceUploadRequest
 from .voice_upload_response import VoiceUploadResponse
 
@@ -183,6 +190,8 @@ __all__ = (
     "DatapointTagsSchema",
     "DriverModelResponse",
     "DriverModelSchema",
+    "DriverPromptRequest",
+    "DriverPromptResponse",
     "ErrorResponse",
     "EvaluationPayload",
     "EvaluationPayloadMetricsKwargs",
@@ -207,12 +216,14 @@ __all__ = (
     "GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData",
     "GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost",
     "GenerationTone",
+    "GetAvailableModelsResponse",
     "GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost",
     "GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item",
     "GetGroupsV0GroupsGetResponse200Item",
     "GetNotificationHistoryV0NotificationHistoryGetResponse200Item",
     "GroupSchema",
     "HTTPValidationError",
+    "ModelInfo",
     "ModelUnderTestResponse",
     "ModelUnderTestResponseDeprecatedParams",
     "ModelUnderTestResponseModels",
@@ -249,6 +260,8 @@ __all__ = (
     "TestDataPointItemMetricValue",
     "TestDataPointPayload",
     "TestDataPointResponse",
+    "TestDriverRequest",
+    "TestDriverResponse",
     "TestRunItem",
     "TestRunItemModelMetrics",
     "TestRunItemSimulationParams",
@@ -262,6 +275,7 @@ __all__ = (
     "UpdateTestDataPointPayload",
     "ValidationError",
     "VoiceDriverModelResponse",
+    "VoiceProfileResponse",
     "VoiceUploadRequest",
     "VoiceUploadResponse",
 )
