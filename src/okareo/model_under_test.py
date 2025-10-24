@@ -1261,6 +1261,81 @@ class CustomMultiturnTargetAsync(BaseModel):
         }
 
 
+class RealtimeVoiceTarget(BaseModel):
+    """
+    Base class for realtime voice targets in Okareo multiturn evaluation.
+    
+    This target runs server-side during multiturn evaluations and follows the
+    same API key pattern as other targets: API keys are passed via the 
+    `api_keys` parameter in `run_simulation()`.
+    
+    Note:
+        The VoiceMultiturnTarget class in okareo.voice module is a different implementation 
+        that runs locally in the SDK. RealtimeVoiceTarget subclasses run server-side and are 
+        recommended for production evaluations as they provide better scalability and
+        monitoring capabilities.
+    """
+    
+    type = "voice"
+    edge_type: str
+    
+    @abstractmethod
+    def params(self) -> dict:
+        pass
+
+
+@_attrs_define
+class OpenAIRealtimeVoiceTarget(RealtimeVoiceTarget):
+    """
+    OpenAI Realtime API voice target for Okareo multiturn evaluation.
+    
+    Arguments:
+        model: Model ID for OpenAI Realtime. Default: "gpt-realtime".
+        instructions: System instructions for the voice agent. Default: "Be brief and helpful."
+        output_voice: Voice ID for TTS output. Options: "alloy", "echo", "fable", "onyx", "nova", "shimmer".
+    """
+    
+    edge_type = "openai"
+    model: str = field(default="gpt-realtime")
+    instructions: str = field(default="Be brief and helpful.")
+    output_voice: str = field(default="alloy")
+    
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "model": self.model,
+            "instructions": self.instructions,
+            "output_voice": self.output_voice,
+        }
+
+
+@_attrs_define
+class DeepgramRealtimeVoiceTarget(RealtimeVoiceTarget):
+    """
+    Deepgram voice target for Okareo multiturn evaluation.
+    
+    Arguments:
+        model: Model ID for Deepgram. Default: "aura-2".
+        instructions: System instructions for the voice agent. Default: "Be brief and helpful."
+        output_voice: Voice ID for TTS output. Example: "aura-2-thalia-en".
+    """
+    
+    edge_type = "deepgram"
+    model: str = field(default="aura-2")
+    instructions: str = field(default="Be brief and helpful.")
+    output_voice: str = field(default="aura-2-thalia-en")
+    
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "model": self.model,
+            "instructions": self.instructions,
+            "output_voice": self.output_voice,
+        }
+
+
 @define
 class StopConfig:
     """
@@ -1506,6 +1581,8 @@ class Target:
         GenerationModel,
         CustomEndpointTarget,
         CustomMultiturnTargetAsync,
+        OpenAIRealtimeVoiceTarget,
+        DeepgramRealtimeVoiceTarget,
         dict,
     ]
     id: Optional[str] = None
@@ -1591,6 +1668,8 @@ class MultiTurnDriver(BaseModel):
         CustomMultiturnTargetAsync,
         GenerationModel,
         CustomEndpointTarget,
+        OpenAIRealtimeVoiceTarget,
+        DeepgramRealtimeVoiceTarget,
     ]
     stop_check: Union[StopConfig, dict, None] = None
     driver_model_id: Optional[str] = None
