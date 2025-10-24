@@ -130,6 +130,8 @@ from .test_data_point_item import TestDataPointItem
 from .test_data_point_item_metric_value import TestDataPointItemMetricValue
 from .test_data_point_payload import TestDataPointPayload
 from .test_data_point_response import TestDataPointResponse
+from .test_driver_request import TestDriverRequest
+from .test_driver_response import TestDriverResponse
 from .test_run_item import TestRunItem
 from .test_run_item_model_metrics import TestRunItemModelMetrics
 from .test_run_item_simulation_params import TestRunItemSimulationParams
@@ -258,6 +260,8 @@ __all__ = (
     "TestDataPointItemMetricValue",
     "TestDataPointPayload",
     "TestDataPointResponse",
+    "TestDriverRequest",
+    "TestDriverResponse",
     "TestRunItem",
     "TestRunItemModelMetrics",
     "TestRunItemSimulationParams",
