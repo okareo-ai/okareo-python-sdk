@@ -535,9 +535,6 @@ class DeepgramRealtimeEdge(VoiceEdge):
             return pcm + (b"\x00\x00" * int(sr * ms / 1000))
 
         pcm16 = add_silence(pcm16, self.edge_config.sr, add_silence_ms)
-        self._turn_taking_latency = 0.0
-        self._time_request_ended = time.time()
-        self._agent_turn_started.clear()
 
         chunks = chunk_bytes(pcm16, self.edge_config.chunk_ms, self.edge_config.sr)
         bytes_per_sec = self.edge_config.sr * 2
@@ -546,6 +543,9 @@ class DeepgramRealtimeEdge(VoiceEdge):
             if pace_realtime:
                 await asyncio.sleep(max(0.001, len(ch) / bytes_per_sec))
         # Wait for agent response
+        self._turn_taking_latency = 0.0
+        self._time_request_ended = time.time()
+        self._agent_turn_started.clear()
         try:
             await asyncio.wait_for(self._agent_turn_complete.wait(), timeout=timeout_s)
         except asyncio.TimeoutError:
