@@ -1564,6 +1564,8 @@ class Driver:
     time_created: Optional[str] = datetime.now().isoformat()
     project_id: Optional[str] = None
     voice_instructions: Optional[str] = None
+    voice_profile: Optional[str] = None
+    voice: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -1574,30 +1576,39 @@ class Driver:
             "id": self.id,
             "time_created": self.time_created,
             "voice_instructions": self.voice_instructions,
+            "voice_profile": self.voice_profile,
+            "voice": self.voice,
         }
+
+    def _get_driver_fields(
+        self, response: Union[DriverModelResponse, VoiceDriverModelResponse]
+    ) -> None:
+        self.id = response.id
+        if response.prompt_template:
+            self.prompt_template = response.prompt_template
+        if response.model_id:
+            self.model_id = response.model_id
+        if response.temperature:
+            self.temperature = response.temperature
+        if response.time_created:
+            self.time_created = response.time_created
+        if response.project_id:
+            self.project_id = response.project_id
+
+    def _get_voice_driver_fields(self, response: VoiceDriverModelResponse) -> None:
+        if response.voice_instructions:
+            self.voice_instructions = response.voice_instructions
+        if response.voice:
+            self.voice = response.voice
 
     @classmethod
     def from_response(
         cls, response: Union[DriverModelResponse, VoiceDriverModelResponse]
     ) -> "Driver":
         inst = cls(response.name)
-        if response.id:
-            inst.id = response.id
-        if response.prompt_template:
-            inst.prompt_template = response.prompt_template
-        if response.model_id:
-            inst.model_id = response.model_id
-        if response.temperature:
-            inst.temperature = response.temperature
-        if response.time_created:
-            inst.time_created = response.time_created
-        if response.project_id:
-            inst.project_id = response.project_id
-        if (
-            isinstance(response, VoiceDriverModelResponse)
-            and response.voice_instructions
-        ):
-            inst.voice_instructions = response.voice_instructions
+        inst._get_driver_fields(response)
+        if isinstance(response, VoiceDriverModelResponse):
+            inst._get_voice_driver_fields(response)
         return inst
 
 

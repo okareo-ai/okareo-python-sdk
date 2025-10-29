@@ -33,9 +33,8 @@ logger = logging.getLogger(__name__)
 API_SR = 24000  # 24 kHz PCM16 mono
 CHUNK_MS = 120  # stream in ~120ms chunks
 
+
 # --------------------- schemas ----------------------
-
-
 @_attrs_define
 class RealtimeMetrics:
     """Response object for realtime metrics to render as checks.
@@ -536,9 +535,6 @@ class DeepgramRealtimeEdge(VoiceEdge):
             return pcm + (b"\x00\x00" * int(sr * ms / 1000))
 
         pcm16 = add_silence(pcm16, self.edge_config.sr, add_silence_ms)
-        self._turn_taking_latency = 0.0
-        self._time_request_ended = time.time()
-        self._agent_turn_started.clear()
 
         chunks = chunk_bytes(pcm16, self.edge_config.chunk_ms, self.edge_config.sr)
         bytes_per_sec = self.edge_config.sr * 2
@@ -547,6 +543,9 @@ class DeepgramRealtimeEdge(VoiceEdge):
             if pace_realtime:
                 await asyncio.sleep(max(0.001, len(ch) / bytes_per_sec))
         # Wait for agent response
+        self._turn_taking_latency = 0.0
+        self._time_request_ended = time.time()
+        self._agent_turn_started.clear()
         try:
             await asyncio.wait_for(self._agent_turn_complete.wait(), timeout=timeout_s)
         except asyncio.TimeoutError:
@@ -634,6 +633,7 @@ class RealtimeClient:
         self,
         text: str,
         tts_voice: str = "echo",
+        tts_instructions: Optional[str] = None,
         pace_realtime: bool = True,
         timeout_s: float = 60.0,
     ) -> Dict[str, Any]:
@@ -647,7 +647,7 @@ class RealtimeClient:
             self.asr_tts_api_key,
             tts_voice,
             self.api_sr,
-            self.driver.voice_instructions,
+            tts_instructions or getattr(self.driver, "voice_instructions", None),
         )
         user_wav_path, _ = self._store_wav(user_pcm, prefix=f"user_turn_{turn_id:03d}_")
 
@@ -786,13 +786,16 @@ class LocalVoiceTarget(CustomMultiturnTargetAsync):
             assert self.sessions, "SessionManager not initialized with Okareo instance"
             assert session_id, "Session ID is required"
             tts_voice = "echo"
+            tts_instructions = None
             if isinstance(scenario_input, dict):
                 tts_voice = scenario_input.get("voice", tts_voice)
+                tts_instructions = scenario_input.get("voice_instructions")
 
             res = await self.sessions.send(
                 session_id,
                 messages[-1]["content"],
                 tts_voice=tts_voice,
+                tts_instructions=tts_instructions,
             )
 
             logger.debug(f"user message: {messages[-1]['content']}")
