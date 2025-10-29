@@ -88,6 +88,9 @@ class BaseModel:
     def params(self) -> dict:
         pass
 
+    def get_sensitive_fields(self) -> list[str]:
+        return []
+
 
 class ModelUnderTest(AsyncProcessorMixin):
     """A class for managing a Model Under Test (MUT) in Okareo.
@@ -1283,6 +1286,9 @@ class VoiceTarget(BaseModel):
     def params(self) -> dict:
         pass
 
+    def get_sensitive_fields(self) -> list[str]:
+        return []
+
 
 @_attrs_define
 class OpenAIVoiceTarget(VoiceTarget):
@@ -1363,6 +1369,9 @@ class TwilioVoiceTarget(VoiceTarget):
             "from_phone_number": self.from_phone_number,
             "to_phone_number": self.to_phone_number,
         }
+
+    def get_sensitive_fields(self) -> list[str]:
+        return ["auth_token"] if self.auth_token else []
 
 
 @define
@@ -1629,13 +1638,17 @@ class Target:
     id: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {
-            "name": self.name,
-            "target": (
-                self.target if isinstance(self.target, dict) else self.target.params()
-            ),
-            "id": self.id,
-        }
+        target_payload = (
+            self.target if isinstance(self.target, dict) else self.target.params()
+        )
+        out: dict = {"name": self.name, "target": target_payload, "id": self.id}
+
+        # Promote any declared sensitive fields to top-level
+        if not isinstance(self.target, dict):
+            sensitive = self.target.get_sensitive_fields()
+            if sensitive:
+                out["sensitive_fields"] = sensitive
+        return out
 
     @classmethod
     def from_response(
@@ -1660,7 +1673,6 @@ class Target:
 
 @_attrs_define
 class Simulation:
-
     stop_check: Union[StopConfig, dict, None] = None
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5

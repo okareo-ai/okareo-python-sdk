@@ -9,7 +9,14 @@ from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
 from okareo.error import TestRunError
-from okareo.model_under_test import CohereModel, OpenAIModel, PineconeDb
+from okareo.model_under_test import (
+    CohereModel,
+    OpenAIModel,
+    OpenAIVoiceTarget,
+    PineconeDb,
+    Target,
+    TwilioVoiceTarget,
+)
 from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
@@ -302,3 +309,54 @@ def test_missing_vector_db_key_test_run_modelv2(httpx_mock: HTTPXMock) -> None:
             test_run_type=TestRunType.INFORMATION_RETRIEVAL,
             api_keys={"cohere": "foo"},
         )
+
+
+def test_target_to_dict_twilio_marks_auth_token_sensitive() -> None:
+    tgt = Target(
+        name="Voice Sim Target (Twilio)",
+        target=TwilioVoiceTarget(
+            account_sid="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            auth_token="super-secret",
+            from_phone_number="+15105551234",
+            to_phone_number="+14155559876",
+        ),
+    )
+    payload = tgt.to_dict()
+
+    # Top-level sensitive_fields should be present and include only "auth_token"
+    assert "sensitive_fields" in payload
+    assert payload["sensitive_fields"] == ["auth_token"]
+
+    # Sanity: the inner target payload is still Twilio-shaped
+    assert payload["target"]["type"] == "voice"
+    assert payload["target"]["edge_type"] == "twilio"
+    assert payload["target"]["account_sid"] == "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    assert payload["target"]["auth_token"] == "super-secret"
+
+
+def test_target_to_dict_twilio_omits_sensitive_when_token_missing() -> None:
+    tgt = Target(
+        name="Voice Sim Target (Twilio)",
+        target=TwilioVoiceTarget(
+            account_sid="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            auth_token="",  # no token provided
+            from_phone_number="+15105551234",
+            to_phone_number="+14155559876",
+        ),
+    )
+    payload = tgt.to_dict()
+
+    # No auth_token provided -> do not emit sensitive_fields
+    assert "sensitive_fields" not in payload
+
+
+def test_target_to_dict_other_voice_targets_have_no_sensitive_fields() -> None:
+    tgt = Target(
+        name="OpenAI Voice",
+        target=OpenAIVoiceTarget(model="gpt-realtime"),
+    )
+    payload = tgt.to_dict()
+
+    # Only Twilio declares sensitive fields, others should not
+    assert "sensitive_fields" not in payload
+    assert payload["target"]["edge_type"] == "openai"
