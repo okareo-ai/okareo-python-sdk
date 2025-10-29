@@ -5,7 +5,7 @@ import pytest
 
 from okareo import Okareo
 from okareo.model_under_test import Driver, Target
-from okareo.voice import DeepgramEdgeConfig, OpenAIEdgeConfig, VoiceMultiturnTarget
+from okareo.voice import DeepgramEdgeConfig, LocalVoiceTarget, OpenAIEdgeConfig
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 
@@ -81,8 +81,8 @@ def okareo() -> Okareo:
 
 
 @pytest.fixture(scope="module")
-def deepgram_voice_target() -> VoiceMultiturnTarget:
-    return VoiceMultiturnTarget(
+def deepgram_voice_target() -> LocalVoiceTarget:
+    return LocalVoiceTarget(
         name=f"Voice Sim Target (Deepgram) {uuid.uuid4()}",
         edge_config=DeepgramEdgeConfig(
             api_key=DEEPGRAM_API_KEY,  # type: ignore
@@ -93,8 +93,8 @@ def deepgram_voice_target() -> VoiceMultiturnTarget:
 
 
 @pytest.fixture(scope="module")
-def openai_voice_target() -> VoiceMultiturnTarget:
-    return VoiceMultiturnTarget(
+def openai_voice_target() -> LocalVoiceTarget:
+    return LocalVoiceTarget(
         name=f"Voice Sim Target (OpenAI) {uuid.uuid4()}",
         edge_config=OpenAIEdgeConfig(
             api_key=OPENAI_API_KEY,  # type: ignore
@@ -106,19 +106,19 @@ def openai_voice_target() -> VoiceMultiturnTarget:
 
 
 def test_voice_multiturn_deepgram(
-    okareo: Okareo, deepgram_voice_target: VoiceMultiturnTarget
+    okareo: Okareo, deepgram_voice_target: LocalVoiceTarget
 ) -> None:
     run_voice_multiturn_test(okareo, deepgram_voice_target, "Deepgram")
 
 
 def test_voice_multiturn_openai(
-    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget
+    okareo: Okareo, openai_voice_target: LocalVoiceTarget
 ) -> None:
     run_voice_multiturn_test(okareo, openai_voice_target, "OpenAI")
 
 
 def run_voice_multiturn_test(
-    okareo: Okareo, voice_target: VoiceMultiturnTarget, vendor: str
+    okareo: Okareo, voice_target: LocalVoiceTarget, vendor: str
 ) -> None:
 
     driver = Driver(
@@ -166,13 +166,13 @@ def run_voice_multiturn_test(
 
 
 def test_voice_multiturn_audio_check(
-    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget
+    okareo: Okareo, openai_voice_target: LocalVoiceTarget
 ) -> None:
     run_voice_multiturn_test_audio_check(okareo, openai_voice_target)
 
 
 def run_voice_multiturn_test_audio_check(
-    okareo: Okareo, voice_target: VoiceMultiturnTarget
+    okareo: Okareo, voice_target: LocalVoiceTarget
 ) -> None:
 
     driver = Driver(

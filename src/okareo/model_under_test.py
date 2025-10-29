@@ -1261,45 +1261,45 @@ class CustomMultiturnTargetAsync(BaseModel):
         }
 
 
-class RealtimeVoiceTarget(BaseModel):
+class VoiceTarget(BaseModel):
     """
     Base class for realtime voice targets in Okareo multiturn evaluation.
-    
+
     This target runs server-side during multiturn evaluations and follows the
-    same API key pattern as other targets: API keys are passed via the 
+    same API key pattern as other targets: API keys are passed via the
     `api_keys` parameter in `run_simulation()`.
-    
+
     Note:
-        The VoiceMultiturnTarget class in okareo.voice module is a different implementation 
-        that runs locally in the SDK. RealtimeVoiceTarget subclasses run server-side and are 
+        The LocalVoiceTarget class in okareo.voice module is a different implementation
+        that runs locally in the SDK. VoiceTarget subclasses run server-side and are
         recommended for production evaluations as they provide better scalability and
         monitoring capabilities.
     """
-    
+
     type = "voice"
     edge_type: str
-    
+
     @abstractmethod
     def params(self) -> dict:
         pass
 
 
 @_attrs_define
-class OpenAIRealtimeVoiceTarget(RealtimeVoiceTarget):
+class OpenAIVoiceTarget(VoiceTarget):
     """
     OpenAI Realtime API voice target for Okareo multiturn evaluation.
-    
+
     Arguments:
         model: Model ID for OpenAI Realtime. Default: "gpt-realtime".
         instructions: System instructions for the voice agent. Default: "Be brief and helpful."
         output_voice: Voice ID for TTS output. Options: "alloy", "echo", "fable", "onyx", "nova", "shimmer".
     """
-    
+
     edge_type = "openai"
     model: str = field(default="gpt-realtime")
     instructions: str = field(default="Be brief and helpful.")
     output_voice: str = field(default="alloy")
-    
+
     def params(self) -> dict:
         return {
             "type": self.type,
@@ -1311,21 +1311,21 @@ class OpenAIRealtimeVoiceTarget(RealtimeVoiceTarget):
 
 
 @_attrs_define
-class DeepgramRealtimeVoiceTarget(RealtimeVoiceTarget):
+class DeepgramVoiceTarget(VoiceTarget):
     """
     Deepgram voice target for Okareo multiturn evaluation.
-    
+
     Arguments:
         model: Model ID for Deepgram. Default: "aura-2".
         instructions: System instructions for the voice agent. Default: "Be brief and helpful."
         output_voice: Voice ID for TTS output. Example: "aura-2-thalia-en".
     """
-    
+
     edge_type = "deepgram"
     model: str = field(default="aura-2")
     instructions: str = field(default="Be brief and helpful.")
     output_voice: str = field(default="aura-2-thalia-en")
-    
+
     def params(self) -> dict:
         return {
             "type": self.type,
@@ -1333,6 +1333,35 @@ class DeepgramRealtimeVoiceTarget(RealtimeVoiceTarget):
             "model": self.model,
             "instructions": self.instructions,
             "output_voice": self.output_voice,
+        }
+
+
+@_attrs_define
+class TwilioVoiceTarget(VoiceTarget):
+    """
+    Twilio voice target for Okareo multiturn evaluation.
+
+    Arguments:
+        account_sid: Twilio account SID for authentication.
+        auth_token: Twilio authentication token.
+        from_phone_number: Phone number to call from (Twilio number).
+        to_phone_number: Phone number to call to (destination number).
+    """
+
+    edge_type = "twilio"
+    account_sid: str = field(default="")
+    auth_token: str = field(default="")
+    from_phone_number: Optional[str] = None
+    to_phone_number: Optional[str] = None
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "account_sid": self.account_sid,
+            "auth_token": self.auth_token,
+            "from_phone_number": self.from_phone_number,
+            "to_phone_number": self.to_phone_number,
         }
 
 
@@ -1581,8 +1610,9 @@ class Target:
         GenerationModel,
         CustomEndpointTarget,
         CustomMultiturnTargetAsync,
-        OpenAIRealtimeVoiceTarget,
-        DeepgramRealtimeVoiceTarget,
+        OpenAIVoiceTarget,
+        DeepgramVoiceTarget,
+        TwilioVoiceTarget,
         dict,
     ]
     id: Optional[str] = None
@@ -1668,8 +1698,9 @@ class MultiTurnDriver(BaseModel):
         CustomMultiturnTargetAsync,
         GenerationModel,
         CustomEndpointTarget,
-        OpenAIRealtimeVoiceTarget,
-        DeepgramRealtimeVoiceTarget,
+        OpenAIVoiceTarget,
+        DeepgramVoiceTarget,
+        TwilioVoiceTarget,
     ]
     stop_check: Union[StopConfig, dict, None] = None
     driver_model_id: Optional[str] = None

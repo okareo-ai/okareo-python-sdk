@@ -1308,9 +1308,9 @@ class Okareo:
                     )
 
             # simplify the API for end users, to not have to pass Okareo instance to the target
-            from okareo.voice import VoiceMultiturnTarget
+            from okareo.voice import LocalVoiceTarget
 
-            if isinstance(target.target, VoiceMultiturnTarget):
+            if isinstance(target.target, LocalVoiceTarget):
                 target.target.set_okareo(self, driver=driver_model)
 
             target_model = self.create_or_update_target(
