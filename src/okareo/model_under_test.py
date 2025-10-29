@@ -88,6 +88,9 @@ class BaseModel:
     def params(self) -> dict:
         pass
 
+    def get_sensitive_fields(self) -> list[str]:
+        return []
+
 
 class ModelUnderTest(AsyncProcessorMixin):
     """A class for managing a Model Under Test (MUT) in Okareo.
@@ -1261,6 +1264,116 @@ class CustomMultiturnTargetAsync(BaseModel):
         }
 
 
+class VoiceTarget(BaseModel):
+    """
+    Base class for realtime voice targets in Okareo multiturn evaluation.
+
+    This target runs server-side during multiturn evaluations and follows the
+    same API key pattern as other targets: API keys are passed via the
+    `api_keys` parameter in `run_simulation()`.
+
+    Note:
+        The LocalVoiceTarget class in okareo.voice module is a different implementation
+        that runs locally in the SDK. VoiceTarget subclasses run server-side and are
+        recommended for production evaluations as they provide better scalability and
+        monitoring capabilities.
+    """
+
+    type = "voice"
+    edge_type: str
+
+    @abstractmethod
+    def params(self) -> dict:
+        pass
+
+    def get_sensitive_fields(self) -> list[str]:
+        return []
+
+
+@_attrs_define
+class OpenAIVoiceTarget(VoiceTarget):
+    """
+    OpenAI Realtime API voice target for Okareo multiturn evaluation.
+
+    Arguments:
+        model: Model ID for OpenAI Realtime. Default: "gpt-realtime".
+        instructions: System instructions for the voice agent. Default: "Be brief and helpful."
+        output_voice: Voice ID for TTS output. Options: "alloy", "echo", "fable", "onyx", "nova", "shimmer".
+    """
+
+    edge_type = "openai"
+    model: str = field(default="gpt-realtime")
+    instructions: str = field(default="Be brief and helpful.")
+    output_voice: str = field(default="alloy")
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "model": self.model,
+            "instructions": self.instructions,
+            "output_voice": self.output_voice,
+        }
+
+
+@_attrs_define
+class DeepgramVoiceTarget(VoiceTarget):
+    """
+    Deepgram voice target for Okareo multiturn evaluation.
+
+    Arguments:
+        model: Model ID for Deepgram. Default: "aura-2".
+        instructions: System instructions for the voice agent. Default: "Be brief and helpful."
+        output_voice: Voice ID for TTS output. Example: "aura-2-thalia-en".
+    """
+
+    edge_type = "deepgram"
+    model: str = field(default="aura-2")
+    instructions: str = field(default="Be brief and helpful.")
+    output_voice: str = field(default="aura-2-thalia-en")
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "model": self.model,
+            "instructions": self.instructions,
+            "output_voice": self.output_voice,
+        }
+
+
+@_attrs_define
+class TwilioVoiceTarget(VoiceTarget):
+    """
+    Twilio voice target for Okareo multiturn evaluation.
+
+    Arguments:
+        account_sid: Twilio account SID for authentication.
+        auth_token: Twilio authentication token.
+        from_phone_number: Phone number to call from (Twilio number).
+        to_phone_number: Phone number to call to (destination number).
+    """
+
+    edge_type = "twilio"
+    account_sid: str = field(default="")
+    auth_token: str = field(default="")
+    from_phone_number: Optional[str] = None
+    to_phone_number: Optional[str] = None
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "account_sid": self.account_sid,
+            "auth_token": self.auth_token,
+            "from_phone_number": self.from_phone_number,
+            "to_phone_number": self.to_phone_number,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        return ["auth_token"] if self.auth_token else []
+
+
 @define
 class StopConfig:
     """
@@ -1517,18 +1630,25 @@ class Target:
         GenerationModel,
         CustomEndpointTarget,
         CustomMultiturnTargetAsync,
+        OpenAIVoiceTarget,
+        DeepgramVoiceTarget,
+        TwilioVoiceTarget,
         dict,
     ]
     id: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {
-            "name": self.name,
-            "target": (
-                self.target if isinstance(self.target, dict) else self.target.params()
-            ),
-            "id": self.id,
-        }
+        target_payload = (
+            self.target if isinstance(self.target, dict) else self.target.params()
+        )
+        out: dict = {"name": self.name, "target": target_payload, "id": self.id}
+
+        # Promote any declared sensitive fields to top-level
+        if not isinstance(self.target, dict):
+            sensitive = self.target.get_sensitive_fields()
+            if sensitive:
+                out["sensitive_fields"] = sensitive
+        return out
 
     @classmethod
     def from_response(
@@ -1553,7 +1673,6 @@ class Target:
 
 @_attrs_define
 class Simulation:
-
     stop_check: Union[StopConfig, dict, None] = None
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
@@ -1602,6 +1721,9 @@ class MultiTurnDriver(BaseModel):
         CustomMultiturnTargetAsync,
         GenerationModel,
         CustomEndpointTarget,
+        OpenAIVoiceTarget,
+        DeepgramVoiceTarget,
+        TwilioVoiceTarget,
     ]
     stop_check: Union[StopConfig, dict, None] = None
     driver_model_id: Optional[str] = None

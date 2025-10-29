@@ -742,10 +742,10 @@ class SessionManager:
                 self.sessions.pop(sid, None)
 
 
-# ---------------- Okareo integration: VoiceMultiturnTarget ----------------
+# ---------------- Okareo integration: LocalVoiceTarget ----------------
 
 
-class VoiceMultiturnTarget(CustomMultiturnTargetAsync):
+class LocalVoiceTarget(CustomMultiturnTargetAsync):
     """
     Configured with a vendor-specific VoiceEdge factory.
     Owns a SessionManager and creates a RealtimeClient per session.
