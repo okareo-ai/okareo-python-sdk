@@ -270,14 +270,14 @@ def voice_profile_templated_driver() -> Driver:
 
 
 def test_voice_multiturn_voice_profile(
-    okareo: Okareo, openai_voice_target: VoiceMultiturnTarget, rnd: str
+    okareo: Okareo, openai_voice_target: LocalVoiceTarget, rnd: str
 ) -> None:
     run_voice_multiturn_test_voice_profile(okareo, openai_voice_target, rnd)
 
 
 def run_voice_multiturn_test_voice_profile(
     okareo: Okareo,
-    voice_target: VoiceMultiturnTarget,
+    voice_target: LocalVoiceTarget,
     rnd: str,
 ) -> None:
 
