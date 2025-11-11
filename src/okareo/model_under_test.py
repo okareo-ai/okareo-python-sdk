@@ -1352,6 +1352,7 @@ class TwilioVoiceTarget(VoiceTarget):
         auth_token: Twilio authentication token.
         from_phone_number: Phone number to call from (Twilio number).
         to_phone_number: Phone number to call to (destination number).
+        max_parallel_requests: Maximum number of parallel requests the target can handle.
     """
 
     edge_type = "twilio"
@@ -1359,6 +1360,7 @@ class TwilioVoiceTarget(VoiceTarget):
     auth_token: str = field(default="")
     from_phone_number: Optional[str] = None
     to_phone_number: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
 
     def params(self) -> dict:
         return {
@@ -1368,6 +1370,7 @@ class TwilioVoiceTarget(VoiceTarget):
             "auth_token": self.auth_token,
             "from_phone_number": self.from_phone_number,
             "to_phone_number": self.to_phone_number,
+            "max_parallel_requests": self.max_parallel_requests,
         }
 
     def get_sensitive_fields(self) -> list[str]:
