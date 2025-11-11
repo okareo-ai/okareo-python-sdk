@@ -5,7 +5,7 @@ import pytest
 from okareo_tests.common import random_string
 
 from okareo import Okareo
-from okareo.model_under_test import Driver, Target, VoiceTarget, TwilioVoiceTarget
+from okareo.model_under_test import Driver, Target, TwilioVoiceTarget, VoiceTarget
 from okareo.voice import DeepgramEdgeConfig, LocalVoiceTarget, OpenAIEdgeConfig
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
@@ -110,14 +110,17 @@ def openai_voice_target() -> LocalVoiceTarget:
         asr_tts_api_key=OPENAI_API_KEY,  # type: ignore
     )
 
+
 @pytest.fixture(scope="module")
 def twilio_voice_target() -> VoiceTarget:
     return TwilioVoiceTarget(
-        account_sid=os.getenv("TWILIO_ACCOUNT_SID"),
-        auth_token=os.getenv("TWILIO_AUTH_TOKEN"),
-        from_phone_number=os.getenv("TWILIO_FROM_PHONE"),
-        to_phone_number=os.getenv("TWILIO_TO_PHONE"),
+        account_sid=os.getenv("TWILIO_ACCOUNT_SID", ""),
+        auth_token=os.getenv("TWILIO_AUTH_TOKEN", ""),
+        from_phone_number=os.getenv("TWILIO_FROM_PHONE", ""),
+        to_phone_number=os.getenv("TWILIO_TO_PHONE", ""),
+        max_parallel_requests=5,
     )
+
 
 def test_voice_multiturn_deepgram(
     okareo: Okareo, deepgram_voice_target: LocalVoiceTarget
@@ -131,6 +134,7 @@ def test_voice_multiturn_openai(
     run_voice_multiturn_test(okareo, openai_voice_target, "OpenAI")
 
 
+@pytest.mark.skip(reason="Requires valid Twilio credentials and phone numbers")
 def test_voice_multiturn_twilio(
     okareo: Okareo, twilio_voice_target: VoiceTarget
 ) -> None:
@@ -169,7 +173,7 @@ def run_voice_multiturn_test(
 
     evaluation = okareo.run_simulation(
         driver=driver,
-        target=Target(name=f"Voice Sim Target ({vendor})", target=voice_target),
+        target=Target(name=f"Voice Sim Target ({vendor})", target=voice_target),  # type: ignore
         name=f"Voice Simulation Run ({vendor})",
         scenario=scenario,
         max_turns=2,
