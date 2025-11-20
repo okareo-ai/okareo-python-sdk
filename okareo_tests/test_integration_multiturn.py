@@ -35,6 +35,7 @@ from okareo_api_client.models.seed_data import SeedData
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "NOT SET")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "NOT SET")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini/gemini-2.5-flash-preview-09-2025")
 base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
 
 
@@ -187,7 +188,7 @@ def test_run_multiturn_with_driver_model_id(
 
     driver = Driver(
         name=f"{rnd}_{first_turn}_driver",
-        model_id="gemini/gemini-2.5-flash-preview-05-20",
+        model_id=GEMINI_MODEL,
     )
 
     target = Target(
