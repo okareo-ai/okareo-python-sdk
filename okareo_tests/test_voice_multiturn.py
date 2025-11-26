@@ -2,11 +2,14 @@ import os
 import uuid
 
 import pytest
-from okareo_tests.common import random_string
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import Driver, Target, TwilioVoiceTarget, VoiceTarget
 from okareo.voice import DeepgramEdgeConfig, LocalVoiceTarget, OpenAIEdgeConfig
+from okareo_api_client.api.default import (
+    delete_test_run_v0_test_runs_delete,
+)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
 
@@ -186,6 +189,13 @@ def run_voice_multiturn_test(
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
     assert evaluation.app_link is not None
+
+    # delete the evaluation to ensure deletion works for voice simulations
+    delete_test_run_v0_test_runs_delete.sync(
+        client=okareo.client,
+        test_run_ids=[evaluation.id],
+        api_key=API_KEY,
+    )
 
 
 def test_voice_multiturn_audio_check(
