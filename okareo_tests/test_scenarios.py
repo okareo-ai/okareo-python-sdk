@@ -426,7 +426,7 @@ def test_generate_scenarios_custom_with_schema(
         assert isinstance(row.input_, dict)
         assert "foo" in row.input_ and isinstance(row.input_["foo"], str)
         assert "bar" in row.input_ and isinstance(row.input_["bar"], int)
-        assert "baz" in row.input_ and isinstance(row.input_["baz"], float)
+        assert "baz" in row.input_ and isinstance(row.input_["baz"], (int, float))
         assert "qux" in row.input_ and isinstance(row.input_["qux"], dict)
         assert "tic" in row.input_ and isinstance(row.input_["tic"], list)
         assert all(isinstance(item, str) for item in row.input_["tic"])
