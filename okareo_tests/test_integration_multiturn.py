@@ -1177,7 +1177,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
             + 'get Okareo API Token: https://okareo.com/docs/getting-started/overview"}.'
         ),
     ):
-        evaluation = okareo.run_simulation(
+        okareo.run_simulation(
             target=target,
             driver=driver,
             name=f"Custom Endpoint Test Exception - {rnd}",
