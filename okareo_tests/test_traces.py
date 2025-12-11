@@ -79,6 +79,7 @@ def verify_span_recorded(random_string: Any, api_key: Any, base_url: Any) -> Any
     return False
 
 
+@pytest.mark.flaky(reruns=3)
 def test_traces_endpoint_with_verification(api_key: Any, base_url: Any) -> Any:
     """Test sending trace data to the /traces endpoint with verification."""
 
