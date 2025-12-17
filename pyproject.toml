@@ -95,6 +95,7 @@ setuptools = "*"
 pytest-xdist = "*"
 types-requests = "*"
 scipy-stubs = "*"
+pytest-rerunfailures = "*"
 
 [tool.pydoc-markdown]
 loaders = [{ type = "python", search_path = ["src"], modules = ["okareo.model_under_test", "okareo.checks", "okareo.async_utils", "okareo.autogen_logger", "okareo.callbacks", "okareo.crewai_logger", "okareo.litellm_logger", "okareo.okareo", "okareo.reporter"] }]
