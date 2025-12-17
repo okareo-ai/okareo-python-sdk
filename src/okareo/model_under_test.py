@@ -166,6 +166,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             "test_run_id": test_run_id,
             "group_id": group_id,
         }
+        print(f"Adding datapoint with body: {body}")
         response = add_datapoint_v0_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
@@ -293,10 +294,14 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_output_metadata = custom_model_return_value.model_output_metadata
             model_input = custom_model_return_value.model_input
             tool_calls = custom_model_return_value.tool_calls
+            error = custom_model_return_value.error
+            error_message = error.get("error_message") if error else None
         else:  # assume the preexisting behavior of returning a tuple
             model_prediction, model_output_metadata = custom_model_return_value
             model_input = None
             tool_calls = None
+            error = None
+            error_message = None
 
         model_data["model_data"][scenario_data_point_id] = {
             "actual": model_prediction,
@@ -304,16 +309,56 @@ class ModelUnderTest(AsyncProcessorMixin):
             "model_input": model_input,
             "tool_calls": tool_calls,
         }
+        if error_message:
+            model_data["model_data"][scenario_data_point_id]["error_message"] = {
+                "message": error_message
+            }
         if test_run_data is not None:
             # add a data point for the invocation
             test_run_id = list(test_run_data.keys())[0]
-            datapoint_response = self.add_data_point(
-                input_obj=model_input,
-                result_obj=model_prediction,
-                project_id=self.project_id,
-                test_run_id=test_run_id,
-            )
-            test_run_data[test_run_id][scenario_data_point_id] = datapoint_response.id
+            try:
+                # Type checking inputs/predictions.
+                # Seems that `add_data_point` interface accepts only str/dict/None,
+                # but model_input and model_prediction can also be list.
+                assert (
+                    isinstance(model_input, str)
+                    or isinstance(model_input, dict)
+                    or model_input is None
+                ), f"Unexpected model_input type: {type(model_input)}"
+                assert (
+                    isinstance(model_prediction, str)
+                    or isinstance(model_prediction, dict)
+                    or model_prediction is None
+                ), f"Unexpected model_prediction type: {type(model_prediction)}"
+                datapoint_response = self.add_data_point(
+                    input_obj=model_input,
+                    result_obj=model_prediction,
+                    project_id=self.project_id,
+                    test_run_id=test_run_id,
+                    error_message=error_message,
+                )
+                self.validate_response(datapoint_response)
+                assert isinstance(datapoint_response, DatapointResponse)
+                test_run_data[test_run_id][
+                    scenario_data_point_id
+                ] = datapoint_response.id
+            except Exception as e:
+                # Log the error but continue processing other datapoints
+                print(
+                    f"Failed to add datapoint for scenario_data_point_id {scenario_data_point_id}: {str(e)}. Adding error data point."
+                )
+                datapoint_response = self.add_data_point(
+                    input_obj=model_input,  # type: ignore
+                    project_id=self.project_id,
+                    test_run_id=test_run_id,
+                    error_message=str(e),
+                )
+
+                self.validate_response(datapoint_response)
+                assert isinstance(datapoint_response, DatapointResponse)
+                test_run_data[test_run_id][
+                    scenario_data_point_id
+                ] = datapoint_response.id
 
     def _get_test_run_payload(
         self,
@@ -665,6 +710,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 if isinstance(scenario, ScenarioSetResponse)
                 else scenario
             )
+            assert isinstance(scenario_id, str)
             run_api_keys = self._validate_run_test_params(
                 api_key, api_keys, test_run_type
             )
@@ -696,7 +742,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             elif self._has_custom_model():
                 if run_test_method == submit_test_v0_test_run_submit_post.sync:
                     # call the 'run_test_method' to fetch the test_run_id first
-                    submit_response: TestRunItem = self._call_run_test_method(
+                    submit_response = self._call_run_test_method(
                         run_test_method,
                         scenario_id,
                         name,
@@ -712,8 +758,11 @@ class ModelUnderTest(AsyncProcessorMixin):
                         driver_id,
                         None,
                     )
+                    assert isinstance(submit_response, TestRunItem)
                     test_run_id = submit_response.id
                     # run _custom_exec + _evaluate_internal in a background thread
+                    # if/when we make this method fully async, then we should use asyncio.create_task
+                    # since this is sync, we use use threading.Thread (which does not require an event loop)
                     thread = threading.Thread(
                         target=self._run_custom_exec_then_evaluate,
                         args=(
@@ -722,37 +771,41 @@ class ModelUnderTest(AsyncProcessorMixin):
                             test_run_id,
                             name,
                             test_run_type,
-                            metrics_kwargs,
-                            checks,
+                            metrics_kwargs or UNSET,
+                            checks or UNSET,
                         ),
+                        name=f"submit-testrun-custommodel-{test_run_id}",
+                        daemon=False,  # Important: don't use daemon thread to ensure task runs in background
                     )
                     thread.start()
                     # log the thread ID for debugging
                     print(
-                        f"Started background thread with ID '{thread.ident}' to invoke CustomModel and complete evaluation."
+                        f"Started background thread with ID '{thread.name}' to invoke CustomModel and complete evaluation."
                     )
                     # return the submit response immediately, allowing the user to access the test run ID
+                    self.validate_response(submit_response)
+                    assert isinstance(submit_response, TestRunItem)
                     return submit_response
                 else:
                     # run the custom exec synchronously
-                    self._custom_exec(scenario_id, model_data)
+                    self._custom_exec(scenario_id, model_data, None)
 
-                response: TestRunItem = self._call_run_test_method(
-                    run_test_method,
-                    scenario_id,
-                    name,
-                    api_key,
-                    api_keys,
-                    run_api_keys,
-                    metrics_kwargs,
-                    test_run_type,
-                    calculate_metrics,
-                    model_data,
-                    checks,
-                    simulation_params,
-                    driver_id,
-                    nats_invoke_id,
-                )
+            response: TestRunItem = self._call_run_test_method(
+                run_test_method,
+                scenario_id,
+                name,
+                api_key,
+                api_keys,
+                run_api_keys,
+                metrics_kwargs,
+                test_run_type,
+                calculate_metrics,
+                model_data,
+                checks,
+                simulation_params,
+                driver_id,
+                nats_invoke_id,
+            )
 
             return response
         except UnexpectedStatus as e:
@@ -815,9 +868,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         test_run_id: str,
         name: str,
         test_run_type: TestRunType,
-        metrics_kwargs: Optional[dict],
-        checks: Optional[List[str]],
-    ) -> None:
+        metrics_kwargs: Union[dict, Unset] = UNSET,
+        checks: Union[List[str], Unset] = UNSET,
+    ) -> TestRunItem:
         """Run custom exec, then evaluate once complete"""
         test_run_data = None
         if test_run_id is not None:
@@ -826,7 +879,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self._custom_exec(scenario_id, model_data, test_run_data)
         # pull datapoint IDs from test_run_data
         datapoint_ids = (
-            list(test_run_data[test_run_id].values()) if test_run_data else None
+            list(test_run_data[test_run_id].values()) if test_run_data else UNSET
         )
         print(
             f"Submitting evaluation for test_run_id {test_run_id} with datapoint_ids {datapoint_ids}"
@@ -834,7 +887,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         print(
             f"Type of datapoint_ids: {type(datapoint_ids[0]) if datapoint_ids else 'N/A'}"
         )
-        self._evaluate_internal(
+        response = self._evaluate_internal(
             self.client,
             self.api_key,
             name=name,
@@ -845,6 +898,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             test_run_id=test_run_id,
             checks=checks,
         )
+        self.validate_response(response)
+        assert isinstance(response, TestRunItem)
+        return response
 
     def _check_multiturn_submit_safe(self, test_run_type: TestRunType) -> bool:
         """Check if the test_run_type is MULTI_TURN and if the model is a CustomMultiturnTarget.
@@ -977,7 +1033,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             print(e.content)
             raise
 
-    def validate_response(self, response: Any) -> None:
+    @classmethod
+    def validate_response(cls, response: Any) -> None:
         if isinstance(response, ErrorResponse):
             error_message = f"error: {response}, {response.detail}"
             print(error_message)
@@ -994,7 +1051,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         return scenario_input
 
     def _custom_exec(
-        self, scenario_id: Any, model_data: Any, test_run_data: Optional[dict]
+        self, scenario_id: Any, model_data: Any, test_run_data: Optional[dict] = None
     ) -> Any:
         assert isinstance(self.models, dict)
 
@@ -1011,7 +1068,20 @@ class ModelUnderTest(AsyncProcessorMixin):
                     scenario_data_point
                 )
 
-                custom_model_return_value = custom_model_invoker(scenario_input)
+                try:
+                    custom_model_return_value = custom_model_invoker(scenario_input)
+                except Exception as e:
+                    # Log the error but continue processing other datapoints
+                    print(
+                        f"An error occurred while invoking the custom model for scenario_data_point ID {scenario_data_point.id}: {str(e)}"
+                    )
+                    # Create a ModelInvocation with error details
+                    custom_model_return_value = ModelInvocation(
+                        model_prediction=None,
+                        model_input=scenario_input,
+                        tool_calls=None,
+                        error={"error_message": str(e)},
+                    )
                 self._add_model_invocation_for_scenario(
                     custom_model_return_value,
                     model_data,
@@ -1062,9 +1132,10 @@ class ModelUnderTest(AsyncProcessorMixin):
         metrics_kwargs: Union[Dict[str, Any], Unset] = UNSET,
         checks: Union[Unset, list[str]] = UNSET,
         test_run_id: Union[Unset, str] = UNSET,
-    ) -> dict:
+    ) -> TestRunItem:
         """Run an 'online' evaluation on already uploaded datapoints.
-        Also used to handle 'submit_test' for a CustomModel."""
+        Also used to handle 'submit_test' for CustomModel (requires a `test_run_id`$).
+        """
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
                 metrics_kwargs or {}
@@ -1085,7 +1156,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             api_key=api_key,
         )
         cls.validate_response(response)
-        assert response is not None
+        assert response is not None and not isinstance(response, ErrorResponse)
         return response
 
 
@@ -1108,6 +1179,7 @@ class ModelInvocation:
     model_input: Union[dict, list, str, None] = None
     model_output_metadata: Union[dict, list, str, None] = None
     tool_calls: Optional[List] = None
+    error: Optional[dict] = None
 
     def params(self) -> dict:
         return {
@@ -1115,6 +1187,7 @@ class ModelInvocation:
             "model_input": self.model_input,
             "model_result": self.model_output_metadata,
             "tool_calls": self.tool_calls,
+            "error": self.error,
         }
 
 

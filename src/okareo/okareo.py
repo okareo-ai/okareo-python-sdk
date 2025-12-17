@@ -1094,6 +1094,7 @@ class Okareo:
         return ModelUnderTest._evaluate_internal(
             client=self.client,
             api_key=self.api_key,
+            name=name,
             test_run_type=test_run_type,
             scenario_id=scenario_id,
             datapoint_ids=datapoint_ids,
