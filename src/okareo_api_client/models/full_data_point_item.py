@@ -38,6 +38,9 @@ class FullDataPointItem:
         end_time (Union[Unset, Any]):
         driver_prompt (Union[Unset, str]):
         baseline_metrics (Union[Unset, FullDataPointItemBaselineMetrics]):
+        error_message (Union[Unset, str]):
+        error_code (Union[Unset, str]):
+        error_type (Union[Unset, str]):
     """
 
     id: str
@@ -57,6 +60,9 @@ class FullDataPointItem:
     end_time: Union[Unset, Any] = UNSET
     driver_prompt: Union[Unset, str] = UNSET
     baseline_metrics: Union[Unset, "FullDataPointItemBaselineMetrics"] = UNSET
+    error_message: Union[Unset, str] = UNSET
+    error_code: Union[Unset, str] = UNSET
+    error_type: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -134,6 +140,10 @@ class FullDataPointItem:
         if not isinstance(self.baseline_metrics, Unset):
             baseline_metrics = self.baseline_metrics.to_dict()
 
+        error_message = self.error_message
+        error_code = self.error_code
+        error_type = self.error_type
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -170,6 +180,12 @@ class FullDataPointItem:
             field_dict["driver_prompt"] = driver_prompt
         if baseline_metrics is not UNSET:
             field_dict["baseline_metrics"] = baseline_metrics
+        if error_message is not UNSET:
+            field_dict["error_message"] = error_message
+        if error_code is not UNSET:
+            field_dict["error_code"] = error_code
+        if error_type is not UNSET:
+            field_dict["error_type"] = error_type
 
         return field_dict
 
@@ -299,6 +315,12 @@ class FullDataPointItem:
         else:
             baseline_metrics = FullDataPointItemBaselineMetrics.from_dict(_baseline_metrics)
 
+        error_message = d.pop("error_message", UNSET)
+
+        error_code = d.pop("error_code", UNSET)
+
+        error_type = d.pop("error_type", UNSET)
+
         full_data_point_item = cls(
             id=id,
             test_run_id=test_run_id,
@@ -317,6 +339,9 @@ class FullDataPointItem:
             end_time=end_time,
             driver_prompt=driver_prompt,
             baseline_metrics=baseline_metrics,
+            error_message=error_message,
+            error_code=error_code,
+            error_type=error_type,
         )
 
         full_data_point_item.additional_properties = d
