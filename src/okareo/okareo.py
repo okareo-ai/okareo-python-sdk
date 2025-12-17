@@ -1278,6 +1278,8 @@ class Okareo:
         max_turns: Optional[int] = 5,
         first_turn: Optional[str] = "target",
         checks_at_every_turn: Optional[bool] = False,
+        concurrent_ask_probability: Optional[float] = 0.0,
+        turn_transition_time: Optional[int] = 1000,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
         metrics_kwargs: Optional[dict] = None,
@@ -1331,6 +1333,8 @@ class Okareo:
             max_turns=max_turns,
             first_turn=first_turn,
             checks_at_every_turn=checks_at_every_turn,
+            concurrent_ask_probability=concurrent_ask_probability,
+            turn_transition_time=turn_transition_time,
         )
 
         # create MUT object
