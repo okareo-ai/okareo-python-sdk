@@ -166,7 +166,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             "test_run_id": test_run_id,
             "group_id": group_id,
         }
-        print(f"Adding datapoint with body: {body}")
         response = add_datapoint_v0_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
