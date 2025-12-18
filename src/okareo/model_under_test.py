@@ -905,8 +905,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Asynchronous server-based version of test-run execution. For CustomModels, model
-        invocations are handled client-side then evaluated server-side asynchronously. For other models,
-        model invocations and evaluations handled server-side asynchronously.
+        invocations are handled client-side in a background thread then evaluated server-side asynchronously.
+        For other models, model invocations and evaluation are both handled server-side asynchronously.
 
         Arguments:
             scenario (Union[ScenarioSetResponse, str]): The scenario set or identifier to use for the test run.
