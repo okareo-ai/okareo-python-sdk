@@ -287,7 +287,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         custom_model_return_value: Any,
         model_data: dict,
         scenario_data_point_id: str,
-        test_run_data: Optional[dict] = None,
+        test_run_id: Optional[str] = None,
     ) -> None:
         if isinstance(custom_model_return_value, ModelInvocation):
             model_prediction = custom_model_return_value.model_prediction
@@ -313,9 +313,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             model_data["model_data"][scenario_data_point_id]["error_message"] = {
                 "message": error_message
             }
-        if test_run_data is not None:
+        if test_run_id is not None:
             # add a data point for the invocation
-            test_run_id = list(test_run_data.keys())[0]
             try:
                 # Type checking inputs/predictions.
                 # Seems that `add_data_point` interface accepts only str/dict/None,
@@ -339,9 +338,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                 )
                 self.validate_response(datapoint_response)
                 assert isinstance(datapoint_response, DatapointResponse)
-                test_run_data[test_run_id][
-                    scenario_data_point_id
-                ] = datapoint_response.id
             except Exception as e:
                 # Log the error but continue processing other datapoints
                 print(
@@ -356,9 +352,6 @@ class ModelUnderTest(AsyncProcessorMixin):
 
                 self.validate_response(datapoint_response)
                 assert isinstance(datapoint_response, DatapointResponse)
-                test_run_data[test_run_id][
-                    scenario_data_point_id
-                ] = datapoint_response.id
 
     def _get_test_run_payload(
         self,
@@ -778,10 +771,6 @@ class ModelUnderTest(AsyncProcessorMixin):
                         daemon=False,  # Important: don't use daemon thread to ensure task runs in background
                     )
                     thread.start()
-                    # log the thread ID for debugging
-                    print(
-                        f"Started background thread with ID '{thread.name}' to invoke CustomModel and complete evaluation."
-                    )
                     # return the submit response immediately, allowing the user to access the test run ID
                     self.validate_response(submit_response)
                     assert isinstance(submit_response, TestRunItem)
@@ -872,27 +861,16 @@ class ModelUnderTest(AsyncProcessorMixin):
         checks: Union[List[str], Unset] = UNSET,
     ) -> TestRunItem:
         """Run custom exec, then evaluate once complete"""
-        test_run_data = None
-        if test_run_id is not None:
-            # add map of test_run_id -> scenario_data_point_id --> datapoint_id
-            test_run_data = {test_run_id: {}}
-        self._custom_exec(scenario_id, model_data, test_run_data)
-        # pull datapoint IDs from test_run_data
-        datapoint_ids = (
-            list(test_run_data[test_run_id].values()) if test_run_data else UNSET
-        )
+        self._custom_exec(scenario_id, model_data, test_run_id)
+        # pull datapoint IDs from test_run_id
         print(
-            f"Submitting evaluation for test_run_id {test_run_id} with datapoint_ids {datapoint_ids}"
-        )
-        print(
-            f"Type of datapoint_ids: {type(datapoint_ids[0]) if datapoint_ids else 'N/A'}"
+            f"Submitting evaluation for test_run_id {test_run_id} after custom model invocations."
         )
         response = self._evaluate_internal(
             self.client,
             self.api_key,
             name=name,
             test_run_type=test_run_type,
-            datapoint_ids=datapoint_ids,
             scenario_id=scenario_id,
             metrics_kwargs=metrics_kwargs,
             test_run_id=test_run_id,
@@ -1051,7 +1029,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         return scenario_input
 
     def _custom_exec(
-        self, scenario_id: Any, model_data: Any, test_run_data: Optional[dict] = None
+        self, scenario_id: Any, model_data: Any, test_run_id: Optional[str] = None
     ) -> Any:
         assert isinstance(self.models, dict)
 
@@ -1086,7 +1064,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     custom_model_return_value,
                     model_data,
                     scenario_data_point.id,
-                    test_run_data,
+                    test_run_id,
                 )
         else:
             # batch inputs to the custom model
@@ -1115,7 +1093,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                         return_dict["model_invocation"],
                         model_data,
                         return_dict["id"],
-                        test_run_data,
+                        test_run_id,
                     )
 
     @classmethod
