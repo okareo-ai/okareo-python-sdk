@@ -674,26 +674,31 @@ def test_run_batch_model_classification(
         assert clf_avg_results[key] == clf_batch_avg_results[key]
 
 
+def generation_rules(model_input: str) -> str:
+    # simple generation rules to ensure consistent model outputs
+    out = [s.split(" ")[0] for s in model_input.split(". ")]
+    return " ".join(out)
+
+
+class TestGenerationModel(CustomModel):
+    def invoke(self, input_value: Any) -> ModelInvocation:
+        return ModelInvocation(
+            model_prediction=generation_rules(input_value),
+            model_input=input_value,
+            model_output_metadata={"model_data": input_value},
+            tool_calls=[{"function": "function"}],
+        )
+
+
 def test_run_batch_model_generation(
     rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
 ) -> None:
-    def generation_rules(model_input: str) -> str:
-        # simple generation rules to ensure consistent model outputs
-        out = [s.split(" ")[0] for s in model_input.split(". ")]
-        return " ".join(out)
-
-    class GenerationModel(CustomModel):
-        def invoke(self, input_value: Any) -> ModelInvocation:
-            return ModelInvocation(
-                model_prediction=generation_rules(input_value),
-                model_input=input_value,
-                model_output_metadata={"model_data": input_value},
-                tool_calls=[{"function": "function"}],
-            )
 
     mut = okareo.register_model(
         name=f"ci-custom-nlg-batch-{rnd}",
-        model=GenerationModel(name="test_run_batch_model_generation - GenerationModel"),
+        model=TestGenerationModel(
+            name="test_run_batch_model_generation - GenerationModel"
+        ),
         update=True,
     )
     mut.run_test(
@@ -702,6 +707,35 @@ def test_run_batch_model_generation(
         test_run_type=TestRunType.NL_GENERATION,
         checks=["latency"],
     )
+
+
+def test_submit_model_generation(
+    rnd: str, okareo: Okareo, article_clf_scenario_set: ScenarioSetResponse
+) -> None:
+    mut = okareo.register_model(
+        name=f"ci-custom-nlg-batch-submit-{rnd}",
+        model=TestGenerationModel(
+            name="test_submit_model_generation - GenerationModel"
+        ),
+        update=True,
+    )
+    submit_response = mut.run_test(
+        name=f"ci-custom-nlg-submit-{rnd}",
+        scenario=article_clf_scenario_set,
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=["latency"],
+    )
+
+    num_tries = 5
+    backoff = 3
+    for i in range(1, num_tries + 1):
+        test_run = mut.get_test_run(submit_response.id)
+        if test_run.status == "FINISHED":
+            break
+        else:
+            import time
+
+            time.sleep(i * backoff)
 
 
 def test_run_test_cohere_qdrant_ir(

@@ -142,6 +142,12 @@ from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
 from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
 from .test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationParams
 from .test_run_type import TestRunType
+from .twilio_call_status_v0_voice_twilio_status_post_response_twilio_call_status_v0_voice_twilio_status_post import (
+    TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost,
+)
+from .twilio_recording_callback_v0_voice_twilio_recording_post_response_twilio_recording_callback_v0_voice_twilio_recording_post import (
+    TwilioRecordingCallbackV0VoiceTwilioRecordingPostResponseTwilioRecordingCallbackV0VoiceTwilioRecordingPost,
+)
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .validation_error import ValidationError
 from .voice_driver_model_response import VoiceDriverModelResponse
@@ -272,6 +278,8 @@ __all__ = (
     "TestRunPayloadV2ModelResults",
     "TestRunPayloadV2SimulationParams",
     "TestRunType",
+    "TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost",
+    "TwilioRecordingCallbackV0VoiceTwilioRecordingPostResponseTwilioRecordingCallbackV0VoiceTwilioRecordingPost",
     "UpdateTestDataPointPayload",
     "ValidationError",
     "VoiceDriverModelResponse",

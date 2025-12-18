@@ -26,6 +26,7 @@ class EvaluationPayload:
         type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
         name (Union[Unset, str]): Name of the test run
         project_id (Union[Unset, str]): Project ID
+        test_run_id (Union[Unset, str]): ID for the test run. Used when 'submit_test' has already been called.
     """
 
     scenario_id: Union[Unset, str] = UNSET
@@ -37,6 +38,7 @@ class EvaluationPayload:
     type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
     name: Union[Unset, str] = UNSET
     project_id: Union[Unset, str] = UNSET
+    test_run_id: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -64,6 +66,7 @@ class EvaluationPayload:
 
         name = self.name
         project_id = self.project_id
+        test_run_id = self.test_run_id
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -86,6 +89,8 @@ class EvaluationPayload:
             field_dict["name"] = name
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if test_run_id is not UNSET:
+            field_dict["test_run_id"] = test_run_id
 
         return field_dict
 
@@ -122,6 +127,8 @@ class EvaluationPayload:
 
         project_id = d.pop("project_id", UNSET)
 
+        test_run_id = d.pop("test_run_id", UNSET)
+
         evaluation_payload = cls(
             scenario_id=scenario_id,
             datapoint_ids=datapoint_ids,
@@ -132,6 +139,7 @@ class EvaluationPayload:
             type=type,
             name=name,
             project_id=project_id,
+            test_run_id=test_run_id,
         )
 
         evaluation_payload.additional_properties = d

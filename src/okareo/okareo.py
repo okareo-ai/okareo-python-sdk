@@ -21,7 +21,6 @@ from okareo_api_client.api.default import (
     create_project_v0_projects_post,
     create_scenario_set_v0_scenario_sets_post,
     create_trace_eval_v0_groups_group_id_trace_eval_post,
-    evaluate_v0_evaluate_post,
     find_test_data_points_v0_find_test_data_points_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
@@ -58,10 +57,6 @@ from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.driver_model_response import DriverModelResponse
 from okareo_api_client.models.driver_model_schema import DriverModelSchema
 from okareo_api_client.models.error_response import ErrorResponse
-from okareo_api_client.models.evaluation_payload import EvaluationPayload
-from okareo_api_client.models.evaluation_payload_metrics_kwargs import (
-    EvaluationPayloadMetricsKwargs,
-)
 from okareo_api_client.models.evaluator_brief_response import EvaluatorBriefResponse
 from okareo_api_client.models.evaluator_detailed_response import (
     EvaluatorDetailedResponse,
@@ -1096,33 +1091,18 @@ class Okareo:
         print(test_run.app_link)  # View link to eval results in Okareo app
         ```
         """
-        payload = EvaluationPayload(
-            metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
-                metrics_kwargs or {}
-            ),
+        return ModelUnderTest._evaluate_internal(
+            client=self.client,
+            api_key=self.api_key,
             name=name,
-            type=test_run_type,
-            tags=tags,
-            checks=checks,
+            test_run_type=test_run_type,
             scenario_id=scenario_id,
             datapoint_ids=datapoint_ids,
             filter_group_id=filter_group_id,
+            tags=tags,
+            metrics_kwargs=metrics_kwargs,
+            checks=checks,
         )
-
-        response = evaluate_v0_evaluate_post.sync(
-            client=self.client,
-            json_body=payload,
-            api_key=self.api_key,
-        )
-        self.validate_response(response)
-        if isinstance(response, ErrorResponse):
-            error_message = f"error: {response}, {response.detail}"
-            print(error_message)
-            raise
-        if not response:
-            print("Empty response from API")
-        assert response is not None
-        return response
 
     def create_or_update_driver(self, driver: Driver) -> Driver:
         """Create or update a driver.
