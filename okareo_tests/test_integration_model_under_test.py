@@ -719,7 +719,7 @@ def test_submit_model_generation(
         ),
         update=True,
     )
-    submit_response = mut.run_test(
+    submit_response = mut.submit_test(
         name=f"ci-custom-nlg-submit-{rnd}",
         scenario=article_clf_scenario_set,
         test_run_type=TestRunType.NL_GENERATION,
