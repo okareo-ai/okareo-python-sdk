@@ -14,11 +14,11 @@ import pytest
 from okareo_tests.common import random_string
 
 from okareo import Okareo
-from okareo.model_under_test import Driver, Target, TwilioVoiceTarget, VoiceTarget
-from okareo_api_client.models.find_test_data_point_payload import FindTestDataPointPayload
+from okareo.model_under_test import Driver, Target, TwilioVoiceTarget
+from okareo_api_client.models.find_test_data_point_payload import (
+    FindTestDataPointPayload,
+)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-
-
 
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
@@ -53,6 +53,7 @@ TARGET_WAITS_PROMPT = """
 # Fixtures
 # ============================================================================
 
+
 @pytest.fixture(scope="module")
 def rnd() -> str:
     return random_string(5)
@@ -80,11 +81,12 @@ def twilio_target() -> TwilioVoiceTarget:
 # Helpers
 # ============================================================================
 
+
 def create_scenario(okareo: Okareo, name: str, inputs: List[Dict[str, Any]]) -> Any:
     """Create a scenario set from input data."""
-    seed_data = Okareo.seed_data_from_list([
-        {"input": inp, "result": "Expected response."} for inp in inputs
-    ])
+    seed_data = Okareo.seed_data_from_list(
+        [{"input": inp, "result": "Expected response."} for inp in inputs]
+    )
     return okareo.create_scenario_set(ScenarioSetCreate(name=name, seed_data=seed_data))
 
 
@@ -93,23 +95,26 @@ def get_messages(okareo: Okareo, test_run_id: str) -> List[List[Dict[str, Any]]]
     from okareo_api_client.models.error_response import ErrorResponse
     from okareo_api_client.models.full_data_point_item import FullDataPointItem
     from okareo_api_client.types import Unset
-    
+
     datapoints = okareo.find_test_data_points(
         FindTestDataPointPayload(test_run_id=test_run_id, full_data_point=True)
     )
-    
+
     # Handle potential error response
     if isinstance(datapoints, ErrorResponse):
         raise ValueError(f"Error fetching datapoints: {datapoints}")
-    
+
     messages_list = []
     for dp in datapoints:
         # Ensure we have a FullDataPointItem with model_metadata
         if isinstance(dp, FullDataPointItem):
-            if not isinstance(dp.model_metadata, Unset) and dp.model_metadata is not None:
+            if (
+                not isinstance(dp.model_metadata, Unset)
+                and dp.model_metadata is not None
+            ):
                 messages = dp.model_metadata.additional_properties.get("messages", [])
                 messages_list.append(messages)
-    
+
     return messages_list
 
 
@@ -117,19 +122,21 @@ def validate_message_timing(msg: Dict[str, Any], msg_idx: int) -> None:
     """Validate timing fields for a single message."""
     meta = msg.get("metadata", {})
     role = msg.get("role")
-    
+
     # Start/end times exist and are logical
     start_time = meta.get("start_time")
     end_time = meta.get("end_time")
     assert start_time is not None, f"Message {msg_idx} ({role}): missing start_time"
     assert end_time is not None, f"Message {msg_idx} ({role}): missing end_time"
-    assert end_time > start_time, f"Message {msg_idx} ({role}): end_time should be > start_time"
-    
+    assert (
+        end_time > start_time
+    ), f"Message {msg_idx} ({role}): end_time should be > start_time"
+
     # Duration > 500ms (reasonable threshold for voice)
     duration_ms = meta.get("duration_ms")
-    assert duration_ms is not None and duration_ms > 0, (
-        f"Message {msg_idx} ({role}): duration_ms should be > 0"
-    )
+    assert (
+        duration_ms is not None and duration_ms > 0
+    ), f"Message {msg_idx} ({role}): duration_ms should be > 0"
 
 
 def validate_message_content(msg: Dict[str, Any], msg_idx: int) -> None:
@@ -137,10 +144,12 @@ def validate_message_content(msg: Dict[str, Any], msg_idx: int) -> None:
     meta = msg.get("metadata", {})
     role = msg.get("role")
     content = msg.get("content", "")
-    
+
     # Transcript captured
-    assert content.strip() != "", f"Message {msg_idx} ({role}): transcript should not be empty"
-    
+    assert (
+        content.strip() != ""
+    ), f"Message {msg_idx} ({role}): transcript should not be empty"
+
     # Recording captured with duration > 0
     wav_path = meta.get("wav_path")
     assert wav_path, f"Message {msg_idx} ({role}): wav_path should exist"
@@ -151,14 +160,15 @@ def validate_conversation_order(messages: List[Dict[str, Any]]) -> None:
     for i in range(len(messages) - 1):
         curr_start = messages[i].get("metadata", {}).get("start_time")
         next_start = messages[i + 1].get("metadata", {}).get("start_time")
-        assert next_start >= curr_start, (
-            f"Message {i+1} start_time should be >= message {i} start_time"
-        )
+        assert (
+            next_start >= curr_start
+        ), f"Message {i+1} start_time should be >= message {i} start_time"
 
 
 # ============================================================================
 # Tests
 # ============================================================================
+
 
 class TestVoiceSanity:
     """Overall sanity test for voice simulations."""
@@ -178,7 +188,7 @@ class TestVoiceSanity:
         - Conversation order is sequential
         """
         num_parallel = 5
-        
+
         driver = Driver(
             name=f"Sanity Driver - {rnd}",
             temperature=0.5,
@@ -200,14 +210,21 @@ class TestVoiceSanity:
             repeats=1,
             first_turn="driver",
             calculate_metrics=True,
-            checks=["avg_turn_taking_latency", "avg_words_per_minute", "total_turn_count"],
+            checks=[
+                "avg_turn_taking_latency",
+                "avg_words_per_minute",
+                "total_turn_count",
+            ],
         )
 
         # Basic assertions
         from okareo_api_client.types import Unset
-        
+
         assert evaluation.status == "FINISHED"
-        assert not isinstance(evaluation.model_metrics, Unset) and evaluation.model_metrics is not None
+        assert (
+            not isinstance(evaluation.model_metrics, Unset)
+            and evaluation.model_metrics is not None
+        )
 
         # Extract metrics
         metrics = evaluation.model_metrics.to_dict()
@@ -216,40 +233,48 @@ class TestVoiceSanity:
 
         # Driver turn taking latency < 5s
         driver_latency = baseline.get("avg_turn_taking_latency")
-        assert driver_latency is not None, "avg_turn_taking_latency should exist in baseline"
-        assert driver_latency < 5000, f"Driver latency {driver_latency}ms should be < 5000ms"
+        assert (
+            driver_latency is not None
+        ), "avg_turn_taking_latency should exist in baseline"
+        assert (
+            driver_latency < 5000
+        ), f"Driver latency {driver_latency}ms should be < 5000ms"
 
         # Target turn taking latency exists
         target_latency = mean_scores.get("avg_turn_taking_latency")
-        assert target_latency is not None, "avg_turn_taking_latency should exist in mean_scores"
+        assert (
+            target_latency is not None
+        ), "avg_turn_taking_latency should exist in mean_scores"
 
         # Validate all parallel conversations completed
         all_messages = get_messages(okareo, evaluation.id)
-        assert len(all_messages) == num_parallel, (
-            f"Expected {num_parallel} conversations, got {len(all_messages)}"
-        )
+        assert (
+            len(all_messages) == num_parallel
+        ), f"Expected {num_parallel} conversations, got {len(all_messages)}"
 
         # Per-conversation validation
         for conv_idx, messages in enumerate(all_messages):
             assert len(messages) > 0, f"Conversation {conv_idx}: should have messages"
-            
+
             user_count = 0
             assistant_count = 0
-            
+
             for msg_idx, msg in enumerate(messages):
                 role = msg.get("role")
                 if role == "user":
                     user_count += 1
                 elif role == "assistant":
                     assistant_count += 1
-                
+
                 validate_message_timing(msg, msg_idx)
                 validate_message_content(msg, msg_idx)
-            
+
             # Both sides have transcripts
             assert user_count > 0, f"Conversation {conv_idx}: should have user messages"
-            assert assistant_count > 0, f"Conversation {conv_idx}: should have assistant messages"
-            
+            assert (
+                assistant_count > 0
+            ), f"Conversation {conv_idx}: should have assistant messages"
+
             # Conversation order is sequential
             validate_conversation_order(messages)
 
@@ -334,7 +359,9 @@ class TestVoiceFirstTurn:
         assert len(messages) > 0
 
         first_msg = messages[0]
-        assert first_msg.get("role") == "assistant", "First speaker should be target (assistant)"
+        assert (
+            first_msg.get("role") == "assistant"
+        ), "First speaker should be target (assistant)"
         validate_message_content(first_msg, 0)
 
 
@@ -376,10 +403,11 @@ class TestVoiceConcurrent:
         assert evaluation.status == "FINISHED"
 
         messages = get_messages(okareo, evaluation.id)[0]
-        assert len(messages) >= 3, "Should have at least 3 messages (user, user, assistant)"
+        assert (
+            len(messages) >= 3
+        ), "Should have at least 3 messages (user, user, assistant)"
 
         # Validate sequence: user → user → assistant
         assert messages[0].get("role") == "user", "Message 1 should be user"
         assert messages[1].get("role") == "user", "Message 2 should be user"
         assert messages[2].get("role") == "assistant", "Message 3 should be assistant"
-
