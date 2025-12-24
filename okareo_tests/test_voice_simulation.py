@@ -100,10 +100,6 @@ def get_messages(okareo: Okareo, test_run_id: str) -> List[List[Dict[str, Any]]]
         FindTestDataPointPayload(test_run_id=test_run_id, full_data_point=True)
     )
 
-    # Handle potential error response
-    if isinstance(datapoints, ErrorResponse):
-        raise ValueError(f"Error fetching datapoints: {datapoints}")
-
     messages_list = []
     for dp in datapoints:
         # Ensure we have a FullDataPointItem with model_metadata
