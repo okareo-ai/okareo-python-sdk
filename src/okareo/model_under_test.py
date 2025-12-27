@@ -1907,6 +1907,8 @@ class Simulation:
     max_turns: Optional[int] = 5
     first_turn: Optional[str] = "target"
     checks_at_every_turn: Optional[bool] = False
+    concurrent_ask_probability: Optional[float] = 0.0
+    turn_transition_time: Optional[int] = 1000
 
     def __attrs_post_init__(self) -> None:
         if isinstance(self.stop_check, dict):
@@ -1923,6 +1925,8 @@ class Simulation:
                 else self.stop_check
             ),
             "checks_at_every_turn": self.checks_at_every_turn,
+            "concurrent_ask_probability": self.concurrent_ask_probability,
+            "turn_transition_time": self.turn_transition_time,
         }
 
 
