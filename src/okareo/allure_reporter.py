@@ -1,29 +1,192 @@
 """
-Allure Report generator for Okareo evaluation results.
+Allure Report Generator for Okareo Evaluation Results
+======================================================
 
 This module provides functionality to convert Okareo evaluation results
 into Allure Report compatible JSON format for visualization and dashboarding.
 
-Usage:
-    from okareo import Okareo
-    from okareo.allure_reporter import AllureReporter
+Allure Report is an open-source test reporting framework that provides
+interactive HTML reports with filtering, trends, and detailed test information.
+Learn more at: https://allurereport.org/docs/
+
+INSTALLATION
+------------
+
+1. Install the Allure CLI:
+
+   macOS:
+       brew install allure
+
+   Linux (Debian/Ubuntu):
+       sudo apt-add-repository ppa:qameta/allure
+       sudo apt-get update
+       sudo apt-get install allure
+
+   Windows:
+       scoop install allure
+
+   Or via npm (cross-platform):
+       npm install -g allure-commandline
+
+2. Verify installation:
+       allure --version
+
+
+QUICK START - Single Test Run
+-----------------------------
+
+    from okareo import Okareo, AllureReporter
     from okareo_api_client.models import FindTestDataPointPayload
 
-    # Run your evaluation
-    okareo = Okareo(api_key="...")
-    model = okareo.register_model(name="my-model", ...)
-    test_run = model.run_test(scenario=scenario, name="My Test")
-
-    # Fetch detailed data points
-    data_points = okareo.find_test_data_points(
-        FindTestDataPointPayload(test_run_id=test_run.id, full=True)
+    # 1. Run your evaluation
+    okareo = Okareo(api_key="your-api-key")
+    model = okareo.register_model(name="my-model", model=...)
+    test_run = model.run_test(
+        scenario=scenario,
+        name="My Evaluation",
+        test_run_type=TestRunType.NL_GENERATION,
+        checks=["coherence_summary"],
     )
 
-    # Generate Allure report
-    reporter = AllureReporter(test_run=test_run, data_points=data_points)
+    # 2. Fetch detailed data points
+    data_points = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=test_run.id, full_data_point=True)
+    )
+
+    # 3. Generate Allure results
+    reporter = AllureReporter(
+        test_run=test_run,
+        data_points=data_points,
+        pass_threshold=0.7,  # Checks scoring >= 0.7 pass
+    )
     reporter.generate()
 
-    # Then run (Allure 3): allure generate -o allure-report --open allure-results
+    # 4. Generate and view HTML report (run in terminal):
+    #    allure generate -o allure-report --open allure-results
+
+
+MULTI-RUN REPORTING
+-------------------
+
+To generate reports for multiple historical test runs, see the example script:
+    examples/allure_multi_run_example.py
+
+Command-line usage:
+    # All runs for a project
+    python examples/allure_multi_run_example.py --project-id YOUR_PROJECT_ID --limit 20
+
+    # Filter by test type
+    python examples/allure_multi_run_example.py --type MULTI_TURN --limit 10
+
+    # Filter by tags
+    python examples/allure_multi_run_example.py --tags production,v2
+
+
+GENERATING THE HTML REPORT
+--------------------------
+
+After running the AllureReporter, generate the HTML report:
+
+    # Allure 3 syntax (recommended):
+    allure generate -o allure-report --open allure-results
+
+    # Or separate steps:
+    allure generate -o allure-report allure-results
+    allure open allure-report
+
+The report will open in your browser with:
+- Overview dashboard with pass/fail statistics
+- Test suites organized by Okareo test run
+- Individual test cases for each scenario/data point
+- Check results shown as test steps
+- Scenario inputs/outputs as parameters and attachments
+
+
+CONFIGURATION OPTIONS
+---------------------
+
+AllureReporter accepts the following parameters:
+
+    test_run (TestRunItem):
+        The Okareo TestRunItem from an evaluation.
+
+    data_points (List[FullDataPointItem | TestDataPointItem]):
+        List of data points from the evaluation.
+
+    pass_threshold (float, default=0.5):
+        Threshold for numeric checks. Values >= threshold pass.
+        Example: pass_threshold=0.7 means scores >= 0.7 are passing.
+
+    output_dir (str, default="./allure-results"):
+        Directory for Allure result files.
+        Can also be set via ALLURE_RESULTS_DIR environment variable.
+
+    include_attachments (bool, default=True):
+        Whether to write attachment files for scenario data.
+        Set to False to reduce disk usage for large evaluations.
+
+
+ALLURE REPORT FEATURES
+----------------------
+
+The generated Allure report includes:
+
+- Test Hierarchy:
+    Parent Suite: "Okareo Evaluations"
+    Suite: Test run name
+    Sub-Suite: Timestamp (for multi-run organization)
+
+- Test Status Mapping:
+    passed  - All checks >= threshold
+    failed  - Any check < threshold
+    broken  - Execution error occurred
+
+- Test Steps:
+    Each Okareo check becomes an Allure step showing:
+    - Check name
+    - Score/value
+    - Pass/fail status
+
+- Labels:
+    - suite: Test run name
+    - feature: Test type (NL_GENERATION, MULTI_TURN, etc.)
+    - story: Metric type
+    - tags: From test run and data point tags
+
+- Parameters:
+    - scenario_input: The input to the model
+    - expected_result: Expected output
+    - model_output: Actual model response
+
+- Attachments:
+    - Full JSON data for inputs, outputs, and checks
+    - Model metrics summary
+
+
+ENVIRONMENT VARIABLES
+---------------------
+
+    OKAREO_API_KEY:
+        Your Okareo API key for authentication.
+
+    ALLURE_RESULTS_DIR:
+        Override the default output directory for Allure results.
+
+    BASE_URL:
+        Okareo API base URL (default: https://api.okareo.com)
+
+
+EXAMPLE FILES
+-------------
+
+See the examples directory for complete usage examples:
+
+    examples/allure_reporter_example.py
+        Basic single-run example with a new evaluation.
+
+    examples/allure_multi_run_example.py
+        Multi-run example with filtering by project, tags, type.
+        Includes command-line interface for easy use.
 """
 
 import hashlib
