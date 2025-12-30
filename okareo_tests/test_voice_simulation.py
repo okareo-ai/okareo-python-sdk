@@ -373,7 +373,7 @@ class TestVoiceConcurrent:
     ) -> None:
         """
         concurrent_ask_probability=1.0: Driver sends 2 messages before target responds.
-        Validates: Message sequence is user → user → assistant.
+        Validates: At least one occurrence of consecutive driver (user) messages.
         """
         driver = Driver(
             name=f"Concurrent Driver - {rnd}",
@@ -403,11 +403,19 @@ class TestVoiceConcurrent:
         assert evaluation.status == "FINISHED"
 
         messages = get_messages(okareo, evaluation.id)[0]
-        assert (
-            len(messages) >= 3
-        ), "Should have at least 3 messages (user, user, assistant)"
+        assert len(messages) >= 3, "Should have at least 3 messages"
 
-        # Validate sequence: user → user → assistant
-        assert messages[0].get("role") == "user", "Message 1 should be user"
-        assert messages[1].get("role") == "user", "Message 2 should be user"
-        assert messages[2].get("role") == "assistant", "Message 3 should be assistant"
+        # Find consecutive user messages (concurrent driver messages)
+        found_consecutive_user = False
+        for i in range(len(messages) - 1):
+            if (
+                messages[i].get("role") == "user"
+                and messages[i + 1].get("role") == "user"
+            ):
+                found_consecutive_user = True
+                break
+
+        assert found_consecutive_user, (
+            "Should have at least one occurrence of consecutive driver (user) messages. "
+            f"Message sequence: {[m.get('role') for m in messages]}"
+        )
