@@ -90,11 +90,9 @@ def create_scenario(okareo: Okareo, name: str, inputs: List[Dict[str, Any]]) -> 
     return okareo.create_scenario_set(ScenarioSetCreate(name=name, seed_data=seed_data))
 
 
-def get_messages(okareo: Okareo, test_run_id: str) -> List[List[Dict[str, Any]]]:
-    """Fetch messages from all datapoints for a test run."""
+def get_datapoints(okareo: Okareo, test_run_id: str) -> List[Any]:
+    """Fetch all datapoints for a test run."""
     from okareo_api_client.models.error_response import ErrorResponse
-    from okareo_api_client.models.full_data_point_item import FullDataPointItem
-    from okareo_api_client.types import Unset
 
     datapoints = okareo.find_test_data_points(
         FindTestDataPointPayload(test_run_id=test_run_id, full_data_point=True)
@@ -102,7 +100,17 @@ def get_messages(okareo: Okareo, test_run_id: str) -> List[List[Dict[str, Any]]]
 
     # Handle potential error response
     if isinstance(datapoints, ErrorResponse):
-        raise TypeError("Error fetching messages")
+        raise TypeError("Error fetching datapoints")
+
+    return datapoints
+
+
+def get_messages(okareo: Okareo, test_run_id: str) -> List[List[Dict[str, Any]]]:
+    """Fetch messages from all datapoints for a test run."""
+    from okareo_api_client.models.full_data_point_item import FullDataPointItem
+    from okareo_api_client.types import Unset
+
+    datapoints = get_datapoints(okareo, test_run_id)
 
     messages_list = []
     for dp in datapoints:
@@ -165,6 +173,217 @@ def validate_conversation_order(messages: List[Dict[str, Any]]) -> None:
         ), f"Message {i+1} start_time should be >= message {i} start_time"
 
 
+def get_driver_latencies(messages: List[Dict[str, Any]]) -> List[int]:
+    """
+    Extract driver latencies from user messages.
+
+    Driver latency is the time the driver took to respond after the target spoke.
+    The first user message (if driver starts first) will have latency=0 and is excluded.
+    """
+    latencies = []
+    for msg in messages:
+        if msg.get("role") == "user":
+            latency = msg.get("metadata", {}).get("latency")
+            # Exclude first message latency (0) since driver hasn't responded to anything yet
+            if latency is not None and latency > 0:
+                latencies.append(latency)
+    return latencies
+
+
+def validate_conversation_sanity(
+    okareo: Okareo,
+    datapoint: Any,
+    messages: List[Dict[str, Any]],
+    conv_idx: int,
+    max_driver_latency_ms: int = 5000,
+) -> None:
+    """
+    Validate sanity for a single conversation.
+
+    Checks:
+    - Messages exist
+    - Both user and assistant messages present
+    - Message timing (start/end times, duration)
+    - Message content (transcript, recording)
+    - Conversation order is sequential
+    - Driver latency within threshold
+    - Call recording exists with content
+
+    Args:
+        okareo: Okareo client instance
+        datapoint: Full datapoint with model_metadata
+        messages: List of messages from the conversation
+        conv_idx: Conversation index for error messages
+        max_driver_latency_ms: Maximum acceptable driver latency in milliseconds
+    """
+    assert len(messages) > 0, f"Conversation {conv_idx}: should have messages"
+
+    user_count = 0
+    assistant_count = 0
+
+    for msg_idx, msg in enumerate(messages):
+        role = msg.get("role")
+        if role == "user":
+            user_count += 1
+        elif role == "assistant":
+            assistant_count += 1
+
+        validate_message_timing(msg, msg_idx)
+        validate_message_content(msg, msg_idx)
+
+    # Both sides have transcripts
+    assert user_count > 0, f"Conversation {conv_idx}: should have user messages"
+    assert (
+        assistant_count > 0
+    ), f"Conversation {conv_idx}: should have assistant messages"
+
+    # Conversation order is sequential
+    validate_conversation_order(messages)
+
+    # Driver latency within threshold for all driver responses
+    driver_latencies = get_driver_latencies(messages)
+    for latency in driver_latencies:
+        assert (
+            latency < max_driver_latency_ms
+        ), f"Conversation {conv_idx}: driver latency {latency}ms should be < {max_driver_latency_ms}ms"
+
+    # Validate call recording exists and has duration > 0
+    validate_call_recording(okareo, datapoint, conv_idx)
+
+
+def validate_test_run_sanity(
+    okareo: Okareo,
+    evaluation: Any,
+    expected_conversations: int | None = None,
+    max_driver_latency_ms: int = 5000,
+    validate_metrics: bool = True,
+) -> None:
+    """
+    Validate sanity for an entire test run.
+
+    Checks:
+    - Evaluation status is FINISHED
+    - Metrics exist and latencies within threshold (if validate_metrics=True)
+    - Expected number of conversations (if provided)
+    - Per-conversation sanity (timing, content, order, recordings)
+
+    Args:
+        okareo: Okareo client instance
+        evaluation: Evaluation result from run_simulation
+        expected_conversations: Expected number of conversations (optional)
+        max_driver_latency_ms: Maximum acceptable driver latency in milliseconds
+        validate_metrics: Whether to validate metrics (requires calculate_metrics=True)
+    """
+    from okareo_api_client.types import Unset
+
+    # Basic status check
+    assert evaluation.status == "FINISHED"
+
+    # Metrics validation (optional)
+    if validate_metrics:
+        assert (
+            not isinstance(evaluation.model_metrics, Unset)
+            and evaluation.model_metrics is not None
+        ), "model_metrics should exist"
+
+        metrics = evaluation.model_metrics.to_dict()
+        mean_scores = metrics.get("mean_scores", {})
+        baseline = metrics.get("aggregate_baseline_metrics", {})
+
+        # Driver turn taking latency check
+        turn_taking_latency = baseline.get("avg_turn_taking_latency")
+        assert (
+            turn_taking_latency is not None
+        ), "avg_turn_taking_latency should exist in baseline"
+        assert (
+            turn_taking_latency < max_driver_latency_ms
+        ), f"Driver latency {turn_taking_latency}ms should be < {max_driver_latency_ms}ms"
+
+        # Target turn taking latency exists
+        target_latency = mean_scores.get("avg_turn_taking_latency")
+        assert (
+            target_latency is not None
+        ), "avg_turn_taking_latency should exist in mean_scores"
+
+    # Get datapoints and messages
+    all_datapoints = get_datapoints(okareo, evaluation.id)
+    all_messages = get_messages(okareo, evaluation.id)
+
+    # Validate expected conversation count
+    if expected_conversations is not None:
+        assert (
+            len(all_messages) == expected_conversations
+        ), f"Expected {expected_conversations} conversations, got {len(all_messages)}"
+        assert (
+            len(all_datapoints) == expected_conversations
+        ), f"Expected {expected_conversations} datapoints, got {len(all_datapoints)}"
+
+    # Per-conversation validation
+    for conv_idx, (datapoint, messages) in enumerate(zip(all_datapoints, all_messages)):
+        validate_conversation_sanity(
+            okareo, datapoint, messages, conv_idx, max_driver_latency_ms
+        )
+
+
+def validate_call_recording(okareo: Okareo, datapoint: Any, conv_idx: int) -> None:
+    """
+    Validate that the call recording exists and has duration > 0.
+
+    Args:
+        okareo: Okareo client instance
+        datapoint: Full datapoint with model_metadata
+        conv_idx: Conversation index for error messages
+    """
+    import requests
+
+    from okareo_api_client.models.full_data_point_item import FullDataPointItem
+    from okareo_api_client.types import Unset
+
+    if not isinstance(datapoint, FullDataPointItem):
+        raise TypeError(f"Conversation {conv_idx}: Expected FullDataPointItem")
+
+    if isinstance(datapoint.model_metadata, Unset) or datapoint.model_metadata is None:
+        raise ValueError(f"Conversation {conv_idx}: Missing model_metadata")
+
+    metadata = datapoint.model_metadata.additional_properties
+
+    # Check for call_recording_url or call_sid
+    call_recording_url = metadata.get("call_recording_url")
+    call_sid = metadata.get("call_sid")
+
+    assert (
+        call_recording_url or call_sid
+    ), f"Conversation {conv_idx}: Missing call_recording_url or call_sid"
+
+    # Fetch the recording using the call_recording_url
+    if call_recording_url:
+        api_key = os.environ["OKAREO_API_KEY"]
+        headers = {"api-key": api_key}
+
+        response = requests.get(call_recording_url, headers=headers, stream=True)
+        assert (
+            response.status_code == 200
+        ), f"Conversation {conv_idx}: Failed to fetch recording, status={response.status_code}"
+
+        # Get content length or download to check size
+        content_length = response.headers.get("content-length")
+        if content_length:
+            file_size = int(content_length)
+            assert (
+                file_size > 0
+            ), f"Conversation {conv_idx}: Recording file size should be > 0, got {file_size}"
+        else:
+            # If no content-length header, download and check actual size
+            content = b""
+            for chunk in response.iter_content(chunk_size=8192):
+                content += chunk
+                if len(content) > 100:  # Stop after confirming some content
+                    break
+            assert (
+                len(content) > 0
+            ), f"Conversation {conv_idx}: Recording content should be > 0 bytes"
+
+
 # ============================================================================
 # Tests
 # ============================================================================
@@ -182,6 +401,7 @@ class TestVoiceSanity:
         - Target turn taking latency exists
         - Parallel conversations complete (5/5)
         - All recordings captured with duration > 0
+        - Call recordings exist and have size > 0
         - Transcripts captured for both sides
         - Start/end times exist and are logical
         - Duration > 0 for each message
@@ -217,66 +437,14 @@ class TestVoiceSanity:
             ],
         )
 
-        # Basic assertions
-        from okareo_api_client.types import Unset
-
-        assert evaluation.status == "FINISHED"
-        assert (
-            not isinstance(evaluation.model_metrics, Unset)
-            and evaluation.model_metrics is not None
+        # Full sanity validation
+        validate_test_run_sanity(
+            okareo,
+            evaluation,
+            expected_conversations=num_parallel,
+            max_driver_latency_ms=5000,
+            validate_metrics=True,
         )
-
-        # Extract metrics
-        metrics = evaluation.model_metrics.to_dict()
-        mean_scores = metrics.get("mean_scores", {})
-        baseline = metrics.get("aggregate_baseline_metrics", {})
-
-        # Driver turn taking latency < 5s
-        driver_latency = baseline.get("avg_turn_taking_latency")
-        assert (
-            driver_latency is not None
-        ), "avg_turn_taking_latency should exist in baseline"
-        assert (
-            driver_latency < 5000
-        ), f"Driver latency {driver_latency}ms should be < 5000ms"
-
-        # Target turn taking latency exists
-        target_latency = mean_scores.get("avg_turn_taking_latency")
-        assert (
-            target_latency is not None
-        ), "avg_turn_taking_latency should exist in mean_scores"
-
-        # Validate all parallel conversations completed
-        all_messages = get_messages(okareo, evaluation.id)
-        assert (
-            len(all_messages) == num_parallel
-        ), f"Expected {num_parallel} conversations, got {len(all_messages)}"
-
-        # Per-conversation validation
-        for conv_idx, messages in enumerate(all_messages):
-            assert len(messages) > 0, f"Conversation {conv_idx}: should have messages"
-
-            user_count = 0
-            assistant_count = 0
-
-            for msg_idx, msg in enumerate(messages):
-                role = msg.get("role")
-                if role == "user":
-                    user_count += 1
-                elif role == "assistant":
-                    assistant_count += 1
-
-                validate_message_timing(msg, msg_idx)
-                validate_message_content(msg, msg_idx)
-
-            # Both sides have transcripts
-            assert user_count > 0, f"Conversation {conv_idx}: should have user messages"
-            assert (
-                assistant_count > 0
-            ), f"Conversation {conv_idx}: should have assistant messages"
-
-            # Conversation order is sequential
-            validate_conversation_order(messages)
 
 
 class TestVoiceFirstTurn:
@@ -287,7 +455,9 @@ class TestVoiceFirstTurn:
     ) -> None:
         """
         first_turn="driver": Driver speaks first.
-        Validates: First message is from "user" with captured greeting and audio.
+        Validates:
+        - First message is from "user" with captured greeting and audio
+        - Full sanity checks (timing, content, order, recordings, latency)
         """
         driver = Driver(
             name=f"Driver Starts - {rnd}",
@@ -310,24 +480,35 @@ class TestVoiceFirstTurn:
             repeats=1,
             first_turn="driver",
             calculate_metrics=True,
-            checks=["total_turn_count"],
+            checks=[
+                "avg_turn_taking_latency",
+                "avg_words_per_minute",
+                "total_turn_count",
+            ],
         )
 
-        assert evaluation.status == "FINISHED"
+        # Full sanity validation
+        validate_test_run_sanity(
+            okareo,
+            evaluation,
+            expected_conversations=1,
+            max_driver_latency_ms=5000,
+            validate_metrics=True,
+        )
 
+        # First turn specific validation
         messages = get_messages(okareo, evaluation.id)[0]
-        assert len(messages) > 0
-
         first_msg = messages[0]
         assert first_msg.get("role") == "user", "First speaker should be driver (user)"
-        validate_message_content(first_msg, 0)
 
     def test_target_starts_first(
         self, okareo: Okareo, twilio_target: TwilioVoiceTarget, rnd: str
     ) -> None:
         """
         first_turn="target": Target speaks first.
-        Validates: First message is from "assistant" with captured greeting and audio.
+        Validates:
+        - First message is from "assistant" with captured greeting and audio
+        - Full sanity checks (timing, content, order, recordings, latency)
         """
         driver = Driver(
             name=f"Target Starts - {rnd}",
@@ -350,19 +531,28 @@ class TestVoiceFirstTurn:
             repeats=1,
             first_turn="target",
             calculate_metrics=True,
-            checks=["total_turn_count"],
+            checks=[
+                "avg_turn_taking_latency",
+                "avg_words_per_minute",
+                "total_turn_count",
+            ],
         )
 
-        assert evaluation.status == "FINISHED"
+        # Full sanity validation
+        validate_test_run_sanity(
+            okareo,
+            evaluation,
+            expected_conversations=1,
+            max_driver_latency_ms=5000,
+            validate_metrics=True,
+        )
 
+        # First turn specific validation
         messages = get_messages(okareo, evaluation.id)[0]
-        assert len(messages) > 0
-
         first_msg = messages[0]
         assert (
             first_msg.get("role") == "assistant"
         ), "First speaker should be target (assistant)"
-        validate_message_content(first_msg, 0)
 
 
 class TestVoiceConcurrent:
@@ -373,7 +563,9 @@ class TestVoiceConcurrent:
     ) -> None:
         """
         concurrent_ask_probability=1.0: Driver sends 2 messages before target responds.
-        Validates: At least one occurrence of consecutive driver (user) messages.
+        Validates:
+        - At least one occurrence of consecutive driver (user) messages
+        - Full sanity checks (timing, content, order, recordings, latency)
         """
         driver = Driver(
             name=f"Concurrent Driver - {rnd}",
@@ -397,11 +589,23 @@ class TestVoiceConcurrent:
             first_turn="driver",
             concurrent_ask_probability=1.0,
             calculate_metrics=True,
-            checks=["total_turn_count"],
+            checks=[
+                "avg_turn_taking_latency",
+                "avg_words_per_minute",
+                "total_turn_count",
+            ],
         )
 
-        assert evaluation.status == "FINISHED"
+        # Full sanity validation
+        validate_test_run_sanity(
+            okareo,
+            evaluation,
+            expected_conversations=1,
+            max_driver_latency_ms=5000,
+            validate_metrics=True,
+        )
 
+        # Concurrent-specific validation
         messages = get_messages(okareo, evaluation.id)[0]
         assert len(messages) >= 3, "Should have at least 3 messages"
 
