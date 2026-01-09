@@ -14,15 +14,18 @@ class VoiceUploadRequest:
     Attributes:
         audio (str): Audio file (.wav) in base64-encoded bytes.
         project_id (Union[Unset, str]): ID of the project to associate the audio file with.
+        transcribe (Union[Unset, bool]): If True, transcribe the audio and create a datapoint with the transcribed conversation.
     """
 
     audio: str
     project_id: Union[Unset, str] = UNSET
+    transcribe: Union[Unset, bool] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         audio = self.audio
         project_id = self.project_id
+        transcribe = self.transcribe
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -33,6 +36,8 @@ class VoiceUploadRequest:
         )
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if transcribe is not UNSET:
+            field_dict["transcribe"] = transcribe
 
         return field_dict
 
@@ -43,9 +48,12 @@ class VoiceUploadRequest:
 
         project_id = d.pop("project_id", UNSET)
 
+        transcribe = d.pop("transcribe", UNSET)
+
         voice_upload_request = cls(
             audio=audio,
             project_id=project_id,
+            transcribe=transcribe,
         )
 
         voice_upload_request.additional_properties = d

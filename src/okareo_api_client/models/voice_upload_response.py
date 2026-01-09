@@ -1,9 +1,11 @@
 import datetime
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="VoiceUploadResponse")
 
@@ -16,12 +18,16 @@ class VoiceUploadResponse:
         file_url (str): Link to access the uploaded audio file.
         file_duration (float): Duration of the audio file in milliseconds.
         time_created (datetime.datetime): Timestamp indicating when audio file was created.
+        datapoint_id (Union[Unset, str]): ID of the created datapoint. Only present when transcribe=True.
+        message (Union[Unset, str]): Status message from transcription. Only present when transcribe=True.
     """
 
     file_id: str
     file_url: str
     file_duration: float
     time_created: datetime.datetime
+    datapoint_id: Union[Unset, str] = UNSET
+    message: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -29,6 +35,8 @@ class VoiceUploadResponse:
         file_url = self.file_url
         file_duration = self.file_duration
         time_created = self.time_created.isoformat()
+        datapoint_id = self.datapoint_id
+        message = self.message
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -40,6 +48,10 @@ class VoiceUploadResponse:
                 "time_created": time_created,
             }
         )
+        if datapoint_id is not UNSET:
+            field_dict["datapoint_id"] = datapoint_id
+        if message is not UNSET:
+            field_dict["message"] = message
 
         return field_dict
 
@@ -54,11 +66,17 @@ class VoiceUploadResponse:
 
         time_created = isoparse(d.pop("time_created"))
 
+        datapoint_id = d.pop("datapoint_id", UNSET)
+
+        message = d.pop("message", UNSET)
+
         voice_upload_response = cls(
             file_id=file_id,
             file_url=file_url,
             file_duration=file_duration,
             time_created=time_created,
+            datapoint_id=datapoint_id,
+            message=message,
         )
 
         voice_upload_response.additional_properties = d
