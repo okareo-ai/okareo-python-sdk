@@ -170,7 +170,7 @@ def validate_conversation_order(messages: List[Dict[str, Any]]) -> None:
         next_start = messages[i + 1].get("metadata", {}).get("start_time")
         assert (
             next_start >= curr_start
-        ), f"Message {i+1} start_time should be >= message {i} start_time"
+        ), f"Message {i + 1} start_time should be >= message {i} start_time"
 
 
 def get_driver_latencies(messages: List[Dict[str, Any]]) -> List[int]:

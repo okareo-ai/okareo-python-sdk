@@ -79,8 +79,12 @@ venv.bak/
 # IDEs
 .idea/
 
+# macOS
+.DS_Store
+
 # Local Development
 local-rebuild.sh
+tmp/
 
 # Models
 examples/webbizz_classification_model

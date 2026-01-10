@@ -1355,7 +1355,77 @@ class Okareo:
         file_path: Optional[str] = None,
         file_bytes: Optional[bytes] = None,
         project_id: Optional[str] = None,
+        transcribe: bool = False,
     ) -> VoiceUploadResponse:
+        """
+        Upload a voice recording file to Okareo.
+
+        This method uploads a WAV audio file and optionally transcribes it to create
+        a datapoint for evaluation. When transcription is enabled, the audio is processed
+        using multichannel transcription to separate speakers, and a datapoint is
+        automatically created with the transcribed conversation.
+
+        Args:
+            file_path (Optional[str]): Path to the WAV audio file to upload.
+                Either `file_path` or `file_bytes` must be provided.
+            file_bytes (Optional[bytes]): Raw bytes of the WAV audio file to upload.
+                Either `file_path` or `file_bytes` must be provided.
+            project_id (Optional[str]): ID of the project to associate the audio file with.
+                If not provided, uses the default project context.
+            transcribe (bool): If True, transcribe the audio and create a datapoint with
+                the transcribed conversation. When True, the response will include
+                `datapoint_id` and `message` fields. Defaults to False for backward
+                compatibility.
+
+        Returns:
+            VoiceUploadResponse: Response containing:
+                - `file_id`: Unique identifier for the uploaded audio file
+                - `file_url`: URL to access the uploaded audio file
+                - `file_duration`: Duration of the audio file in milliseconds
+                - `time_created`: Timestamp when the audio file was created
+                - `datapoint_id` (optional): ID of the created datapoint. Only present when `transcribe=True`
+                - `message` (optional): Status message from transcription. Only present when `transcribe=True`
+
+        Raises:
+            ValueError: If neither `file_path` nor `file_bytes` is provided.
+            OkareoAPIException: If the API request fails.
+
+        Note:
+            Only WAV audio files are supported. MP3 and other formats are not supported.
+
+        Example:
+            Upload without transcription (backward compatible):
+            ```python
+            response = okareo.upload_voice(file_path="recording.wav")
+            print(f"File uploaded: {response.file_url}")
+            ```
+
+            Upload with transcription to create a datapoint:
+            ```python
+            response = okareo.upload_voice(
+                file_path="conversation.wav",
+                transcribe=True
+            )
+            print(f"Datapoint created: {response.datapoint_id}")
+            print(f"Message: {response.message}")
+            ```
+
+            Use the created datapoint for evaluation:
+            ```python
+            response = okareo.upload_voice(
+                file_path="conversation.wav",
+                transcribe=True
+            )
+
+            # Create an evaluation using the transcribed datapoint
+            evaluation = okareo.evaluate(
+                name="Voice Conversation Evaluation",
+                test_run_type=TestRunType.NL_GENERATION,
+                datapoint_ids=[response.datapoint_id]
+            )
+            print(f"Evaluation link: {evaluation.app_link}")
+            ```
+        """
         audio_data = None
         if file_bytes:
             audio_data = file_bytes
@@ -1366,9 +1436,13 @@ class Okareo:
             raise ValueError("Either file_path or file_bytes must be provided.")
         audio_b64 = base64.b64encode(audio_data).decode("utf-8")
 
-        body = {"audio": audio_b64}
+        body: Dict[str, Any] = {"audio": audio_b64}
         if project_id:
             body["project_id"] = project_id
+        # Only include transcribe when True to maintain backward compatibility
+        # When transcribe=False (default), don't include it so model uses UNSET
+        if transcribe:
+            body["transcribe"] = True
         json_body = VoiceUploadRequest.from_dict(body)
         response = upload_voice_file_v0_voice_upload_post.sync(
             client=self.client, api_key=self.api_key, json_body=json_body
