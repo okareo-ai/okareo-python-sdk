@@ -357,7 +357,7 @@ class TestMultiturnErrors:
     ) -> Any:
         """Helper method to create custom endpoint configurations"""
         api_headers = json.dumps(
-            {"api-key": api_key, "Content-Type": "application/json"}
+            {"api-key": api_key, "Content-Type": "application/json.*"}
         )
 
         start_config = SessionConfig(
@@ -444,7 +444,7 @@ class TestMultiturnErrors:
         exception_str_template = (
             "Response status code {status_code} did not match expected status code 2000. Response: .*. Request: [A-Z]+ https?://.*?, Headers: {'api-key': '"
             + redacted_str
-            + "', 'Content-Type': 'application/json'}, Body: {}."
+            + "', 'Content-Type': 'application/json.*'}, Body: {}."
         )
         exception_str_match = exception_str_template.replace("{status_code}", "201")
 
