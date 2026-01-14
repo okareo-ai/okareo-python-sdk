@@ -582,28 +582,22 @@ class TestVoiceConcurrent:
         """
         import time
 
-        print("[Timing] START test_concurrent_driver_messages")
         t0 = time.perf_counter()
 
-        print("[Timing] Creating driver...")
         t_driver = time.perf_counter()
         driver = Driver(
             name=f"Concurrent Driver - {rnd}",
             temperature=0.5,
             prompt_template=DRIVER_PROMPT,
         )
-        print(f"[Timing] Driver creation took {time.perf_counter() - t_driver:.3f}s")
 
-        print("[Timing] Creating scenario...")
         t_scenario = time.perf_counter()
         scenario = create_scenario(
             okareo,
             f"Concurrent Scenario - {rnd}",
             [{"name": "Jane", "topic": "shipping options", "voice": "oliver"}],
         )
-        print(f"[Timing] Scenario creation took {time.perf_counter() - t_scenario:.3f}s")
 
-        print("[Timing] Running simulation...")
         t_simulation = time.perf_counter()
         evaluation = okareo.run_simulation(
             driver=driver,
@@ -621,9 +615,7 @@ class TestVoiceConcurrent:
                 "total_turn_count",
             ],
         )
-        print(f"[Timing] Simulation run took {time.perf_counter() - t_simulation:.3f}s")
 
-        print("[Timing] Sanity validation...")
         t_sanity = time.perf_counter()
         validate_test_run_sanity(
             okareo,
@@ -631,15 +623,12 @@ class TestVoiceConcurrent:
             expected_conversations=1,
             validate_metrics=True,
         )
-        print(f"[Timing] Sanity validation took {time.perf_counter() - t_sanity:.3f}s")
 
-        print("[Timing] Getting messages...")
         t_getmessages = time.perf_counter()
         messages = get_messages(okareo, evaluation.id)[0]
-        print(f"[Timing] Fetching messages took {time.perf_counter() - t_getmessages:.3f}s")
+
         assert len(messages) >= 3, "Should have at least 3 messages"
 
-        print("[Timing] Checking for consecutive user messages...")
         t_check = time.perf_counter()
         # Find consecutive user messages (concurrent driver messages)
         found_consecutive_user = False
@@ -651,9 +640,7 @@ class TestVoiceConcurrent:
                 found_consecutive_user = True
                 break
 
-        print(f"[Timing] Check took {time.perf_counter() - t_check:.3f}s")
         assert found_consecutive_user, (
             "Should have at least one occurrence of consecutive driver (user) messages. "
             f"Message sequence: {[m.get('role') for m in messages]}"
         )
-        print(f"[Timing] END test_concurrent_driver_messages. TOTAL: {time.perf_counter() - t0:.3f}s")
