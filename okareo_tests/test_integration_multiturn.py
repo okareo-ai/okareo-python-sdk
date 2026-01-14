@@ -1106,7 +1106,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
 
     # Define API headers
-    api_headers = json.dumps({"api-key": "foobar", "Content-Type": "application/json"})
+    api_headers = json.dumps({"api-key": "foobar", "Content-Type": "application/json; charset=utf-8"})
 
     # Create start session config
     start_config = SessionConfig(
@@ -1172,7 +1172,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
             + "/v0/custom_endpoint_stub/create, "
             + "Headers: {'api-key': '"
             + redacted_str
-            + "', 'Content-Type': 'application/json'}, Body: {}. "
+            + "', 'Content-Type': 'application/json; charset=utf-8'}, Body: {}. "
             + 'Error message is: {"detail":"Invalid Okareo API Token. Please check the docs to '
             + 'get Okareo API Token: https://okareo.com/docs/getting-started/overview"}.'
         ),
