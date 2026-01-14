@@ -580,25 +580,19 @@ class TestVoiceConcurrent:
         - At least one occurrence of consecutive driver (user) messages
         - Full sanity checks (timing, content, order, recordings, latency)
         """
-        import time
 
-        t0 = time.perf_counter()
-
-        t_driver = time.perf_counter()
         driver = Driver(
             name=f"Concurrent Driver - {rnd}",
             temperature=0.5,
             prompt_template=DRIVER_PROMPT,
         )
 
-        t_scenario = time.perf_counter()
         scenario = create_scenario(
             okareo,
             f"Concurrent Scenario - {rnd}",
             [{"name": "Jane", "topic": "shipping options", "voice": "oliver"}],
         )
 
-        t_simulation = time.perf_counter()
         evaluation = okareo.run_simulation(
             driver=driver,
             target=Target(name=f"Twilio Target - {rnd}", target=twilio_target),
@@ -616,7 +610,6 @@ class TestVoiceConcurrent:
             ],
         )
 
-        t_sanity = time.perf_counter()
         validate_test_run_sanity(
             okareo,
             evaluation,
@@ -624,12 +617,10 @@ class TestVoiceConcurrent:
             validate_metrics=True,
         )
 
-        t_getmessages = time.perf_counter()
         messages = get_messages(okareo, evaluation.id)[0]
 
         assert len(messages) >= 3, "Should have at least 3 messages"
 
-        t_check = time.perf_counter()
         # Find consecutive user messages (concurrent driver messages)
         found_consecutive_user = False
         for i in range(len(messages) - 1):
