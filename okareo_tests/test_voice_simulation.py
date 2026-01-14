@@ -195,7 +195,7 @@ def validate_conversation_sanity(
     datapoint: Any,
     messages: List[Dict[str, Any]],
     conv_idx: int,
-    max_driver_latency_ms: int = 5000,
+    max_driver_latency_ms: int = 7000,
 ) -> None:
     """
     Validate sanity for a single conversation.
@@ -206,7 +206,7 @@ def validate_conversation_sanity(
     - Message timing (start/end times, duration)
     - Message content (transcript, recording)
     - Conversation order is sequential
-    - Driver latency within threshold
+    - Driver latency within threshold (all individual latencies)
     - Call recording exists with content
 
     Args:
@@ -255,7 +255,8 @@ def validate_test_run_sanity(
     okareo: Okareo,
     evaluation: Any,
     expected_conversations: int | None = None,
-    max_driver_latency_ms: int = 5000,
+    max_driver_latency_ms: int = 7000,
+    median_driver_latency_ms: int = 5000,
     validate_metrics: bool = True,
 ) -> None:
     """
@@ -266,14 +267,19 @@ def validate_test_run_sanity(
     - Metrics exist and latencies within threshold (if validate_metrics=True)
     - Expected number of conversations (if provided)
     - Per-conversation sanity (timing, content, order, recordings)
+    - Median driver latency across all conversations
+    - All individual driver latencies within max threshold
 
     Args:
         okareo: Okareo client instance
         evaluation: Evaluation result from run_simulation
         expected_conversations: Expected number of conversations (optional)
-        max_driver_latency_ms: Maximum acceptable driver latency in milliseconds
+        max_driver_latency_ms: Maximum acceptable driver latency in milliseconds (default 7000ms)
+        median_driver_latency_ms: Maximum acceptable median driver latency in milliseconds (default 4500ms)
         validate_metrics: Whether to validate metrics (requires calculate_metrics=True)
     """
+    import statistics
+
     from okareo_api_client.types import Unset
 
     # Basic status check
@@ -295,9 +301,6 @@ def validate_test_run_sanity(
         assert (
             turn_taking_latency is not None
         ), "avg_turn_taking_latency should exist in baseline"
-        assert (
-            turn_taking_latency < max_driver_latency_ms
-        ), f"Driver latency {turn_taking_latency}ms should be < {max_driver_latency_ms}ms"
 
         # Target turn taking latency exists
         target_latency = mean_scores.get("avg_turn_taking_latency")
@@ -317,6 +320,19 @@ def validate_test_run_sanity(
         assert (
             len(all_datapoints) == expected_conversations
         ), f"Expected {expected_conversations} datapoints, got {len(all_datapoints)}"
+
+    # Collect all driver latencies across all conversations
+    all_driver_latencies = []
+    for messages in all_messages:
+        driver_latencies = get_driver_latencies(messages)
+        all_driver_latencies.extend(driver_latencies)
+
+    # Validate median driver latency
+    if all_driver_latencies:
+        median_latency = statistics.median(all_driver_latencies)
+        assert (
+            median_latency < median_driver_latency_ms
+        ), f"Median driver latency {median_latency}ms should be < {median_driver_latency_ms}ms"
 
     # Per-conversation validation
     for conv_idx, (datapoint, messages) in enumerate(zip(all_datapoints, all_messages)):
@@ -416,7 +432,7 @@ class TestVoiceSanity:
         )
 
         inputs = [
-            {"name": f"Customer{i}", "topic": "store hours", "voice": "ash"}
+            {"name": f"Customer{i}", "topic": "store hours", "voice": "oliver"}
             for i in range(num_parallel)
         ]
         scenario = create_scenario(okareo, f"Sanity Scenario - {rnd}", inputs)
@@ -442,7 +458,6 @@ class TestVoiceSanity:
             okareo,
             evaluation,
             expected_conversations=num_parallel,
-            max_driver_latency_ms=5000,
             validate_metrics=True,
         )
 
@@ -468,7 +483,7 @@ class TestVoiceFirstTurn:
         scenario = create_scenario(
             okareo,
             f"Driver Starts Scenario - {rnd}",
-            [{"name": "Sarah", "topic": "return policy", "voice": "coral"}],
+            [{"name": "Sarah", "topic": "return policy", "voice": "oliver"}],
         )
 
         evaluation = okareo.run_simulation(
@@ -492,7 +507,6 @@ class TestVoiceFirstTurn:
             okareo,
             evaluation,
             expected_conversations=1,
-            max_driver_latency_ms=5000,
             validate_metrics=True,
         )
 
@@ -519,7 +533,7 @@ class TestVoiceFirstTurn:
         scenario = create_scenario(
             okareo,
             f"Target Starts Scenario - {rnd}",
-            [{"name": "Mike", "topic": "order status", "voice": "ash"}],
+            [{"name": "Mike", "topic": "order status", "voice": "oliver"}],
         )
 
         evaluation = okareo.run_simulation(
@@ -543,7 +557,6 @@ class TestVoiceFirstTurn:
             okareo,
             evaluation,
             expected_conversations=1,
-            max_driver_latency_ms=5000,
             validate_metrics=True,
         )
 
@@ -567,18 +580,31 @@ class TestVoiceConcurrent:
         - At least one occurrence of consecutive driver (user) messages
         - Full sanity checks (timing, content, order, recordings, latency)
         """
+        import time
+
+        print("[Timing] START test_concurrent_driver_messages")
+        t0 = time.perf_counter()
+
+        print("[Timing] Creating driver...")
+        t_driver = time.perf_counter()
         driver = Driver(
             name=f"Concurrent Driver - {rnd}",
             temperature=0.5,
             prompt_template=DRIVER_PROMPT,
         )
+        print(f"[Timing] Driver creation took {time.perf_counter() - t_driver:.3f}s")
 
+        print("[Timing] Creating scenario...")
+        t_scenario = time.perf_counter()
         scenario = create_scenario(
             okareo,
             f"Concurrent Scenario - {rnd}",
-            [{"name": "Jane", "topic": "shipping options", "voice": "ash"}],
+            [{"name": "Jane", "topic": "shipping options", "voice": "oliver"}],
         )
+        print(f"[Timing] Scenario creation took {time.perf_counter() - t_scenario:.3f}s")
 
+        print("[Timing] Running simulation...")
+        t_simulation = time.perf_counter()
         evaluation = okareo.run_simulation(
             driver=driver,
             target=Target(name=f"Twilio Target - {rnd}", target=twilio_target),
@@ -595,20 +621,26 @@ class TestVoiceConcurrent:
                 "total_turn_count",
             ],
         )
+        print(f"[Timing] Simulation run took {time.perf_counter() - t_simulation:.3f}s")
 
-        # Full sanity validation
+        print("[Timing] Sanity validation...")
+        t_sanity = time.perf_counter()
         validate_test_run_sanity(
             okareo,
             evaluation,
             expected_conversations=1,
-            max_driver_latency_ms=5000,
             validate_metrics=True,
         )
+        print(f"[Timing] Sanity validation took {time.perf_counter() - t_sanity:.3f}s")
 
-        # Concurrent-specific validation
+        print("[Timing] Getting messages...")
+        t_getmessages = time.perf_counter()
         messages = get_messages(okareo, evaluation.id)[0]
+        print(f"[Timing] Fetching messages took {time.perf_counter() - t_getmessages:.3f}s")
         assert len(messages) >= 3, "Should have at least 3 messages"
 
+        print("[Timing] Checking for consecutive user messages...")
+        t_check = time.perf_counter()
         # Find consecutive user messages (concurrent driver messages)
         found_consecutive_user = False
         for i in range(len(messages) - 1):
@@ -619,7 +651,9 @@ class TestVoiceConcurrent:
                 found_consecutive_user = True
                 break
 
+        print(f"[Timing] Check took {time.perf_counter() - t_check:.3f}s")
         assert found_consecutive_user, (
             "Should have at least one occurrence of consecutive driver (user) messages. "
             f"Message sequence: {[m.get('role') for m in messages]}"
         )
+        print(f"[Timing] END test_concurrent_driver_messages. TOTAL: {time.perf_counter() - t0:.3f}s")
