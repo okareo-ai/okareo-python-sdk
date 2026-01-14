@@ -1106,7 +1106,9 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
 
     # Define API headers
-    api_headers = json.dumps({"api-key": "foobar", "Content-Type": "application/json; charset=utf-8"})
+    api_headers = json.dumps(
+        {"api-key": "foobar", "Content-Type": "application/json; charset=utf-8"}
+    )
 
     # Create start session config
     start_config = SessionConfig(
