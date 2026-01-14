@@ -8,6 +8,7 @@ import pytest
 from okareo.common import BASE_URL
 
 API_KEY = os.environ.get("OKAREO_API_KEY", "no-api-key")
+PROXY_URL = os.environ.get("PROXY_URL", "http://host.docker.internal:4000")
 
 
 class OkareoAPIhost:
