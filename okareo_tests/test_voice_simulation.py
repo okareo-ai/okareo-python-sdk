@@ -464,7 +464,7 @@ class TestVoiceSanity:
 
 class TestVoiceFirstTurn:
     """Tests for first turn control (driver vs target starts)."""
-
+    @pytest.mark.skip(reason="Skipping tests until test target can be parameterized)")
     def test_driver_starts_first(
         self, okareo: Okareo, twilio_target: TwilioVoiceTarget, rnd: str
     ) -> None:
