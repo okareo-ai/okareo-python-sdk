@@ -357,7 +357,7 @@ class TestMultiturnErrors:
     ) -> Any:
         """Helper method to create custom endpoint configurations"""
         api_headers = json.dumps(
-            {"api-key": api_key, "Content-Type": "application/json.*"}
+            {"api-key": api_key, "Content-Type": "application/json; charset=utf-8"}
         )
 
         start_config = SessionConfig(

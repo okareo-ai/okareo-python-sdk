@@ -16,7 +16,6 @@ import numpy as np
 import requests
 import websockets
 from attrs import define as _attrs_define
-from scipy.signal import resample_poly
 
 from okareo import Okareo
 from okareo.model_under_test import (
@@ -87,6 +86,12 @@ def tts_pcm16(
     native_sr = 24000
     audio = np.frombuffer(r.content, dtype=np.int16)
     if target_sr != native_sr:
+        try:
+            from scipy.signal import resample_poly
+        except ImportError as e:
+            raise ImportError(
+                "scipy is required for audio resampling. Install it with: pip install okareo[voice]"
+            ) from e
         audio = resample_poly(audio, target_sr, native_sr).astype(np.int16)
     return audio.tobytes()
 
