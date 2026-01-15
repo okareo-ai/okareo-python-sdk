@@ -432,7 +432,7 @@ class TestVoiceSanity:
         )
 
         inputs = [
-            {"name": f"Customer{i}", "topic": "store hours", "voice": "ash"}
+            {"name": f"Customer{i}", "topic": "store hours", "voice": "oscar"}
             for i in range(num_parallel)
         ]
         scenario = create_scenario(okareo, f"Sanity Scenario - {rnd}", inputs)
@@ -484,7 +484,7 @@ class TestVoiceFirstTurn:
         scenario = create_scenario(
             okareo,
             f"Driver Starts Scenario - {rnd}",
-            [{"name": "Sarah", "topic": "return policy", "voice": "ash"}],
+            [{"name": "Sarah", "topic": "return policy", "voice": "oscar"}],
         )
 
         evaluation = okareo.run_simulation(
@@ -534,7 +534,7 @@ class TestVoiceFirstTurn:
         scenario = create_scenario(
             okareo,
             f"Target Starts Scenario - {rnd}",
-            [{"name": "Mike", "topic": "order status", "voice": "ash"}],
+            [{"name": "Mike", "topic": "order status", "voice": "oscar"}],
         )
 
         evaluation = okareo.run_simulation(
@@ -591,7 +591,7 @@ class TestVoiceConcurrent:
         scenario = create_scenario(
             okareo,
             f"Concurrent Scenario - {rnd}",
-            [{"name": "Jane", "topic": "shipping options", "voice": "ash"}],
+            [{"name": "Jane", "topic": "shipping options", "voice": "oscar"}],
         )
 
         evaluation = okareo.run_simulation(

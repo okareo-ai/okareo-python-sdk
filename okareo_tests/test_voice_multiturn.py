@@ -160,7 +160,7 @@ def run_voice_multiturn_test(
                 "input": {
                     "name": "James Taylor",
                     "productType": "Apparel",
-                    "voice": "oliver",
+                    "voice": "oscar",
                 },
                 "result": "Share refund limits for Apparel.",
             }
@@ -223,7 +223,7 @@ def run_voice_multiturn_test_audio_check(
                 "input": {
                     "name": "James Taylor",
                     "productType": "iPhone 17",
-                    "voice": "oliver",
+                    "voice": "oscar",
                 },
                 "result": "Receive an exchange or refund for malfunctioning iPhone 17.",
             }
