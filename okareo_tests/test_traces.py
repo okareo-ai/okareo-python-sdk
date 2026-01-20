@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 import secrets
 import time
@@ -29,6 +30,8 @@ from okareo_api_client.models.find_test_data_point_payload import (
 )
 from okareo_api_client.models.test_run_type import TestRunType
 
+logger = logging.getLogger(__name__)
+
 # ============================================================================
 # Timing Utilities
 # ============================================================================
@@ -47,14 +50,14 @@ def timed(operation: str) -> Generator[None, None, None]:
         if operation not in _timing_results:
             _timing_results[operation] = []
         _timing_results[operation].append(elapsed)
-        print(f"⏱️  {operation}: {elapsed:.3f}s")
+        logger.debug(f"⏱️  {operation}: {elapsed:.3f}s")
 
 
 def print_timing_summary() -> None:
     """Print a summary of all timed operations."""
-    print("\n" + "=" * 60)
-    print("TIMING SUMMARY")
-    print("=" * 60)
+    logger.info(f"\n{'=' * 60}")
+    logger.info("TIMING SUMMARY")
+    logger.info("=" * 60)
 
     # Sort by total time descending
     sorted_ops = sorted(_timing_results.items(), key=lambda x: sum(x[1]), reverse=True)
@@ -63,10 +66,10 @@ def print_timing_summary() -> None:
         total = sum(times)
         count = len(times)
         avg = total / count if count > 0 else 0
-        print(f"{operation}:")
-        print(f"  Total: {total:.3f}s | Count: {count} | Avg: {avg:.3f}s")
+        logger.info(f"{operation}:")
+        logger.info(f"  Total: {total:.3f}s | Count: {count} | Avg: {avg:.3f}s")
 
-    print("=" * 60 + "\n")
+    logger.info(f"{'=' * 60}\n")
 
 
 def reset_timing() -> None:
@@ -127,10 +130,11 @@ def find_datapoints(
         if response.status_code == 200:
             data = response.json()
             if isinstance(data, list) and len(data) > 0:
-                print(f"find_datapoints: found {len(data)} datapoints")
+                logger.debug(f"find_datapoints: found {len(data)} datapoints")
                 return data
-        print(
-            f"find_datapoints attempt {attempt + 1}: {response.status_code}, retrying..."
+        attempt_num = attempt + 1
+        logger.debug(
+            f"find_datapoints attempt {attempt_num}: {response.status_code}, retrying..."
         )
         time.sleep(10 * (attempt + 1))
 
@@ -252,7 +256,7 @@ def test_traces_endpoint_with_verification(api_key: Any, base_url: Any) -> Any:
     # Generate identifiers for this test
     test_id = generate_random_string()
     session_id = str(uuid.uuid4())
-    print(f"Using test_id: {test_id}, session_id: {session_id}")
+    logger.debug(f"Using test_id: {test_id}, session_id: {session_id}")
 
     # Build and send trace using shared utilities
     messages = [{"role": "user", "content": f"Test message with {test_id}"}]
@@ -280,7 +284,7 @@ def test_traces_endpoint_with_verification(api_key: Any, base_url: Any) -> Any:
         response_data = response.json()
         assert response_data.get("status") == "success"
         assert "message" in response_data
-        print(f"Response: {response_data}")
+        logger.debug(f"Response: {response_data}")
     except ValueError:
         # If response is not JSON, just check status code
         pass
@@ -291,7 +295,7 @@ def test_traces_endpoint_with_verification(api_key: Any, base_url: Any) -> Any:
     assert (
         len(datapoints) > 0
     ), f"Span with session_id '{session_id}' was not found in Okareo"
-    print(f"Found {len(datapoints)} datapoint(s) with session_id: {session_id}")
+    logger.info(f"Found {len(datapoints)} datapoint(s) with session_id: {session_id}")
     print_timing_summary()
 
 
@@ -385,7 +389,7 @@ def run_trace_consistency_test(
     generation_output = tdp.metric_value.additional_properties.get(  # type: ignore
         "generation_output", []
     )
-    print(f"Simulation conversation: {json.dumps(generation_output, indent=2)}")
+    logger.debug(f"Simulation conversation: {json.dumps(generation_output, indent=2)}")
 
     # Prepare message data for traces
     trace_messages = generation_output[:-1] if generation_output else []
@@ -396,9 +400,9 @@ def run_trace_consistency_test(
     # =========================================================================
     # Test 1: MATCHING trace (same session_id, same conversation)
     # =========================================================================
-    print("\n" + "=" * 60)
-    print("TEST 1: MATCHING TRACE")
-    print("=" * 60)
+    logger.info(f"\n{'=' * 60}")
+    logger.info("TEST 1: MATCHING TRACE")
+    logger.info("=" * 60)
 
     matching_trace_payload = build_otel_trace_payload(
         session_id=simulation_session_id,
@@ -411,14 +415,14 @@ def run_trace_consistency_test(
     assert (
         response.status_code == 201
     ), f"Failed to send matching trace: {response.text}"
-    print(f"Sent matching trace with session_id: {simulation_session_id}")
+    logger.info(f"Sent matching trace with session_id: {simulation_session_id}")
 
     # =========================================================================
     # Test 2: MISMATCHED trace (different session_id, truncated user messages)
     # =========================================================================
-    print("\n" + "=" * 60)
-    print("TEST 2: MISMATCHED TRACE")
-    print("=" * 60)
+    logger.info(f"\n{'=' * 60}")
+    logger.info("TEST 2: MISMATCHED TRACE")
+    logger.info("=" * 60)
 
     # Use a different session_id for the mismatched trace so it links to the same simulation
     # but creates a separate trace datapoint we can evaluate independently
@@ -442,8 +446,8 @@ def run_trace_consistency_test(
         first_mismatch_user: dict[str, Any] = next(
             (m for m in mismatched_messages if m.get("role") == "user"), {}
         )
-        print(f"Simulation user message: '{first_sim_user.get('content', '')}'")
-        print(
+        logger.debug(f"Simulation user message: '{first_sim_user.get('content', '')}'")
+        logger.debug(
             f"Trace user message (truncated): '{first_mismatch_user.get('content', '')}'"
         )
 
@@ -462,7 +466,7 @@ def run_trace_consistency_test(
     assert (
         response.status_code == 201
     ), f"Failed to send mismatched trace: {response.text}"
-    print(f"Sent mismatched trace with session_id: {simulation_session_id}")
+    logger.info(f"Sent mismatched trace with session_id: {simulation_session_id}")
 
     # =========================================================================
     # Wait for trace ingestion and find all trace datapoints
@@ -474,7 +478,7 @@ def run_trace_consistency_test(
 
     # Filter to only OTEL-ingested datapoints (source != "Okareo")
     trace_only = [dp for dp in trace_datapoints if dp.get("source") != "Okareo"]
-    print(
+    logger.info(
         f"Trace datapoints found: {len(trace_only)} (total with same context_token: {len(trace_datapoints)})"
     )
     assert (
@@ -482,14 +486,14 @@ def run_trace_consistency_test(
     ), f"Expected at least 2 trace datapoints, found {len(trace_only)}"
 
     datapoint_ids: list[str] = [str(dp.get("id")) for dp in trace_only if dp.get("id")]
-    print(f"Datapoint IDs: {datapoint_ids}")
+    logger.debug(f"Datapoint IDs: {datapoint_ids}")
 
     # =========================================================================
     # Evaluate all trace datapoints together
     # =========================================================================
-    print("\n" + "=" * 60)
-    print("EVALUATING ALL TRACES")
-    print("=" * 60)
+    logger.info(f"\n{'=' * 60}")
+    logger.info("EVALUATING ALL TRACES")
+    logger.info("=" * 60)
 
     with timed("evaluate (simulation_trace_consistency)"):
         check_eval = okareo_client.evaluate(
@@ -502,7 +506,7 @@ def run_trace_consistency_test(
     assert (
         check_eval.status == "FINISHED"
     ), f"Evaluation failed: {check_eval.failure_message}"
-    print(f"Evaluation completed: {check_eval.app_link}")
+    logger.info(f"Evaluation completed: {check_eval.app_link}")
 
     # Verify we get one pass (matching) and one fail (mismatched)
     with timed("find_test_data_points (evaluation)"):
@@ -517,15 +521,15 @@ def run_trace_consistency_test(
         checks = eval_tdp.checks if eval_tdp.checks else {}  # type: ignore
         consistency_score = checks.get("simulation_trace_consistency")
         explanation = checks.get("simulation_trace_consistency__explanation", "")
-        print(f"simulation_trace_consistency score: {consistency_score}")
+        logger.debug(f"simulation_trace_consistency score: {consistency_score}")
         if explanation:
-            print(f"Explanation: {explanation}")
+            logger.debug(f"Explanation: {explanation}")
         if consistency_score is True:
             pass_count += 1
         elif consistency_score is False:
             fail_count += 1
 
-    print(f"\nResults: {pass_count} passed, {fail_count} failed")
+    logger.info(f"Results: {pass_count} passed, {fail_count} failed")
     assert (
         pass_count >= 1
     ), f"Expected at least 1 pass (matching trace), got {pass_count}"
@@ -533,7 +537,9 @@ def run_trace_consistency_test(
         fail_count >= 1
     ), f"Expected at least 1 fail (mismatched trace), got {fail_count}"
 
-    print("PASS: Got expected mix of matching (pass) and mismatched (fail) results")
+    logger.info(
+        "PASS: Got expected mix of matching (pass) and mismatched (fail) results"
+    )
 
 
 def test_simulation_trace_consistency_matching_and_mismatching(
@@ -604,7 +610,7 @@ def test_simulation_trace_consistency_matching_and_mismatching(
     assert (
         simulation_eval.status == "FINISHED"
     ), f"Simulation failed: {simulation_eval.failure_message}"
-    print(f"Simulation completed with session_id: {simulation_session_id}")
+    logger.info(f"Simulation completed with session_id: {simulation_session_id}")
 
     run_trace_consistency_test(
         api_key,
@@ -670,7 +676,7 @@ def test_voice_simulation_trace_consistency_matching_and_mismatching(
     assert len(datapoints) > 0, "No datapoints found for voice simulation"
     simulation_session_id = datapoints[0].get("context_token")
     assert simulation_session_id, "No context_token found in voice simulation datapoint"
-    print(f"Voice simulation completed with session_id: {simulation_session_id}")
+    logger.info(f"Voice simulation completed with session_id: {simulation_session_id}")
 
     run_trace_consistency_test(
         api_key,
