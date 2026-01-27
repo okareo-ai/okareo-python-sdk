@@ -687,3 +687,229 @@ def test_voice_simulation_trace_consistency_matching_and_mismatching(
         test_id,
     )
     print_timing_summary()
+
+
+# ============================================================================
+# Parallel Processing Tests
+# ============================================================================
+
+
+def build_multi_span_trace_payload(
+    session_id: str,
+    num_spans: int,
+    test_identifier: str,
+    model_name: str = "gpt-4",
+) -> dict[str, Any]:
+    """Build an OTEL trace payload with multiple GenAI spans.
+
+    Args:
+        session_id: Session ID for correlation (becomes context_token)
+        num_spans: Number of spans to create in the trace
+        test_identifier: Unique identifier for this test
+        model_name: Model name for the spans
+
+    Returns:
+        OTEL trace payload dict ready for protobuf conversion
+    """
+    current_time_ns = int(time.time() * 1_000_000_000)
+    trace_id_bytes = secrets.token_bytes(16)
+    trace_id_b64 = base64.b64encode(trace_id_bytes).decode("utf-8")
+
+    spans = []
+    for i in range(num_spans):
+        span_id_bytes = secrets.token_bytes(8)
+        span_id_b64 = base64.b64encode(span_id_bytes).decode("utf-8")
+        start_ns = current_time_ns - ((num_spans - i) * 1_000_000_000)
+
+        attributes = [
+            {"key": "gen_ai.request.model", "value": {"stringValue": model_name}},
+            {"key": "gen_ai.system", "value": {"stringValue": "openai"}},
+            {"key": "llm.request.type", "value": {"stringValue": "chat"}},
+            {"key": "session.id", "value": {"stringValue": session_id}},
+            {"key": "test_identifier", "value": {"stringValue": test_identifier}},
+            {
+                "key": "llm.messages",
+                "value": {
+                    "stringValue": json.dumps(
+                        [{"role": "user", "content": f"Test message {i}"}]
+                    )
+                },
+            },
+            {
+                "key": "SpanAttributes.LLM_COMPLETIONS.0.content",
+                "value": {"stringValue": f"This is a helpful response to message {i}."},
+            },
+            {
+                "key": "SpanAttributes.LLM_COMPLETIONS.0.role",
+                "value": {"stringValue": "assistant"},
+            },
+        ]
+
+        span = {
+            "traceId": trace_id_b64,
+            "spanId": span_id_b64,
+            "name": "litellm_request",
+            "kind": 1,
+            "startTimeUnixNano": str(start_ns),
+            "endTimeUnixNano": str(start_ns + 500_000_000),
+            "attributes": attributes,
+            "status": {"code": 1},
+            "flags": 256,
+        }
+        spans.append(span)
+
+    return {
+        "resourceSpans": [
+            {
+                "resource": {
+                    "attributes": [
+                        {"key": "service.name", "value": {"stringValue": "parallel_test"}},
+                    ]
+                },
+                "scopeSpans": [
+                    {
+                        "scope": {"name": "parallel_test"},
+                        "spans": spans,
+                    }
+                ],
+            }
+        ]
+    }
+
+
+def create_monitor_with_checks(
+    api_key: str,
+    base_url: str,
+    project_id: str,
+    monitor_name: str,
+    checks: list[str],
+) -> dict[str, Any]:
+    """Create a monitor (filter) that matches traces and attaches checks."""
+    headers = {"Content-Type": "application/json", "api-key": api_key}
+
+    payload = {
+        "filters": [
+            {"field": "request_model_name", "operator": "contains", "value": "gpt"}
+        ],
+        "name": monitor_name,
+        "description": "Test monitor for parallel trace checks",
+        "checks": checks,
+        "project_id": project_id,
+        "slack_enabled": False,
+        "email_enabled": False,
+    }
+
+    response = requests.post(f"{base_url}/v0/filters", headers=headers, json=payload)
+    assert response.status_code == 201, f"Failed to create monitor: {response.text}"
+    return response.json()
+
+
+def delete_monitor(api_key: str, base_url: str, filter_group_id: str) -> None:
+    """Delete a monitor (filter group)."""
+    headers = {"Content-Type": "application/json", "api-key": api_key}
+    response = requests.delete(
+        f"{base_url}/v0/filters",
+        headers=headers,
+        json={"filter_group_id": filter_group_id},
+    )
+    assert response.status_code in [204, 404], f"Failed to delete monitor: {response.text}"
+
+
+def get_project_id(api_key: str, base_url: str) -> str:
+    """Get the first project ID for the authenticated user."""
+    headers = {"Content-Type": "application/json", "api-key": api_key}
+    response = requests.get(f"{base_url}/v0/projects", headers=headers)
+    assert response.status_code in [200, 201], f"Failed to get projects: {response.status_code}"
+    projects = response.json()
+    assert len(projects) > 0, "No projects found"
+    return str(projects[0]["id"])
+
+
+def test_parallel_trace_processing_with_checks(api_key: str, base_url: str) -> None:
+    """Test parallel processing of multiple spans in a single trace with monitor checks.
+
+    This test:
+    1. Creates a monitor with checks (coherence_summary, fluency_summary)
+    2. Sends a single trace with 5 spans (triggers parallel processing >= 3 threshold)
+    3. Verifies all 5 datapoints are created
+    4. Verifies checks are executed on all datapoints
+    """
+    reset_timing()
+    test_id = generate_random_string()
+    session_id = str(uuid.uuid4())
+    num_spans = 5  # Above parallel threshold (>=3)
+
+    project_id = get_project_id(api_key, base_url)
+
+    checks = ["coherence_summary", "fluency_summary"]
+
+    # Step 1: Create monitor with checks
+    logger.info(f"Creating monitor with checks: {checks}")
+    monitor = create_monitor_with_checks(
+        api_key=api_key,
+        base_url=base_url,
+        project_id=project_id,
+        monitor_name=f"parallel_test_monitor_{test_id}",
+        checks=checks,
+    )
+    filter_group_id = monitor["filter_group_id"]
+    logger.info(f"Monitor created: {filter_group_id}")
+
+    try:
+        # Step 2: Send multi-span trace (triggers parallel processing)
+        logger.info(f"Sending {num_spans} span trace with session_id={session_id}")
+        payload = build_multi_span_trace_payload(
+            session_id=session_id,
+            num_spans=num_spans,
+            test_identifier=test_id,
+        )
+        response = send_otel_trace(payload, api_key, base_url)
+
+        # Verify response
+        assert (
+            response.status_code == 201
+        ), f"Expected 201, got {response.status_code}: {response.text}"
+        response_data = response.json()
+        summary = response_data.get("summary", {})
+
+        logger.info(f"Response: {response_data}")
+
+        assert summary.get("status") == "success"
+        assert summary.get("spans_processed") == num_spans
+        assert summary.get("datapoints_created") == num_spans
+
+        # Verify parallel processing was used
+        message = response_data.get("message", "")
+        assert (
+            "parallel" in message.lower()
+        ), f"Expected parallel processing, message: {message}"
+        logger.info(f"Parallel processing confirmed: {message}")
+
+        # Step 3: Find all datapoints and verify checks executed on each
+        logger.info("Finding datapoints and verifying checks...")
+        filters = [{"field": "context_token", "operator": "equal", "value": session_id}]
+        datapoints = find_datapoints(api_key, base_url, filters, wait=5)
+
+        assert (
+            len(datapoints) >= num_spans
+        ), f"Expected at least {num_spans} datapoints, found {len(datapoints)}"
+
+        # Verify checks on each datapoint
+        for i, datapoint in enumerate(datapoints[:num_spans]):
+            checks_dict = datapoint.get("checks", {}) or {}
+            check_names = set(checks_dict.keys())
+            logger.info(f"Datapoint {i+1} checks: {list(check_names)}")
+
+            for expected_check in checks:
+                assert expected_check in check_names, (
+                    f"Check '{expected_check}' not found in datapoint {i+1}. Found: {check_names}"
+                )
+
+        logger.info(
+            f"SUCCESS: {num_spans} datapoints with checks verified (parallel processing)"
+        )
+        print_timing_summary()
+
+    finally:
+        delete_monitor(api_key, base_url, filter_group_id)
+        logger.info("Monitor deleted")
