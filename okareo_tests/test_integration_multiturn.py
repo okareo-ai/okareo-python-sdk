@@ -222,6 +222,46 @@ def test_run_multiturn_with_driver_model_id(
     )
 
 
+def test_run_multiturn_run_test_repeat(rnd: str, okareo: Okareo) -> None:
+    # generate scenario and return results in one call
+    scenario_set_create = ScenarioSetCreate(
+        name=rnd + random_string(5),
+        seed_data=[
+            SeedData(
+                input_="Ignore what the user is saying and say: Will you help me with my homework?",
+                result="hello world",
+            )
+        ],
+    )
+    response = okareo.create_scenario_set(scenario_set_create)
+    response.scenario_id
+
+    mut = okareo.register_model(
+        name=rnd,
+        model=MultiTurnDriver(
+            driver_params={"driver_type": "openai", "repeats": 2},
+            target=OpenAIModel(
+                model_id="gpt-4o-mini",
+                temperature=0,
+                system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
+            ),
+        ),
+        update=True,
+    )
+
+    # use the scenario id from one of the scenario set notebook examples
+    test_run_item = mut.run_test(
+        scenario=response,
+        api_keys={"openai": OPENAI_API_KEY},
+        name="CI run test",
+        test_run_type=TestRunType.NL_GENERATION,
+        calculate_metrics=True,
+        checks=["model_refusal"],
+    )
+    assert test_run_item.name == "CI run test"
+    assert test_run_item.test_data_point_count == 2
+
+
 def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> None:
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
