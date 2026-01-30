@@ -902,7 +902,8 @@ def test_parallel_trace_processing_with_checks(api_key: str, base_url: str) -> N
         for i, datapoint in enumerate(datapoints[:num_spans]):
             checks_dict = datapoint.get("checks", {}) or {}
             check_names = set(checks_dict.keys())
-            logger.info(f"Datapoint {i+1} checks: {list(check_names)}")
+            datapoint_num = i + 1
+            logger.info(f"Datapoint {datapoint_num} checks: {list(check_names)}")
 
             for expected_check in checks:
                 assert (
