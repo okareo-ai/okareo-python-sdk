@@ -1,7 +1,6 @@
 import base64
 import json
 import logging
-import math
 import os
 import secrets
 import time
@@ -805,7 +804,8 @@ def create_monitor_with_checks(
 
     response = requests.post(f"{base_url}/v0/filters", headers=headers, json=payload)
     assert response.status_code == 201, f"Failed to create monitor: {response.text}"
-    return response.json()
+    result: dict[str, Any] = response.json()
+    return result
 
 
 def delete_monitor(api_key: str, base_url: str, filter_group_id: str) -> None:
@@ -917,102 +917,3 @@ def test_parallel_trace_processing_with_checks(api_key: str, base_url: str) -> N
     finally:
         delete_monitor(api_key, base_url, filter_group_id)
         logger.info("Monitor deleted")
-
-
-def _percentile(sorted_data: list[float], p: float) -> float:
-    """Compute the p-th percentile from already-sorted data (0-100 scale)."""
-    if not sorted_data:
-        return 0.0
-    k = (p / 100) * (len(sorted_data) - 1)
-    f = math.floor(k)
-    c = math.ceil(k)
-    if f == c:
-        return sorted_data[int(k)]
-    return sorted_data[f] * (c - k) + sorted_data[c] * (k - f)
-
-
-def test_trace_scaling_by_span_count(api_key: str, base_url: str) -> None:
-    """Send traces with increasing span counts (1, 3, 6), 2 runs each.
-
-    Each trace is sent with a monitor that runs 3 model-based checks per datapoint.
-    Reports p50, p90, p95, p99, min, max for each span count.
-    Uses assert 1 == 0 at the end to force-print timing results.
-    """
-    reset_timing()
-    span_counts = [1, 3, 6]
-    num_runs = 2
-    checks = ["coherence_summary", "fluency_summary", "consistency_summary"]
-
-    project_id = get_project_id(api_key, base_url)
-
-    # Create a monitor with 3 checks
-    monitor_test_id = generate_random_string()
-    monitor = create_monitor_with_checks(
-        api_key=api_key,
-        base_url=base_url,
-        project_id=project_id,
-        monitor_name=f"scaling_test_monitor_{monitor_test_id}",
-        checks=checks,
-    )
-    filter_group_id = monitor["filter_group_id"]
-
-    # span_count -> list of elapsed times
-    timings: dict[int, list[float]] = {n: [] for n in span_counts}
-
-    try:
-        for num_spans in span_counts:
-            for run in range(num_runs):
-                test_id = generate_random_string()
-                session_id = str(uuid.uuid4())
-
-                payload = build_multi_span_trace_payload(
-                    session_id=session_id,
-                    num_spans=num_spans,
-                    test_identifier=test_id,
-                )
-
-                start = time.perf_counter()
-                response = send_otel_trace(payload, api_key, base_url)
-                elapsed = time.perf_counter() - start
-
-                assert response.status_code == 201, (
-                    f"Spans={num_spans} run={run+1}: "
-                    f"status {response.status_code}: {response.text[:200]}"
-                )
-                timings[num_spans].append(elapsed)
-
-        # Build summary
-        summary_lines = [
-            "\n" + "=" * 70,
-            f"TRACE SCALING TIMING RESULTS  ({num_runs} runs x {len(span_counts)} span counts, 3 model checks)",
-            "=" * 70,
-            f"  {'Spans':>5} | {'Min':>7} | {'p50':>7} | {'p90':>7} | {'p95':>7} | {'p99':>7} | {'Max':>7}",
-            "  " + "-" * 62,
-        ]
-        for num_spans in span_counts:
-            t = sorted(timings[num_spans])
-            summary_lines.append(
-                f"  {num_spans:>5} | "
-                f"{min(t):>6.2f}s | "
-                f"{_percentile(t, 50):>6.2f}s | "
-                f"{_percentile(t, 90):>6.2f}s | "
-                f"{_percentile(t, 95):>6.2f}s | "
-                f"{_percentile(t, 99):>6.2f}s | "
-                f"{max(t):>6.2f}s"
-            )
-        summary_lines.append("=" * 70)
-
-        # Also show raw timings
-        summary_lines.append("\nRaw timings (seconds):")
-        for num_spans in span_counts:
-            vals = ", ".join(f"{v:.2f}" for v in timings[num_spans])
-            summary_lines.append(f"  Spans {num_spans:>2}: [{vals}]")
-        summary_lines.append("=" * 70)
-
-        summary = "\n".join(summary_lines)
-
-        # Force failure to print results
-        assert 1 == 0, summary
-
-    finally:
-        delete_monitor(api_key, base_url, filter_group_id)
