@@ -143,12 +143,13 @@ def find_datapoints(
 
 def build_otel_trace_payload(
     session_id: str,
-    messages: list[dict[str, str]],
-    completion: str,
+    messages: list[dict[str, str]] | None = None,
+    completion: str | None = None,
     test_identifier: str | None = None,
     service_name: str = "okareo_test",
     model_name: str = "gpt-4",
     system_name: str = "openai",
+    num_spans: int = 1,
 ) -> dict[str, Any]:
     """Build an OTEL trace payload with the given conversation data.
 
@@ -160,38 +161,68 @@ def build_otel_trace_payload(
         service_name: Service name for the trace (default: okareo_test)
         model_name: Model name (default: gpt-4)
         system_name: AI system name (default: openai)
+        num_spans: Number of spans to create in the trace (default: 1)
 
     Returns:
         OTEL trace payload dict ready for protobuf conversion
     """
     current_time_ns = int(time.time() * 1_000_000_000)
-    start_time_ns = current_time_ns - (30 * 1_000_000_000)
-
     trace_id_bytes = secrets.token_bytes(16)
-    span_id_bytes = secrets.token_bytes(8)
     trace_id_b64 = base64.b64encode(trace_id_bytes).decode("utf-8")
-    span_id_b64 = base64.b64encode(span_id_bytes).decode("utf-8")
 
-    attributes = [
-        {"key": "gen_ai.request.model", "value": {"stringValue": model_name}},
-        {"key": "llm.request.type", "value": {"stringValue": "chat"}},
-        {"key": "llm.messages", "value": {"stringValue": json.dumps(messages)}},
-        {"key": "session.id", "value": {"stringValue": session_id}},
-        {"key": "gen_ai.system", "value": {"stringValue": system_name}},
-        {
-            "key": "SpanAttributes.LLM_COMPLETIONS.0.content",
-            "value": {"stringValue": completion},
-        },
-        {
-            "key": "SpanAttributes.LLM_COMPLETIONS.0.role",
-            "value": {"stringValue": "assistant"},
-        },
-    ]
+    spans = []
+    for i in range(num_spans):
+        span_id_bytes = secrets.token_bytes(8)
+        span_id_b64 = base64.b64encode(span_id_bytes).decode("utf-8")
 
-    if test_identifier:
-        attributes.append(
-            {"key": "test_identifier", "value": {"stringValue": test_identifier}}
-        )
+        # For multi-span traces, stagger the timestamps
+        if num_spans > 1:
+            start_ns = current_time_ns - ((num_spans - i) * 1_000_000_000)
+            end_ns = start_ns + 500_000_000
+            span_messages = [{"role": "user", "content": f"Test message {i}"}]
+            span_completion = f"This is a helpful response to message {i}."
+        else:
+            start_ns = current_time_ns - (30 * 1_000_000_000)
+            end_ns = current_time_ns
+            span_messages = messages or []
+            span_completion = completion or ""
+
+        attributes = [
+            {"key": "gen_ai.request.model", "value": {"stringValue": model_name}},
+            {"key": "gen_ai.system", "value": {"stringValue": system_name}},
+            {"key": "llm.request.type", "value": {"stringValue": "chat"}},
+            {
+                "key": "llm.messages",
+                "value": {"stringValue": json.dumps(span_messages)},
+            },
+            {"key": "session.id", "value": {"stringValue": session_id}},
+            {
+                "key": "SpanAttributes.LLM_COMPLETIONS.0.content",
+                "value": {"stringValue": span_completion},
+            },
+            {
+                "key": "SpanAttributes.LLM_COMPLETIONS.0.role",
+                "value": {"stringValue": "assistant"},
+            },
+        ]
+
+        if test_identifier:
+            attributes.append(
+                {"key": "test_identifier", "value": {"stringValue": test_identifier}}
+            )
+
+        span = {
+            "traceId": trace_id_b64,
+            "spanId": span_id_b64,
+            "name": "litellm_request",
+            "kind": 1,
+            "startTimeUnixNano": str(start_ns),
+            "endTimeUnixNano": str(end_ns),
+            "attributes": attributes,
+            "status": {"code": 1},
+            "flags": 256,
+        }
+        spans.append(span)
 
     return {
         "resourceSpans": [
@@ -208,19 +239,7 @@ def build_otel_trace_payload(
                 "scopeSpans": [
                     {
                         "scope": {"name": service_name},
-                        "spans": [
-                            {
-                                "traceId": trace_id_b64,
-                                "spanId": span_id_b64,
-                                "name": "litellm_request",
-                                "kind": 1,
-                                "startTimeUnixNano": str(start_time_ns),
-                                "endTimeUnixNano": str(current_time_ns),
-                                "attributes": attributes,
-                                "status": {"code": 1},
-                                "flags": 256,
-                            }
-                        ],
+                        "spans": spans,
                     }
                 ],
             }
@@ -694,92 +713,6 @@ def test_voice_simulation_trace_consistency_matching_and_mismatching(
 # ============================================================================
 
 
-def build_multi_span_trace_payload(
-    session_id: str,
-    num_spans: int,
-    test_identifier: str,
-    model_name: str = "gpt-4",
-) -> dict[str, Any]:
-    """Build an OTEL trace payload with multiple GenAI spans.
-
-    Args:
-        session_id: Session ID for correlation (becomes context_token)
-        num_spans: Number of spans to create in the trace
-        test_identifier: Unique identifier for this test
-        model_name: Model name for the spans
-
-    Returns:
-        OTEL trace payload dict ready for protobuf conversion
-    """
-    current_time_ns = int(time.time() * 1_000_000_000)
-    trace_id_bytes = secrets.token_bytes(16)
-    trace_id_b64 = base64.b64encode(trace_id_bytes).decode("utf-8")
-
-    spans = []
-    for i in range(num_spans):
-        span_id_bytes = secrets.token_bytes(8)
-        span_id_b64 = base64.b64encode(span_id_bytes).decode("utf-8")
-        start_ns = current_time_ns - ((num_spans - i) * 1_000_000_000)
-
-        attributes = [
-            {"key": "gen_ai.request.model", "value": {"stringValue": model_name}},
-            {"key": "gen_ai.system", "value": {"stringValue": "openai"}},
-            {"key": "llm.request.type", "value": {"stringValue": "chat"}},
-            {"key": "session.id", "value": {"stringValue": session_id}},
-            {"key": "test_identifier", "value": {"stringValue": test_identifier}},
-            {
-                "key": "llm.messages",
-                "value": {
-                    "stringValue": json.dumps(
-                        [{"role": "user", "content": f"Test message {i}"}]
-                    )
-                },
-            },
-            {
-                "key": "SpanAttributes.LLM_COMPLETIONS.0.content",
-                "value": {"stringValue": f"This is a helpful response to message {i}."},
-            },
-            {
-                "key": "SpanAttributes.LLM_COMPLETIONS.0.role",
-                "value": {"stringValue": "assistant"},
-            },
-        ]
-
-        span = {
-            "traceId": trace_id_b64,
-            "spanId": span_id_b64,
-            "name": "litellm_request",
-            "kind": 1,
-            "startTimeUnixNano": str(start_ns),
-            "endTimeUnixNano": str(start_ns + 500_000_000),
-            "attributes": attributes,
-            "status": {"code": 1},
-            "flags": 256,
-        }
-        spans.append(span)
-
-    return {
-        "resourceSpans": [
-            {
-                "resource": {
-                    "attributes": [
-                        {
-                            "key": "service.name",
-                            "value": {"stringValue": "parallel_test"},
-                        },
-                    ]
-                },
-                "scopeSpans": [
-                    {
-                        "scope": {"name": "parallel_test"},
-                        "spans": spans,
-                    }
-                ],
-            }
-        ]
-    }
-
-
 def create_monitor_with_checks(
     api_key: str,
     base_url: str,
@@ -868,10 +801,11 @@ def test_parallel_trace_processing_with_checks(api_key: str, base_url: str) -> N
     try:
         # Step 2: Send multi-span trace (triggers parallel processing)
         logger.info(f"Sending {num_spans} span trace with session_id={session_id}")
-        payload = build_multi_span_trace_payload(
+        payload = build_otel_trace_payload(
             session_id=session_id,
             num_spans=num_spans,
             test_identifier=test_id,
+            service_name="parallel_test",
         )
         response = send_otel_trace(payload, api_key, base_url)
 
