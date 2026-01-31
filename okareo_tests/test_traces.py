@@ -719,13 +719,14 @@ def create_monitor_with_checks(
     project_id: str,
     monitor_name: str,
     checks: list[str],
+    context_token: str,
 ) -> dict[str, Any]:
     """Create a monitor (filter) that matches traces and attaches checks."""
     headers = {"Content-Type": "application/json", "api-key": api_key}
 
     payload = {
         "filters": [
-            {"field": "request_model_name", "operator": "contains", "value": "gpt"}
+            {"field": "context_token", "operator": "equal", "value": context_token}
         ],
         "name": monitor_name,
         "description": "Test monitor for parallel trace checks",
@@ -794,6 +795,7 @@ def test_parallel_trace_processing_with_checks(api_key: str, base_url: str) -> N
         project_id=project_id,
         monitor_name=f"parallel_test_monitor_{test_id}",
         checks=checks,
+        context_token=session_id,
     )
     filter_group_id = monitor["filter_group_id"]
     logger.info(f"Monitor created: {filter_group_id}")
