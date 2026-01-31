@@ -143,12 +143,13 @@ def find_datapoints(
 
 def build_otel_trace_payload(
     session_id: str,
-    messages: list[dict[str, str]],
-    completion: str,
+    messages: list[dict[str, str]] | None = None,
+    completion: str | None = None,
     test_identifier: str | None = None,
     service_name: str = "okareo_test",
     model_name: str = "gpt-4",
     system_name: str = "openai",
+    num_spans: int = 1,
 ) -> dict[str, Any]:
     """Build an OTEL trace payload with the given conversation data.
 
@@ -160,38 +161,68 @@ def build_otel_trace_payload(
         service_name: Service name for the trace (default: okareo_test)
         model_name: Model name (default: gpt-4)
         system_name: AI system name (default: openai)
+        num_spans: Number of spans to create in the trace (default: 1)
 
     Returns:
         OTEL trace payload dict ready for protobuf conversion
     """
     current_time_ns = int(time.time() * 1_000_000_000)
-    start_time_ns = current_time_ns - (30 * 1_000_000_000)
-
     trace_id_bytes = secrets.token_bytes(16)
-    span_id_bytes = secrets.token_bytes(8)
     trace_id_b64 = base64.b64encode(trace_id_bytes).decode("utf-8")
-    span_id_b64 = base64.b64encode(span_id_bytes).decode("utf-8")
 
-    attributes = [
-        {"key": "gen_ai.request.model", "value": {"stringValue": model_name}},
-        {"key": "llm.request.type", "value": {"stringValue": "chat"}},
-        {"key": "llm.messages", "value": {"stringValue": json.dumps(messages)}},
-        {"key": "session.id", "value": {"stringValue": session_id}},
-        {"key": "gen_ai.system", "value": {"stringValue": system_name}},
-        {
-            "key": "SpanAttributes.LLM_COMPLETIONS.0.content",
-            "value": {"stringValue": completion},
-        },
-        {
-            "key": "SpanAttributes.LLM_COMPLETIONS.0.role",
-            "value": {"stringValue": "assistant"},
-        },
-    ]
+    spans = []
+    for i in range(num_spans):
+        span_id_bytes = secrets.token_bytes(8)
+        span_id_b64 = base64.b64encode(span_id_bytes).decode("utf-8")
 
-    if test_identifier:
-        attributes.append(
-            {"key": "test_identifier", "value": {"stringValue": test_identifier}}
-        )
+        # For multi-span traces, stagger the timestamps
+        if num_spans > 1:
+            start_ns = current_time_ns - ((num_spans - i) * 1_000_000_000)
+            end_ns = start_ns + 500_000_000
+            span_messages = [{"role": "user", "content": f"Test message {i}"}]
+            span_completion = f"This is a helpful response to message {i}."
+        else:
+            start_ns = current_time_ns - (30 * 1_000_000_000)
+            end_ns = current_time_ns
+            span_messages = messages or []
+            span_completion = completion or ""
+
+        attributes = [
+            {"key": "gen_ai.request.model", "value": {"stringValue": model_name}},
+            {"key": "gen_ai.system", "value": {"stringValue": system_name}},
+            {"key": "llm.request.type", "value": {"stringValue": "chat"}},
+            {
+                "key": "llm.messages",
+                "value": {"stringValue": json.dumps(span_messages)},
+            },
+            {"key": "session.id", "value": {"stringValue": session_id}},
+            {
+                "key": "SpanAttributes.LLM_COMPLETIONS.0.content",
+                "value": {"stringValue": span_completion},
+            },
+            {
+                "key": "SpanAttributes.LLM_COMPLETIONS.0.role",
+                "value": {"stringValue": "assistant"},
+            },
+        ]
+
+        if test_identifier:
+            attributes.append(
+                {"key": "test_identifier", "value": {"stringValue": test_identifier}}
+            )
+
+        span = {
+            "traceId": trace_id_b64,
+            "spanId": span_id_b64,
+            "name": "litellm_request",
+            "kind": 1,
+            "startTimeUnixNano": str(start_ns),
+            "endTimeUnixNano": str(end_ns),
+            "attributes": attributes,
+            "status": {"code": 1},
+            "flags": 256,
+        }
+        spans.append(span)
 
     return {
         "resourceSpans": [
@@ -208,19 +239,7 @@ def build_otel_trace_payload(
                 "scopeSpans": [
                     {
                         "scope": {"name": service_name},
-                        "spans": [
-                            {
-                                "traceId": trace_id_b64,
-                                "spanId": span_id_b64,
-                                "name": "litellm_request",
-                                "kind": 1,
-                                "startTimeUnixNano": str(start_time_ns),
-                                "endTimeUnixNano": str(current_time_ns),
-                                "attributes": attributes,
-                                "status": {"code": 1},
-                                "flags": 256,
-                            }
-                        ],
+                        "spans": spans,
                     }
                 ],
             }
@@ -687,3 +706,151 @@ def test_voice_simulation_trace_consistency_matching_and_mismatching(
         test_id,
     )
     print_timing_summary()
+
+
+# ============================================================================
+# Parallel Processing Tests
+# ============================================================================
+
+
+def create_monitor_with_checks(
+    api_key: str,
+    base_url: str,
+    project_id: str,
+    monitor_name: str,
+    checks: list[str],
+    context_token: str,
+) -> dict[str, Any]:
+    """Create a monitor (filter) that matches traces and attaches checks."""
+    headers = {"Content-Type": "application/json", "api-key": api_key}
+
+    payload = {
+        "filters": [
+            {"field": "context_token", "operator": "equal", "value": context_token}
+        ],
+        "name": monitor_name,
+        "description": "Test monitor for parallel trace checks",
+        "checks": checks,
+        "project_id": project_id,
+        "slack_enabled": False,
+        "email_enabled": False,
+    }
+
+    response = requests.post(f"{base_url}/v0/filters", headers=headers, json=payload)
+    assert response.status_code == 201, f"Failed to create monitor: {response.text}"
+    result: dict[str, Any] = response.json()
+    return result
+
+
+def delete_monitor(api_key: str, base_url: str, filter_group_id: str) -> None:
+    """Delete a monitor (filter group)."""
+    headers = {"Content-Type": "application/json", "api-key": api_key}
+    response = requests.delete(
+        f"{base_url}/v0/filters",
+        headers=headers,
+        json={"filter_group_id": filter_group_id},
+    )
+    assert response.status_code in [
+        204,
+        404,
+    ], f"Failed to delete monitor: {response.text}"
+
+
+def get_project_id(api_key: str, base_url: str) -> str:
+    """Get the first project ID for the authenticated user."""
+    headers = {"Content-Type": "application/json", "api-key": api_key}
+    response = requests.get(f"{base_url}/v0/projects", headers=headers)
+    assert response.status_code in [
+        200,
+        201,
+    ], f"Failed to get projects: {response.status_code}"
+    projects = response.json()
+    assert len(projects) > 0, "No projects found"
+    return str(projects[0]["id"])
+
+
+def test_parallel_trace_processing_with_checks(api_key: str, base_url: str) -> None:
+    """Test parallel processing of multiple spans in a single trace with monitor checks.
+
+    This test:
+    1. Creates a monitor with checks (coherence_summary, fluency_summary)
+    2. Sends a single trace with 5 spans (triggers parallel processing >= 3 threshold)
+    3. Verifies all 5 datapoints are created
+    4. Verifies checks are executed on all datapoints
+    """
+    reset_timing()
+    test_id = generate_random_string()
+    session_id = str(uuid.uuid4())
+    num_spans = 5  # Above parallel threshold (>=3)
+
+    project_id = get_project_id(api_key, base_url)
+
+    checks = ["coherence_summary", "fluency_summary"]
+
+    # Step 1: Create monitor with checks
+    logger.info(f"Creating monitor with checks: {checks}")
+    monitor = create_monitor_with_checks(
+        api_key=api_key,
+        base_url=base_url,
+        project_id=project_id,
+        monitor_name=f"parallel_test_monitor_{test_id}",
+        checks=checks,
+        context_token=session_id,
+    )
+    filter_group_id = monitor["filter_group_id"]
+    logger.info(f"Monitor created: {filter_group_id}")
+
+    try:
+        # Step 2: Send multi-span trace (triggers parallel processing)
+        logger.info(f"Sending {num_spans} span trace with session_id={session_id}")
+        payload = build_otel_trace_payload(
+            session_id=session_id,
+            num_spans=num_spans,
+            test_identifier=test_id,
+            service_name="parallel_test",
+        )
+        response = send_otel_trace(payload, api_key, base_url)
+
+        # Verify response
+        assert (
+            response.status_code == 201
+        ), f"Expected 201, got {response.status_code}: {response.text}"
+
+        # Verify the response data
+        try:
+            response_data = response.json()
+            assert response_data.get("status") == "success"
+            logger.info(f"Response: {response_data}")
+        except ValueError:
+            # If response is not JSON, just check status code
+            pass
+
+        # Step 3: Find all datapoints and verify checks executed on each
+        logger.info("Finding datapoints and verifying checks...")
+        filters = [{"field": "context_token", "operator": "equal", "value": session_id}]
+        datapoints = find_datapoints(api_key, base_url, filters, wait=20)
+
+        assert (
+            len(datapoints) >= num_spans
+        ), f"Expected at least {num_spans} datapoints, found {len(datapoints)}"
+
+        # Verify checks on each datapoint
+        for i, datapoint in enumerate(datapoints[:num_spans]):
+            checks_dict = datapoint.get("checks", {}) or {}
+            check_names = set(checks_dict.keys())
+            datapoint_num = i + 1
+            logger.info(f"Datapoint {datapoint_num} checks: {list(check_names)}")
+
+            for expected_check in checks:
+                assert (
+                    expected_check in check_names
+                ), f"Check '{expected_check}' not found in datapoint {i+1}. Found: {check_names}"
+
+        logger.info(
+            f"SUCCESS: {num_spans} datapoints with checks verified (parallel processing)"
+        )
+        print_timing_summary()
+
+    finally:
+        delete_monitor(api_key, base_url, filter_group_id)
+        logger.info("Monitor deleted")
