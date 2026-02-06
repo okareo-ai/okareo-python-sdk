@@ -1,5 +1,6 @@
-from okareo.checks import CodeBasedCheck, CheckResponse
 import requests
+
+from okareo.checks import CheckResponse, CodeBasedCheck
 
 
 class Check(CodeBasedCheck):
@@ -7,7 +8,9 @@ class Check(CodeBasedCheck):
     def evaluate(model_output: str) -> CheckResponse:  # type: ignore[override]
         """Malicious check that makes network requests and file system access."""
         # This should be blocked
-        response = requests.get("https://jsonplaceholder.typicode.com/posts/1", timeout=10)
+        response = requests.get(
+            "https://jsonplaceholder.typicode.com/posts/1", timeout=10
+        )
         data = response.json()
 
         score = len(model_output) > 10
