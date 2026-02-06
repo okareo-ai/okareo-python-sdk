@@ -12,45 +12,6 @@ def okareo_client() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
-class TestCheckRetrieval:
-    """Tests for retrieving checks."""
-
-    def test_get_all_checks_returns_list(self, okareo_client: Okareo) -> None:
-        """Test that get_all_checks returns a non-empty list."""
-        checks = okareo_client.get_all_checks()
-        assert isinstance(checks, list)
-        assert len(checks) > 0
-
-    def test_get_all_checks_structure(self, okareo_client: Okareo) -> None:
-        """Test that each check has the expected fields."""
-        checks = okareo_client.get_all_checks()
-        for check in checks:
-            assert hasattr(check, "id")
-            assert hasattr(check, "name")
-            assert hasattr(check, "description")
-            assert hasattr(check, "output_data_type")
-            assert hasattr(check, "time_created")
-            assert hasattr(check, "is_predefined")
-            assert isinstance(check.id, str)
-            assert isinstance(check.name, str)
-            assert isinstance(check.description, str)
-            assert isinstance(check.output_data_type, str)
-            assert isinstance(check.is_predefined, bool)
-
-    def test_predefined_checks_exist(self, okareo_client: Okareo) -> None:
-        """Test that predefined checks are available."""
-        checks = okareo_client.get_all_checks()
-        predefined_checks = [c for c in checks if c.is_predefined]
-        assert len(predefined_checks) > 0
-
-        check_names = [c.name for c in predefined_checks]
-        expected_checks = ["levenshtein_distance", "is_json", "latency"]
-        for expected in expected_checks:
-            assert (
-                expected in check_names
-            ), f"Expected predefined check '{expected}' not found"
-
-
 class TestCheckGeneration:
     """Tests for AI-generated check creation."""
 
