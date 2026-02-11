@@ -1497,12 +1497,6 @@ class VoiceTarget(BaseModel):
     This target runs server-side during multiturn evaluations and follows the
     same API key pattern as other targets: API keys are passed via the
     `api_keys` parameter in `run_simulation()`.
-
-    Note:
-        The LocalVoiceTarget class in okareo.voice module is a different implementation
-        that runs locally in the SDK. VoiceTarget subclasses run server-side and are
-        recommended for production evaluations as they provide better scalability and
-        monitoring capabilities.
     """
 
     type = "voice"

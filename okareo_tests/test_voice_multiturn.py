@@ -1,12 +1,16 @@
 import os
-import uuid
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
-from okareo.model_under_test import Driver, Target, TwilioVoiceTarget, VoiceTarget
-from okareo.voice import DeepgramEdgeConfig, LocalVoiceTarget, OpenAIEdgeConfig
+from okareo.model_under_test import (
+    DeepgramVoiceTarget,
+    Driver,
+    OpenAIVoiceTarget,
+    Target,
+    TwilioVoiceTarget,
+)
 from okareo_api_client.api.default import (
     delete_test_run_v0_test_runs_delete,
 )
@@ -90,62 +94,61 @@ def okareo() -> Okareo:
 
 
 @pytest.fixture(scope="module")
-def deepgram_voice_target() -> LocalVoiceTarget:
-    return LocalVoiceTarget(
-        name=f"Voice Sim Target (Deepgram) {uuid.uuid4()}",
-        edge_config=DeepgramEdgeConfig(
-            api_key=DEEPGRAM_API_KEY,  # type: ignore
-            instructions=PERSISTENT_PROMPT,
-        ),
-        asr_tts_api_key=OPENAI_API_KEY,  # type: ignore
+def deepgram_voice_target() -> DeepgramVoiceTarget:
+    return DeepgramVoiceTarget(
+        model="aura-2",
+        instructions=PERSISTENT_PROMPT,
+        output_voice="aura-2-thalia-en",
     )
 
 
 @pytest.fixture(scope="module")
-def openai_voice_target() -> LocalVoiceTarget:
-    return LocalVoiceTarget(
-        name=f"Voice Sim Target (OpenAI) {uuid.uuid4()}",
-        edge_config=OpenAIEdgeConfig(
-            api_key=OPENAI_API_KEY,  # type: ignore
-            model="gpt-realtime",
-            instructions=PERSISTENT_PROMPT,
-        ),
-        asr_tts_api_key=OPENAI_API_KEY,  # type: ignore
+def openai_voice_target() -> OpenAIVoiceTarget:
+    return OpenAIVoiceTarget(
+        model="gpt-realtime",
+        instructions=PERSISTENT_PROMPT,
+        output_voice="alloy",
     )
 
 
 @pytest.fixture(scope="module")
-def twilio_voice_target() -> VoiceTarget:
+def twilio_voice_target() -> TwilioVoiceTarget:
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    assert account_sid is not None, "TWILIO_ACCOUNT_SID must be set"
+    assert auth_token is not None, "TWILIO_AUTH_TOKEN must be set"
     return TwilioVoiceTarget(
-        account_sid=os.getenv("TWILIO_ACCOUNT_SID", ""),
-        auth_token=os.getenv("TWILIO_AUTH_TOKEN", ""),
-        from_phone_number=os.getenv("TWILIO_FROM_PHONE", ""),
-        to_phone_number=os.getenv("TWILIO_TO_PHONE", ""),
+        account_sid=account_sid,
+        auth_token=auth_token,
+        from_phone_number=os.getenv("TWILIO_FROM_PHONE"),
+        to_phone_number=os.getenv("TWILIO_TO_PHONE"),
         max_parallel_requests=5,
     )
 
 
 def test_voice_multiturn_deepgram(
-    okareo: Okareo, deepgram_voice_target: LocalVoiceTarget
+    okareo: Okareo, deepgram_voice_target: DeepgramVoiceTarget
 ) -> None:
     run_voice_multiturn_test(okareo, deepgram_voice_target, "Deepgram")
 
 
 def test_voice_multiturn_openai(
-    okareo: Okareo, openai_voice_target: LocalVoiceTarget
+    okareo: Okareo, openai_voice_target: OpenAIVoiceTarget
 ) -> None:
     run_voice_multiturn_test(okareo, openai_voice_target, "OpenAI")
 
 
-@pytest.mark.skip(reason="Requires valid Twilio credentials and phone numbers")
+# @pytest.mark.skip(reason="Requires valid Twilio credentials and phone numbers")
 def test_voice_multiturn_twilio(
-    okareo: Okareo, twilio_voice_target: VoiceTarget
+    okareo: Okareo, twilio_voice_target: TwilioVoiceTarget
 ) -> None:
     run_voice_multiturn_test(okareo, twilio_voice_target, "Twilio")
 
 
 def run_voice_multiturn_test(
-    okareo: Okareo, voice_target: LocalVoiceTarget | VoiceTarget, vendor: str
+    okareo: Okareo,
+    voice_target: OpenAIVoiceTarget | DeepgramVoiceTarget | TwilioVoiceTarget,
+    vendor: str,
 ) -> None:
 
     driver = Driver(
@@ -174,6 +177,15 @@ def run_voice_multiturn_test(
         )
     )
 
+    # Determine API keys based on vendor
+    api_keys = {}
+    if vendor == "Deepgram":
+        api_keys = {
+            "voice": DEEPGRAM_API_KEY,  # type: ignore
+        }
+    elif vendor == "OpenAI":
+        api_keys = {"voice": OPENAI_API_KEY}  # type: ignore
+
     evaluation = okareo.run_simulation(
         driver=driver,
         target=Target(name=f"Voice Sim Target ({vendor})", target=voice_target),  # type: ignore
@@ -181,8 +193,9 @@ def run_voice_multiturn_test(
         scenario=scenario,
         max_turns=2,
         repeats=1,
-        first_turn="driver",
+        first_turn="target",
         checks=["avg_turn_latency"],
+        api_keys=api_keys if api_keys else None,
     )
 
     assert evaluation.name == f"Voice Simulation Run ({vendor})"
@@ -199,13 +212,13 @@ def run_voice_multiturn_test(
 
 
 def test_voice_multiturn_audio_check(
-    okareo: Okareo, openai_voice_target: LocalVoiceTarget
+    okareo: Okareo, twilio_voice_target: TwilioVoiceTarget, rnd: str
 ) -> None:
-    run_voice_multiturn_test_audio_check(okareo, openai_voice_target)
+    run_voice_multiturn_test_audio_check(okareo, twilio_voice_target, rnd)
 
 
 def run_voice_multiturn_test_audio_check(
-    okareo: Okareo, voice_target: LocalVoiceTarget
+    okareo: Okareo, voice_target: TwilioVoiceTarget, rnd: str
 ) -> None:
 
     driver = Driver(
@@ -239,10 +252,12 @@ def run_voice_multiturn_test_audio_check(
 
     evaluation = okareo.run_simulation(
         driver=driver,
-        target=Target(name="Voice Sim Target - Frustrated User", target=voice_target),
-        name="Voice Simulation Run - Frustrated User",
+        target=Target(
+            name=f"Voice Sim Target - Frustrated User - {rnd}", target=voice_target
+        ),
+        name=f"Voice Simulation Run - Frustrated User - {rnd}",
         scenario=scenario,
-        max_turns=1,
+        max_turns=2,
         repeats=1,
         first_turn="driver",
         checks=[
@@ -254,7 +269,7 @@ def run_voice_multiturn_test_audio_check(
         ],
     )
 
-    assert evaluation.name == "Voice Simulation Run - Frustrated User"
+    assert evaluation.name == f"Voice Simulation Run - Frustrated User - {rnd}"
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
     assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
@@ -298,14 +313,14 @@ def voice_profile_templated_driver() -> Driver:
 
 
 def test_voice_multiturn_voice_profile(
-    okareo: Okareo, openai_voice_target: LocalVoiceTarget, rnd: str
+    okareo: Okareo, twilio_voice_target: TwilioVoiceTarget, rnd: str
 ) -> None:
-    run_voice_multiturn_test_voice_profile(okareo, openai_voice_target, rnd)
+    run_voice_multiturn_test_voice_profile(okareo, twilio_voice_target, rnd)
 
 
 def run_voice_multiturn_test_voice_profile(
     okareo: Okareo,
-    voice_target: LocalVoiceTarget,
+    voice_target: TwilioVoiceTarget,
     rnd: str,
 ) -> None:
 

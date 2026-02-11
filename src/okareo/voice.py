@@ -6,11 +6,10 @@ import logging
 import os
 import tempfile
 import time
-import uuid
 import wave
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import numpy as np
 import requests
@@ -19,9 +18,7 @@ from attrs import define as _attrs_define
 
 from okareo import Okareo
 from okareo.model_under_test import (
-    CustomMultiturnTargetAsync,
     Driver,
-    ModelInvocation,
 )
 
 logger = logging.getLogger(__name__)
@@ -745,79 +742,3 @@ class SessionManager:
                 await c.close()
             finally:
                 self.sessions.pop(sid, None)
-
-
-# ---------------- Okareo integration: LocalVoiceTarget ----------------
-
-
-class LocalVoiceTarget(CustomMultiturnTargetAsync):
-    """
-    Configured with a vendor-specific VoiceEdge factory.
-    Owns a SessionManager and creates a RealtimeClient per session.
-    """
-
-    def __init__(self, name: str, edge_config: EdgeConfig, asr_tts_api_key: str):
-        super().__init__(name=name)
-        self.cfg = edge_config
-        self.asr_tts_api_key = asr_tts_api_key
-        self.sessions: Optional[SessionManager] = None  # Initialize sessions as None
-
-    def set_okareo(self, okareo: Okareo, driver: Driver) -> None:
-        """Set the Okareo instance and create a SessionManager with it."""
-        self.sessions = SessionManager(self.cfg, okareo, driver, self.asr_tts_api_key)
-
-    async def start_session(
-        self, scenario_input: Optional[Union[dict, list, str]] = None
-    ) -> tuple[Optional[str], Optional[ModelInvocation]]:
-        assert self.sessions, "SessionManager not initialized with Okareo instance"
-        session_id = str(uuid.uuid4())
-
-        # For OpenAIRealtimeEdge: you can pass output_voice via edge_connect_kwargs
-        await self.sessions.start(session_id)
-        logger.debug(f"✅ Session started: {session_id}")
-        return session_id, None
-
-    async def end_session(self, session_id: str) -> None:
-        if self.sessions:
-            await self.sessions.end(session_id)
-
-    async def invoke(  # type: ignore[override]
-        self,
-        messages: list[dict[str, str]],
-        scenario_input: Optional[Union[dict, list, str]] = None,
-        session_id: Optional[str] = None,
-    ) -> ModelInvocation:
-        try:
-            assert self.sessions, "SessionManager not initialized with Okareo instance"
-            assert session_id, "Session ID is required"
-            tts_voice = "echo"
-            tts_instructions = None
-            if isinstance(scenario_input, dict):
-                tts_voice = scenario_input.get("voice", tts_voice)
-                tts_instructions = scenario_input.get("voice_instructions")
-
-            res = await self.sessions.send(
-                session_id,
-                messages[-1]["content"],
-                tts_voice=tts_voice,
-                tts_instructions=tts_instructions,
-            )
-
-            logger.debug(f"user message: {messages[-1]['content']}")
-            logger.debug(res)
-
-            return ModelInvocation(
-                res.get("agent_asr", ""),
-                messages,
-                {
-                    "user_wav_path": res.get("user_wav_path"),
-                    "assistant_wav_path": res.get("assistant_wav_path"),
-                    "turn_taking_latency": res.get("turn_taking_latency"),
-                    "words_per_minute": res.get("words_per_minute"),
-                },
-            )
-        except Exception as e:
-            import traceback
-
-            traceback.print_exc()
-            return ModelInvocation(f"API error: {str(e)}", messages, {"error": str(e)})
