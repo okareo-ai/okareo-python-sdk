@@ -1786,7 +1786,7 @@ class CustomEndpointTarget(BaseModel):
         }
 
 
-@_attrs_define
+@define(slots=False)  # allows for dynamic attributes
 class Driver:
     name: str
     prompt_template: str = "{scenario_input}"
@@ -1798,9 +1798,16 @@ class Driver:
     voice_instructions: Optional[str] = None
     voice_profile: Optional[str] = None
     voice: Optional[str] = None
+    _extra_fields: dict = field(factory=dict, repr=False)
+
+    def __attrs_post_init__(self) -> None:
+        # Set any extra fields from _extra_fields
+        for key, value in self._extra_fields.items():
+            if not hasattr(self, key):
+                setattr(self, key, value)
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             "name": self.name,
             "temperature": self.temperature,
             "model_id": self.model_id,
@@ -1811,36 +1818,44 @@ class Driver:
             "voice_profile": self.voice_profile,
             "voice": self.voice,
         }
-
-    def _get_driver_fields(
-        self, response: Union[DriverModelResponse, VoiceDriverModelResponse]
-    ) -> None:
-        self.id = response.id
-        if response.prompt_template:
-            self.prompt_template = response.prompt_template
-        if response.model_id:
-            self.model_id = response.model_id
-        if response.temperature:
-            self.temperature = response.temperature
-        if response.time_created:
-            self.time_created = response.time_created
-        if response.project_id:
-            self.project_id = response.project_id
-
-    def _get_voice_driver_fields(self, response: VoiceDriverModelResponse) -> None:
-        if response.voice_instructions:
-            self.voice_instructions = response.voice_instructions
-        if response.voice:
-            self.voice = response.voice
+        result.update(self._extra_fields)
+        return result
 
     @classmethod
     def from_response(
         cls, response: Union[DriverModelResponse, VoiceDriverModelResponse]
     ) -> "Driver":
-        inst = cls(response.name)
-        inst._get_driver_fields(response)
-        if isinstance(response, VoiceDriverModelResponse):
-            inst._get_voice_driver_fields(response)
+        # Get all fields from response as dict
+        response_dict = (
+            response.to_dict() if hasattr(response, "to_dict") else vars(response)
+        )
+
+        # Separate known fields from unknown fields
+        known_fields = {
+            "name",
+            "prompt_template",
+            "model_id",
+            "temperature",
+            "id",
+            "time_created",
+            "project_id",
+            "voice_instructions",
+            "voice_profile",
+            "voice",
+        }
+
+        # Separate into known and extra fields
+        init_kwargs = {k: v for k, v in response_dict.items() if k in known_fields}
+        extra_fields = {k: v for k, v in response_dict.items() if k not in known_fields}
+
+        # Create instance with only known fields
+        inst = cls(**init_kwargs)
+
+        # Manually populate _extra_fields and set dynamic attributes
+        inst._extra_fields = extra_fields
+        for key, value in extra_fields.items():
+            setattr(inst, key, value)
+
         return inst
 
 
