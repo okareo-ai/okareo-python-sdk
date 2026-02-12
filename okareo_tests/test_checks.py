@@ -22,7 +22,6 @@ from okareo_api_client.models.evaluator_detailed_response import (
 )
 from okareo_api_client.types import Unset
 
-
 BOOL_CODE = """\
 from okareo.checks import CodeBasedCheck
 
@@ -290,5 +289,3 @@ def test_create_update_by_id_update_by_name_type_inference(
         # --- Step 7: Cleanup ---
         if check_id is not None:
             _delete_check(okareo_client, check_id, check_name)
-
-
