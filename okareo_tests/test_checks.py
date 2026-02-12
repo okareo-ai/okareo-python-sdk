@@ -99,9 +99,7 @@ def _create_or_update_check(
     return response
 
 
-def _get_check(
-    okareo_client: Okareo, check_id: str
-) -> EvaluatorDetailedResponse:
+def _get_check(okareo_client: Okareo, check_id: str) -> EvaluatorDetailedResponse:
     """Helper to call GET /v0/check/{check_id}."""
     response = get_check_v0_check_check_id_get.sync(
         client=okareo_client.client,
@@ -226,9 +224,7 @@ def test_check_update_blocks_malicious_code(okareo_client: Okareo) -> None:
         okareo_client.delete_check(legitimate_check.id, legitimate_check.name)
 
 
-def _assert_check_type(
-    response: EvaluatorDetailedResponse, expected_type: str
-) -> None:
+def _assert_check_type(response: EvaluatorDetailedResponse, expected_type: str) -> None:
     """Assert that both check_config['type'] and output_data_type match expected_type."""
     assert not isinstance(response.check_config, Unset)
     assert response.check_config["type"] == expected_type, (
