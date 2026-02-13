@@ -126,12 +126,16 @@ def twilio_voice_target() -> TwilioVoiceTarget:
     )
 
 
+@pytest.mark.skip(
+    reason="Deepgram Target is 1) unreliable/slowing build time and 2) not commonly implemented by our users."
+)
 def test_voice_multiturn_deepgram(
     okareo: Okareo, deepgram_voice_target: DeepgramVoiceTarget
 ) -> None:
     run_voice_multiturn_test(okareo, deepgram_voice_target, "Deepgram")
 
 
+@pytest.mark.skip(reason="OpenAI Target is not commonly implemented by our users.")
 def test_voice_multiturn_openai(
     okareo: Okareo, openai_voice_target: OpenAIVoiceTarget
 ) -> None:
