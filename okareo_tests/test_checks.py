@@ -251,35 +251,35 @@ def test_create_update_by_id_update_by_name_type_inference(
     check_id = None
 
     try:
-        # --- Step 1: Create with code returning plain True (bool) ---
+        # --- Step 1: Create with code returning plain True (bool → pass_fail) ---
         create_resp = _create_or_update_check(okareo_client, check_name, BOOL_CODE)
         assert isinstance(create_resp.id, str)
         check_id = create_resp.id
-        _assert_check_type(create_resp, "bool")
+        _assert_check_type(create_resp, "pass_fail")
 
-        # --- Step 2: GET and verify bool type ---
+        # --- Step 2: GET and verify pass_fail type ---
         get_resp = _get_check(okareo_client, check_id)
-        _assert_check_type(get_resp, "bool")
+        _assert_check_type(get_resp, "pass_fail")
 
-        # --- Step 3: Update by check_id — change code to return CheckResponse(score=3) (int) ---
+        # --- Step 3: Update by check_id — change code to return CheckResponse(score=3) (int → score) ---
         update_by_id_resp = _create_or_update_check(
             okareo_client, check_name, INT_CODE, check_id=check_id
         )
-        _assert_check_type(update_by_id_resp, "int")
+        _assert_check_type(update_by_id_resp, "score")
 
-        # --- Step 4: GET and verify int type ---
+        # --- Step 4: GET and verify score type ---
         get_resp = _get_check(okareo_client, check_id)
-        _assert_check_type(get_resp, "int")
+        _assert_check_type(get_resp, "score")
 
-        # --- Step 5: Update by name (no check_id) — change code to return CheckResponse(score=0.75) (float) ---
+        # --- Step 5: Update by name (no check_id) — change code to return CheckResponse(score=0.75) (float → score) ---
         update_by_name_resp = _create_or_update_check(
             okareo_client, check_name, FLOAT_CODE
         )
-        _assert_check_type(update_by_name_resp, "float")
+        _assert_check_type(update_by_name_resp, "score")
 
-        # --- Step 6: GET and verify float type ---
+        # --- Step 6: GET and verify score type ---
         get_resp = _get_check(okareo_client, check_id)
-        _assert_check_type(get_resp, "float")
+        _assert_check_type(get_resp, "score")
 
     finally:
         # --- Step 7: Cleanup ---
