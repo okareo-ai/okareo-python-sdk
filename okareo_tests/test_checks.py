@@ -3,6 +3,7 @@ from okareo_tests.checks.sample_check import Check
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
+from okareo.checks import CheckOutputType
 from okareo_api_client.api.default import (
     check_create_or_update_v0_check_create_or_update_post,
     check_delete_v0_check_check_id_delete,
@@ -242,15 +243,17 @@ def test_check_update_blocks_malicious_code(okareo_client: Okareo) -> None:
         okareo_client.delete_check(legitimate_check.id, legitimate_check.name)
 
 
-def _assert_check_type(response: EvaluatorDetailedResponse, expected_type: str) -> None:
-    """Assert that both check_config['type'] and output_data_type match expected_type."""
+def _assert_check_type(
+    response: EvaluatorDetailedResponse, expected_type: CheckOutputType
+) -> None:
+    """Assert that both check_config['type'] and output_data_type match expected enum value."""
     assert not isinstance(response.check_config, Unset)
-    assert response.check_config["type"] == expected_type, (
-        f"Expected check_config['type'] == {expected_type!r}, "
+    assert response.check_config["type"] == expected_type.value, (
+        f"Expected check_config['type'] == {expected_type.value!r}, "
         f"got {response.check_config['type']!r}"
     )
-    assert response.output_data_type == expected_type, (
-        f"Expected output_data_type == {expected_type!r}, "
+    assert response.output_data_type == expected_type.value, (
+        f"Expected output_data_type == {expected_type.value!r}, "
         f"got {response.output_data_type!r}"
     )
 
@@ -272,31 +275,31 @@ def test_create_update_by_id_update_by_name_type_inference(
         create_resp = _create_or_update_check(okareo_client, check_name, BOOL_CODE)
         assert isinstance(create_resp.id, str)
         check_id = create_resp.id
-        _assert_check_type(create_resp, "pass_fail")
+        _assert_check_type(create_resp, CheckOutputType.PASS_FAIL)
 
         # --- Step 2: GET and verify pass_fail persisted ---
         get_resp = _get_check(okareo_client, check_id)
-        _assert_check_type(get_resp, "pass_fail")
+        _assert_check_type(get_resp, CheckOutputType.PASS_FAIL)
 
         # --- Step 3: Update by check_id with "int" annotation → server normalizes to "score" ---
         update_by_id_resp = _create_or_update_check(
             okareo_client, check_name, INT_CODE, check_id=check_id
         )
-        _assert_check_type(update_by_id_resp, "score")
+        _assert_check_type(update_by_id_resp, CheckOutputType.SCORE)
 
         # --- Step 4: GET and verify score persisted ---
         get_resp = _get_check(okareo_client, check_id)
-        _assert_check_type(get_resp, "score")
+        _assert_check_type(get_resp, CheckOutputType.SCORE)
 
         # --- Step 5: Update by name with "float" annotation → server normalizes to "score" ---
         update_by_name_resp = _create_or_update_check(
             okareo_client, check_name, FLOAT_CODE
         )
-        _assert_check_type(update_by_name_resp, "score")
+        _assert_check_type(update_by_name_resp, CheckOutputType.SCORE)
 
         # --- Step 6: GET and verify score persisted ---
         get_resp = _get_check(okareo_client, check_id)
-        _assert_check_type(get_resp, "score")
+        _assert_check_type(get_resp, CheckOutputType.SCORE)
 
     finally:
         if check_id is not None:
@@ -322,17 +325,17 @@ def test_check_response_runtime_type_inference(
         )
         assert isinstance(create_resp.id, str)
         check_id = create_resp.id
-        _assert_check_type(create_resp, "pass_fail")
+        _assert_check_type(create_resp, CheckOutputType.PASS_FAIL)
 
         # --- Step 2: Update with CheckResponse(score=0.75) → runtime infers "score" ---
         update_resp = _create_or_update_check(
             okareo_client, check_name, CHECK_RESPONSE_FLOAT_CODE, check_id=check_id
         )
-        _assert_check_type(update_resp, "score")
+        _assert_check_type(update_resp, CheckOutputType.SCORE)
 
         # --- Step 3: GET and verify score persisted ---
         get_resp = _get_check(okareo_client, check_id)
-        _assert_check_type(get_resp, "score")
+        _assert_check_type(get_resp, CheckOutputType.SCORE)
 
     finally:
         if check_id is not None:
