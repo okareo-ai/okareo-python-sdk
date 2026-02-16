@@ -32,15 +32,33 @@ class Check(CodeBasedCheck):
 """
 
 INT_CODE = """\
+from okareo.checks import CodeBasedCheck
+
+class Check(CodeBasedCheck):
+    @staticmethod
+    def evaluate(model_output: str) -> int:
+        return 3
+"""
+
+FLOAT_CODE = """\
+from okareo.checks import CodeBasedCheck
+
+class Check(CodeBasedCheck):
+    @staticmethod
+    def evaluate(model_output: str) -> float:
+        return 0.75
+"""
+
+CHECK_RESPONSE_BOOL_CODE = """\
 from okareo.checks import CodeBasedCheck, CheckResponse
 
 class Check(CodeBasedCheck):
     @staticmethod
     def evaluate(model_output: str) -> CheckResponse:
-        return CheckResponse(score=3)
+        return CheckResponse(score=True, explanation="ok")
 """
 
-FLOAT_CODE = """\
+CHECK_RESPONSE_FLOAT_CODE = """\
 from okareo.checks import CodeBasedCheck, CheckResponse
 
 class Check(CodeBasedCheck):
@@ -240,48 +258,82 @@ def _assert_check_type(response: EvaluatorDetailedResponse, expected_type: str) 
 def test_create_update_by_id_update_by_name_type_inference(
     okareo_client: Okareo,
 ) -> None:
-    """Test 1: Create → Update by ID → Update by name.
+    """Test: Create → Update by ID → Update by name with static normalization.
 
-    Covers: POST /v0/check_create_or_update, GET /v0/check/{check_id},
-    DELETE /v0/check/{check_id}, plain return values, CheckResponse return
-    values, bool/int/float inference, create path, update-by-id path,
-    update-by-name path.
+    Covers static normalization of raw Python types sent by the SDK:
+    "bool" → "pass_fail", "int" → "score", "float" → "score".
+    Tests create path, update-by-id path, and update-by-name path.
     """
     check_name = f"infer_type_test_{random_string(5)}"
     check_id = None
 
     try:
-        # --- Step 1: Create with code returning plain True (bool → pass_fail) ---
+        # --- Step 1: Create with "bool" annotation → server normalizes to "pass_fail" ---
         create_resp = _create_or_update_check(okareo_client, check_name, BOOL_CODE)
         assert isinstance(create_resp.id, str)
         check_id = create_resp.id
         _assert_check_type(create_resp, "pass_fail")
 
-        # --- Step 2: GET and verify pass_fail type ---
+        # --- Step 2: GET and verify pass_fail persisted ---
         get_resp = _get_check(okareo_client, check_id)
         _assert_check_type(get_resp, "pass_fail")
 
-        # --- Step 3: Update by check_id — change code to return CheckResponse(score=3) (int → score) ---
+        # --- Step 3: Update by check_id with "int" annotation → server normalizes to "score" ---
         update_by_id_resp = _create_or_update_check(
             okareo_client, check_name, INT_CODE, check_id=check_id
         )
         _assert_check_type(update_by_id_resp, "score")
 
-        # --- Step 4: GET and verify score type ---
+        # --- Step 4: GET and verify score persisted ---
         get_resp = _get_check(okareo_client, check_id)
         _assert_check_type(get_resp, "score")
 
-        # --- Step 5: Update by name (no check_id) — change code to return CheckResponse(score=0.75) (float → score) ---
+        # --- Step 5: Update by name with "float" annotation → server normalizes to "score" ---
         update_by_name_resp = _create_or_update_check(
             okareo_client, check_name, FLOAT_CODE
         )
         _assert_check_type(update_by_name_resp, "score")
 
-        # --- Step 6: GET and verify score type ---
+        # --- Step 6: GET and verify score persisted ---
         get_resp = _get_check(okareo_client, check_id)
         _assert_check_type(get_resp, "score")
 
     finally:
-        # --- Step 7: Cleanup ---
+        if check_id is not None:
+            _delete_check(okareo_client, check_id, check_name)
+
+
+def test_check_response_runtime_type_inference(
+    okareo_client: Okareo,
+) -> None:
+    """Test runtime type inference when SDK sends "CheckResponse".
+
+    When the SDK sends type="CheckResponse" (not in the static map),
+    the server falls back to runtime inference from the actual score value:
+    CheckResponse(score=True) → "pass_fail", CheckResponse(score=0.75) → "score".
+    """
+    check_name = f"infer_cr_test_{random_string(5)}"
+    check_id = None
+
+    try:
+        # --- Step 1: Create with CheckResponse(score=True) → runtime infers "pass_fail" ---
+        create_resp = _create_or_update_check(
+            okareo_client, check_name, CHECK_RESPONSE_BOOL_CODE
+        )
+        assert isinstance(create_resp.id, str)
+        check_id = create_resp.id
+        _assert_check_type(create_resp, "pass_fail")
+
+        # --- Step 2: Update with CheckResponse(score=0.75) → runtime infers "score" ---
+        update_resp = _create_or_update_check(
+            okareo_client, check_name, CHECK_RESPONSE_FLOAT_CODE, check_id=check_id
+        )
+        _assert_check_type(update_resp, "score")
+
+        # --- Step 3: GET and verify score persisted ---
+        get_resp = _get_check(okareo_client, check_id)
+        _assert_check_type(get_resp, "score")
+
+    finally:
         if check_id is not None:
             _delete_check(okareo_client, check_id, check_name)
