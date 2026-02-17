@@ -104,7 +104,7 @@ def mark_optional_properties_nullable(spec: dict) -> dict:
        generated ``from_dict`` will handle it instead of crashing.
     """
     schemas = spec.get("components", {}).get("schemas", {})
-    for schema_name, schema in schemas.items():
+    for schema in schemas.values():
         properties = schema.get("properties")
         if not properties:
             continue
