@@ -17,7 +17,7 @@ def _get_kwargs(
     start_date: str | Unset = UNSET,
     end_date: str | Unset = UNSET,
     project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UNSET,
+    precision: UsagePrecision | Unset = UsagePrecision.DAY,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -83,7 +83,7 @@ def sync_detailed(
     start_date: str | Unset = UNSET,
     end_date: str | Unset = UNSET,
     project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UNSET,
+    precision: UsagePrecision | Unset = UsagePrecision.DAY,
 ) -> Response[HTTPValidationError | UsageMetricsResponse]:
     """Get usage metrics
 
@@ -123,7 +123,8 @@ def sync_detailed(
         end_date (str | Unset): End date for metrics period (will be capped based on buffer).
             Defaults to current time with buffer applied.
         project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
+            UsagePrecision.DAY.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -153,7 +154,7 @@ def sync(
     start_date: str | Unset = UNSET,
     end_date: str | Unset = UNSET,
     project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UNSET,
+    precision: UsagePrecision | Unset = UsagePrecision.DAY,
 ) -> HTTPValidationError | UsageMetricsResponse | None:
     """Get usage metrics
 
@@ -193,7 +194,8 @@ def sync(
         end_date (str | Unset): End date for metrics period (will be capped based on buffer).
             Defaults to current time with buffer applied.
         project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
+            UsagePrecision.DAY.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -218,7 +220,7 @@ async def asyncio_detailed(
     start_date: str | Unset = UNSET,
     end_date: str | Unset = UNSET,
     project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UNSET,
+    precision: UsagePrecision | Unset = UsagePrecision.DAY,
 ) -> Response[HTTPValidationError | UsageMetricsResponse]:
     """Get usage metrics
 
@@ -258,7 +260,8 @@ async def asyncio_detailed(
         end_date (str | Unset): End date for metrics period (will be capped based on buffer).
             Defaults to current time with buffer applied.
         project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
+            UsagePrecision.DAY.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -286,7 +289,7 @@ async def asyncio(
     start_date: str | Unset = UNSET,
     end_date: str | Unset = UNSET,
     project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UNSET,
+    precision: UsagePrecision | Unset = UsagePrecision.DAY,
 ) -> HTTPValidationError | UsageMetricsResponse | None:
     """Get usage metrics
 
@@ -326,7 +329,8 @@ async def asyncio(
         end_date (str | Unset): End date for metrics period (will be capped based on buffer).
             Defaults to current time with buffer applied.
         project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
+            UsagePrecision.DAY.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
