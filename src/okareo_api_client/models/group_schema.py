@@ -1,4 +1,7 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,21 +15,26 @@ T = TypeVar("T", bound="GroupSchema")
 class GroupSchema:
     """
     Attributes:
-        name (Union[Unset, str]): Name of the group
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter groups in the Okareo app
+        name (None | str | Unset): Name of the group
+        tags (list[str] | Unset): Tags are strings that can be used to filter groups in the Okareo app
     """
 
-    name: Union[Unset, str] = UNSET
-    tags: Union[Unset, List[str]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    name: None | str | Unset = UNSET
+    tags: list[str] | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        name = self.name
-        tags: Union[Unset, List[str]] = UNSET
+    def to_dict(self) -> dict[str, Any]:
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if name is not UNSET:
@@ -37,11 +45,19 @@ class GroupSchema:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        name = d.pop("name", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        name = _parse_name(d.pop("name", UNSET))
+
+        tags = cast(list[str], d.pop("tags", UNSET))
 
         group_schema = cls(
             name=name,
@@ -52,7 +68,7 @@ class GroupSchema:
         return group_schema
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

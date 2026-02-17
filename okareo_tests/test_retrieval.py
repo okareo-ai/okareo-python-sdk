@@ -8,6 +8,7 @@ from okareo_tests.common import API_KEY, random_string
 from okareo import Okareo
 from okareo.model_under_test import CustomModel, ModelInvocation
 from okareo_api_client.models import ScenarioSetResponse, ScenarioType, TestRunType
+from okareo_api_client.types import Unset
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 rnd_str = random_string(5)
@@ -33,7 +34,8 @@ def uploaded_scenario_set(okareo_client: Okareo) -> ScenarioSetResponse:
 def generate_scenarios(
     okareo_client: Okareo, uploaded_scenario_set: ScenarioSetResponse
 ) -> ScenarioSetResponse:
-    assert isinstance(uploaded_scenario_set.scenario_id, str)
+    assert uploaded_scenario_set.scenario_id is not None
+    assert not isinstance(uploaded_scenario_set.scenario_id, Unset)
     questions: ScenarioSetResponse = okareo_client.generate_scenarios(
         source_scenario=uploaded_scenario_set.scenario_id,
         name=f"test_generate_scenarios {unique_key}",

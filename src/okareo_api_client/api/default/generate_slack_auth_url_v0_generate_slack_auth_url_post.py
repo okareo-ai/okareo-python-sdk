@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -17,52 +17,59 @@ from ...types import Response
 
 def _get_kwargs(
     *,
-    json_body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
+    body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/generate_slack_auth_url",
-        "json": json_json_body,
-        "headers": headers,
     }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[
-    Union[
-        ErrorResponse,
-        GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
-    ]
-]:
-    if response.status_code == HTTPStatus.OK:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> (
+    ErrorResponse
+    | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
+    | None
+):
+    if response.status_code == 200:
         response_200 = GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost.from_dict(
             response.json()
         )
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -70,12 +77,9 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
+    *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
-    Union[
-        ErrorResponse,
-        GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
-    ]
+    ErrorResponse | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -87,14 +91,11 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
+    client: AuthenticatedClient | Client,
+    body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
     api_key: str,
 ) -> Response[
-    Union[
-        ErrorResponse,
-        GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
-    ]
+    ErrorResponse | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
 ]:
     """Generate Slack Auth Url
 
@@ -109,18 +110,18 @@ def sync_detailed(
 
     Args:
         api_key (str):
-        json_body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
+        body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost]]
+        Response[ErrorResponse | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -133,15 +134,14 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
+    client: AuthenticatedClient | Client,
+    body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
     api_key: str,
-) -> Optional[
-    Union[
-        ErrorResponse,
-        GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
-    ]
-]:
+) -> (
+    ErrorResponse
+    | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
+    | None
+):
     """Generate Slack Auth Url
 
      Generates a Slack authentication URL with a temporary authorization token.
@@ -155,33 +155,30 @@ def sync(
 
     Args:
         api_key (str):
-        json_body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
+        body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost]
+        ErrorResponse | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
     """
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
+    client: AuthenticatedClient | Client,
+    body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
     api_key: str,
 ) -> Response[
-    Union[
-        ErrorResponse,
-        GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
-    ]
+    ErrorResponse | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
 ]:
     """Generate Slack Auth Url
 
@@ -196,18 +193,18 @@ async def asyncio_detailed(
 
     Args:
         api_key (str):
-        json_body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
+        body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost]]
+        Response[ErrorResponse | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -218,15 +215,14 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
+    client: AuthenticatedClient | Client,
+    body: GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData,
     api_key: str,
-) -> Optional[
-    Union[
-        ErrorResponse,
-        GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost,
-    ]
-]:
+) -> (
+    ErrorResponse
+    | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
+    | None
+):
     """Generate Slack Auth Url
 
      Generates a Slack authentication URL with a temporary authorization token.
@@ -240,20 +236,20 @@ async def asyncio(
 
     Args:
         api_key (str):
-        json_body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
+        body (GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostProjectData):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost]
+        ErrorResponse | GenerateSlackAuthUrlV0GenerateSlackAuthUrlPostResponseGenerateSlackAuthUrlV0GenerateSlackAuthUrlPost
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

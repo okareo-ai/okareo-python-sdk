@@ -84,7 +84,7 @@ def tts_pcm16(
     audio = np.frombuffer(r.content, dtype=np.int16)
     if target_sr != native_sr:
         try:
-            from scipy.signal import resample_poly
+            from scipy.signal import resample_poly  # type: ignore[import-untyped]
         except ImportError as e:
             raise ImportError(
                 "scipy is required for audio resampling. Install it with: pip install okareo[voice]"

@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -13,40 +13,47 @@ from ...types import Response
 def _get_kwargs(
     *,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/custom_endpoint_stub/create",
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[AssistantThreadResponse, ErrorResponse]]:
-    if response.status_code == HTTPStatus.CREATED:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> AssistantThreadResponse | ErrorResponse | None:
+    if response.status_code == 201:
         response_201 = AssistantThreadResponse.from_dict(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -54,8 +61,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[AssistantThreadResponse, ErrorResponse]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[AssistantThreadResponse | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,9 +73,9 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[AssistantThreadResponse, ErrorResponse]]:
+) -> Response[AssistantThreadResponse | ErrorResponse]:
     """Create Assistant Thread
 
      Creates a new Assistant thread with an initial system message.
@@ -84,7 +91,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AssistantThreadResponse, ErrorResponse]]
+        Response[AssistantThreadResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -100,9 +107,9 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[AssistantThreadResponse, ErrorResponse]]:
+) -> AssistantThreadResponse | ErrorResponse | None:
     """Create Assistant Thread
 
      Creates a new Assistant thread with an initial system message.
@@ -118,7 +125,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AssistantThreadResponse, ErrorResponse]
+        AssistantThreadResponse | ErrorResponse
     """
 
     return sync_detailed(
@@ -129,9 +136,9 @@ def sync(
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[AssistantThreadResponse, ErrorResponse]]:
+) -> Response[AssistantThreadResponse | ErrorResponse]:
     """Create Assistant Thread
 
      Creates a new Assistant thread with an initial system message.
@@ -147,7 +154,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AssistantThreadResponse, ErrorResponse]]
+        Response[AssistantThreadResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -161,9 +168,9 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[AssistantThreadResponse, ErrorResponse]]:
+) -> AssistantThreadResponse | ErrorResponse | None:
     """Create Assistant Thread
 
      Creates a new Assistant thread with an initial system message.
@@ -179,7 +186,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AssistantThreadResponse, ErrorResponse]
+        AssistantThreadResponse | ErrorResponse
     """
 
     return (

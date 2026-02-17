@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,55 +22,102 @@ T = TypeVar("T", bound="EvaluatorDetailedResponse")
 class EvaluatorDetailedResponse:
     """
     Attributes:
-        id (Union[Unset, str]):
-        project_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):  Default: ''.
-        requires_scenario_input (Union[Unset, bool]):
-        requires_scenario_result (Union[Unset, bool]):
-        output_data_type (Union[Unset, str]):  Default: ''.
-        code_contents (Union[Unset, str]):  Default: ''.
-        time_created (Union[Unset, datetime.datetime]):
-        warning (Union[Unset, str]):
-        check_config (Union[Unset, EvaluatorDetailedResponseCheckConfig]):
-        is_predefined (Union[Unset, bool]):
+        id (None | Unset | UUID):
+        project_id (None | Unset | UUID):
+        name (None | str | Unset):
+        description (str | Unset):  Default: ''.
+        requires_scenario_input (bool | None | Unset):
+        requires_scenario_result (bool | None | Unset):
+        output_data_type (str | Unset):  Default: ''.
+        code_contents (str | Unset):  Default: ''.
+        time_created (datetime.datetime | None | Unset):
+        warning (None | str | Unset):
+        check_config (EvaluatorDetailedResponseCheckConfig | None | Unset):
+        is_predefined (bool | Unset):  Default: False.
     """
 
-    id: Union[Unset, str] = UNSET
-    project_id: Union[Unset, str] = UNSET
-    name: Union[Unset, str] = UNSET
-    description: Union[Unset, str] = ""
-    requires_scenario_input: Union[Unset, bool] = UNSET
-    requires_scenario_result: Union[Unset, bool] = UNSET
-    output_data_type: Union[Unset, str] = ""
-    code_contents: Union[Unset, str] = ""
-    time_created: Union[Unset, datetime.datetime] = UNSET
-    warning: Union[Unset, str] = UNSET
-    check_config: Union[Unset, "EvaluatorDetailedResponseCheckConfig"] = UNSET
-    is_predefined: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    id: None | Unset | UUID = UNSET
+    project_id: None | Unset | UUID = UNSET
+    name: None | str | Unset = UNSET
+    description: str | Unset = ""
+    requires_scenario_input: bool | None | Unset = UNSET
+    requires_scenario_result: bool | None | Unset = UNSET
+    output_data_type: str | Unset = ""
+    code_contents: str | Unset = ""
+    time_created: datetime.datetime | None | Unset = UNSET
+    warning: None | str | Unset = UNSET
+    check_config: EvaluatorDetailedResponseCheckConfig | None | Unset = UNSET
+    is_predefined: bool | Unset = False
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        project_id = self.project_id
-        name = self.name
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
+
+        id: None | str | Unset
+        if isinstance(self.id, Unset):
+            id = UNSET
+        elif isinstance(self.id, UUID):
+            id = str(self.id)
+        else:
+            id = self.id
+
+        project_id: None | str | Unset
+        if isinstance(self.project_id, Unset):
+            project_id = UNSET
+        elif isinstance(self.project_id, UUID):
+            project_id = str(self.project_id)
+        else:
+            project_id = self.project_id
+
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
         description = self.description
-        requires_scenario_input = self.requires_scenario_input
-        requires_scenario_result = self.requires_scenario_result
-        output_data_type = self.output_data_type
-        code_contents = self.code_contents
-        time_created: Union[Unset, str] = UNSET
-        if not isinstance(self.time_created, Unset):
-            time_created = self.time_created.isoformat()
 
-        warning = self.warning
-        check_config: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.check_config, Unset):
+        requires_scenario_input: bool | None | Unset
+        if isinstance(self.requires_scenario_input, Unset):
+            requires_scenario_input = UNSET
+        else:
+            requires_scenario_input = self.requires_scenario_input
+
+        requires_scenario_result: bool | None | Unset
+        if isinstance(self.requires_scenario_result, Unset):
+            requires_scenario_result = UNSET
+        else:
+            requires_scenario_result = self.requires_scenario_result
+
+        output_data_type = self.output_data_type
+
+        code_contents = self.code_contents
+
+        time_created: None | str | Unset
+        if isinstance(self.time_created, Unset):
+            time_created = UNSET
+        elif isinstance(self.time_created, datetime.datetime):
+            time_created = self.time_created.isoformat()
+        else:
+            time_created = self.time_created
+
+        warning: None | str | Unset
+        if isinstance(self.warning, Unset):
+            warning = UNSET
+        else:
+            warning = self.warning
+
+        check_config: dict[str, Any] | None | Unset
+        if isinstance(self.check_config, Unset):
+            check_config = UNSET
+        elif isinstance(self.check_config, EvaluatorDetailedResponseCheckConfig):
             check_config = self.check_config.to_dict()
+        else:
+            check_config = self.check_config
 
         is_predefined = self.is_predefined
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if id is not UNSET:
@@ -97,41 +148,120 @@ class EvaluatorDetailedResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
 
-        d = src_dict.copy()
-        id = d.pop("id", UNSET)
+        d = dict(src_dict)
 
-        project_id = d.pop("project_id", UNSET)
+        def _parse_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                id_type_0 = UUID(data)
 
-        name = d.pop("name", UNSET)
+                return id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        id = _parse_id(d.pop("id", UNSET))
+
+        def _parse_project_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                project_id_type_0 = UUID(data)
+
+                return project_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        project_id = _parse_project_id(d.pop("project_id", UNSET))
+
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        name = _parse_name(d.pop("name", UNSET))
 
         description = d.pop("description", UNSET)
 
-        requires_scenario_input = d.pop("requires_scenario_input", UNSET)
+        def _parse_requires_scenario_input(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
 
-        requires_scenario_result = d.pop("requires_scenario_result", UNSET)
+        requires_scenario_input = _parse_requires_scenario_input(d.pop("requires_scenario_input", UNSET))
+
+        def _parse_requires_scenario_result(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        requires_scenario_result = _parse_requires_scenario_result(d.pop("requires_scenario_result", UNSET))
 
         output_data_type = d.pop("output_data_type", UNSET)
 
         code_contents = d.pop("code_contents", UNSET)
 
-        _time_created = d.pop("time_created", UNSET)
-        time_created: Union[Unset, datetime.datetime]
-        if isinstance(_time_created, Unset):
-            time_created = UNSET
-        else:
-            time_created = isoparse(_time_created)
+        def _parse_time_created(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                time_created_type_0 = isoparse(data)
 
-        warning = d.pop("warning", UNSET)
+                return time_created_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
 
-        _check_config = d.pop("check_config", UNSET)
-        check_config: Union[Unset, EvaluatorDetailedResponseCheckConfig]
-        if isinstance(_check_config, Unset):
-            check_config = UNSET
-        else:
-            check_config = EvaluatorDetailedResponseCheckConfig.from_dict(_check_config)
+        time_created = _parse_time_created(d.pop("time_created", UNSET))
+
+        def _parse_warning(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        warning = _parse_warning(d.pop("warning", UNSET))
+
+        def _parse_check_config(data: object) -> EvaluatorDetailedResponseCheckConfig | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                check_config_type_0 = EvaluatorDetailedResponseCheckConfig.from_dict(data)
+
+                return check_config_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(EvaluatorDetailedResponseCheckConfig | None | Unset, data)
+
+        check_config = _parse_check_config(d.pop("check_config", UNSET))
 
         is_predefined = d.pop("is_predefined", UNSET)
 
@@ -154,7 +284,7 @@ class EvaluatorDetailedResponse:
         return evaluator_detailed_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

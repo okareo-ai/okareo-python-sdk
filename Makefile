@@ -4,14 +4,17 @@ GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 VERSION := $(shell git describe --tags)-$(GIT_SHA_SHORT)
 OPENAPI_SPEC ?= "https://api.okareo.com/openapi.json" # use in prod
-# OPENAPI_SPEC ?= "http://localhost:8000/openapi.json" # use in local development
 
 .PHONY: spec/update
 spec/update:
 	wget -q $(OPENAPI_SPEC) -O openapi.json
 
+.PHONY: spec/preprocess
+spec/preprocess:
+	python scripts/preprocess_openapi.py openapi.json openapi.json
+
 .PHONY: openapi/generate
-openapi/generate:
+openapi/generate: spec/preprocess
 	rm -rf src/okareo_api_client
 	openapi-python-client generate --path openapi.json --meta poetry
 	mv -f okareo-api-client/okareo_api_client src

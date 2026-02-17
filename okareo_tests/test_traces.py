@@ -107,7 +107,7 @@ def generate_random_string():  # type: ignore
 
 
 def find_datapoints(
-    api_key: Any, base_url: Any, filters: list[dict[str, str]], wait: int = 15
+    api_key: Any, base_url: Any, filters: list[dict[str, Any]], wait: int = 15
 ) -> list[dict[str, Any]]:
     """Find datapoints using /v0/find_datapoints_filter. Retries 3x with backoff."""
     if wait > 0:

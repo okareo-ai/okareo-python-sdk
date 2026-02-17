@@ -9,7 +9,7 @@ from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
 from typing import Any, Awaitable, Dict, List, Optional, Union
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import aiohttp
 from attrs import define
@@ -55,6 +55,9 @@ from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
 )
 from okareo_api_client.models.test_run_payload_v2_model_results import (
     TestRunPayloadV2ModelResults,
+)
+from okareo_api_client.models.test_run_payload_v2_simulation_params import (
+    TestRunPayloadV2SimulationParams,
 )
 from okareo_api_client.models.voice_driver_model_response import (
     VoiceDriverModelResponse,
@@ -161,15 +164,17 @@ class ModelUnderTest(AsyncProcessorMixin):
                 if result_datetime == UNSET and result_obj is not None
                 else result_datetime
             ),
-            "project_id": self.project_id,
-            "mut_id": self.mut_id,
-            "test_run_id": test_run_id,
-            "group_id": group_id,
+            "project_id": str(self.project_id),
+            "mut_id": str(self.mut_id),
         }
+        if test_run_id is not None:
+            body["test_run_id"] = test_run_id
+        if group_id is not None:
+            body["group_id"] = group_id
         response = add_datapoint_v0_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=DatapointSchema.from_dict(body),
+            body=DatapointSchema.from_dict(body),
         )
         if not response:
             print("Empty response from API")
@@ -210,11 +215,13 @@ class ModelUnderTest(AsyncProcessorMixin):
                 if result_datetime == UNSET and result_obj is not None
                 else result_datetime
             ),
-            "project_id": self.project_id,
-            "mut_id": self.mut_id,
-            "test_run_id": test_run_id,
-            "group_id": group_id,
+            "project_id": str(self.project_id),
+            "mut_id": str(self.mut_id),
         }
+        if test_run_id is not None:
+            body["test_run_id"] = test_run_id
+        if group_id is not None:
+            body["group_id"] = group_id
 
         return self.async_call(
             add_datapoint_v0_datapoints_post.sync, DatapointSchema.from_dict(body)
@@ -267,13 +274,15 @@ class ModelUnderTest(AsyncProcessorMixin):
         return "custom_batch" in list(self.models.keys())
 
     def _get_scenario_data_points(
-        self, scenario_id: str
+        self, scenario_id: Union[str, UUID]
     ) -> List[ScenarioDataPoinResponse]:
         scenario_data_points = (
             get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
                 client=self.client,
                 api_key=self.api_key,
-                scenario_id=scenario_id,
+                scenario_id=(
+                    UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+                ),
             )
         )
         scenario_data_points = (
@@ -285,9 +294,10 @@ class ModelUnderTest(AsyncProcessorMixin):
         self,
         custom_model_return_value: Any,
         model_data: dict,
-        scenario_data_point_id: str,
+        scenario_data_point_id: Union[str, UUID],
         test_run_id: Optional[str] = None,
     ) -> None:
+        scenario_data_point_id = str(scenario_data_point_id)
         if isinstance(custom_model_return_value, ModelInvocation):
             model_prediction = custom_model_return_value.model_prediction
             model_output_metadata = custom_model_return_value.model_output_metadata
@@ -331,7 +341,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 datapoint_response = self.add_data_point(
                     input_obj=model_input,
                     result_obj=model_prediction,
-                    project_id=self.project_id,
+                    project_id=str(self.project_id),
                     test_run_id=test_run_id,
                     error_message=error_message,
                 )
@@ -344,7 +354,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 )
                 datapoint_response = self.add_data_point(
                     input_obj=model_input,  # type: ignore
-                    project_id=self.project_id,
+                    project_id=str(self.project_id),
                     test_run_id=test_run_id,
                     error_message=str(e),
                 )
@@ -377,7 +387,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             ),
             scenario_id=scenario_id,
             name=name,
-            type=test_run_type,
+            type_=test_run_type,
             calculate_metrics=calculate_metrics,
             metrics_kwargs=TestRunPayloadV2MetricsKwargs.from_dict(
                 metrics_kwargs or {}
@@ -388,8 +398,16 @@ class ModelUnderTest(AsyncProcessorMixin):
                 else UNSET
             ),
             checks=checks if checks else UNSET,
-            simulation_params=simulation_params if simulation_params else UNSET,
-            driver_id=driver_id if driver_id else UNSET,
+            simulation_params=(
+                TestRunPayloadV2SimulationParams.from_dict(simulation_params.to_dict())
+                if simulation_params
+                else UNSET
+            ),
+            driver_id=(
+                UUID(driver_id)
+                if isinstance(driver_id, str)
+                else (driver_id if driver_id else UNSET)
+            ),
             nats_invoke_id=nats_invoke_id if nats_invoke_id else UNSET,
         )
 
@@ -679,7 +697,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def _run_test_internal(
         self,
-        scenario: Union[ScenarioSetResponse, str],
+        scenario: Union[ScenarioSetResponse, str, UUID],
         name: str,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
@@ -697,12 +715,15 @@ class ModelUnderTest(AsyncProcessorMixin):
 
         try:
             assert isinstance(self.models, dict)
-            scenario_id = (
+            _raw_scenario_id = (
                 scenario.scenario_id
                 if isinstance(scenario, ScenarioSetResponse)
                 else scenario
             )
-            assert isinstance(scenario_id, str)
+            assert _raw_scenario_id is not None and not isinstance(
+                _raw_scenario_id, Unset
+            )
+            scenario_id: Union[str, UUID] = _raw_scenario_id
             run_api_keys = self._validate_run_test_params(
                 api_key, api_keys, test_run_type
             )
@@ -717,7 +738,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
                     client=self.client,
                     api_key=self.api_key,
-                    mut_id=self.mut_id,
+                    mut_id=str(self.mut_id),
                     nats_invoke_id=nats_invoke_id,
                 )
                 assert isinstance(creds, dict)
@@ -807,7 +828,7 @@ class ModelUnderTest(AsyncProcessorMixin):
     def _call_run_test_method(
         self,
         run_test_method: Any,
-        scenario_id: str,
+        scenario_id: Union[str, UUID],
         name: str,
         api_key: Optional[str],
         api_keys: Optional[dict],
@@ -824,7 +845,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         response: TestRunItem = run_test_method(
             client=self.client,
             api_key=self.api_key,
-            json_body=self._get_test_run_payload(
+            body=self._get_test_run_payload(
                 scenario_id,
                 name,
                 api_key,
@@ -893,7 +914,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def submit_test(
         self,
-        scenario: Union[ScenarioSetResponse, str],
+        scenario: Union[ScenarioSetResponse, str, UUID],
         name: str,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
@@ -944,7 +965,7 @@ class ModelUnderTest(AsyncProcessorMixin):
 
     def run_test(
         self,
-        scenario: Union[ScenarioSetResponse, str],
+        scenario: Union[ScenarioSetResponse, str, UUID],
         name: str,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
@@ -989,7 +1010,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         except Exception as e:
             raise TestRunError(str(e)) from e
 
-    def get_test_run(self, test_run_id: str) -> TestRunItem:
+    def get_test_run(self, test_run_id: Union[str, UUID]) -> TestRunItem:
         """Retrieve a test run by its ID.
 
         Arguments:
@@ -1000,7 +1021,11 @@ class ModelUnderTest(AsyncProcessorMixin):
         """
         try:
             response = get_test_run_v0_test_runs_test_run_id_get.sync(
-                client=self.client, api_key=self.api_key, test_run_id=test_run_id
+                client=self.client,
+                api_key=self.api_key,
+                test_run_id=(
+                    UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+                ),
             )
             self.validate_response(response)
             assert isinstance(response, TestRunItem)
@@ -1078,7 +1103,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 scenario_data_points_batch = scenario_data_points[index:end_index]
                 scenario_inputs = [
                     {
-                        "id": sdp.id,
+                        "id": str(sdp.id),
                         "input_value": self._extract_input_from_scenario_data_point(
                             sdp
                         ),
@@ -1102,34 +1127,58 @@ class ModelUnderTest(AsyncProcessorMixin):
         api_key: str,
         name: str,
         test_run_type: TestRunType,
-        scenario_id: Union[Unset, str] = UNSET,
-        datapoint_ids: Union[Unset, list[str]] = UNSET,
-        filter_group_id: Union[Unset, str] = UNSET,
+        scenario_id: Union[Unset, str, UUID] = UNSET,
+        datapoint_ids: Union[Unset, list[str], list[UUID]] = UNSET,
+        filter_group_id: Union[Unset, str, UUID] = UNSET,
         tags: Union[Unset, list[str]] = UNSET,
         metrics_kwargs: Union[Dict[str, Any], Unset] = UNSET,
         checks: Union[Unset, list[str]] = UNSET,
-        test_run_id: Union[Unset, str] = UNSET,
+        test_run_id: Union[Unset, str, UUID] = UNSET,
     ) -> TestRunItem:
         """Run an 'online' evaluation on already uploaded datapoints.
         Also used to handle 'submit_test' for CustomModel (requires a `test_run_id`$).
         """
+        _scenario_id: Union[Unset, UUID, None] = (
+            UNSET
+            if isinstance(scenario_id, Unset)
+            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+        )
+        _datapoint_ids: Union[Unset, list[UUID], None] = (
+            UNSET
+            if isinstance(datapoint_ids, Unset)
+            else [UUID(d) if isinstance(d, str) else d for d in datapoint_ids]
+        )
+        _filter_group_id: Union[Unset, UUID, None] = (
+            UNSET
+            if isinstance(filter_group_id, Unset)
+            else (
+                UUID(filter_group_id)
+                if isinstance(filter_group_id, str)
+                else filter_group_id
+            )
+        )
+        _test_run_id: Union[Unset, UUID, None] = (
+            UNSET
+            if isinstance(test_run_id, Unset)
+            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+        )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
                 metrics_kwargs or {}
             ),
             name=name,
-            type=test_run_type,
+            type_=test_run_type,
             tags=tags,
             checks=checks,
-            scenario_id=scenario_id,
-            datapoint_ids=datapoint_ids,
-            filter_group_id=filter_group_id,
-            test_run_id=test_run_id,
+            scenario_id=_scenario_id,
+            datapoint_ids=_datapoint_ids,
+            filter_group_id=_filter_group_id,
+            test_run_id=_test_run_id,
         )
 
         response = evaluate_v0_evaluate_post.sync(
             client=client,
-            json_body=payload,
+            body=payload,
             api_key=api_key,
         )
         cls.validate_response(response)
@@ -1792,25 +1841,27 @@ class Driver:
     prompt_template: str = "{scenario_input}"
     model_id: Optional[str] = None
     temperature: Optional[float] = 0.6
-    id: Optional[str] = None
+    id: Optional[Union[str, UUID]] = None
     time_created: Optional[str] = datetime.now().isoformat()
-    project_id: Optional[str] = None
+    project_id: Optional[Union[str, UUID]] = None
     voice_instructions: Optional[str] = None
     voice_profile: Optional[str] = None
     voice: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {
+        d: dict = {
             "name": self.name,
             "temperature": self.temperature,
             "model_id": self.model_id,
             "prompt_template": self.prompt_template,
-            "id": self.id,
             "time_created": self.time_created,
             "voice_instructions": self.voice_instructions,
             "voice_profile": self.voice_profile,
             "voice": self.voice,
         }
+        if self.id is not None:
+            d["id"] = str(self.id)
+        return d
 
     def _get_driver_fields(
         self, response: Union[DriverModelResponse, VoiceDriverModelResponse]
@@ -1890,7 +1941,7 @@ class Target:
         assert target is not None
         inst = cls(response.name, target)
         if response.id:
-            inst.id = response.id
+            inst.id = str(response.id)
         return inst
 
 

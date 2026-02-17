@@ -1,5 +1,7 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
@@ -13,35 +15,37 @@ from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    group_id: str,
+    group_id: UUID,
     *,
-    model_id: str,
+    model_id: UUID,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["model_id"] = model_id
+    params: dict[str, Any] = {}
+
+    json_model_id = str(model_id)
+    params["model_id"] = json_model_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/groups/{group_id}/models".format(
-            group_id=group_id,
+            group_id=quote(str(group_id), safe=""),
         ),
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[
-    Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
-]:
-    if response.status_code == HTTPStatus.CREATED:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse | None:
+    if response.status_code == 201:
         response_201 = (
             AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost.from_dict(
                 response.json()
@@ -49,22 +53,27 @@ def _parse_response(
         )
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -72,10 +81,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[
-    Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
-]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -85,14 +92,12 @@ def _build_response(
 
 
 def sync_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    model_id: str,
+    client: AuthenticatedClient | Client,
+    model_id: UUID,
     api_key: str,
-) -> Response[
-    Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
-]:
+) -> Response[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse]:
     """Add Model To Group
 
      Add a model to a group.
@@ -101,8 +106,8 @@ def sync_detailed(
         A success message
 
     Args:
-        group_id (str): The ID of the group
-        model_id (str): The ID of the model to add
+        group_id (UUID): The ID of the group
+        model_id (UUID): The ID of the model to add
         api_key (str):
 
     Raises:
@@ -110,7 +115,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]]
+        Response[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -127,14 +132,12 @@ def sync_detailed(
 
 
 def sync(
-    group_id: str,
+    group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    model_id: str,
+    client: AuthenticatedClient | Client,
+    model_id: UUID,
     api_key: str,
-) -> Optional[
-    Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
-]:
+) -> AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse | None:
     """Add Model To Group
 
      Add a model to a group.
@@ -143,8 +146,8 @@ def sync(
         A success message
 
     Args:
-        group_id (str): The ID of the group
-        model_id (str): The ID of the model to add
+        group_id (UUID): The ID of the group
+        model_id (UUID): The ID of the model to add
         api_key (str):
 
     Raises:
@@ -152,7 +155,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
+        AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse
     """
 
     return sync_detailed(
@@ -164,14 +167,12 @@ def sync(
 
 
 async def asyncio_detailed(
-    group_id: str,
+    group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    model_id: str,
+    client: AuthenticatedClient | Client,
+    model_id: UUID,
     api_key: str,
-) -> Response[
-    Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
-]:
+) -> Response[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse]:
     """Add Model To Group
 
      Add a model to a group.
@@ -180,8 +181,8 @@ async def asyncio_detailed(
         A success message
 
     Args:
-        group_id (str): The ID of the group
-        model_id (str): The ID of the model to add
+        group_id (UUID): The ID of the group
+        model_id (UUID): The ID of the model to add
         api_key (str):
 
     Raises:
@@ -189,7 +190,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]]
+        Response[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -204,14 +205,12 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    group_id: str,
+    group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    model_id: str,
+    client: AuthenticatedClient | Client,
+    model_id: UUID,
     api_key: str,
-) -> Optional[
-    Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
-]:
+) -> AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse | None:
     """Add Model To Group
 
      Add a model to a group.
@@ -220,8 +219,8 @@ async def asyncio(
         A success message
 
     Args:
-        group_id (str): The ID of the group
-        model_id (str): The ID of the model to add
+        group_id (UUID): The ID of the group
+        model_id (UUID): The ID of the model to add
         api_key (str):
 
     Raises:
@@ -229,7 +228,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost, ErrorResponse]
+        AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost | ErrorResponse
     """
 
     return (

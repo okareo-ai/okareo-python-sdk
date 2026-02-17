@@ -52,7 +52,7 @@ class AsyncProcessorMixin:
                 return func(
                     client=self.get_client(),
                     api_key=self.get_api_key(),
-                    json_body=data,
+                    body=data,
                 )
 
             except Exception as e:

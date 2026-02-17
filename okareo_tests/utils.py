@@ -1,5 +1,6 @@
 import datetime
 from typing import List, Union
+from uuid import UUID
 
 from litellm import token_counter
 
@@ -152,6 +153,7 @@ def _parse_baseline_metrics(
         "baseline_metrics"
     ):
         baseline = tdp.additional_properties["baseline_metrics"]
+        assert baseline is not None
         baseline_metrics["latency"].append(baseline[latency_key_baseline])
         baseline_metrics["input_tokens"].append(baseline[input_tokens_key])
         baseline_metrics["output_tokens"].append(baseline[output_tokens_key])
@@ -322,7 +324,7 @@ def create_dummy_mut(
     t_get = okareo.get_target_by_name(target.name)
     assert isinstance(t_get, Target) and t_get.id is not None
     dummy_response = ModelUnderTestResponse(
-        id=t_get.id,
+        id=UUID(t_get.id) if isinstance(t_get.id, str) else t_get.id,
         project_id=evaluation.project_id,
         name=t_get.name,
         tags=[],
