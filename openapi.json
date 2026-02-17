@@ -11,43 +11,32 @@
   ],
   "paths": {
     "/v0/projects": {
-      "post": {
-        "summary": "Create Project",
-        "description": "Create a project\n\nReturns:\n    the id, name, and tags for the created project",
-        "operationId": "create_project_v0_projects_post",
+      "get": {
+        "summary": "Get All Projects",
+        "description": "Get a list of projects for this organization\n\nReturns:\n    a list of requested projects",
+        "operationId": "get_all_projects_v0_projects_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ProjectSchema"
-                  }
-                ]
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProjectResponse"
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get All Projects V0 Projects Get"
                 }
               }
             }
@@ -94,32 +83,38 @@
           }
         }
       },
-      "get": {
-        "summary": "Get All Projects",
-        "description": "Get a list of projects for this organization\n\nReturns:\n    a list of requested projects",
-        "operationId": "get_all_projects_v0_projects_get",
+      "post": {
+        "summary": "Create Project",
+        "description": "Create a project\n\nReturns:\n    the id, name, and tags for the created project",
+        "operationId": "create_project_v0_projects_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectSchema"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get All Projects V0 Projects Get",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ProjectResponse"
-                  }
+                  "$ref": "#/components/schemas/ProjectResponse"
                 }
               }
             }
@@ -174,25 +169,25 @@
         "operationId": "get_project_v0_projects__project_id__get",
         "parameters": [
           {
-            "name": "project_id",
-            "in": "path",
+            "description": "The ID of the project",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the project",
-              "title": "Project Id"
+              "title": "Project Id",
+              "description": "The ID of the project"
             },
-            "description": "The ID of the project"
+            "name": "project_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -254,41 +249,36 @@
         "operationId": "update_project_v0_projects__project_id__put",
         "parameters": [
           {
-            "name": "project_id",
-            "in": "path",
+            "description": "ID of the project",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "ID of the project",
-              "title": "Project Id"
+              "title": "Project Id",
+              "description": "ID of the project"
             },
-            "description": "ID of the project"
+            "name": "project_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ProjectSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/ProjectSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -350,13 +340,13 @@
         "operationId": "generate_api_token_v0_generate_api_token_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -421,22 +411,22 @@
         "operationId": "update_onboarding_status_v0_onboarding_status_put",
         "parameters": [
           {
-            "name": "status",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Status"
-            }
+            },
+            "name": "status",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -501,26 +491,25 @@
         "operationId": "generate_slack_auth_url_v0_generate_slack_auth_url_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "additionalProperties": true,
                 "title": "Project Data"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -529,7 +518,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Generate Slack Auth Url V0 Generate Slack Auth Url Post"
                 }
               }
@@ -584,31 +572,31 @@
         "operationId": "slack_oauth_callback_v0_slack_get",
         "parameters": [
           {
-            "name": "code",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Code"
-            }
+            },
+            "name": "code",
+            "in": "query"
           },
           {
-            "name": "state",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "title": "State"
-            }
+            },
+            "name": "state",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -618,7 +606,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Slack Oauth Callback V0 Slack Get"
                 }
               }
@@ -668,43 +655,56 @@
       }
     },
     "/v0/scenario_sets": {
-      "post": {
-        "summary": "Create Scenario Set",
-        "description": "Triggers a generation of a test scenario set, could be long running.\nThis scenario set can now be used for testing on a model.\n\nReturns:\n    Object: generation result with '201 Created' status code on success.",
-        "operationId": "create_scenario_set_v0_scenario_sets_post",
+      "get": {
+        "summary": "Get Scenario Sets",
+        "description": "Find all scenario sets based on either the project id or the scenario id\n\nReturns:\n    a list of scenario sets (project id) or a list of scenarios (scenario id)",
+        "operationId": "get_scenario_sets_v0_scenario_sets_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
+            "description": "The ID of the scenario set",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id",
+              "description": "The ID of the scenario set"
+            },
+            "name": "scenario_id",
+            "in": "query"
+          },
+          {
+            "description": "The ID of the project",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id",
+              "description": "The ID of the project"
+            },
+            "name": "project_id",
+            "in": "query"
+          },
+          {
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "title": "Scenario Set Create",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ScenarioSetCreate"
-                  }
-                ]
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ScenarioSetResponse"
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioSetResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Scenario Sets V0 Scenario Sets Get"
                 }
               }
             }
@@ -751,56 +751,38 @@
           }
         }
       },
-      "get": {
-        "summary": "Get Scenario Sets",
-        "description": "Find all scenario sets based on either the project id or the scenario id\n\nReturns:\n    a list of scenario sets (project id) or a list of scenarios (scenario id)",
-        "operationId": "get_scenario_sets_v0_scenario_sets_get",
+      "post": {
+        "summary": "Create Scenario Set",
+        "description": "Triggers a generation of a test scenario set, could be long running.\nThis scenario set can now be used for testing on a model.\n\nReturns:\n    Object: generation result with '201 Created' status code on success.",
+        "operationId": "create_scenario_set_v0_scenario_sets_post",
         "parameters": [
           {
-            "name": "scenario_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "description": "The ID of the scenario set",
-              "title": "Scenario Id"
-            },
-            "description": "The ID of the scenario set"
-          },
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "description": "The ID of the project",
-              "title": "Project Id"
-            },
-            "description": "The ID of the project"
-          },
-          {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioSetCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Scenario Sets V0 Scenario Sets Get",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ScenarioSetResponse"
-                  }
+                  "$ref": "#/components/schemas/ScenarioSetResponse"
                 }
               }
             }
@@ -855,41 +837,36 @@
         "operationId": "update_scenario_set_v0_scenario_sets__scenario_id__put",
         "parameters": [
           {
-            "name": "scenario_id",
-            "in": "path",
+            "description": "The ID of the scenario set to modify",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the scenario set to modify",
-              "title": "Scenario Id"
+              "title": "Scenario Id",
+              "description": "The ID of the scenario set to modify"
             },
-            "description": "The ID of the scenario set to modify"
+            "name": "scenario_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Scenario Set Update",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ScenarioSetUpdate"
-                  }
-                ]
+                "$ref": "#/components/schemas/ScenarioSetUpdate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -950,36 +927,36 @@
         "operationId": "delete_scenario_set_v0_scenario_sets__scenario_id__delete",
         "parameters": [
           {
-            "name": "scenario_id",
-            "in": "path",
+            "description": "The ID of the Scenario Set to delete",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the Scenario Set to delete",
-              "title": "Scenario Id"
+              "title": "Scenario Id",
+              "description": "The ID of the Scenario Set to delete"
             },
-            "description": "The ID of the Scenario Set to delete"
+            "name": "scenario_id",
+            "in": "path"
           },
           {
-            "name": "name",
-            "in": "query",
+            "description": "Name of the Scenario Set to delete",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Name of the Scenario Set to delete",
-              "title": "Name"
+              "title": "Name",
+              "description": "Name of the Scenario Set to delete"
             },
-            "description": "Name of the Scenario Set to delete"
+            "name": "name",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -1036,24 +1013,24 @@
         "operationId": "scenario_sets_upload_v0_scenario_sets_upload_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/Body_scenario_sets_upload_v0_scenario_sets_upload_post"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1116,24 +1093,24 @@
         "operationId": "get_scenario_sets_download_v0_scenario_sets_download__scenario_id__get",
         "parameters": [
           {
-            "name": "scenario_id",
-            "in": "path",
+            "description": "The ID of the scenario set",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "The ID of the scenario set",
-              "title": "Scenario Id"
+              "title": "Scenario Id",
+              "description": "The ID of the scenario set"
             },
-            "description": "The ID of the scenario set"
+            "name": "scenario_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -1195,25 +1172,25 @@
         "operationId": "get_scenario_set_data_points_v0_scenario_data_points__scenario_id__get",
         "parameters": [
           {
-            "name": "scenario_id",
-            "in": "path",
+            "description": "The ID of the scenario set to download",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the scenario set to download",
-              "title": "Scenario Id"
+              "title": "Scenario Id",
+              "description": "The ID of the scenario set to download"
             },
-            "description": "The ID of the scenario set to download"
+            "name": "scenario_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -1222,11 +1199,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Scenario Set Data Points V0 Scenario Data Points  Scenario Id  Get",
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/ScenarioDataPoinResponse"
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get Scenario Set Data Points V0 Scenario Data Points  Scenario Id  Get"
                 }
               }
             }
@@ -1281,29 +1258,24 @@
         "operationId": "generate_scenario_set_v0_scenario_sets_generate_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Scenario Set Generate",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ScenarioSetGenerate"
-                  }
-                ]
+                "$ref": "#/components/schemas/ScenarioSetGenerate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -1366,29 +1338,24 @@
         "operationId": "get_datapoints_v0_find_datapoints_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointSearch"
-                  }
-                ]
+                "$ref": "#/components/schemas/DatapointSearch"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1396,11 +1363,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Datapoints V0 Find Datapoints Post",
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/DatapointListItem"
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get Datapoints V0 Find Datapoints Post"
                 }
               }
             }
@@ -1455,29 +1422,24 @@
         "operationId": "get_datapoints_filter_v0_find_datapoints_filter_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointFilterSearch"
-                  }
-                ]
+                "$ref": "#/components/schemas/DatapointFilterSearch"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1485,11 +1447,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Datapoints Filter V0 Find Datapoints Filter Post",
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/DatapointListItem"
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get Datapoints Filter V0 Find Datapoints Filter Post"
                 }
               }
             }
@@ -1544,29 +1506,24 @@
         "operationId": "get_datapoint_counts_v0_filter_counts_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointFilterSearch"
-                  }
-                ]
+                "$ref": "#/components/schemas/DatapointFilterSearch"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1575,7 +1532,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Get Datapoint Counts V0 Filter Counts Post"
                 }
               }
@@ -1625,35 +1581,142 @@
       }
     },
     "/v0/filters": {
+      "get": {
+        "summary": "Get Filters",
+        "description": "Get all datapoint filters for a project.\nDefaults to a 90-day lookback window.\n\nArgs:\n    request: The FastAPI request object\n    project_id: UUID of the project to get filters for\n\nReturns:\n    List of filter items for the project",
+        "operationId": "get_filters_v0_filters_get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Lookback Start",
+              "default": 90
+            },
+            "name": "lookback_start",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Lookback End",
+              "default": 0
+            },
+            "name": "lookback_end",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Get Baseline Metrics",
+              "default": false
+            },
+            "name": "get_baseline_metrics",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Timezone",
+              "default": "Etc/UTC"
+            },
+            "name": "timezone",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Api-Key"
+            },
+            "name": "api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DatapointFilterItem"
+                  },
+                  "type": "array",
+                  "title": "Response Get Filters V0 Filters Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input data is incorrect",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Okareo API token has failed authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data is not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input data is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "summary": "Create Filter",
         "description": "Create a new datapoint filter.\n\nArgs:\n    request: The FastAPI request object\n    payload: Filter creation payload containing conditions and metadata\n\nReturns:\n    The created filter objects",
         "operationId": "create_filter_v0_filters_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointFilterCreate"
-                  }
-                ]
+                "$ref": "#/components/schemas/DatapointFilterCreate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -1714,29 +1777,24 @@
         "operationId": "delete_filter_v0_filters_delete",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointFilterDelete"
-                  }
-                ]
+                "$ref": "#/components/schemas/DatapointFilterDelete"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "204": {
@@ -1783,165 +1841,36 @@
             }
           }
         }
-      },
-      "get": {
-        "summary": "Get Filters",
-        "description": "Get all datapoint filters for a project.\nDefaults to a 90-day lookback window.\n\nArgs:\n    request: The FastAPI request object\n    project_id: UUID of the project to get filters for\n\nReturns:\n    List of filter items for the project",
-        "operationId": "get_filters_v0_filters_get",
-        "parameters": [
-          {
-            "name": "lookback_start",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 90,
-              "title": "Lookback Start"
-            }
-          },
-          {
-            "name": "lookback_end",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Lookback End"
-            }
-          },
-          {
-            "name": "get_baseline_metrics",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Get Baseline Metrics"
-            }
-          },
-          {
-            "name": "timezone",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "Etc/UTC",
-              "title": "Timezone"
-            }
-          },
-          {
-            "name": "api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Api-Key"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Get Filters V0 Filters Get",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DatapointFilterItem"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Input data is incorrect",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Okareo API token has failed authentication",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Data is not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Input data is invalid",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/v0/filters/{filter_group_id}": {
-      "put": {
-        "summary": "Update Filter",
-        "description": "Update an existing datapoint filter. Allows update on the name, description, and checks fields.\n\nArgs:\n    request: The FastAPI request object\n    filter_group_id: UUID of the filter group to update\n    payload: Filter creation payload containing conditions and metadata\n\nReturns:\n    The created filter object",
-        "operationId": "update_filter_v0_filters__filter_group_id__put",
+      "get": {
+        "summary": "Get Filter",
+        "description": "Get a specific datapoint filter.\n\nArgs:\n    request: The FastAPI request object\n    project_id: UUID of the project the filter belongs to\n    filter_group_id: UUID of the specific filter group to retrieve\n\nReturns:\n    The requested filter item",
+        "operationId": "get_filter_v0_filters__filter_group_id__get",
         "parameters": [
           {
-            "name": "filter_group_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the filter group to update",
               "title": "Filter Group Id"
             },
-            "description": "The ID of the filter group to update"
+            "name": "filter_group_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointFilterUpdate"
-                  }
-                ]
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -1993,33 +1922,45 @@
           }
         }
       },
-      "get": {
-        "summary": "Get Filter",
-        "description": "Get a specific datapoint filter.\n\nArgs:\n    request: The FastAPI request object\n    project_id: UUID of the project the filter belongs to\n    filter_group_id: UUID of the specific filter group to retrieve\n\nReturns:\n    The requested filter item",
-        "operationId": "get_filter_v0_filters__filter_group_id__get",
+      "put": {
+        "summary": "Update Filter",
+        "description": "Update an existing datapoint filter. Allows update on the name, description, and checks fields.\n\nArgs:\n    request: The FastAPI request object\n    filter_group_id: UUID of the filter group to update\n    payload: Filter creation payload containing conditions and metadata\n\nReturns:\n    The created filter object",
+        "operationId": "update_filter_v0_filters__filter_group_id__put",
         "parameters": [
           {
-            "name": "filter_group_id",
-            "in": "path",
+            "description": "The ID of the filter group to update",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Filter Group Id"
-            }
+              "title": "Filter Group Id",
+              "description": "The ID of the filter group to update"
+            },
+            "name": "filter_group_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatapointFilterUpdate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2079,13 +2020,13 @@
         "operationId": "get_filters_metadata_v0_filters_metadata_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -2094,10 +2035,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
                     "type": "string"
                   },
+                  "type": "array",
                   "title": "Response Get Filters Metadata V0 Filters Metadata Get"
                 }
               }
@@ -2153,29 +2094,24 @@
         "operationId": "get_datapoints_summary_v0_summary_datapoints_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/SummaryDatapointSearch"
-                  }
-                ]
+                "$ref": "#/components/schemas/SummaryDatapointSearch"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2183,11 +2119,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Datapoints Summary V0 Summary Datapoints Post",
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/DatapointSummaryItem"
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get Datapoints Summary V0 Summary Datapoints Post"
                 }
               }
             }
@@ -2242,29 +2178,24 @@
         "operationId": "add_datapoint_v0_datapoints_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/DatapointSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2327,41 +2258,36 @@
         "operationId": "update_datapoint_v0_datapoints__datapoint_id__put",
         "parameters": [
           {
-            "name": "datapoint_id",
-            "in": "path",
+            "description": "The ID of the datapoint",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the datapoint",
-              "title": "Datapoint Id"
+              "title": "Datapoint Id",
+              "description": "The ID of the datapoint"
             },
-            "description": "The ID of the datapoint"
+            "name": "datapoint_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DatapointTagsSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/DatapointTagsSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2424,29 +2350,24 @@
         "operationId": "find_traces_v0_find_traces_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/FindTracesRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/FindTracesRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2506,13 +2427,13 @@
         "operationId": "receive_traces_v1_traces_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -2573,22 +2494,22 @@
         "operationId": "get_target_model_by_name_v0_target__target_model_name__get",
         "parameters": [
           {
-            "name": "target_model_name",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Target Model Name"
-            }
+            },
+            "name": "target_model_name",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -2622,29 +2543,24 @@
         "operationId": "register_model_v0_register_model_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ModelUnderTestSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/ModelUnderTestSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2707,25 +2623,25 @@
         "operationId": "get_model_under_test_v0_models_under_test__mut_id__get",
         "parameters": [
           {
-            "name": "mut_id",
-            "in": "path",
+            "description": "The ID of the model",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the model",
-              "title": "Mut Id"
+              "title": "Mut Id",
+              "description": "The ID of the model"
             },
-            "description": "The ID of the model"
+            "name": "mut_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -2787,41 +2703,36 @@
         "operationId": "update_model_under_test_v0_models_under_test__mut_id__put",
         "parameters": [
           {
-            "name": "mut_id",
-            "in": "path",
+            "description": "The ID of the model under test",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the model under test",
-              "title": "Mut Id"
+              "title": "Mut Id",
+              "description": "The ID of the model under test"
             },
-            "description": "The ID of the model under test"
+            "name": "mut_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ModelUnderTestSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/ModelUnderTestSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2882,25 +2793,25 @@
         "operationId": "delete_model_under_test_v0_models_under_test__mut_id__delete",
         "parameters": [
           {
-            "name": "mut_id",
-            "in": "path",
+            "description": "The ID of the model under test",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the model under test",
-              "title": "Mut Id"
+              "title": "Mut Id",
+              "description": "The ID of the model under test"
             },
-            "description": "The ID of the model under test"
+            "name": "mut_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -2957,17 +2868,15 @@
         "operationId": "get_model_under_test_by_name_and_version_v0_models_under_test__name___version__get",
         "parameters": [
           {
-            "name": "name",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Name"
-            }
+            },
+            "name": "name",
+            "in": "path"
           },
           {
-            "name": "version",
-            "in": "path",
             "required": true,
             "schema": {
               "anyOf": [
@@ -2979,16 +2888,18 @@
                 }
               ],
               "title": "Version"
-            }
+            },
+            "name": "version",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3052,37 +2963,37 @@
         "operationId": "get_all_models_under_test_v0_models_under_test_get",
         "parameters": [
           {
-            "name": "project_id",
-            "in": "query",
+            "description": "The ID of the project",
             "required": false,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the project",
-              "title": "Project Id"
+              "title": "Project Id",
+              "description": "The ID of the project"
             },
-            "description": "The ID of the project"
+            "name": "project_id",
+            "in": "query"
           },
           {
-            "name": "version",
-            "in": "query",
+            "description": "The version(s) of the mut to retrieve. 'latest' will retrieve only the latest version for each mut name. 'all' will retrieve all versions for all mut names.",
             "required": false,
             "schema": {
               "type": "string",
+              "title": "Version",
               "description": "The version(s) of the mut to retrieve. 'latest' will retrieve only the latest version for each mut name. 'all' will retrieve all versions for all mut names.",
-              "default": "all",
-              "title": "Version"
+              "default": "all"
             },
-            "description": "The version(s) of the mut to retrieve. 'latest' will retrieve only the latest version for each mut name. 'all' will retrieve all versions for all mut names."
+            "name": "version",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3091,11 +3002,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get All Models Under Test V0 Models Under Test Get",
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/ModelUnderTestResponse"
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get All Models Under Test V0 Models Under Test Get"
                 }
               }
             }
@@ -3144,68 +3055,44 @@
       }
     },
     "/v0/groups": {
-      "post": {
-        "summary": "Create Group",
-        "description": "Create a new group for models under test or return existing group with the same name.\n\nReturns:\n    The group's details (either newly created or existing)",
-        "operationId": "create_group_v0_groups_post",
+      "get": {
+        "summary": "Get Groups",
+        "description": "Get all groups for the current organization and project.\n\nReturns:\n    A list of groups",
+        "operationId": "get_groups_v0_groups_get",
         "parameters": [
           {
-            "name": "name",
-            "in": "query",
+            "description": "The ID of the project",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "The name of the group",
-              "title": "Name"
+              "format": "uuid",
+              "title": "Project Id",
+              "description": "The ID of the project"
             },
-            "description": "The name of the group"
+            "name": "project_id",
+            "in": "query"
           },
           {
-            "name": "tags",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "Tags for the group",
-              "title": "Tags"
-            },
-            "description": "Tags for the group"
-          },
-          {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "description": "Log source of the group",
-                "title": "Source",
-                "nullable": true
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Create Group V0 Groups Post"
+                  "items": {
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Groups V0 Groups Get"
                 }
               }
             }
@@ -3252,45 +3139,65 @@
           }
         }
       },
-      "get": {
-        "summary": "Get Groups",
-        "description": "Get all groups for the current organization and project.\n\nReturns:\n    A list of groups",
-        "operationId": "get_groups_v0_groups_get",
+      "post": {
+        "summary": "Create Group",
+        "description": "Create a new group for models under test or return existing group with the same name.\n\nReturns:\n    The group's details (either newly created or existing)",
+        "operationId": "create_group_v0_groups_post",
         "parameters": [
           {
-            "name": "project_id",
-            "in": "query",
+            "description": "The name of the group",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "description": "The ID of the project",
-              "title": "Project Id"
+              "title": "Name",
+              "description": "The name of the group"
             },
-            "description": "The ID of the project"
+            "name": "name",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
+            "description": "Tags for the group",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Tags",
+              "description": "Tags for the group"
+            },
+            "name": "tags",
+            "in": "query"
+          },
+          {
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Source",
+                "description": "Log source of the group"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": true
-                  },
-                  "title": "Response Get Groups V0 Groups Get"
+                  "type": "object",
+                  "title": "Response Create Group V0 Groups Post"
                 }
               }
             }
@@ -3339,43 +3246,31 @@
       }
     },
     "/v0/groups/{group_id}/models": {
-      "post": {
-        "summary": "Add Model To Group",
-        "description": "Add a model to a group.\n\nReturns:\n    A success message",
-        "operationId": "add_model_to_group_v0_groups__group_id__models_post",
+      "get": {
+        "summary": "Get Models In Group",
+        "description": "Get all models in a specific group.\n\nReturns:\n    A list of models in the group",
+        "operationId": "get_models_in_group_v0_groups__group_id__models_get",
         "parameters": [
           {
+            "description": "The ID of the group",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Group Id",
+              "description": "The ID of the group"
+            },
             "name": "group_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "description": "The ID of the group",
-              "title": "Group Id"
-            },
-            "description": "The ID of the group"
+            "in": "path"
           },
           {
-            "name": "model_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "description": "The ID of the model to add",
-              "title": "Model Id"
-            },
-            "description": "The ID of the model to add"
-          },
-          {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3384,9 +3279,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Add Model To Group V0 Groups  Group Id  Models Post"
+                  "items": {
+                    "$ref": "#/components/schemas/ModelUnderTestResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Models In Group V0 Groups  Group Id  Models Get"
                 }
               }
             }
@@ -3433,31 +3330,43 @@
           }
         }
       },
-      "get": {
-        "summary": "Get Models In Group",
-        "description": "Get all models in a specific group.\n\nReturns:\n    A list of models in the group",
-        "operationId": "get_models_in_group_v0_groups__group_id__models_get",
+      "post": {
+        "summary": "Add Model To Group",
+        "description": "Add a model to a group.\n\nReturns:\n    A success message",
+        "operationId": "add_model_to_group_v0_groups__group_id__models_post",
         "parameters": [
           {
-            "name": "group_id",
-            "in": "path",
+            "description": "The ID of the group",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the group",
-              "title": "Group Id"
+              "title": "Group Id",
+              "description": "The ID of the group"
             },
-            "description": "The ID of the group"
+            "name": "group_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
+            "description": "The ID of the model to add",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Model Id",
+              "description": "The ID of the model to add"
+            },
+            "name": "model_id",
+            "in": "query"
+          },
+          {
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3466,11 +3375,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Models In Group V0 Groups  Group Id  Models Get",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ModelUnderTestResponse"
-                  }
+                  "type": "object",
+                  "title": "Response Add Model To Group V0 Groups  Group Id  Models Post"
                 }
               }
             }
@@ -3525,41 +3431,36 @@
         "operationId": "update_group_v0_groups__group_id__put",
         "parameters": [
           {
-            "name": "group_id",
-            "in": "path",
+            "description": "The ID of the group",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the group",
-              "title": "Group Id"
+              "title": "Group Id",
+              "description": "The ID of the group"
             },
-            "description": "The ID of the group"
+            "name": "group_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/GroupSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/GroupSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -3623,36 +3524,36 @@
         "operationId": "create_trace_eval_v0_groups__group_id__trace_eval_post",
         "parameters": [
           {
-            "name": "group_id",
-            "in": "path",
+            "description": "The ID of the group",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the group",
-              "title": "Group Id"
+              "title": "Group Id",
+              "description": "The ID of the group"
             },
-            "description": "The ID of the group"
+            "name": "group_id",
+            "in": "path"
           },
           {
-            "name": "context_token",
-            "in": "query",
+            "description": "The context token for the trace",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "The context token for the trace",
-              "title": "Context Token"
+              "title": "Context Token",
+              "description": "The context token for the trace"
             },
-            "description": "The context token for the trace"
+            "name": "context_token",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3662,7 +3563,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Create Trace Eval V0 Groups  Group Id  Trace Eval Post"
                 }
               }
@@ -3718,25 +3618,25 @@
         "operationId": "get_datapoints_in_group_trace_v0_traces__group_id__datapoints_get",
         "parameters": [
           {
-            "name": "group_id",
-            "in": "path",
+            "description": "The ID of the group",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the group",
-              "title": "Group Id"
+              "title": "Group Id",
+              "description": "The ID of the group"
             },
-            "description": "The ID of the group"
+            "name": "group_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3800,13 +3700,13 @@
         "operationId": "get_available_target_models_v0_available_target_models_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3869,29 +3769,24 @@
         "operationId": "find_test_run_v0_find_test_runs_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/GeneralFindPayload"
-                  }
-                ]
+                "$ref": "#/components/schemas/GeneralFindPayload"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -3954,25 +3849,25 @@
         "operationId": "get_test_run_v0_test_runs__test_run_id__get",
         "parameters": [
           {
-            "name": "test_run_id",
-            "in": "path",
+            "description": "ID of test run",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "ID of test run",
-              "title": "Test Run Id"
+              "title": "Test Run Id",
+              "description": "ID of test run"
             },
-            "description": "ID of test run"
+            "name": "test_run_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -4034,41 +3929,36 @@
         "operationId": "update_test_run_v0_test_runs__test_run_id__put",
         "parameters": [
           {
-            "name": "test_run_id",
-            "in": "path",
+            "description": "The ID of the test run to modify",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the test run to modify",
-              "title": "Test Run Id"
+              "title": "Test Run Id",
+              "description": "The ID of the test run to modify"
             },
-            "description": "The ID of the test run to modify"
+            "name": "test_run_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TestRunPayload"
-                  }
-                ]
+                "$ref": "#/components/schemas/TestRunPayload"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4131,28 +4021,28 @@
         "operationId": "delete_test_run_v0_test_runs_delete",
         "parameters": [
           {
-            "name": "test_run_ids",
-            "in": "query",
+            "description": "List of Test Run IDs to delete",
             "required": true,
             "schema": {
-              "type": "array",
               "items": {
                 "type": "string",
                 "format": "uuid"
               },
-              "description": "List of Test Run IDs to delete",
-              "title": "Test Run Ids"
+              "type": "array",
+              "title": "Test Run Ids",
+              "description": "List of Test Run IDs to delete"
             },
-            "description": "List of Test Run IDs to delete"
+            "name": "test_run_ids",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -4208,29 +4098,24 @@
         "operationId": "run_test_v0_test_run_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TestRunPayloadV2"
-                  }
-                ]
+                "$ref": "#/components/schemas/TestRunPayloadV2"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4292,29 +4177,24 @@
         "operationId": "submit_test_v0_test_run_submit_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TestRunPayloadV2"
-                  }
-                ]
+                "$ref": "#/components/schemas/TestRunPayloadV2"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4376,29 +4256,24 @@
         "operationId": "evaluate_v0_evaluate_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/EvaluationPayload"
-                  }
-                ]
+                "$ref": "#/components/schemas/EvaluationPayload"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4461,25 +4336,25 @@
         "operationId": "create_failure_scenario_v0_test_run_create_failure_scenario__test_run_id__post",
         "parameters": [
           {
-            "name": "test_run_id",
-            "in": "path",
+            "description": "The ID of the test run to use for getting failed scenario data points.",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the test run to use for getting failed scenario data points.",
-              "title": "Test Run Id"
+              "title": "Test Run Id",
+              "description": "The ID of the test run to use for getting failed scenario data points."
             },
-            "description": "The ID of the test run to use for getting failed scenario data points."
+            "name": "test_run_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -4543,29 +4418,24 @@
         "operationId": "add_test_data_point_v0_test_data_point_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TestDataPointPayload"
-                  }
-                ]
+                "$ref": "#/components/schemas/TestDataPointPayload"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4628,25 +4498,25 @@
         "operationId": "get_test_data_point_v0_test_data_points__test_data_point_id__get",
         "parameters": [
           {
-            "name": "test_data_point_id",
-            "in": "path",
+            "description": "The ID of the test data point to return",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the test data point to return",
-              "title": "Test Data Point Id"
+              "title": "Test Data Point Id",
+              "description": "The ID of the test data point to return"
             },
-            "description": "The ID of the test data point to return"
+            "name": "test_data_point_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -4710,29 +4580,24 @@
         "operationId": "find_test_data_points_v0_find_test_data_points_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/FindTestDataPointPayload"
-                  }
-                ]
+                "$ref": "#/components/schemas/FindTestDataPointPayload"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4740,8 +4605,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Find Test Data Points V0 Find Test Data Points Post",
-                  "type": "array",
                   "items": {
                     "anyOf": [
                       {
@@ -4751,7 +4614,9 @@
                         "$ref": "#/components/schemas/TestDataPointItem"
                       }
                     ]
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Find Test Data Points V0 Find Test Data Points Post"
                 }
               }
             }
@@ -4806,29 +4671,24 @@
         "operationId": "update_test_data_point_v0_update_test_data_point_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UpdateTestDataPointPayload"
-                  }
-                ]
+                "$ref": "#/components/schemas/UpdateTestDataPointPayload"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4891,31 +4751,31 @@
         "operationId": "internal_custom_model_listener_v0_internal_custom_model_listener_get",
         "parameters": [
           {
-            "name": "mut_id",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Mut Id"
-            }
+            },
+            "name": "mut_id",
+            "in": "query"
           },
           {
-            "name": "nats_invoke_id",
-            "in": "query",
             "required": false,
             "schema": {
               "type": "string",
               "title": "Nats Invoke Id"
-            }
+            },
+            "name": "nats_invoke_id",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -4947,13 +4807,13 @@
         "operationId": "create_assistant_thread_v0_custom_endpoint_stub_create_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -5017,29 +4877,24 @@
         "operationId": "send_assistant_message_v0_custom_endpoint_stub_message_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/AssistantMessageRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/AssistantMessageRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5102,29 +4957,24 @@
         "operationId": "end_assistant_thread_v0_custom_endpoint_stub_end_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/AssistantEndThreadRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/AssistantEndThreadRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5186,29 +5036,24 @@
         "operationId": "test_custom_endpoint_v0_test_custom_endpoint_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TestCustomEndpointRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/TestCustomEndpointRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5271,29 +5116,24 @@
         "operationId": "upload_voice_file_v0_voice_upload_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/VoiceUploadRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/VoiceUploadRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -5355,24 +5195,24 @@
         "operationId": "download_file_v0_voice_file__project_id___file_id__get",
         "parameters": [
           {
-            "name": "project_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
               "title": "Project Id"
-            }
+            },
+            "name": "project_id",
+            "in": "path"
           },
           {
-            "name": "file_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
               "title": "File Id"
-            }
+            },
+            "name": "file_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -5404,13 +5244,13 @@
         "operationId": "download_file_by_call_sid_v0_voice_call_sid__call_sid__get",
         "parameters": [
           {
-            "name": "call_sid",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Call Sid"
-            }
+            },
+            "name": "call_sid",
+            "in": "path"
           }
         ],
         "responses": {
@@ -5445,7 +5285,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Twilio Recording Callback V0 Voice Twilio Recording Post"
                 }
@@ -5465,7 +5304,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Twilio Call Status V0 Voice Twilio Status Post"
                 }
@@ -5498,29 +5336,24 @@
         "operationId": "check_validate_v0_check_validate_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CheckValidateRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/CheckValidateRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5583,29 +5416,24 @@
         "operationId": "check_generate_v0_check_generate_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/EvaluatorSpecRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/EvaluatorSpecRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -5668,29 +5496,24 @@
         "operationId": "check_create_or_update_v0_check_create_or_update_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CheckCreateUpdateSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/CheckCreateUpdateSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5747,114 +5570,31 @@
       }
     },
     "/v0/check/{check_id}": {
-      "delete": {
-        "summary": "Check Delete",
-        "description": "Deletes a check\n\nRaises:\n    HTTPException: 404 if check_id is not found\n\nReturns: 204 status code on successful deletion",
-        "operationId": "check_delete_v0_check__check_id__delete",
-        "parameters": [
-          {
-            "name": "check_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "description": "The ID of the Check to delete",
-              "title": "Check Id"
-            },
-            "description": "The ID of the Check to delete"
-          },
-          {
-            "name": "api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Api-Key"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_check_delete_v0_check__check_id__delete"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "400": {
-            "description": "Input data is incorrect",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Okareo API token has failed authentication",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Data is not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Input data is invalid",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "get": {
         "summary": "Get Check",
         "description": "Get a check\n\nRaises:\n    HTTPException: 404 if check_id is not found\n\nReturns: the check",
         "operationId": "get_check_v0_check__check_id__get",
         "parameters": [
           {
-            "name": "check_id",
-            "in": "path",
+            "description": "The ID of the Check to get",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the Check to get",
-              "title": "Check Id"
+              "title": "Check Id",
+              "description": "The ID of the Check to get"
             },
-            "description": "The ID of the Check to get"
+            "name": "check_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -5909,6 +5649,89 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Check Delete",
+        "description": "Deletes a check\n\nRaises:\n    HTTPException: 404 if check_id is not found\n\nReturns: 204 status code on successful deletion",
+        "operationId": "check_delete_v0_check__check_id__delete",
+        "parameters": [
+          {
+            "description": "The ID of the Check to delete",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Check Id",
+              "description": "The ID of the Check to delete"
+            },
+            "name": "check_id",
+            "in": "path"
+          },
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Api-Key"
+            },
+            "name": "api-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_check_delete_v0_check__check_id__delete"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Input data is incorrect",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Okareo API token has failed authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data is not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input data is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v0/checks": {
@@ -5918,13 +5741,13 @@
         "operationId": "get_all_checks_v0_checks_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -5933,11 +5756,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get All Checks V0 Checks Get",
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/EvaluatorBriefResponse"
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get All Checks V0 Checks Get"
                 }
               }
             }
@@ -5992,51 +5815,51 @@
         "operationId": "setup_filter_group_notification_v0_setup_filter_group_notification_post",
         "parameters": [
           {
-            "name": "filter_group_id",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
               "title": "Filter Group Id"
-            }
+            },
+            "name": "filter_group_id",
+            "in": "query"
           },
           {
-            "name": "notification_type",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Notification Type"
-            }
+            },
+            "name": "notification_type",
+            "in": "query"
           },
           {
-            "name": "status",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Status"
-            }
+            },
+            "name": "status",
+            "in": "query"
           },
           {
-            "name": "cooldown_seconds",
-            "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 0,
-              "title": "Cooldown Seconds"
-            }
+              "title": "Cooldown Seconds",
+              "default": 0
+            },
+            "name": "cooldown_seconds",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6046,7 +5869,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Setup Filter Group Notification V0 Setup Filter Group Notification Post"
                 }
               }
@@ -6102,13 +5924,13 @@
         "operationId": "get_filter_group_notifications_v0_filter_group_notifications_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6117,11 +5939,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "type": "object"
                   },
+                  "type": "array",
                   "title": "Response Get Filter Group Notifications V0 Filter Group Notifications Get"
                 }
               }
@@ -6177,13 +5998,13 @@
         "operationId": "get_all_notification__v0_notifications_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6243,13 +6064,13 @@
         "operationId": "update_notification_settings_v0_notifications_put",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6309,13 +6130,13 @@
         "operationId": "delete_notification_history_config_v0_notifications_delete",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6377,13 +6198,13 @@
         "operationId": "get_notification_history_v0_notification_history_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6392,11 +6213,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "type": "object"
                   },
+                  "type": "array",
                   "title": "Response Get Notification History V0 Notification History Get"
                 }
               }
@@ -6451,29 +6271,24 @@
         "operationId": "generate_driver_prompt_v0_generate_driver_prompt_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DriverPromptRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/DriverPromptRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -6505,29 +6320,24 @@
         "operationId": "register_driver_model_v0_driver_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DriverModelSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/DriverModelSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -6535,7 +6345,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Register Driver Model V0 Driver Post",
                   "anyOf": [
                     {
                       "$ref": "#/components/schemas/VoiceDriverModelResponse"
@@ -6543,7 +6352,8 @@
                     {
                       "$ref": "#/components/schemas/DriverModelResponse"
                     }
-                  ]
+                  ],
+                  "title": "Response Register Driver Model V0 Driver Post"
                 }
               }
             }
@@ -6597,25 +6407,25 @@
         "operationId": "get_all_drivers_v0_drivers_get",
         "parameters": [
           {
-            "name": "project_id",
-            "in": "query",
+            "description": "The ID of the project",
             "required": false,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "The ID of the project",
-              "title": "Project Id"
+              "title": "Project Id",
+              "description": "The ID of the project"
             },
-            "description": "The ID of the project"
+            "name": "project_id",
+            "in": "query"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6624,8 +6434,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get All Drivers V0 Drivers Get",
-                  "type": "array",
                   "items": {
                     "anyOf": [
                       {
@@ -6635,7 +6443,9 @@
                         "$ref": "#/components/schemas/DriverModelResponse"
                       }
                     ]
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get All Drivers V0 Drivers Get"
                 }
               }
             }
@@ -6659,22 +6469,22 @@
         "operationId": "get_driver_v0_driver__identifier__get",
         "parameters": [
           {
-            "name": "identifier",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Identifier"
-            }
+            },
+            "name": "identifier",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6683,7 +6493,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Driver V0 Driver  Identifier  Get",
                   "anyOf": [
                     {
                       "$ref": "#/components/schemas/VoiceDriverModelResponse"
@@ -6691,7 +6500,8 @@
                     {
                       "$ref": "#/components/schemas/DriverModelResponse"
                     }
-                  ]
+                  ],
+                  "title": "Response Get Driver V0 Driver  Identifier  Get"
                 }
               }
             }
@@ -6715,39 +6525,34 @@
         "operationId": "update_driver_model_v0_driver__driver_id__put",
         "parameters": [
           {
-            "name": "driver_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
               "title": "Driver Id"
-            }
+            },
+            "name": "driver_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DriverModelSchema"
-                  }
-                ]
+                "$ref": "#/components/schemas/DriverModelSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -6755,7 +6560,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Update Driver Model V0 Driver  Driver Id  Put",
                   "anyOf": [
                     {
                       "$ref": "#/components/schemas/VoiceDriverModelResponse"
@@ -6763,7 +6567,8 @@
                     {
                       "$ref": "#/components/schemas/DriverModelResponse"
                     }
-                  ]
+                  ],
+                  "title": "Response Update Driver Model V0 Driver  Driver Id  Put"
                 }
               }
             }
@@ -6815,23 +6620,23 @@
         "operationId": "delete_driver_model_v0_driver__driver_id__delete",
         "parameters": [
           {
-            "name": "driver_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
               "title": "Driver Id"
-            }
+            },
+            "name": "driver_id",
+            "in": "path"
           },
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6888,13 +6693,13 @@
         "operationId": "get_driver_profiles_v0_driver_profiles_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6903,11 +6708,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Get Driver Profiles V0 Driver Profiles Get",
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/VoiceProfileResponse"
-                  }
+                  },
+                  "type": "array",
+                  "title": "Response Get Driver Profiles V0 Driver Profiles Get"
                 }
               }
             }
@@ -6962,13 +6767,13 @@
         "operationId": "get_driver_voices_v0_driver_voices_get",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "responses": {
@@ -6977,11 +6782,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "type": "object"
                   },
+                  "type": "array",
                   "title": "Response Get Driver Voices V0 Driver Voices Get"
                 }
               }
@@ -7037,29 +6841,24 @@
         "operationId": "test_driver_model_v0_driver_test_post",
         "parameters": [
           {
-            "name": "api-key",
-            "in": "header",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Api-Key"
-            }
+            },
+            "name": "api-key",
+            "in": "header"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Payload",
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TestDriverRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/TestDriverRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -7125,51 +6924,55 @@
         "operationId": "get_usage_metrics_v0_usage_metrics_get",
         "parameters": [
           {
-            "name": "start_date",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "Start date for metrics period (ISO 8601 or YYYY-MM-DD). Defaults to 30 days ago if not provided.",
-              "title": "Start Date"
-            },
             "description": "Start date for metrics period (ISO 8601 or YYYY-MM-DD). Defaults to 30 days ago if not provided.",
-            "example": "2024-01-01"
-          },
-          {
-            "name": "end_date",
-            "in": "query",
             "required": false,
             "schema": {
               "type": "string",
-              "description": "End date for metrics period (will be capped based on buffer). Defaults to current time with buffer applied.",
-              "title": "End Date"
+              "title": "Start Date",
+              "description": "Start date for metrics period (ISO 8601 or YYYY-MM-DD). Defaults to 30 days ago if not provided."
             },
-            "description": "End date for metrics period (will be capped based on buffer). Defaults to current time with buffer applied.",
-            "example": "2024-01-31"
+            "example": "2024-01-01",
+            "name": "start_date",
+            "in": "query"
           },
           {
-            "name": "project_id",
-            "in": "query",
+            "description": "End date for metrics period (will be capped based on buffer). Defaults to current time with buffer applied.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "End Date",
+              "description": "End date for metrics period (will be capped based on buffer). Defaults to current time with buffer applied."
+            },
+            "example": "2024-01-31",
+            "name": "end_date",
+            "in": "query"
+          },
+          {
+            "description": "Optional project filter - only include metrics for this project",
             "required": false,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "Optional project filter - only include metrics for this project",
-              "title": "Project Id"
+              "title": "Project Id",
+              "description": "Optional project filter - only include metrics for this project"
             },
-            "description": "Optional project filter - only include metrics for this project"
+            "name": "project_id",
+            "in": "query"
           },
           {
-            "name": "precision",
-            "in": "query",
+            "description": "Time period precision: MINUTE (max 180 min), HOUR (max 168 hrs), DAY (max 90 days), MONTH (max 3 months)",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/UsagePrecision",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/UsagePrecision"
+                }
+              ],
               "description": "Time period precision: MINUTE (max 180 min), HOUR (max 168 hrs), DAY (max 90 days), MONTH (max 3 months)",
               "default": "day"
             },
-            "description": "Time period precision: MINUTE (max 180 min), HOUR (max 168 hrs), DAY (max 90 days), MONTH (max 3 months)"
+            "name": "precision",
+            "in": "query"
           }
         ],
         "responses": {
@@ -10721,7 +10524,38 @@
           "details"
         ],
         "title": "UsageMetricsResponse",
-        "description": "Complete response for usage metrics request."
+        "description": "Complete response for usage metrics request.",
+        "example": {
+          "organization_id": "123e4567-e89b-12d3-a456-426614174000",
+          "period": {
+            "start_date": "2026-01-01T00:00:00Z",
+            "end_date": "2026-01-31T11:59:59Z"
+          },
+          "totals": {
+            "voice_minutes": 1234.56,
+            "simulations": 450,
+            "datapoints": 12500,
+            "checks": 5600
+          },
+          "details": [
+            {
+              "period_start": "2026-01-01T00:00:00Z",
+              "period_end": "2026-01-01T23:59:59Z",
+              "voice_minutes": 42.5,
+              "simulations": 15,
+              "datapoints": 420,
+              "checks": 180
+            },
+            {
+              "period_start": "2026-01-02T00:00:00Z",
+              "period_end": "2026-01-02T23:59:59Z",
+              "voice_minutes": 38.2,
+              "simulations": 12,
+              "datapoints": 380,
+              "checks": 165
+            }
+          ]
+        }
       },
       "UsagePrecision": {
         "type": "string",
