@@ -14,7 +14,7 @@ from ..types import UNSET, Unset
 if TYPE_CHECKING:
     from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
     from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
-    from ..models.scenario_set_generate_generation_schema import ScenarioSetGenerateGenerationSchema
+    from ..models.scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateGenerationSchemaType0
 
 
 T = TypeVar("T", bound="ScenarioSetGenerate")
@@ -35,11 +35,11 @@ class ScenarioSetGenerate:
             the SYNONYMS generation type.
         save_generated_scenario (bool | Unset): Whether to save the generated scenarios. Defaults to True. Default:
             True.
-        generation_type (ScenarioType | Unset): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
-        generation_tone (GenerationTone | Unset): An enumeration. Default: GenerationTone.NEUTRAL.
+        generation_type (ScenarioType | Unset):
+        generation_tone (GenerationTone | Unset):
         generation_prompt (None | str | Unset): Prompt for the generator to use when generating scenarios. Only
             supported by CustomGenerator type.
-        generation_schema (None | ScenarioSetGenerateGenerationSchema | Unset): Structured output schema for the
+        generation_schema (None | ScenarioSetGenerateGenerationSchemaType0 | Unset): Structured output schema for the
             generator to use when generating scenarios. Only supported by CustomGenerator type.
         pre_template (None | str | Unset): Template for pre-processing scenario before sending it to generator
         post_template (None | str | Unset): Template for post-processing scenario after generator before it's saved
@@ -56,10 +56,10 @@ class ScenarioSetGenerate:
     source_scenario_rows: list[ScenarioDataPoinResponse] | None | Unset = UNSET
     synonym_sets: list[list[str]] | None | Unset = UNSET
     save_generated_scenario: bool | Unset = True
-    generation_type: ScenarioType | Unset = ScenarioType.REPHRASE_INVARIANT
-    generation_tone: GenerationTone | Unset = GenerationTone.NEUTRAL
+    generation_type: ScenarioType | Unset = UNSET
+    generation_tone: GenerationTone | Unset = UNSET
     generation_prompt: None | str | Unset = UNSET
-    generation_schema: None | ScenarioSetGenerateGenerationSchema | Unset = UNSET
+    generation_schema: None | ScenarioSetGenerateGenerationSchemaType0 | Unset = UNSET
     pre_template: None | str | Unset = UNSET
     post_template: None | str | Unset = UNSET
     lock_result: bool | Unset = False
@@ -68,7 +68,7 @@ class ScenarioSetGenerate:
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
-        from ..models.scenario_set_generate_generation_schema import ScenarioSetGenerateGenerationSchema
+        from ..models.scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateGenerationSchemaType0
 
         name = self.name
 
@@ -134,7 +134,7 @@ class ScenarioSetGenerate:
         generation_schema: dict[str, Any] | None | Unset
         if isinstance(self.generation_schema, Unset):
             generation_schema = UNSET
-        elif isinstance(self.generation_schema, ScenarioSetGenerateGenerationSchema):
+        elif isinstance(self.generation_schema, ScenarioSetGenerateGenerationSchemaType0):
             generation_schema = self.generation_schema.to_dict()
         else:
             generation_schema = self.generation_schema
@@ -205,7 +205,7 @@ class ScenarioSetGenerate:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
         from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
-        from ..models.scenario_set_generate_generation_schema import ScenarioSetGenerateGenerationSchema
+        from ..models.scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateGenerationSchemaType0
 
         d = dict(src_dict)
         name = d.pop("name")
@@ -317,7 +317,7 @@ class ScenarioSetGenerate:
 
         generation_prompt = _parse_generation_prompt(d.pop("generation_prompt", UNSET))
 
-        def _parse_generation_schema(data: object) -> None | ScenarioSetGenerateGenerationSchema | Unset:
+        def _parse_generation_schema(data: object) -> None | ScenarioSetGenerateGenerationSchemaType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -325,12 +325,12 @@ class ScenarioSetGenerate:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                generation_schema_type_0 = ScenarioSetGenerateGenerationSchema.from_dict(data)
+                generation_schema_type_0 = ScenarioSetGenerateGenerationSchemaType0.from_dict(data)
 
                 return generation_schema_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | ScenarioSetGenerateGenerationSchema | Unset, data)
+            return cast(None | ScenarioSetGenerateGenerationSchemaType0 | Unset, data)
 
         generation_schema = _parse_generation_schema(d.pop("generation_schema", UNSET))
 

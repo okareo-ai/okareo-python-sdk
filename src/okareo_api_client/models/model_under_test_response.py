@@ -10,8 +10,8 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
-    from ..models.model_under_test_response_models import ModelUnderTestResponseModels
+    from ..models.model_under_test_response_deprecated_params_type_0 import ModelUnderTestResponseDeprecatedParamsType0
+    from ..models.model_under_test_response_models_type_0 import ModelUnderTestResponseModelsType0
 
 
 T = TypeVar("T", bound="ModelUnderTestResponse")
@@ -27,12 +27,12 @@ class ModelUnderTestResponse:
         tags (list[str]):
         time_created (str):
         version (int | Unset):  Default: 1.
-        models (ModelUnderTestResponseModels | None | Unset):
+        models (ModelUnderTestResponseModelsType0 | None | Unset):
         sensitive_fields (list[str] | None | Unset):
         datapoint_count (int | None | Unset):
         app_link (str | Unset): This URL links to the Okareo webpage for this model Default: ''.
-        deprecated_params (ModelUnderTestResponseDeprecatedParams | None | Unset): Deprecated parameters for backward
-            compatibility.
+        deprecated_params (ModelUnderTestResponseDeprecatedParamsType0 | None | Unset): Deprecated parameters for
+            backward compatibility.
         warning (None | str | Unset):
     """
 
@@ -42,17 +42,19 @@ class ModelUnderTestResponse:
     tags: list[str]
     time_created: str
     version: int | Unset = 1
-    models: ModelUnderTestResponseModels | None | Unset = UNSET
+    models: ModelUnderTestResponseModelsType0 | None | Unset = UNSET
     sensitive_fields: list[str] | None | Unset = UNSET
     datapoint_count: int | None | Unset = UNSET
     app_link: str | Unset = ""
-    deprecated_params: ModelUnderTestResponseDeprecatedParams | None | Unset = UNSET
+    deprecated_params: ModelUnderTestResponseDeprecatedParamsType0 | None | Unset = UNSET
     warning: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
-        from ..models.model_under_test_response_models import ModelUnderTestResponseModels
+        from ..models.model_under_test_response_deprecated_params_type_0 import (
+            ModelUnderTestResponseDeprecatedParamsType0,
+        )
+        from ..models.model_under_test_response_models_type_0 import ModelUnderTestResponseModelsType0
 
         id = str(self.id)
 
@@ -69,7 +71,7 @@ class ModelUnderTestResponse:
         models: dict[str, Any] | None | Unset
         if isinstance(self.models, Unset):
             models = UNSET
-        elif isinstance(self.models, ModelUnderTestResponseModels):
+        elif isinstance(self.models, ModelUnderTestResponseModelsType0):
             models = self.models.to_dict()
         else:
             models = self.models
@@ -94,7 +96,7 @@ class ModelUnderTestResponse:
         deprecated_params: dict[str, Any] | None | Unset
         if isinstance(self.deprecated_params, Unset):
             deprecated_params = UNSET
-        elif isinstance(self.deprecated_params, ModelUnderTestResponseDeprecatedParams):
+        elif isinstance(self.deprecated_params, ModelUnderTestResponseDeprecatedParamsType0):
             deprecated_params = self.deprecated_params.to_dict()
         else:
             deprecated_params = self.deprecated_params
@@ -135,8 +137,10 @@ class ModelUnderTestResponse:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
-        from ..models.model_under_test_response_models import ModelUnderTestResponseModels
+        from ..models.model_under_test_response_deprecated_params_type_0 import (
+            ModelUnderTestResponseDeprecatedParamsType0,
+        )
+        from ..models.model_under_test_response_models_type_0 import ModelUnderTestResponseModelsType0
 
         d = dict(src_dict)
         id = UUID(d.pop("id"))
@@ -151,7 +155,7 @@ class ModelUnderTestResponse:
 
         version = d.pop("version", UNSET)
 
-        def _parse_models(data: object) -> ModelUnderTestResponseModels | None | Unset:
+        def _parse_models(data: object) -> ModelUnderTestResponseModelsType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -159,12 +163,12 @@ class ModelUnderTestResponse:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                models_type_0 = ModelUnderTestResponseModels.from_dict(data)
+                models_type_0 = ModelUnderTestResponseModelsType0.from_dict(data)
 
                 return models_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(ModelUnderTestResponseModels | None | Unset, data)
+            return cast(ModelUnderTestResponseModelsType0 | None | Unset, data)
 
         models = _parse_models(d.pop("models", UNSET))
 
@@ -196,7 +200,7 @@ class ModelUnderTestResponse:
 
         app_link = d.pop("app_link", UNSET)
 
-        def _parse_deprecated_params(data: object) -> ModelUnderTestResponseDeprecatedParams | None | Unset:
+        def _parse_deprecated_params(data: object) -> ModelUnderTestResponseDeprecatedParamsType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -204,12 +208,12 @@ class ModelUnderTestResponse:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                deprecated_params_type_0 = ModelUnderTestResponseDeprecatedParams.from_dict(data)
+                deprecated_params_type_0 = ModelUnderTestResponseDeprecatedParamsType0.from_dict(data)
 
                 return deprecated_params_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(ModelUnderTestResponseDeprecatedParams | None | Unset, data)
+            return cast(ModelUnderTestResponseDeprecatedParamsType0 | None | Unset, data)
 
         deprecated_params = _parse_deprecated_params(d.pop("deprecated_params", UNSET))
 

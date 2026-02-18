@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,24 +19,19 @@ T = TypeVar("T", bound="HTTPValidationError")
 class HTTPValidationError:
     """
     Attributes:
-        detail (list[ValidationError] | None | Unset):
+        detail (list[ValidationError] | Unset):
     """
 
-    detail: list[ValidationError] | None | Unset = UNSET
+    detail: list[ValidationError] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        detail: list[dict[str, Any]] | None | Unset
-        if isinstance(self.detail, Unset):
-            detail = UNSET
-        elif isinstance(self.detail, list):
+        detail: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.detail, Unset):
             detail = []
-            for detail_type_0_item_data in self.detail:
-                detail_type_0_item = detail_type_0_item_data.to_dict()
-                detail.append(detail_type_0_item)
-
-        else:
-            detail = self.detail
+            for detail_item_data in self.detail:
+                detail_item = detail_item_data.to_dict()
+                detail.append(detail_item)
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -51,28 +46,14 @@ class HTTPValidationError:
         from ..models.validation_error import ValidationError
 
         d = dict(src_dict)
+        _detail = d.pop("detail", UNSET)
+        detail: list[ValidationError] | Unset = UNSET
+        if _detail is not UNSET:
+            detail = []
+            for detail_item_data in _detail:
+                detail_item = ValidationError.from_dict(detail_item_data)
 
-        def _parse_detail(data: object) -> list[ValidationError] | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                detail_type_0 = []
-                _detail_type_0 = data
-                for detail_type_0_item_data in _detail_type_0:
-                    detail_type_0_item = ValidationError.from_dict(detail_type_0_item_data)
-
-                    detail_type_0.append(detail_type_0_item)
-
-                return detail_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(list[ValidationError] | None | Unset, data)
-
-        detail = _parse_detail(d.pop("detail", UNSET))
+                detail.append(detail_item)
 
         http_validation_error = cls(
             detail=detail,

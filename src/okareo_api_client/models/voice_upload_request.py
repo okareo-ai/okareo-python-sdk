@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -17,23 +17,19 @@ class VoiceUploadRequest:
     """
     Attributes:
         audio (str): Audio file (.wav) in base64-encoded bytes.
-        project_id (None | Unset | UUID): ID of the project to associate the audio file with.
+        project_id (UUID | Unset): ID of the project to associate the audio file with.
     """
 
     audio: str
-    project_id: None | Unset | UUID = UNSET
+    project_id: UUID | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         audio = self.audio
 
-        project_id: None | str | Unset
-        if isinstance(self.project_id, Unset):
-            project_id = UNSET
-        elif isinstance(self.project_id, UUID):
+        project_id: str | Unset = UNSET
+        if not isinstance(self.project_id, Unset):
             project_id = str(self.project_id)
-        else:
-            project_id = self.project_id
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -52,22 +48,12 @@ class VoiceUploadRequest:
         d = dict(src_dict)
         audio = d.pop("audio")
 
-        def _parse_project_id(data: object) -> None | Unset | UUID:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                project_id_type_0 = UUID(data)
-
-                return project_id_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(None | Unset | UUID, data)
-
-        project_id = _parse_project_id(d.pop("project_id", UNSET))
+        _project_id = d.pop("project_id", UNSET)
+        project_id: UUID | Unset
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         voice_upload_request = cls(
             audio=audio,

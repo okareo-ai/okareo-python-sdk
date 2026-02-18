@@ -16,19 +16,21 @@ T = TypeVar("T", bound="TestDataPointPayload")
 class TestDataPointPayload:
     """
     Attributes:
+        metric_value (str):
         test_run_id (None | Unset | UUID): ID for the testrun
         scenario_data_point_id (None | Unset | UUID): ID of the scenario data point
-        metric_type (None | str | Unset):
-        metric_value (None | str | Unset):
+        metric_type (str | Unset):
     """
 
+    metric_value: str
     test_run_id: None | Unset | UUID = UNSET
     scenario_data_point_id: None | Unset | UUID = UNSET
-    metric_type: None | str | Unset = UNSET
-    metric_value: None | str | Unset = UNSET
+    metric_type: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        metric_value = self.metric_value
+
         test_run_id: None | str | Unset
         if isinstance(self.test_run_id, Unset):
             test_run_id = UNSET
@@ -45,35 +47,28 @@ class TestDataPointPayload:
         else:
             scenario_data_point_id = self.scenario_data_point_id
 
-        metric_type: None | str | Unset
-        if isinstance(self.metric_type, Unset):
-            metric_type = UNSET
-        else:
-            metric_type = self.metric_type
-
-        metric_value: None | str | Unset
-        if isinstance(self.metric_value, Unset):
-            metric_value = UNSET
-        else:
-            metric_value = self.metric_value
+        metric_type = self.metric_type
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
+        field_dict.update(
+            {
+                "metric_value": metric_value,
+            }
+        )
         if test_run_id is not UNSET:
             field_dict["test_run_id"] = test_run_id
         if scenario_data_point_id is not UNSET:
             field_dict["scenario_data_point_id"] = scenario_data_point_id
         if metric_type is not UNSET:
             field_dict["metric_type"] = metric_type
-        if metric_value is not UNSET:
-            field_dict["metric_value"] = metric_value
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        metric_value = d.pop("metric_value")
 
         def _parse_test_run_id(data: object) -> None | Unset | UUID:
             if data is None:
@@ -109,29 +104,13 @@ class TestDataPointPayload:
 
         scenario_data_point_id = _parse_scenario_data_point_id(d.pop("scenario_data_point_id", UNSET))
 
-        def _parse_metric_type(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        metric_type = _parse_metric_type(d.pop("metric_type", UNSET))
-
-        def _parse_metric_value(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        metric_value = _parse_metric_value(d.pop("metric_value", UNSET))
+        metric_type = d.pop("metric_type", UNSET)
 
         test_data_point_payload = cls(
+            metric_value=metric_value,
             test_run_id=test_run_id,
             scenario_data_point_id=scenario_data_point_id,
             metric_type=metric_type,
-            metric_value=metric_value,
         )
 
         test_data_point_payload.additional_properties = d

@@ -17,8 +17,8 @@ T = TypeVar("T", bound="FilterCondition")
 class FilterCondition:
     """
     Attributes:
-        field (DatapointField): An enumeration.
-        operator (ComparisonOperator): An enumeration.
+        field (DatapointField):
+        operator (ComparisonOperator):
         value (str): Value to compare against
         field_key (None | str | Unset): Key of the User Metadata field to filter on. Ignored for other 'field' values
     """

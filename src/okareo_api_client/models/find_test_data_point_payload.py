@@ -20,14 +20,14 @@ class FindTestDataPointPayload:
         test_run_id (None | Unset | UUID): ID of the test run
         scenario_data_point_id (None | Unset | UUID): ID of the scenario data point
         metric_type (None | str | Unset):
-        full_data_point (bool | Unset):  Default: False.
+        full_data_point (bool | None | Unset):  Default: False.
     """
 
     id: None | Unset | UUID = UNSET
     test_run_id: None | Unset | UUID = UNSET
     scenario_data_point_id: None | Unset | UUID = UNSET
     metric_type: None | str | Unset = UNSET
-    full_data_point: bool | Unset = False
+    full_data_point: bool | None | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -61,7 +61,11 @@ class FindTestDataPointPayload:
         else:
             metric_type = self.metric_type
 
-        full_data_point = self.full_data_point
+        full_data_point: bool | None | Unset
+        if isinstance(self.full_data_point, Unset):
+            full_data_point = UNSET
+        else:
+            full_data_point = self.full_data_point
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -143,7 +147,14 @@ class FindTestDataPointPayload:
 
         metric_type = _parse_metric_type(d.pop("metric_type", UNSET))
 
-        full_data_point = d.pop("full_data_point", UNSET)
+        def _parse_full_data_point(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        full_data_point = _parse_full_data_point(d.pop("full_data_point", UNSET))
 
         find_test_data_point_payload = cls(
             id=id,

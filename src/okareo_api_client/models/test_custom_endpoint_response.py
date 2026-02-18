@@ -9,14 +9,14 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.test_custom_endpoint_response_end_session_raw_response import (
-        TestCustomEndpointResponseEndSessionRawResponse,
+    from ..models.test_custom_endpoint_response_end_session_raw_response_type_0 import (
+        TestCustomEndpointResponseEndSessionRawResponseType0,
     )
     from ..models.test_custom_endpoint_response_next_message_raw_response import (
         TestCustomEndpointResponseNextMessageRawResponse,
     )
-    from ..models.test_custom_endpoint_response_start_session_raw_response import (
-        TestCustomEndpointResponseStartSessionRawResponse,
+    from ..models.test_custom_endpoint_response_start_session_raw_response_type_0 import (
+        TestCustomEndpointResponseStartSessionRawResponseType0,
     )
 
 
@@ -27,50 +27,43 @@ T = TypeVar("T", bound="TestCustomEndpointResponse")
 class TestCustomEndpointResponse:
     """
     Attributes:
-        start_session_raw_response (None | TestCustomEndpointResponseStartSessionRawResponse | Unset): Raw response from
-            the start session endpoint, if applicable.
-        next_message_raw_response (None | TestCustomEndpointResponseNextMessageRawResponse | Unset): Raw response from
-            the next message endpoint.
-        end_session_raw_response (None | TestCustomEndpointResponseEndSessionRawResponse | Unset): Raw response from the
-            end session endpoint, if applicable.
+        start_session_raw_response (None | TestCustomEndpointResponseStartSessionRawResponseType0 | Unset): Raw response
+            from the start session endpoint, if applicable.
+        next_message_raw_response (TestCustomEndpointResponseNextMessageRawResponse | Unset): Raw response from the next
+            message endpoint.
+        end_session_raw_response (None | TestCustomEndpointResponseEndSessionRawResponseType0 | Unset): Raw response
+            from the end session endpoint, if applicable.
     """
 
-    start_session_raw_response: None | TestCustomEndpointResponseStartSessionRawResponse | Unset = UNSET
-    next_message_raw_response: None | TestCustomEndpointResponseNextMessageRawResponse | Unset = UNSET
-    end_session_raw_response: None | TestCustomEndpointResponseEndSessionRawResponse | Unset = UNSET
+    start_session_raw_response: None | TestCustomEndpointResponseStartSessionRawResponseType0 | Unset = UNSET
+    next_message_raw_response: TestCustomEndpointResponseNextMessageRawResponse | Unset = UNSET
+    end_session_raw_response: None | TestCustomEndpointResponseEndSessionRawResponseType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.test_custom_endpoint_response_end_session_raw_response import (
-            TestCustomEndpointResponseEndSessionRawResponse,
+        from ..models.test_custom_endpoint_response_end_session_raw_response_type_0 import (
+            TestCustomEndpointResponseEndSessionRawResponseType0,
         )
-        from ..models.test_custom_endpoint_response_next_message_raw_response import (
-            TestCustomEndpointResponseNextMessageRawResponse,
-        )
-        from ..models.test_custom_endpoint_response_start_session_raw_response import (
-            TestCustomEndpointResponseStartSessionRawResponse,
+        from ..models.test_custom_endpoint_response_start_session_raw_response_type_0 import (
+            TestCustomEndpointResponseStartSessionRawResponseType0,
         )
 
         start_session_raw_response: dict[str, Any] | None | Unset
         if isinstance(self.start_session_raw_response, Unset):
             start_session_raw_response = UNSET
-        elif isinstance(self.start_session_raw_response, TestCustomEndpointResponseStartSessionRawResponse):
+        elif isinstance(self.start_session_raw_response, TestCustomEndpointResponseStartSessionRawResponseType0):
             start_session_raw_response = self.start_session_raw_response.to_dict()
         else:
             start_session_raw_response = self.start_session_raw_response
 
-        next_message_raw_response: dict[str, Any] | None | Unset
-        if isinstance(self.next_message_raw_response, Unset):
-            next_message_raw_response = UNSET
-        elif isinstance(self.next_message_raw_response, TestCustomEndpointResponseNextMessageRawResponse):
+        next_message_raw_response: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.next_message_raw_response, Unset):
             next_message_raw_response = self.next_message_raw_response.to_dict()
-        else:
-            next_message_raw_response = self.next_message_raw_response
 
         end_session_raw_response: dict[str, Any] | None | Unset
         if isinstance(self.end_session_raw_response, Unset):
             end_session_raw_response = UNSET
-        elif isinstance(self.end_session_raw_response, TestCustomEndpointResponseEndSessionRawResponse):
+        elif isinstance(self.end_session_raw_response, TestCustomEndpointResponseEndSessionRawResponseType0):
             end_session_raw_response = self.end_session_raw_response.to_dict()
         else:
             end_session_raw_response = self.end_session_raw_response
@@ -89,21 +82,21 @@ class TestCustomEndpointResponse:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.test_custom_endpoint_response_end_session_raw_response import (
-            TestCustomEndpointResponseEndSessionRawResponse,
+        from ..models.test_custom_endpoint_response_end_session_raw_response_type_0 import (
+            TestCustomEndpointResponseEndSessionRawResponseType0,
         )
         from ..models.test_custom_endpoint_response_next_message_raw_response import (
             TestCustomEndpointResponseNextMessageRawResponse,
         )
-        from ..models.test_custom_endpoint_response_start_session_raw_response import (
-            TestCustomEndpointResponseStartSessionRawResponse,
+        from ..models.test_custom_endpoint_response_start_session_raw_response_type_0 import (
+            TestCustomEndpointResponseStartSessionRawResponseType0,
         )
 
         d = dict(src_dict)
 
         def _parse_start_session_raw_response(
             data: object,
-        ) -> None | TestCustomEndpointResponseStartSessionRawResponse | Unset:
+        ) -> None | TestCustomEndpointResponseStartSessionRawResponseType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -111,37 +104,29 @@ class TestCustomEndpointResponse:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                start_session_raw_response_type_0 = TestCustomEndpointResponseStartSessionRawResponse.from_dict(data)
+                start_session_raw_response_type_0 = TestCustomEndpointResponseStartSessionRawResponseType0.from_dict(
+                    data
+                )
 
                 return start_session_raw_response_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | TestCustomEndpointResponseStartSessionRawResponse | Unset, data)
+            return cast(None | TestCustomEndpointResponseStartSessionRawResponseType0 | Unset, data)
 
         start_session_raw_response = _parse_start_session_raw_response(d.pop("start_session_raw_response", UNSET))
 
-        def _parse_next_message_raw_response(
-            data: object,
-        ) -> None | TestCustomEndpointResponseNextMessageRawResponse | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, dict):
-                    raise TypeError()
-                next_message_raw_response_type_0 = TestCustomEndpointResponseNextMessageRawResponse.from_dict(data)
-
-                return next_message_raw_response_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(None | TestCustomEndpointResponseNextMessageRawResponse | Unset, data)
-
-        next_message_raw_response = _parse_next_message_raw_response(d.pop("next_message_raw_response", UNSET))
+        _next_message_raw_response = d.pop("next_message_raw_response", UNSET)
+        next_message_raw_response: TestCustomEndpointResponseNextMessageRawResponse | Unset
+        if isinstance(_next_message_raw_response, Unset):
+            next_message_raw_response = UNSET
+        else:
+            next_message_raw_response = TestCustomEndpointResponseNextMessageRawResponse.from_dict(
+                _next_message_raw_response
+            )
 
         def _parse_end_session_raw_response(
             data: object,
-        ) -> None | TestCustomEndpointResponseEndSessionRawResponse | Unset:
+        ) -> None | TestCustomEndpointResponseEndSessionRawResponseType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -149,12 +134,12 @@ class TestCustomEndpointResponse:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                end_session_raw_response_type_0 = TestCustomEndpointResponseEndSessionRawResponse.from_dict(data)
+                end_session_raw_response_type_0 = TestCustomEndpointResponseEndSessionRawResponseType0.from_dict(data)
 
                 return end_session_raw_response_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | TestCustomEndpointResponseEndSessionRawResponse | Unset, data)
+            return cast(None | TestCustomEndpointResponseEndSessionRawResponseType0 | Unset, data)
 
         end_session_raw_response = _parse_end_session_raw_response(d.pop("end_session_raw_response", UNSET))
 

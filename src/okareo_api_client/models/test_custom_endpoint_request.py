@@ -10,9 +10,13 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.test_custom_endpoint_request_end_session_params import TestCustomEndpointRequestEndSessionParams
+    from ..models.test_custom_endpoint_request_end_session_params_type_0 import (
+        TestCustomEndpointRequestEndSessionParamsType0,
+    )
     from ..models.test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
-    from ..models.test_custom_endpoint_request_start_session_params import TestCustomEndpointRequestStartSessionParams
+    from ..models.test_custom_endpoint_request_start_session_params_type_0 import (
+        TestCustomEndpointRequestStartSessionParamsType0,
+    )
 
 
 T = TypeVar("T", bound="TestCustomEndpointRequest")
@@ -24,25 +28,27 @@ class TestCustomEndpointRequest:
     Attributes:
         next_message_params (TestCustomEndpointRequestNextMessageParams): API parameters to get the next message in the
             session.
-        start_session_params (None | TestCustomEndpointRequestStartSessionParams | Unset): API parameters to start a
-            session. Optional
-        end_session_params (None | TestCustomEndpointRequestEndSessionParams | Unset): API parameters to end a session.
-            Optional.
+        start_session_params (None | TestCustomEndpointRequestStartSessionParamsType0 | Unset): API parameters to start
+            a session. Optional
+        end_session_params (None | TestCustomEndpointRequestEndSessionParamsType0 | Unset): API parameters to end a
+            session. Optional.
         mut_id (None | Unset | UUID): ID of the model to use for the custom endpoint. Optional.
         sensitive_fields (list[str] | None | Unset): List of sensitive fields to redact in the response. Optional.
     """
 
     next_message_params: TestCustomEndpointRequestNextMessageParams
-    start_session_params: None | TestCustomEndpointRequestStartSessionParams | Unset = UNSET
-    end_session_params: None | TestCustomEndpointRequestEndSessionParams | Unset = UNSET
+    start_session_params: None | TestCustomEndpointRequestStartSessionParamsType0 | Unset = UNSET
+    end_session_params: None | TestCustomEndpointRequestEndSessionParamsType0 | Unset = UNSET
     mut_id: None | Unset | UUID = UNSET
     sensitive_fields: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.test_custom_endpoint_request_end_session_params import TestCustomEndpointRequestEndSessionParams
-        from ..models.test_custom_endpoint_request_start_session_params import (
-            TestCustomEndpointRequestStartSessionParams,
+        from ..models.test_custom_endpoint_request_end_session_params_type_0 import (
+            TestCustomEndpointRequestEndSessionParamsType0,
+        )
+        from ..models.test_custom_endpoint_request_start_session_params_type_0 import (
+            TestCustomEndpointRequestStartSessionParamsType0,
         )
 
         next_message_params = self.next_message_params.to_dict()
@@ -50,7 +56,7 @@ class TestCustomEndpointRequest:
         start_session_params: dict[str, Any] | None | Unset
         if isinstance(self.start_session_params, Unset):
             start_session_params = UNSET
-        elif isinstance(self.start_session_params, TestCustomEndpointRequestStartSessionParams):
+        elif isinstance(self.start_session_params, TestCustomEndpointRequestStartSessionParamsType0):
             start_session_params = self.start_session_params.to_dict()
         else:
             start_session_params = self.start_session_params
@@ -58,7 +64,7 @@ class TestCustomEndpointRequest:
         end_session_params: dict[str, Any] | None | Unset
         if isinstance(self.end_session_params, Unset):
             end_session_params = UNSET
-        elif isinstance(self.end_session_params, TestCustomEndpointRequestEndSessionParams):
+        elif isinstance(self.end_session_params, TestCustomEndpointRequestEndSessionParamsType0):
             end_session_params = self.end_session_params.to_dict()
         else:
             end_session_params = self.end_session_params
@@ -100,16 +106,20 @@ class TestCustomEndpointRequest:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.test_custom_endpoint_request_end_session_params import TestCustomEndpointRequestEndSessionParams
+        from ..models.test_custom_endpoint_request_end_session_params_type_0 import (
+            TestCustomEndpointRequestEndSessionParamsType0,
+        )
         from ..models.test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
-        from ..models.test_custom_endpoint_request_start_session_params import (
-            TestCustomEndpointRequestStartSessionParams,
+        from ..models.test_custom_endpoint_request_start_session_params_type_0 import (
+            TestCustomEndpointRequestStartSessionParamsType0,
         )
 
         d = dict(src_dict)
         next_message_params = TestCustomEndpointRequestNextMessageParams.from_dict(d.pop("next_message_params"))
 
-        def _parse_start_session_params(data: object) -> None | TestCustomEndpointRequestStartSessionParams | Unset:
+        def _parse_start_session_params(
+            data: object,
+        ) -> None | TestCustomEndpointRequestStartSessionParamsType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -117,16 +127,16 @@ class TestCustomEndpointRequest:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                start_session_params_type_0 = TestCustomEndpointRequestStartSessionParams.from_dict(data)
+                start_session_params_type_0 = TestCustomEndpointRequestStartSessionParamsType0.from_dict(data)
 
                 return start_session_params_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | TestCustomEndpointRequestStartSessionParams | Unset, data)
+            return cast(None | TestCustomEndpointRequestStartSessionParamsType0 | Unset, data)
 
         start_session_params = _parse_start_session_params(d.pop("start_session_params", UNSET))
 
-        def _parse_end_session_params(data: object) -> None | TestCustomEndpointRequestEndSessionParams | Unset:
+        def _parse_end_session_params(data: object) -> None | TestCustomEndpointRequestEndSessionParamsType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -134,12 +144,12 @@ class TestCustomEndpointRequest:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                end_session_params_type_0 = TestCustomEndpointRequestEndSessionParams.from_dict(data)
+                end_session_params_type_0 = TestCustomEndpointRequestEndSessionParamsType0.from_dict(data)
 
                 return end_session_params_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | TestCustomEndpointRequestEndSessionParams | Unset, data)
+            return cast(None | TestCustomEndpointRequestEndSessionParamsType0 | Unset, data)
 
         end_session_params = _parse_end_session_params(d.pop("end_session_params", UNSET))
 

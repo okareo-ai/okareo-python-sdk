@@ -17,11 +17,12 @@ class UpdateTestDataPointPayload:
     """
     Attributes:
         ids (list[UUID] | None | Unset): IDs of the datapoints to update
-        tags (list[list[str]] | Unset): Tags are strings that can be used to filter test data points in the Okareo app
+        tags (list[list[str]] | None | Unset): Tags are strings that can be used to filter test data points in the
+            Okareo app
     """
 
     ids: list[UUID] | None | Unset = UNSET
-    tags: list[list[str]] | Unset = UNSET
+    tags: list[list[str]] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -37,13 +38,18 @@ class UpdateTestDataPointPayload:
         else:
             ids = self.ids
 
-        tags: list[list[str]] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[list[str]] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
             tags = []
-            for tags_item_data in self.tags:
-                tags_item = tags_item_data
+            for tags_type_0_item_data in self.tags:
+                tags_type_0_item = tags_type_0_item_data
 
-                tags.append(tags_item)
+                tags.append(tags_type_0_item)
+
+        else:
+            tags = self.tags
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -81,14 +87,27 @@ class UpdateTestDataPointPayload:
 
         ids = _parse_ids(d.pop("ids", UNSET))
 
-        _tags = d.pop("tags", UNSET)
-        tags: list[list[str]] | Unset = UNSET
-        if _tags is not UNSET:
-            tags = []
-            for tags_item_data in _tags:
-                tags_item = cast(list[str], tags_item_data)
+        def _parse_tags(data: object) -> list[list[str]] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = []
+                _tags_type_0 = data
+                for tags_type_0_item_data in _tags_type_0:
+                    tags_type_0_item = cast(list[str], tags_type_0_item_data)
 
-                tags.append(tags_item)
+                    tags_type_0.append(tags_type_0_item)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[list[str]] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         update_test_data_point_payload = cls(
             ids=ids,

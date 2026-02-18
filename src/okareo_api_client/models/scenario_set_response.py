@@ -27,13 +27,13 @@ class ScenarioSetResponse:
         time_created (datetime.datetime):
         type_ (str):
         scenario_id (None | Unset | UUID):
-        tags (list[str] | Unset):
+        tags (list[str] | None | Unset):
         name (None | str | Unset):
-        seed_data (list[SeedData] | Unset):
-        scenario_data (list[ScenarioDataPoinResponse] | Unset):
-        failed_data (list[ScenarioDataPoinResponse] | Unset):
-        scenario_count (int | Unset):  Default: 0.
-        scenario_input (list[str] | Unset):
+        seed_data (list[SeedData] | None | Unset):
+        scenario_data (list[ScenarioDataPoinResponse] | None | Unset):
+        failed_data (list[ScenarioDataPoinResponse] | None | Unset):
+        scenario_count (int | None | Unset):  Default: 0.
+        scenario_input (list[str] | None | Unset):
         app_link (str | Unset): This URL links to the Okareo webpage for this scenario set Default: ''.
         warning (None | str | Unset):
     """
@@ -42,13 +42,13 @@ class ScenarioSetResponse:
     time_created: datetime.datetime
     type_: str
     scenario_id: None | Unset | UUID = UNSET
-    tags: list[str] | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     name: None | str | Unset = UNSET
-    seed_data: list[SeedData] | Unset = UNSET
-    scenario_data: list[ScenarioDataPoinResponse] | Unset = UNSET
-    failed_data: list[ScenarioDataPoinResponse] | Unset = UNSET
-    scenario_count: int | Unset = 0
-    scenario_input: list[str] | Unset = UNSET
+    seed_data: list[SeedData] | None | Unset = UNSET
+    scenario_data: list[ScenarioDataPoinResponse] | None | Unset = UNSET
+    failed_data: list[ScenarioDataPoinResponse] | None | Unset = UNSET
+    scenario_count: int | None | Unset = 0
+    scenario_input: list[str] | None | Unset = UNSET
     app_link: str | Unset = ""
     warning: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -68,8 +68,13 @@ class ScenarioSetResponse:
         else:
             scenario_id = self.scenario_id
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
             tags = self.tags
 
         name: None | str | Unset
@@ -78,31 +83,55 @@ class ScenarioSetResponse:
         else:
             name = self.name
 
-        seed_data: list[dict[str, Any]] | Unset = UNSET
-        if not isinstance(self.seed_data, Unset):
+        seed_data: list[dict[str, Any]] | None | Unset
+        if isinstance(self.seed_data, Unset):
+            seed_data = UNSET
+        elif isinstance(self.seed_data, list):
             seed_data = []
-            for seed_data_item_data in self.seed_data:
-                seed_data_item = seed_data_item_data.to_dict()
-                seed_data.append(seed_data_item)
+            for seed_data_type_0_item_data in self.seed_data:
+                seed_data_type_0_item = seed_data_type_0_item_data.to_dict()
+                seed_data.append(seed_data_type_0_item)
 
-        scenario_data: list[dict[str, Any]] | Unset = UNSET
-        if not isinstance(self.scenario_data, Unset):
+        else:
+            seed_data = self.seed_data
+
+        scenario_data: list[dict[str, Any]] | None | Unset
+        if isinstance(self.scenario_data, Unset):
+            scenario_data = UNSET
+        elif isinstance(self.scenario_data, list):
             scenario_data = []
-            for scenario_data_item_data in self.scenario_data:
-                scenario_data_item = scenario_data_item_data.to_dict()
-                scenario_data.append(scenario_data_item)
+            for scenario_data_type_0_item_data in self.scenario_data:
+                scenario_data_type_0_item = scenario_data_type_0_item_data.to_dict()
+                scenario_data.append(scenario_data_type_0_item)
 
-        failed_data: list[dict[str, Any]] | Unset = UNSET
-        if not isinstance(self.failed_data, Unset):
+        else:
+            scenario_data = self.scenario_data
+
+        failed_data: list[dict[str, Any]] | None | Unset
+        if isinstance(self.failed_data, Unset):
+            failed_data = UNSET
+        elif isinstance(self.failed_data, list):
             failed_data = []
-            for failed_data_item_data in self.failed_data:
-                failed_data_item = failed_data_item_data.to_dict()
-                failed_data.append(failed_data_item)
+            for failed_data_type_0_item_data in self.failed_data:
+                failed_data_type_0_item = failed_data_type_0_item_data.to_dict()
+                failed_data.append(failed_data_type_0_item)
 
-        scenario_count = self.scenario_count
+        else:
+            failed_data = self.failed_data
 
-        scenario_input: list[str] | Unset = UNSET
-        if not isinstance(self.scenario_input, Unset):
+        scenario_count: int | None | Unset
+        if isinstance(self.scenario_count, Unset):
+            scenario_count = UNSET
+        else:
+            scenario_count = self.scenario_count
+
+        scenario_input: list[str] | None | Unset
+        if isinstance(self.scenario_input, Unset):
+            scenario_input = UNSET
+        elif isinstance(self.scenario_input, list):
+            scenario_input = self.scenario_input
+
+        else:
             scenario_input = self.scenario_input
 
         app_link = self.app_link
@@ -174,7 +203,22 @@ class ScenarioSetResponse:
 
         scenario_id = _parse_scenario_id(d.pop("scenario_id", UNSET))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         def _parse_name(data: object) -> None | str | Unset:
             if data is None:
@@ -185,36 +229,97 @@ class ScenarioSetResponse:
 
         name = _parse_name(d.pop("name", UNSET))
 
-        _seed_data = d.pop("seed_data", UNSET)
-        seed_data: list[SeedData] | Unset = UNSET
-        if _seed_data is not UNSET:
-            seed_data = []
-            for seed_data_item_data in _seed_data:
-                seed_data_item = SeedData.from_dict(seed_data_item_data)
+        def _parse_seed_data(data: object) -> list[SeedData] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                seed_data_type_0 = []
+                _seed_data_type_0 = data
+                for seed_data_type_0_item_data in _seed_data_type_0:
+                    seed_data_type_0_item = SeedData.from_dict(seed_data_type_0_item_data)
 
-                seed_data.append(seed_data_item)
+                    seed_data_type_0.append(seed_data_type_0_item)
 
-        _scenario_data = d.pop("scenario_data", UNSET)
-        scenario_data: list[ScenarioDataPoinResponse] | Unset = UNSET
-        if _scenario_data is not UNSET:
-            scenario_data = []
-            for scenario_data_item_data in _scenario_data:
-                scenario_data_item = ScenarioDataPoinResponse.from_dict(scenario_data_item_data)
+                return seed_data_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[SeedData] | None | Unset, data)
 
-                scenario_data.append(scenario_data_item)
+        seed_data = _parse_seed_data(d.pop("seed_data", UNSET))
 
-        _failed_data = d.pop("failed_data", UNSET)
-        failed_data: list[ScenarioDataPoinResponse] | Unset = UNSET
-        if _failed_data is not UNSET:
-            failed_data = []
-            for failed_data_item_data in _failed_data:
-                failed_data_item = ScenarioDataPoinResponse.from_dict(failed_data_item_data)
+        def _parse_scenario_data(data: object) -> list[ScenarioDataPoinResponse] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                scenario_data_type_0 = []
+                _scenario_data_type_0 = data
+                for scenario_data_type_0_item_data in _scenario_data_type_0:
+                    scenario_data_type_0_item = ScenarioDataPoinResponse.from_dict(scenario_data_type_0_item_data)
 
-                failed_data.append(failed_data_item)
+                    scenario_data_type_0.append(scenario_data_type_0_item)
 
-        scenario_count = d.pop("scenario_count", UNSET)
+                return scenario_data_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[ScenarioDataPoinResponse] | None | Unset, data)
 
-        scenario_input = cast(list[str], d.pop("scenario_input", UNSET))
+        scenario_data = _parse_scenario_data(d.pop("scenario_data", UNSET))
+
+        def _parse_failed_data(data: object) -> list[ScenarioDataPoinResponse] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                failed_data_type_0 = []
+                _failed_data_type_0 = data
+                for failed_data_type_0_item_data in _failed_data_type_0:
+                    failed_data_type_0_item = ScenarioDataPoinResponse.from_dict(failed_data_type_0_item_data)
+
+                    failed_data_type_0.append(failed_data_type_0_item)
+
+                return failed_data_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[ScenarioDataPoinResponse] | None | Unset, data)
+
+        failed_data = _parse_failed_data(d.pop("failed_data", UNSET))
+
+        def _parse_scenario_count(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        scenario_count = _parse_scenario_count(d.pop("scenario_count", UNSET))
+
+        def _parse_scenario_input(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                scenario_input_type_0 = cast(list[str], data)
+
+                return scenario_input_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        scenario_input = _parse_scenario_input(d.pop("scenario_input", UNSET))
 
         app_link = d.pop("app_link", UNSET)
 

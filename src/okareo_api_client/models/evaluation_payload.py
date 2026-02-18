@@ -27,8 +27,8 @@ class EvaluationPayload:
         filter_group_id (None | Unset | UUID): ID of the datapoint filter group to apply
         tags (list[str] | Unset): Tags are strings that can be used to filter test runs in the Okareo app
         checks (list[str] | None | Unset): List of checks to include in the test run.
-        type_ (TestRunType | Unset): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
-        name (None | str | Unset): Name of the test run
+        type_ (TestRunType | Unset):
+        name (str | Unset): Name of the test run
         project_id (None | Unset | UUID): Project ID
         test_run_id (None | Unset | UUID): ID for the test run. Used when 'submit_test' has already been called.
     """
@@ -39,8 +39,8 @@ class EvaluationPayload:
     filter_group_id: None | Unset | UUID = UNSET
     tags: list[str] | Unset = UNSET
     checks: list[str] | None | Unset = UNSET
-    type_: TestRunType | Unset = TestRunType.MULTI_CLASS_CLASSIFICATION
-    name: None | str | Unset = UNSET
+    type_: TestRunType | Unset = UNSET
+    name: str | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
     test_run_id: None | Unset | UUID = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -95,11 +95,7 @@ class EvaluationPayload:
         if not isinstance(self.type_, Unset):
             type_ = self.type_.value
 
-        name: None | str | Unset
-        if isinstance(self.name, Unset):
-            name = UNSET
-        else:
-            name = self.name
+        name = self.name
 
         project_id: None | str | Unset
         if isinstance(self.project_id, Unset):
@@ -238,14 +234,7 @@ class EvaluationPayload:
         else:
             type_ = TestRunType(_type_)
 
-        def _parse_name(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        name = _parse_name(d.pop("name", UNSET))
+        name = d.pop("name", UNSET)
 
         def _parse_project_id(data: object) -> None | Unset | UUID:
             if data is None:

@@ -15,20 +15,16 @@ T = TypeVar("T", bound="GroupSchema")
 class GroupSchema:
     """
     Attributes:
-        name (None | str | Unset): Name of the group
+        name (str | Unset): Name of the group
         tags (list[str] | Unset): Tags are strings that can be used to filter groups in the Okareo app
     """
 
-    name: None | str | Unset = UNSET
+    name: str | Unset = UNSET
     tags: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name: None | str | Unset
-        if isinstance(self.name, Unset):
-            name = UNSET
-        else:
-            name = self.name
+        name = self.name
 
         tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
@@ -47,15 +43,7 @@ class GroupSchema:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-
-        def _parse_name(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        name = _parse_name(d.pop("name", UNSET))
+        name = d.pop("name", UNSET)
 
         tags = cast(list[str], d.pop("tags", UNSET))
 

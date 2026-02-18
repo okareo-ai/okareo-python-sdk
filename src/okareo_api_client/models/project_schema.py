@@ -16,11 +16,11 @@ class ProjectSchema:
     """
     Attributes:
         name (None | str | Unset): Name of the project
-        tags (list[str] | Unset): Tags are strings that can be used to filter projects in the Okareo app
+        tags (list[str] | None | Unset): Tags are strings that can be used to filter projects in the Okareo app
     """
 
     name: None | str | Unset = UNSET
-    tags: list[str] | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -30,8 +30,13 @@ class ProjectSchema:
         else:
             name = self.name
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
             tags = self.tags
 
         field_dict: dict[str, Any] = {}
@@ -57,7 +62,22 @@ class ProjectSchema:
 
         name = _parse_name(d.pop("name", UNSET))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         project_schema = cls(
             name=name,

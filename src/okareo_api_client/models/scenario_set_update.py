@@ -25,19 +25,19 @@ class ScenarioSetUpdate:
         project_id (None | Unset | UUID): ID for the project
         time_created (datetime.datetime | None | Unset):
         type_ (None | str | Unset): Generation type of scenario
-        tags (list[str] | Unset): Tags are strings that can be used to filter scenario sets in the Okareo app
+        tags (list[str] | None | Unset): Tags are strings that can be used to filter scenario sets in the Okareo app
         name (None | str | Unset): Name of the scenario set
-        seed_data (list[SeedData] | Unset): Seed data is a list of dictionaries, each with an input and result
-        scenario_input (list[str] | Unset):
+        seed_data (list[SeedData] | None | Unset): Seed data is a list of dictionaries, each with an input and result
+        scenario_input (list[str] | None | Unset):
     """
 
     project_id: None | Unset | UUID = UNSET
     time_created: datetime.datetime | None | Unset = UNSET
     type_: None | str | Unset = UNSET
-    tags: list[str] | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     name: None | str | Unset = UNSET
-    seed_data: list[SeedData] | Unset = UNSET
-    scenario_input: list[str] | Unset = UNSET
+    seed_data: list[SeedData] | None | Unset = UNSET
+    scenario_input: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -63,8 +63,13 @@ class ScenarioSetUpdate:
         else:
             type_ = self.type_
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
             tags = self.tags
 
         name: None | str | Unset
@@ -73,15 +78,25 @@ class ScenarioSetUpdate:
         else:
             name = self.name
 
-        seed_data: list[dict[str, Any]] | Unset = UNSET
-        if not isinstance(self.seed_data, Unset):
+        seed_data: list[dict[str, Any]] | None | Unset
+        if isinstance(self.seed_data, Unset):
+            seed_data = UNSET
+        elif isinstance(self.seed_data, list):
             seed_data = []
-            for seed_data_item_data in self.seed_data:
-                seed_data_item = seed_data_item_data.to_dict()
-                seed_data.append(seed_data_item)
+            for seed_data_type_0_item_data in self.seed_data:
+                seed_data_type_0_item = seed_data_type_0_item_data.to_dict()
+                seed_data.append(seed_data_type_0_item)
 
-        scenario_input: list[str] | Unset = UNSET
-        if not isinstance(self.scenario_input, Unset):
+        else:
+            seed_data = self.seed_data
+
+        scenario_input: list[str] | None | Unset
+        if isinstance(self.scenario_input, Unset):
+            scenario_input = UNSET
+        elif isinstance(self.scenario_input, list):
+            scenario_input = self.scenario_input
+
+        else:
             scenario_input = self.scenario_input
 
         field_dict: dict[str, Any] = {}
@@ -153,7 +168,22 @@ class ScenarioSetUpdate:
 
         type_ = _parse_type_(d.pop("type", UNSET))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         def _parse_name(data: object) -> None | str | Unset:
             if data is None:
@@ -164,16 +194,44 @@ class ScenarioSetUpdate:
 
         name = _parse_name(d.pop("name", UNSET))
 
-        _seed_data = d.pop("seed_data", UNSET)
-        seed_data: list[SeedData] | Unset = UNSET
-        if _seed_data is not UNSET:
-            seed_data = []
-            for seed_data_item_data in _seed_data:
-                seed_data_item = SeedData.from_dict(seed_data_item_data)
+        def _parse_seed_data(data: object) -> list[SeedData] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                seed_data_type_0 = []
+                _seed_data_type_0 = data
+                for seed_data_type_0_item_data in _seed_data_type_0:
+                    seed_data_type_0_item = SeedData.from_dict(seed_data_type_0_item_data)
 
-                seed_data.append(seed_data_item)
+                    seed_data_type_0.append(seed_data_type_0_item)
 
-        scenario_input = cast(list[str], d.pop("scenario_input", UNSET))
+                return seed_data_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[SeedData] | None | Unset, data)
+
+        seed_data = _parse_seed_data(d.pop("seed_data", UNSET))
+
+        def _parse_scenario_input(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                scenario_input_type_0 = cast(list[str], data)
+
+                return scenario_input_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        scenario_input = _parse_scenario_input(d.pop("scenario_input", UNSET))
 
         scenario_set_update = cls(
             project_id=project_id,

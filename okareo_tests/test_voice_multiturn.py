@@ -15,7 +15,7 @@ from okareo_api_client.api.default import (
     delete_test_run_v0_test_runs_delete,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
+from okareo_api_client.models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
 
 # Constants
 FRUSTRATED_PROMPT = open(
@@ -276,7 +276,7 @@ def run_voice_multiturn_test_audio_check(
     assert evaluation.name == f"Voice Simulation Run - Frustrated User - {rnd}"
     assert evaluation.status == "FINISHED"
     assert evaluation.model_metrics is not None
-    assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
+    assert isinstance(evaluation.model_metrics, TestRunItemModelMetricsType0)
     metrics_dict = evaluation.model_metrics.to_dict()
     assert isinstance(metrics_dict, dict)
     assert metrics_dict.get("mean_scores") is not None
@@ -383,7 +383,7 @@ def run_voice_multiturn_test_voice_profile(
         assert evaluation.name == eval_name
         assert evaluation.status == "FINISHED"
         assert evaluation.model_metrics is not None
-        assert isinstance(evaluation.model_metrics, TestRunItemModelMetrics)
+        assert isinstance(evaluation.model_metrics, TestRunItemModelMetricsType0)
         metrics_dict = evaluation.model_metrics.to_dict()
         assert isinstance(metrics_dict, dict)
         assert metrics_dict.get("mean_scores") is not None

@@ -24,13 +24,14 @@ class ScenarioSetCreate:
         name (str): Name of the scenario set
         seed_data (list[SeedData]): Seed data is a list of dictionaries, each with an input and result
         project_id (None | Unset | UUID): ID for the project
-        generation_type (ScenarioType | Unset): An enumeration. Default: ScenarioType.SEED.
+        generation_type (None | ScenarioType | Unset): Generation type of the uploaded scenario. Default is SEED.
+            Default: ScenarioType.SEED.
     """
 
     name: str
     seed_data: list[SeedData]
     project_id: None | Unset | UUID = UNSET
-    generation_type: ScenarioType | Unset = ScenarioType.SEED
+    generation_type: None | ScenarioType | Unset = ScenarioType.SEED
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,9 +50,13 @@ class ScenarioSetCreate:
         else:
             project_id = self.project_id
 
-        generation_type: str | Unset = UNSET
-        if not isinstance(self.generation_type, Unset):
+        generation_type: None | str | Unset
+        if isinstance(self.generation_type, Unset):
+            generation_type = UNSET
+        elif isinstance(self.generation_type, ScenarioType):
             generation_type = self.generation_type.value
+        else:
+            generation_type = self.generation_type
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -99,12 +104,22 @@ class ScenarioSetCreate:
 
         project_id = _parse_project_id(d.pop("project_id", UNSET))
 
-        _generation_type = d.pop("generation_type", UNSET)
-        generation_type: ScenarioType | Unset
-        if isinstance(_generation_type, Unset):
-            generation_type = UNSET
-        else:
-            generation_type = ScenarioType(_generation_type)
+        def _parse_generation_type(data: object) -> None | ScenarioType | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                generation_type_type_0 = ScenarioType(data)
+
+                return generation_type_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | ScenarioType | Unset, data)
+
+        generation_type = _parse_generation_type(d.pop("generation_type", UNSET))
 
         scenario_set_create = cls(
             name=name,

@@ -13,7 +13,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     version: str | Unset = "all",
     api_key: str,
 ) -> dict[str, Any]:
@@ -22,9 +22,13 @@ def _get_kwargs(
 
     params: dict[str, Any] = {}
 
-    json_project_id: str | Unset = UNSET
-    if not isinstance(project_id, Unset):
+    json_project_id: None | str | Unset
+    if isinstance(project_id, Unset):
+        json_project_id = UNSET
+    elif isinstance(project_id, UUID):
         json_project_id = str(project_id)
+    else:
+        json_project_id = project_id
     params["project_id"] = json_project_id
 
     params["version"] = version
@@ -94,7 +98,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     version: str | Unset = "all",
     api_key: str,
 ) -> Response[ErrorResponse | list[ModelUnderTestResponse]]:
@@ -106,7 +110,7 @@ def sync_detailed(
         a list of requested models under test
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         version (str | Unset): The version(s) of the mut to retrieve. 'latest' will retrieve only
             the latest version for each mut name. 'all' will retrieve all versions for all mut names.
             Default: 'all'.
@@ -136,7 +140,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     version: str | Unset = "all",
     api_key: str,
 ) -> ErrorResponse | list[ModelUnderTestResponse] | None:
@@ -148,7 +152,7 @@ def sync(
         a list of requested models under test
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         version (str | Unset): The version(s) of the mut to retrieve. 'latest' will retrieve only
             the latest version for each mut name. 'all' will retrieve all versions for all mut names.
             Default: 'all'.
@@ -173,7 +177,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     version: str | Unset = "all",
     api_key: str,
 ) -> Response[ErrorResponse | list[ModelUnderTestResponse]]:
@@ -185,7 +189,7 @@ async def asyncio_detailed(
         a list of requested models under test
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         version (str | Unset): The version(s) of the mut to retrieve. 'latest' will retrieve only
             the latest version for each mut name. 'all' will retrieve all versions for all mut names.
             Default: 'all'.
@@ -213,7 +217,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     version: str | Unset = "all",
     api_key: str,
 ) -> ErrorResponse | list[ModelUnderTestResponse] | None:
@@ -225,7 +229,7 @@ async def asyncio(
         a list of requested models under test
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         version (str | Unset): The version(s) of the mut to retrieve. 'latest' will retrieve only
             the latest version for each mut name. 'all' will retrieve all versions for all mut names.
             Default: 'all'.

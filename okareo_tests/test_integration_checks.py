@@ -91,6 +91,7 @@ def test_generate_check(
     ]
     for check_dict in checks_to_generate:
         generate_request = EvaluatorSpecRequest(
+            project_id=okareo.get_projects()[0].id,
             description=str(check_dict["description"]),
             requires_scenario_input=bool(check_dict["requires_scenario_input"]),
             requires_scenario_result=bool(check_dict["requires_scenario_result"]),

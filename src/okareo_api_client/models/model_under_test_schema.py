@@ -20,44 +20,34 @@ T = TypeVar("T", bound="ModelUnderTestSchema")
 class ModelUnderTestSchema:
     """
     Attributes:
-        name (None | str | Unset): Name of the model
-        models (ModelUnderTestSchemaModels | None | Unset): Models to be added for testing
+        name (str | Unset): Name of the model
+        models (ModelUnderTestSchemaModels | Unset): Models to be added for testing
+        version (int | Unset): Version of the model under test. Defaults to 1 if not provided. Default: 1.
         sensitive_fields (list[str] | None | Unset): List of sensitive fields in the model to redact. Should include
             nested fields, e.g. ['headers.authorization', 'body.password']
         tags (list[str] | Unset): Tags are strings that can be used to filter models in the Okareo app
         project_id (None | Unset | UUID): ID of the project
-        update (bool | Unset): If set to true, the model will be updated instead of returning the existing model
+        update (bool | None | Unset): If set to true, the model will be updated instead of returning the existing model
             Default: False.
-        version (int | Unset): Version of the model under test. Defaults to 1 if not provided. Default: 1.
-        int_ (int | Unset): Version of the model under test. Defaults to 1 if not provided. Default: 1.
     """
 
-    name: None | str | Unset = UNSET
-    models: ModelUnderTestSchemaModels | None | Unset = UNSET
+    name: str | Unset = UNSET
+    models: ModelUnderTestSchemaModels | Unset = UNSET
+    version: int | Unset = 1
     sensitive_fields: list[str] | None | Unset = UNSET
     tags: list[str] | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
-    update: bool | Unset = False
-    version: int | Unset = 1
-    int_: int | Unset = 1
+    update: bool | None | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.model_under_test_schema_models import ModelUnderTestSchemaModels
+        name = self.name
 
-        name: None | str | Unset
-        if isinstance(self.name, Unset):
-            name = UNSET
-        else:
-            name = self.name
-
-        models: dict[str, Any] | None | Unset
-        if isinstance(self.models, Unset):
-            models = UNSET
-        elif isinstance(self.models, ModelUnderTestSchemaModels):
+        models: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.models, Unset):
             models = self.models.to_dict()
-        else:
-            models = self.models
+
+        version = self.version
 
         sensitive_fields: list[str] | None | Unset
         if isinstance(self.sensitive_fields, Unset):
@@ -80,11 +70,11 @@ class ModelUnderTestSchema:
         else:
             project_id = self.project_id
 
-        update = self.update
-
-        version = self.version
-
-        int_ = self.int_
+        update: bool | None | Unset
+        if isinstance(self.update, Unset):
+            update = UNSET
+        else:
+            update = self.update
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -93,6 +83,8 @@ class ModelUnderTestSchema:
             field_dict["name"] = name
         if models is not UNSET:
             field_dict["models"] = models
+        if version is not UNSET:
+            field_dict["version"] = version
         if sensitive_fields is not UNSET:
             field_dict["sensitive_fields"] = sensitive_fields
         if tags is not UNSET:
@@ -101,10 +93,6 @@ class ModelUnderTestSchema:
             field_dict["project_id"] = project_id
         if update is not UNSET:
             field_dict["update"] = update
-        if version is not UNSET:
-            field_dict["version"] = version
-        if int_ is not UNSET:
-            field_dict["int"] = int_
 
         return field_dict
 
@@ -113,32 +101,16 @@ class ModelUnderTestSchema:
         from ..models.model_under_test_schema_models import ModelUnderTestSchemaModels
 
         d = dict(src_dict)
+        name = d.pop("name", UNSET)
 
-        def _parse_name(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
+        _models = d.pop("models", UNSET)
+        models: ModelUnderTestSchemaModels | Unset
+        if isinstance(_models, Unset):
+            models = UNSET
+        else:
+            models = ModelUnderTestSchemaModels.from_dict(_models)
 
-        name = _parse_name(d.pop("name", UNSET))
-
-        def _parse_models(data: object) -> ModelUnderTestSchemaModels | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, dict):
-                    raise TypeError()
-                models_type_0 = ModelUnderTestSchemaModels.from_dict(data)
-
-                return models_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(ModelUnderTestSchemaModels | None | Unset, data)
-
-        models = _parse_models(d.pop("models", UNSET))
+        version = d.pop("version", UNSET)
 
         def _parse_sensitive_fields(data: object) -> list[str] | None | Unset:
             if data is None:
@@ -176,21 +148,23 @@ class ModelUnderTestSchema:
 
         project_id = _parse_project_id(d.pop("project_id", UNSET))
 
-        update = d.pop("update", UNSET)
+        def _parse_update(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
 
-        version = d.pop("version", UNSET)
-
-        int_ = d.pop("int", UNSET)
+        update = _parse_update(d.pop("update", UNSET))
 
         model_under_test_schema = cls(
             name=name,
             models=models,
+            version=version,
             sensitive_fields=sensitive_fields,
             tags=tags,
             project_id=project_id,
             update=update,
-            version=version,
-            int_=int_,
         )
 
         model_under_test_schema.additional_properties = d

@@ -10,8 +10,8 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
-    from ..models.full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
+    from ..models.full_data_point_item_baseline_metrics_type_0 import FullDataPointItemBaselineMetricsType0
+    from ..models.full_data_point_item_checks_metadata_type_0 import FullDataPointItemChecksMetadataType0
     from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
     from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
     from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
@@ -31,17 +31,17 @@ class FullDataPointItem:
         metric_value (FullDataPointItemMetricValue):
         tags (list[str] | None | Unset):
         scenario_data_point_id (None | Unset | UUID):
-        model_input (Any | Unset):
-        model_result (Any | Unset):
+        model_input (Any | None | Unset):
+        model_result (Any | None | Unset):
         scenario_input (FullDataPointItemScenarioInputType0 | list[Any] | None | str | Unset):
         scenario_result (FullDataPointItemScenarioResultType0 | list[Any] | None | str | Unset):
         model_metadata (Any | FullDataPointItemModelMetadataType0 | None | Unset):
         time_created (None | str | Unset):
         checks (Any | Unset):
-        checks_metadata (FullDataPointItemChecksMetadata | None | Unset):
-        end_time (Any | Unset):
+        checks_metadata (FullDataPointItemChecksMetadataType0 | None | Unset):
+        end_time (Any | None | Unset):
         driver_prompt (None | str | Unset):
-        baseline_metrics (FullDataPointItemBaselineMetrics | None | Unset):
+        baseline_metrics (FullDataPointItemBaselineMetricsType0 | None | Unset):
         error_message (None | str | Unset):
         error_code (None | str | Unset):
         error_type (None | str | Unset):
@@ -54,17 +54,17 @@ class FullDataPointItem:
     metric_value: FullDataPointItemMetricValue
     tags: list[str] | None | Unset = UNSET
     scenario_data_point_id: None | Unset | UUID = UNSET
-    model_input: Any | Unset = UNSET
-    model_result: Any | Unset = UNSET
+    model_input: Any | None | Unset = UNSET
+    model_result: Any | None | Unset = UNSET
     scenario_input: FullDataPointItemScenarioInputType0 | list[Any] | None | str | Unset = UNSET
     scenario_result: FullDataPointItemScenarioResultType0 | list[Any] | None | str | Unset = UNSET
     model_metadata: Any | FullDataPointItemModelMetadataType0 | None | Unset = UNSET
     time_created: None | str | Unset = UNSET
     checks: Any | Unset = UNSET
-    checks_metadata: FullDataPointItemChecksMetadata | None | Unset = UNSET
-    end_time: Any | Unset = UNSET
+    checks_metadata: FullDataPointItemChecksMetadataType0 | None | Unset = UNSET
+    end_time: Any | None | Unset = UNSET
     driver_prompt: None | str | Unset = UNSET
-    baseline_metrics: FullDataPointItemBaselineMetrics | None | Unset = UNSET
+    baseline_metrics: FullDataPointItemBaselineMetricsType0 | None | Unset = UNSET
     error_message: None | str | Unset = UNSET
     error_code: None | str | Unset = UNSET
     error_type: None | str | Unset = UNSET
@@ -72,8 +72,8 @@ class FullDataPointItem:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
-        from ..models.full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
+        from ..models.full_data_point_item_baseline_metrics_type_0 import FullDataPointItemBaselineMetricsType0
+        from ..models.full_data_point_item_checks_metadata_type_0 import FullDataPointItemChecksMetadataType0
         from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
         from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
         from ..models.full_data_point_item_scenario_result_type_0 import FullDataPointItemScenarioResultType0
@@ -103,9 +103,17 @@ class FullDataPointItem:
         else:
             scenario_data_point_id = self.scenario_data_point_id
 
-        model_input = self.model_input
+        model_input: Any | None | Unset
+        if isinstance(self.model_input, Unset):
+            model_input = UNSET
+        else:
+            model_input = self.model_input
 
-        model_result = self.model_result
+        model_result: Any | None | Unset
+        if isinstance(self.model_result, Unset):
+            model_result = UNSET
+        else:
+            model_result = self.model_result
 
         scenario_input: dict[str, Any] | list[Any] | None | str | Unset
         if isinstance(self.scenario_input, Unset):
@@ -148,12 +156,16 @@ class FullDataPointItem:
         checks_metadata: dict[str, Any] | None | Unset
         if isinstance(self.checks_metadata, Unset):
             checks_metadata = UNSET
-        elif isinstance(self.checks_metadata, FullDataPointItemChecksMetadata):
+        elif isinstance(self.checks_metadata, FullDataPointItemChecksMetadataType0):
             checks_metadata = self.checks_metadata.to_dict()
         else:
             checks_metadata = self.checks_metadata
 
-        end_time = self.end_time
+        end_time: Any | None | Unset
+        if isinstance(self.end_time, Unset):
+            end_time = UNSET
+        else:
+            end_time = self.end_time
 
         driver_prompt: None | str | Unset
         if isinstance(self.driver_prompt, Unset):
@@ -164,7 +176,7 @@ class FullDataPointItem:
         baseline_metrics: dict[str, Any] | None | Unset
         if isinstance(self.baseline_metrics, Unset):
             baseline_metrics = UNSET
-        elif isinstance(self.baseline_metrics, FullDataPointItemBaselineMetrics):
+        elif isinstance(self.baseline_metrics, FullDataPointItemBaselineMetricsType0):
             baseline_metrics = self.baseline_metrics.to_dict()
         else:
             baseline_metrics = self.baseline_metrics
@@ -242,8 +254,8 @@ class FullDataPointItem:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
-        from ..models.full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
+        from ..models.full_data_point_item_baseline_metrics_type_0 import FullDataPointItemBaselineMetricsType0
+        from ..models.full_data_point_item_checks_metadata_type_0 import FullDataPointItemChecksMetadataType0
         from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
         from ..models.full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
         from ..models.full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
@@ -292,9 +304,23 @@ class FullDataPointItem:
 
         scenario_data_point_id = _parse_scenario_data_point_id(d.pop("scenario_data_point_id", UNSET))
 
-        model_input = d.pop("model_input", UNSET)
+        def _parse_model_input(data: object) -> Any | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Any | None | Unset, data)
 
-        model_result = d.pop("model_result", UNSET)
+        model_input = _parse_model_input(d.pop("model_input", UNSET))
+
+        def _parse_model_result(data: object) -> Any | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Any | None | Unset, data)
+
+        model_result = _parse_model_result(d.pop("model_result", UNSET))
 
         def _parse_scenario_input(data: object) -> FullDataPointItemScenarioInputType0 | list[Any] | None | str | Unset:
             if data is None:
@@ -376,7 +402,7 @@ class FullDataPointItem:
 
         checks = d.pop("checks", UNSET)
 
-        def _parse_checks_metadata(data: object) -> FullDataPointItemChecksMetadata | None | Unset:
+        def _parse_checks_metadata(data: object) -> FullDataPointItemChecksMetadataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -384,16 +410,23 @@ class FullDataPointItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                checks_metadata_type_0 = FullDataPointItemChecksMetadata.from_dict(data)
+                checks_metadata_type_0 = FullDataPointItemChecksMetadataType0.from_dict(data)
 
                 return checks_metadata_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(FullDataPointItemChecksMetadata | None | Unset, data)
+            return cast(FullDataPointItemChecksMetadataType0 | None | Unset, data)
 
         checks_metadata = _parse_checks_metadata(d.pop("checks_metadata", UNSET))
 
-        end_time = d.pop("end_time", UNSET)
+        def _parse_end_time(data: object) -> Any | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(Any | None | Unset, data)
+
+        end_time = _parse_end_time(d.pop("end_time", UNSET))
 
         def _parse_driver_prompt(data: object) -> None | str | Unset:
             if data is None:
@@ -404,7 +437,7 @@ class FullDataPointItem:
 
         driver_prompt = _parse_driver_prompt(d.pop("driver_prompt", UNSET))
 
-        def _parse_baseline_metrics(data: object) -> FullDataPointItemBaselineMetrics | None | Unset:
+        def _parse_baseline_metrics(data: object) -> FullDataPointItemBaselineMetricsType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -412,12 +445,12 @@ class FullDataPointItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                baseline_metrics_type_0 = FullDataPointItemBaselineMetrics.from_dict(data)
+                baseline_metrics_type_0 = FullDataPointItemBaselineMetricsType0.from_dict(data)
 
                 return baseline_metrics_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(FullDataPointItemBaselineMetrics | None | Unset, data)
+            return cast(FullDataPointItemBaselineMetricsType0 | None | Unset, data)
 
         baseline_metrics = _parse_baseline_metrics(d.pop("baseline_metrics", UNSET))
 

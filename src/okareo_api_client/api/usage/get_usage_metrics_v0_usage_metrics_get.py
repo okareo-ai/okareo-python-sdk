@@ -14,20 +14,34 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    start_date: str | Unset = UNSET,
-    end_date: str | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UsagePrecision.DAY,
+    start_date: None | str | Unset = UNSET,
+    end_date: None | str | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
+    precision: UsagePrecision | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    params["start_date"] = start_date
+    json_start_date: None | str | Unset
+    if isinstance(start_date, Unset):
+        json_start_date = UNSET
+    else:
+        json_start_date = start_date
+    params["start_date"] = json_start_date
 
-    params["end_date"] = end_date
+    json_end_date: None | str | Unset
+    if isinstance(end_date, Unset):
+        json_end_date = UNSET
+    else:
+        json_end_date = end_date
+    params["end_date"] = json_end_date
 
-    json_project_id: str | Unset = UNSET
-    if not isinstance(project_id, Unset):
+    json_project_id: None | str | Unset
+    if isinstance(project_id, Unset):
+        json_project_id = UNSET
+    elif isinstance(project_id, UUID):
         json_project_id = str(project_id)
+    else:
+        json_project_id = project_id
     params["project_id"] = json_project_id
 
     json_precision: str | Unset = UNSET
@@ -80,10 +94,10 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    start_date: str | Unset = UNSET,
-    end_date: str | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UsagePrecision.DAY,
+    start_date: None | str | Unset = UNSET,
+    end_date: None | str | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
+    precision: UsagePrecision | Unset = UNSET,
 ) -> Response[HTTPValidationError | UsageMetricsResponse]:
     """Get usage metrics
 
@@ -118,13 +132,13 @@ def sync_detailed(
         ```
 
     Args:
-        start_date (str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD). Defaults
-            to 30 days ago if not provided.
-        end_date (str | Unset): End date for metrics period (will be capped based on buffer).
-            Defaults to current time with buffer applied.
-        project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
-            UsagePrecision.DAY.
+        start_date (None | str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD).
+            Defaults to 30 days ago if not provided.
+        end_date (None | str | Unset): End date for metrics period (will be capped based on
+            buffer). Defaults to current time with buffer applied.
+        project_id (None | Unset | UUID): Optional project filter - only include metrics for this
+            project
+        precision (UsagePrecision | Unset): Time period precision for usage metrics.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -151,10 +165,10 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    start_date: str | Unset = UNSET,
-    end_date: str | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UsagePrecision.DAY,
+    start_date: None | str | Unset = UNSET,
+    end_date: None | str | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
+    precision: UsagePrecision | Unset = UNSET,
 ) -> HTTPValidationError | UsageMetricsResponse | None:
     """Get usage metrics
 
@@ -189,13 +203,13 @@ def sync(
         ```
 
     Args:
-        start_date (str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD). Defaults
-            to 30 days ago if not provided.
-        end_date (str | Unset): End date for metrics period (will be capped based on buffer).
-            Defaults to current time with buffer applied.
-        project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
-            UsagePrecision.DAY.
+        start_date (None | str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD).
+            Defaults to 30 days ago if not provided.
+        end_date (None | str | Unset): End date for metrics period (will be capped based on
+            buffer). Defaults to current time with buffer applied.
+        project_id (None | Unset | UUID): Optional project filter - only include metrics for this
+            project
+        precision (UsagePrecision | Unset): Time period precision for usage metrics.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -217,10 +231,10 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    start_date: str | Unset = UNSET,
-    end_date: str | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UsagePrecision.DAY,
+    start_date: None | str | Unset = UNSET,
+    end_date: None | str | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
+    precision: UsagePrecision | Unset = UNSET,
 ) -> Response[HTTPValidationError | UsageMetricsResponse]:
     """Get usage metrics
 
@@ -255,13 +269,13 @@ async def asyncio_detailed(
         ```
 
     Args:
-        start_date (str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD). Defaults
-            to 30 days ago if not provided.
-        end_date (str | Unset): End date for metrics period (will be capped based on buffer).
-            Defaults to current time with buffer applied.
-        project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
-            UsagePrecision.DAY.
+        start_date (None | str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD).
+            Defaults to 30 days ago if not provided.
+        end_date (None | str | Unset): End date for metrics period (will be capped based on
+            buffer). Defaults to current time with buffer applied.
+        project_id (None | Unset | UUID): Optional project filter - only include metrics for this
+            project
+        precision (UsagePrecision | Unset): Time period precision for usage metrics.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -286,10 +300,10 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    start_date: str | Unset = UNSET,
-    end_date: str | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
-    precision: UsagePrecision | Unset = UsagePrecision.DAY,
+    start_date: None | str | Unset = UNSET,
+    end_date: None | str | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
+    precision: UsagePrecision | Unset = UNSET,
 ) -> HTTPValidationError | UsageMetricsResponse | None:
     """Get usage metrics
 
@@ -324,13 +338,13 @@ async def asyncio(
         ```
 
     Args:
-        start_date (str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD). Defaults
-            to 30 days ago if not provided.
-        end_date (str | Unset): End date for metrics period (will be capped based on buffer).
-            Defaults to current time with buffer applied.
-        project_id (UUID | Unset): Optional project filter - only include metrics for this project
-        precision (UsagePrecision | Unset): Time period precision for usage metrics. Default:
-            UsagePrecision.DAY.
+        start_date (None | str | Unset): Start date for metrics period (ISO 8601 or YYYY-MM-DD).
+            Defaults to 30 days ago if not provided.
+        end_date (None | str | Unset): End date for metrics period (will be capped based on
+            buffer). Defaults to current time with buffer applied.
+        project_id (None | Unset | UUID): Optional project filter - only include metrics for this
+            project
+        precision (UsagePrecision | Unset): Time period precision for usage metrics.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

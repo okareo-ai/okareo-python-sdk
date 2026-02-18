@@ -22,23 +22,22 @@ class TestRunPayload:
         mut_id (None | Unset | UUID): ID of model
         scenario_set_id (None | Unset | UUID): ID of scenario set
         name (None | str | Unset): Name of test run
-        tags (list[str] | Unset): Tags are strings that can be used to filter test runs in the Okareo app
-        type_ (None | TestRunType | Unset): The type of test run will determine which relevant model metrics should be
-            calculated.
+        tags (list[str] | None | Unset): Tags are strings that can be used to filter test runs in the Okareo app
+        type_ (TestRunType | Unset):
         start_time (datetime.datetime | None | Unset):
         end_time (datetime.datetime | None | Unset):
-        calculate_model_metrics (bool | Unset): Boolean value indicating if model metrics should be calculated Default:
-            False.
+        calculate_model_metrics (bool | None | Unset): Boolean value indicating if model metrics should be calculated
+            Default: False.
     """
 
     mut_id: None | Unset | UUID = UNSET
     scenario_set_id: None | Unset | UUID = UNSET
     name: None | str | Unset = UNSET
-    tags: list[str] | Unset = UNSET
-    type_: None | TestRunType | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
+    type_: TestRunType | Unset = UNSET
     start_time: datetime.datetime | None | Unset = UNSET
     end_time: datetime.datetime | None | Unset = UNSET
-    calculate_model_metrics: bool | Unset = False
+    calculate_model_metrics: bool | None | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -64,17 +63,18 @@ class TestRunPayload:
         else:
             name = self.name
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
             tags = self.tags
 
-        type_: None | str | Unset
-        if isinstance(self.type_, Unset):
-            type_ = UNSET
-        elif isinstance(self.type_, TestRunType):
-            type_ = self.type_.value
         else:
-            type_ = self.type_
+            tags = self.tags
+
+        type_: str | Unset = UNSET
+        if not isinstance(self.type_, Unset):
+            type_ = self.type_.value
 
         start_time: None | str | Unset
         if isinstance(self.start_time, Unset):
@@ -92,7 +92,11 @@ class TestRunPayload:
         else:
             end_time = self.end_time
 
-        calculate_model_metrics = self.calculate_model_metrics
+        calculate_model_metrics: bool | None | Unset
+        if isinstance(self.calculate_model_metrics, Unset):
+            calculate_model_metrics = UNSET
+        else:
+            calculate_model_metrics = self.calculate_model_metrics
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -163,24 +167,29 @@ class TestRunPayload:
 
         name = _parse_name(d.pop("name", UNSET))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
-
-        def _parse_type_(data: object) -> None | TestRunType | Unset:
+        def _parse_tags(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
             try:
-                if not isinstance(data, str):
+                if not isinstance(data, list):
                     raise TypeError()
-                type_type_1 = TestRunType(data)
+                tags_type_0 = cast(list[str], data)
 
-                return type_type_1
+                return tags_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | TestRunType | Unset, data)
+            return cast(list[str] | None | Unset, data)
 
-        type_ = _parse_type_(d.pop("type", UNSET))
+        tags = _parse_tags(d.pop("tags", UNSET))
+
+        _type_ = d.pop("type", UNSET)
+        type_: TestRunType | Unset
+        if isinstance(_type_, Unset):
+            type_ = UNSET
+        else:
+            type_ = TestRunType(_type_)
 
         def _parse_start_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -216,7 +225,14 @@ class TestRunPayload:
 
         end_time = _parse_end_time(d.pop("end_time", UNSET))
 
-        calculate_model_metrics = d.pop("calculate_model_metrics", UNSET)
+        def _parse_calculate_model_metrics(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        calculate_model_metrics = _parse_calculate_model_metrics(d.pop("calculate_model_metrics", UNSET))
 
         test_run_payload = cls(
             mut_id=mut_id,

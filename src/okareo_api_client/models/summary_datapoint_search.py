@@ -24,14 +24,14 @@ class SummaryDatapointSearch:
     Attributes:
         project_id (None | Unset | UUID): Project ID
         mut_id (None | Unset | UUID): Model ID
-        from_date (datetime.datetime | Unset): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
+        from_date (datetime.datetime | None | Unset): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
         to_date (datetime.datetime | None | Unset): Latest date
         filters (list[FilterCondition] | None | Unset): List of filter conditions to apply. Defaults to None (i.e., all
             datapoints).
         checks (list[Any] | None | Unset): List of checks to only flag issues for. Defaults to None (i.e., all checks).
         timezone (None | str | Unset): IANA timezone to use for date filtering/aggregation (e.g., 'America/New_York').
             Defaults to None (i.e., UTC).
-        precision (str | Unset): Time precision for the summary. Valid values include ['day', 'hour', 'minute'].
+        precision (None | str | Unset): Time precision for the summary. Valid values include ['day', 'hour', 'minute'].
             Defaults to 'day'. Default: 'day'.
         filter_group_id (None | Unset | UUID): Filter group ID to search with
         group_column (None | str | Unset): Column to group by for the summary. Overwrites the default time-based
@@ -40,12 +40,12 @@ class SummaryDatapointSearch:
 
     project_id: None | Unset | UUID = UNSET
     mut_id: None | Unset | UUID = UNSET
-    from_date: datetime.datetime | Unset = isoparse("2022-12-31T23:59:59.999999")
+    from_date: datetime.datetime | None | Unset = isoparse("2022-12-31T23:59:59.999999")
     to_date: datetime.datetime | None | Unset = UNSET
     filters: list[FilterCondition] | None | Unset = UNSET
     checks: list[Any] | None | Unset = UNSET
     timezone: None | str | Unset = UNSET
-    precision: str | Unset = "day"
+    precision: None | str | Unset = "day"
     filter_group_id: None | Unset | UUID = UNSET
     group_column: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -67,9 +67,13 @@ class SummaryDatapointSearch:
         else:
             mut_id = self.mut_id
 
-        from_date: str | Unset = UNSET
-        if not isinstance(self.from_date, Unset):
+        from_date: None | str | Unset
+        if isinstance(self.from_date, Unset):
+            from_date = UNSET
+        elif isinstance(self.from_date, datetime.datetime):
             from_date = self.from_date.isoformat()
+        else:
+            from_date = self.from_date
 
         to_date: None | str | Unset
         if isinstance(self.to_date, Unset):
@@ -106,7 +110,11 @@ class SummaryDatapointSearch:
         else:
             timezone = self.timezone
 
-        precision = self.precision
+        precision: None | str | Unset
+        if isinstance(self.precision, Unset):
+            precision = UNSET
+        else:
+            precision = self.precision
 
         filter_group_id: None | str | Unset
         if isinstance(self.filter_group_id, Unset):
@@ -188,12 +196,22 @@ class SummaryDatapointSearch:
 
         mut_id = _parse_mut_id(d.pop("mut_id", UNSET))
 
-        _from_date = d.pop("from_date", UNSET)
-        from_date: datetime.datetime | Unset
-        if isinstance(_from_date, Unset):
-            from_date = UNSET
-        else:
-            from_date = isoparse(_from_date)
+        def _parse_from_date(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                from_date_type_0 = isoparse(data)
+
+                return from_date_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        from_date = _parse_from_date(d.pop("from_date", UNSET))
 
         def _parse_to_date(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -260,7 +278,14 @@ class SummaryDatapointSearch:
 
         timezone = _parse_timezone(d.pop("timezone", UNSET))
 
-        precision = d.pop("precision", UNSET)
+        def _parse_precision(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        precision = _parse_precision(d.pop("precision", UNSET))
 
         def _parse_filter_group_id(data: object) -> None | Unset | UUID:
             if data is None:

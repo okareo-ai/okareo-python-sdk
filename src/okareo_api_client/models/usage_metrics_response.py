@@ -21,12 +21,12 @@ class UsageMetricsResponse:
     """Complete response for usage metrics request.
 
     Example:
-        {'organization_id': '123e4567-e89b-12d3-a456-426614174000', 'period': {'start_date': '2026-01-01T00:00:00Z',
-            'end_date': '2026-01-31T11:59:59Z'}, 'totals': {'voice_minutes': 1234.56, 'simulations': 450, 'datapoints':
-            12500, 'checks': 5600}, 'details': [{'period_start': '2026-01-01T00:00:00Z', 'period_end':
-            '2026-01-01T23:59:59Z', 'voice_minutes': 42.5, 'simulations': 15, 'datapoints': 420, 'checks': 180},
-            {'period_start': '2026-01-02T00:00:00Z', 'period_end': '2026-01-02T23:59:59Z', 'voice_minutes': 38.2,
-            'simulations': 12, 'datapoints': 380, 'checks': 165}]}
+        {'details': [{'checks': 180, 'datapoints': 420, 'period_end': '2026-01-01T23:59:59Z', 'period_start':
+            '2026-01-01T00:00:00Z', 'simulations': 15, 'voice_minutes': 42.5}, {'checks': 165, 'datapoints': 380,
+            'period_end': '2026-01-02T23:59:59Z', 'period_start': '2026-01-02T00:00:00Z', 'simulations': 12,
+            'voice_minutes': 38.2}], 'organization_id': '123e4567-e89b-12d3-a456-426614174000', 'period': {'end_date':
+            '2026-01-31T11:59:59Z', 'start_date': '2026-01-01T00:00:00Z'}, 'totals': {'checks': 5600, 'datapoints': 12500,
+            'simulations': 450, 'voice_minutes': 1234.56}}
 
     Attributes:
         organization_id (UUID):

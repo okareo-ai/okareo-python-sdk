@@ -262,7 +262,7 @@ def test_get_test_run(httpx_mock: HTTPXMock) -> None:
         },
     )
 
-    result = registered_model.get_test_run("test_run_id")
+    result = registered_model.get_test_run(MOCK_UUID)
     assert result
 
 

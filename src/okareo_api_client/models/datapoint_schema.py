@@ -18,12 +18,12 @@ T = TypeVar("T", bound="DatapointSchema")
 class DatapointSchema:
     """
     Attributes:
-        mut_id (None | Unset | UUID): Model ID
-        input_ (None | str | Unset): Inputted value into the model
+        input_ (str): Inputted value into the model
+        result (str): Outputted value from the model based on the input
+        mut_id (UUID | Unset): Model ID
         input_datetime (datetime.datetime | None | Unset): Datetime for the input
-        result (None | str | Unset): Outputted value from the model based on the input
         result_datetime (datetime.datetime | None | Unset): Datetime for the result
-        tags (list[str] | Unset): Tags are strings that can be used to filter datapoints in the Okareo app
+        tags (list[str] | None | Unset): Tags are strings that can be used to filter datapoints in the Okareo app
         feedback (float | None | Unset): Feedback is a 0 to 1 float value that captures user feedback range for related
             datapoint results
         error_message (None | str | Unset):
@@ -37,12 +37,12 @@ class DatapointSchema:
         result_metadata (None | str | Unset): Metadata about the result
     """
 
-    mut_id: None | Unset | UUID = UNSET
-    input_: None | str | Unset = UNSET
+    input_: str
+    result: str
+    mut_id: UUID | Unset = UNSET
     input_datetime: datetime.datetime | None | Unset = UNSET
-    result: None | str | Unset = UNSET
     result_datetime: datetime.datetime | None | Unset = UNSET
-    tags: list[str] | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     feedback: float | None | Unset = UNSET
     error_message: None | str | Unset = UNSET
     error_code: None | str | Unset = UNSET
@@ -55,19 +55,13 @@ class DatapointSchema:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        mut_id: None | str | Unset
-        if isinstance(self.mut_id, Unset):
-            mut_id = UNSET
-        elif isinstance(self.mut_id, UUID):
-            mut_id = str(self.mut_id)
-        else:
-            mut_id = self.mut_id
+        input_ = self.input_
 
-        input_: None | str | Unset
-        if isinstance(self.input_, Unset):
-            input_ = UNSET
-        else:
-            input_ = self.input_
+        result = self.result
+
+        mut_id: str | Unset = UNSET
+        if not isinstance(self.mut_id, Unset):
+            mut_id = str(self.mut_id)
 
         input_datetime: None | str | Unset
         if isinstance(self.input_datetime, Unset):
@@ -77,12 +71,6 @@ class DatapointSchema:
         else:
             input_datetime = self.input_datetime
 
-        result: None | str | Unset
-        if isinstance(self.result, Unset):
-            result = UNSET
-        else:
-            result = self.result
-
         result_datetime: None | str | Unset
         if isinstance(self.result_datetime, Unset):
             result_datetime = UNSET
@@ -91,8 +79,13 @@ class DatapointSchema:
         else:
             result_datetime = self.result_datetime
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
             tags = self.tags
 
         feedback: float | None | Unset
@@ -155,15 +148,16 @@ class DatapointSchema:
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
+        field_dict.update(
+            {
+                "input": input_,
+                "result": result,
+            }
+        )
         if mut_id is not UNSET:
             field_dict["mut_id"] = mut_id
-        if input_ is not UNSET:
-            field_dict["input"] = input_
         if input_datetime is not UNSET:
             field_dict["input_datetime"] = input_datetime
-        if result is not UNSET:
-            field_dict["result"] = result
         if result_datetime is not UNSET:
             field_dict["result_datetime"] = result_datetime
         if tags is not UNSET:
@@ -192,32 +186,16 @@ class DatapointSchema:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        input_ = d.pop("input")
 
-        def _parse_mut_id(data: object) -> None | Unset | UUID:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                mut_id_type_0 = UUID(data)
+        result = d.pop("result")
 
-                return mut_id_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(None | Unset | UUID, data)
-
-        mut_id = _parse_mut_id(d.pop("mut_id", UNSET))
-
-        def _parse_input_(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        input_ = _parse_input_(d.pop("input", UNSET))
+        _mut_id = d.pop("mut_id", UNSET)
+        mut_id: UUID | Unset
+        if isinstance(_mut_id, Unset):
+            mut_id = UNSET
+        else:
+            mut_id = UUID(_mut_id)
 
         def _parse_input_datetime(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -236,15 +214,6 @@ class DatapointSchema:
 
         input_datetime = _parse_input_datetime(d.pop("input_datetime", UNSET))
 
-        def _parse_result(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        result = _parse_result(d.pop("result", UNSET))
-
         def _parse_result_datetime(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
@@ -262,7 +231,22 @@ class DatapointSchema:
 
         result_datetime = _parse_result_datetime(d.pop("result_datetime", UNSET))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         def _parse_feedback(data: object) -> float | None | Unset:
             if data is None:
@@ -362,10 +346,10 @@ class DatapointSchema:
         result_metadata = _parse_result_metadata(d.pop("result_metadata", UNSET))
 
         datapoint_schema = cls(
-            mut_id=mut_id,
             input_=input_,
-            input_datetime=input_datetime,
             result=result,
+            mut_id=mut_id,
+            input_datetime=input_datetime,
             result_datetime=result_datetime,
             tags=tags,
             feedback=feedback,

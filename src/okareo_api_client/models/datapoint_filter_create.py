@@ -24,10 +24,10 @@ class DatapointFilterCreate:
         name (None | str | Unset): Optional name describing this filter
         description (None | str | Unset): Optional description of the filter
         checks (list[str] | None | Unset): Optional list of checks to apply to datapoints in the filter
-        slack_enabled (bool | Unset): Whether to enable Slack notifications for this filter group. Default is False
-            (off). Default: False.
-        email_enabled (bool | Unset): Whether to enable Email notifications for this filter group. Default is False
-            (off). Default: False.
+        slack_enabled (bool | None | Unset): Whether to enable Slack notifications for this filter group. Default is
+            False (off). Default: False.
+        email_enabled (bool | None | Unset): Whether to enable Email notifications for this filter group. Default is
+            False (off). Default: False.
         project_id (None | Unset | UUID): Project ID these filters belong to
     """
 
@@ -35,8 +35,8 @@ class DatapointFilterCreate:
     name: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     checks: list[str] | None | Unset = UNSET
-    slack_enabled: bool | Unset = False
-    email_enabled: bool | Unset = False
+    slack_enabled: bool | None | Unset = False
+    email_enabled: bool | None | Unset = False
     project_id: None | Unset | UUID = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -67,9 +67,17 @@ class DatapointFilterCreate:
         else:
             checks = self.checks
 
-        slack_enabled = self.slack_enabled
+        slack_enabled: bool | None | Unset
+        if isinstance(self.slack_enabled, Unset):
+            slack_enabled = UNSET
+        else:
+            slack_enabled = self.slack_enabled
 
-        email_enabled = self.email_enabled
+        email_enabled: bool | None | Unset
+        if isinstance(self.email_enabled, Unset):
+            email_enabled = UNSET
+        else:
+            email_enabled = self.email_enabled
 
         project_id: None | str | Unset
         if isinstance(self.project_id, Unset):
@@ -148,9 +156,23 @@ class DatapointFilterCreate:
 
         checks = _parse_checks(d.pop("checks", UNSET))
 
-        slack_enabled = d.pop("slack_enabled", UNSET)
+        def _parse_slack_enabled(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
 
-        email_enabled = d.pop("email_enabled", UNSET)
+        slack_enabled = _parse_slack_enabled(d.pop("slack_enabled", UNSET))
+
+        def _parse_email_enabled(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        email_enabled = _parse_email_enabled(d.pop("email_enabled", UNSET))
 
         def _parse_project_id(data: object) -> None | Unset | UUID:
             if data is None:

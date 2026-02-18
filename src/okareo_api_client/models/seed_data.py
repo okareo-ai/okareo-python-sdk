@@ -6,8 +6,6 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
 T = TypeVar("T", bound="SeedData")
 
 
@@ -15,12 +13,12 @@ T = TypeVar("T", bound="SeedData")
 class SeedData:
     """
     Attributes:
-        input_ (Any | Unset):
-        result (Any | Unset):
+        input_ (Any):
+        result (Any):
     """
 
-    input_: Any | Unset = UNSET
-    result: Any | Unset = UNSET
+    input_: Any
+    result: Any
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -30,20 +28,21 @@ class SeedData:
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if input_ is not UNSET:
-            field_dict["input"] = input_
-        if result is not UNSET:
-            field_dict["result"] = result
+        field_dict.update(
+            {
+                "input": input_,
+                "result": result,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        input_ = d.pop("input", UNSET)
+        input_ = d.pop("input")
 
-        result = d.pop("result", UNSET)
+        result = d.pop("result")
 
         seed_data = cls(
             input_=input_,

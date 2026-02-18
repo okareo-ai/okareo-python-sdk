@@ -17,10 +17,10 @@ from .check_validate_request_check_config import CheckValidateRequestCheckConfig
 from .check_validate_request_check_type import CheckValidateRequestCheckType
 from .check_validate_response import CheckValidateResponse
 from .comparison_operator import ComparisonOperator
+from .create_group_v0_groups_post_body_type_0 import CreateGroupV0GroupsPostBodyType0
 from .create_group_v0_groups_post_response_create_group_v0_groups_post import (
     CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost,
 )
-from .create_group_v0_groups_post_source import CreateGroupV0GroupsPostSource
 from .create_trace_eval_v0_groups_group_id_trace_eval_post_response_create_trace_eval_v0_groups_group_id_trace_eval_post import (
     CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost,
 )
@@ -34,8 +34,8 @@ from .datapoint_filter_search import DatapointFilterSearch
 from .datapoint_filter_update import DatapointFilterUpdate
 from .datapoint_list_item import DatapointListItem
 from .datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
-from .datapoint_list_item_checks import DatapointListItemChecks
-from .datapoint_list_item_checks_metadata import DatapointListItemChecksMetadata
+from .datapoint_list_item_checks_metadata_type_0 import DatapointListItemChecksMetadataType0
+from .datapoint_list_item_checks_type_0 import DatapointListItemChecksType0
 from .datapoint_list_item_input_tools_type_0_item import DatapointListItemInputToolsType0Item
 from .datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
 from .datapoint_list_item_result_embeddings_type_0_item import DatapointListItemResultEmbeddingsType0Item
@@ -55,9 +55,9 @@ from .error_response import ErrorResponse
 from .evaluation_payload import EvaluationPayload
 from .evaluation_payload_metrics_kwargs import EvaluationPayloadMetricsKwargs
 from .evaluator_brief_response import EvaluatorBriefResponse
-from .evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+from .evaluator_brief_response_check_config_type_0 import EvaluatorBriefResponseCheckConfigType0
 from .evaluator_detailed_response import EvaluatorDetailedResponse
-from .evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
+from .evaluator_detailed_response_check_config_type_0 import EvaluatorDetailedResponseCheckConfigType0
 from .evaluator_generate_response import EvaluatorGenerateResponse
 from .evaluator_spec_request import EvaluatorSpecRequest
 from .feedback_range_summary import FeedbackRangeSummary
@@ -65,8 +65,8 @@ from .filter_condition import FilterCondition
 from .find_test_data_point_payload import FindTestDataPointPayload
 from .find_traces_request import FindTracesRequest
 from .full_data_point_item import FullDataPointItem
-from .full_data_point_item_baseline_metrics import FullDataPointItemBaselineMetrics
-from .full_data_point_item_checks_metadata import FullDataPointItemChecksMetadata
+from .full_data_point_item_baseline_metrics_type_0 import FullDataPointItemBaselineMetricsType0
+from .full_data_point_item_checks_metadata_type_0 import FullDataPointItemChecksMetadataType0
 from .full_data_point_item_metric_value import FullDataPointItemMetricValue
 from .full_data_point_item_model_metadata_type_0 import FullDataPointItemModelMetadataType0
 from .full_data_point_item_scenario_input_type_0 import FullDataPointItemScenarioInputType0
@@ -97,20 +97,22 @@ from .metric_detail import MetricDetail
 from .metrics import Metrics
 from .model_info import ModelInfo
 from .model_under_test_response import ModelUnderTestResponse
-from .model_under_test_response_deprecated_params import ModelUnderTestResponseDeprecatedParams
-from .model_under_test_response_models import ModelUnderTestResponseModels
-from .model_under_test_response_models_additional_property import ModelUnderTestResponseModelsAdditionalProperty
+from .model_under_test_response_deprecated_params_type_0 import ModelUnderTestResponseDeprecatedParamsType0
+from .model_under_test_response_models_type_0 import ModelUnderTestResponseModelsType0
+from .model_under_test_response_models_type_0_additional_property import (
+    ModelUnderTestResponseModelsType0AdditionalProperty,
+)
 from .model_under_test_schema import ModelUnderTestSchema
 from .model_under_test_schema_models import ModelUnderTestSchemaModels
 from .model_under_test_schema_models_additional_property import ModelUnderTestSchemaModelsAdditionalProperty
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
 from .scenario_data_poin_response import ScenarioDataPoinResponse
-from .scenario_data_poin_response_meta_data import ScenarioDataPoinResponseMetaData
+from .scenario_data_poin_response_meta_data_type_0 import ScenarioDataPoinResponseMetaDataType0
 from .scenario_set_create import ScenarioSetCreate
 from .scenario_set_generate import ScenarioSetGenerate
 from .scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
-from .scenario_set_generate_generation_schema import ScenarioSetGenerateGenerationSchema
+from .scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateGenerationSchemaType0
 from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
@@ -125,13 +127,17 @@ from .summary_datapoint_search import SummaryDatapointSearch
 from .target_model_response import TargetModelResponse
 from .target_model_response_target import TargetModelResponseTarget
 from .test_custom_endpoint_request import TestCustomEndpointRequest
-from .test_custom_endpoint_request_end_session_params import TestCustomEndpointRequestEndSessionParams
+from .test_custom_endpoint_request_end_session_params_type_0 import TestCustomEndpointRequestEndSessionParamsType0
 from .test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
-from .test_custom_endpoint_request_start_session_params import TestCustomEndpointRequestStartSessionParams
+from .test_custom_endpoint_request_start_session_params_type_0 import TestCustomEndpointRequestStartSessionParamsType0
 from .test_custom_endpoint_response import TestCustomEndpointResponse
-from .test_custom_endpoint_response_end_session_raw_response import TestCustomEndpointResponseEndSessionRawResponse
+from .test_custom_endpoint_response_end_session_raw_response_type_0 import (
+    TestCustomEndpointResponseEndSessionRawResponseType0,
+)
 from .test_custom_endpoint_response_next_message_raw_response import TestCustomEndpointResponseNextMessageRawResponse
-from .test_custom_endpoint_response_start_session_raw_response import TestCustomEndpointResponseStartSessionRawResponse
+from .test_custom_endpoint_response_start_session_raw_response_type_0 import (
+    TestCustomEndpointResponseStartSessionRawResponseType0,
+)
 from .test_data_point_item import TestDataPointItem
 from .test_data_point_item_metric_value import TestDataPointItemMetricValue
 from .test_data_point_payload import TestDataPointPayload
@@ -139,14 +145,14 @@ from .test_data_point_response import TestDataPointResponse
 from .test_driver_request import TestDriverRequest
 from .test_driver_response import TestDriverResponse
 from .test_run_item import TestRunItem
-from .test_run_item_model_metrics import TestRunItemModelMetrics
-from .test_run_item_simulation_params import TestRunItemSimulationParams
+from .test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
+from .test_run_item_simulation_params_type_0 import TestRunItemSimulationParamsType0
 from .test_run_payload import TestRunPayload
 from .test_run_payload_v2 import TestRunPayloadV2
-from .test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
+from .test_run_payload_v2_api_keys_type_0 import TestRunPayloadV2ApiKeysType0
 from .test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
-from .test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
-from .test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationParams
+from .test_run_payload_v2_model_results_type_0 import TestRunPayloadV2ModelResultsType0
+from .test_run_payload_v2_simulation_params_type_0 import TestRunPayloadV2SimulationParamsType0
 from .test_run_type import TestRunType
 from .twilio_call_status_v0_voice_twilio_status_post_response_twilio_call_status_v0_voice_twilio_status_post import (
     TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost,
@@ -180,8 +186,8 @@ __all__ = (
     "CheckValidateRequestCheckType",
     "CheckValidateResponse",
     "ComparisonOperator",
+    "CreateGroupV0GroupsPostBodyType0",
     "CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost",
-    "CreateGroupV0GroupsPostSource",
     "CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost",
     "DatapointField",
     "DatapointFilterCreate",
@@ -193,8 +199,8 @@ __all__ = (
     "DatapointFilterUpdate",
     "DatapointListItem",
     "DatapointListItemAgentMetadataType0",
-    "DatapointListItemChecks",
-    "DatapointListItemChecksMetadata",
+    "DatapointListItemChecksMetadataType0",
+    "DatapointListItemChecksType0",
     "DatapointListItemInputToolsType0Item",
     "DatapointListItemModelMetadataType0",
     "DatapointListItemResultEmbeddingsType0Item",
@@ -214,9 +220,9 @@ __all__ = (
     "EvaluationPayload",
     "EvaluationPayloadMetricsKwargs",
     "EvaluatorBriefResponse",
-    "EvaluatorBriefResponseCheckConfig",
+    "EvaluatorBriefResponseCheckConfigType0",
     "EvaluatorDetailedResponse",
-    "EvaluatorDetailedResponseCheckConfig",
+    "EvaluatorDetailedResponseCheckConfigType0",
     "EvaluatorGenerateResponse",
     "EvaluatorSpecRequest",
     "FeedbackRangeSummary",
@@ -224,8 +230,8 @@ __all__ = (
     "FindTestDataPointPayload",
     "FindTracesRequest",
     "FullDataPointItem",
-    "FullDataPointItemBaselineMetrics",
-    "FullDataPointItemChecksMetadata",
+    "FullDataPointItemBaselineMetricsType0",
+    "FullDataPointItemChecksMetadataType0",
     "FullDataPointItemMetricValue",
     "FullDataPointItemModelMetadataType0",
     "FullDataPointItemScenarioInputType0",
@@ -246,20 +252,20 @@ __all__ = (
     "Metrics",
     "ModelInfo",
     "ModelUnderTestResponse",
-    "ModelUnderTestResponseDeprecatedParams",
-    "ModelUnderTestResponseModels",
-    "ModelUnderTestResponseModelsAdditionalProperty",
+    "ModelUnderTestResponseDeprecatedParamsType0",
+    "ModelUnderTestResponseModelsType0",
+    "ModelUnderTestResponseModelsType0AdditionalProperty",
     "ModelUnderTestSchema",
     "ModelUnderTestSchemaModels",
     "ModelUnderTestSchemaModelsAdditionalProperty",
     "ProjectResponse",
     "ProjectSchema",
     "ScenarioDataPoinResponse",
-    "ScenarioDataPoinResponseMetaData",
+    "ScenarioDataPoinResponseMetaDataType0",
     "ScenarioSetCreate",
     "ScenarioSetGenerate",
     "ScenarioSetGenerateChecksItemType1",
-    "ScenarioSetGenerateGenerationSchema",
+    "ScenarioSetGenerateGenerationSchemaType0",
     "ScenarioSetResponse",
     "ScenarioSetUpdate",
     "ScenarioType",
@@ -270,13 +276,13 @@ __all__ = (
     "TargetModelResponse",
     "TargetModelResponseTarget",
     "TestCustomEndpointRequest",
-    "TestCustomEndpointRequestEndSessionParams",
+    "TestCustomEndpointRequestEndSessionParamsType0",
     "TestCustomEndpointRequestNextMessageParams",
-    "TestCustomEndpointRequestStartSessionParams",
+    "TestCustomEndpointRequestStartSessionParamsType0",
     "TestCustomEndpointResponse",
-    "TestCustomEndpointResponseEndSessionRawResponse",
+    "TestCustomEndpointResponseEndSessionRawResponseType0",
     "TestCustomEndpointResponseNextMessageRawResponse",
-    "TestCustomEndpointResponseStartSessionRawResponse",
+    "TestCustomEndpointResponseStartSessionRawResponseType0",
     "TestDataPointItem",
     "TestDataPointItemMetricValue",
     "TestDataPointPayload",
@@ -284,14 +290,14 @@ __all__ = (
     "TestDriverRequest",
     "TestDriverResponse",
     "TestRunItem",
-    "TestRunItemModelMetrics",
-    "TestRunItemSimulationParams",
+    "TestRunItemModelMetricsType0",
+    "TestRunItemSimulationParamsType0",
     "TestRunPayload",
     "TestRunPayloadV2",
-    "TestRunPayloadV2ApiKeys",
+    "TestRunPayloadV2ApiKeysType0",
     "TestRunPayloadV2MetricsKwargs",
-    "TestRunPayloadV2ModelResults",
-    "TestRunPayloadV2SimulationParams",
+    "TestRunPayloadV2ModelResultsType0",
+    "TestRunPayloadV2SimulationParamsType0",
     "TestRunType",
     "TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost",
     "TwilioRecordingCallbackV0VoiceTwilioRecordingPostResponseTwilioRecordingCallbackV0VoiceTwilioRecordingPost",

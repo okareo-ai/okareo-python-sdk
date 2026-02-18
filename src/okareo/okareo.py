@@ -49,8 +49,8 @@ from okareo_api_client.models.check_create_update_schema import CheckCreateUpdat
 from okareo_api_client.models.check_create_update_schema_check_config import (
     CheckCreateUpdateSchemaCheckConfig,
 )
-from okareo_api_client.models.create_group_v0_groups_post_source import (
-    CreateGroupV0GroupsPostSource,
+from okareo_api_client.models.create_group_v0_groups_post_body_type_0 import (
+    CreateGroupV0GroupsPostBodyType0,
 )
 from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
@@ -72,8 +72,8 @@ from okareo_api_client.models.find_test_data_point_payload import (
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
-from okareo_api_client.models.model_under_test_response_models import (
-    ModelUnderTestResponseModels,
+from okareo_api_client.models.model_under_test_response_models_type_0 import (
+    ModelUnderTestResponseModelsType0,
 )
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
@@ -83,8 +83,8 @@ from okareo_api_client.models.scenario_data_poin_response import (
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
-from okareo_api_client.models.scenario_set_generate_generation_schema import (
-    ScenarioSetGenerateGenerationSchema,
+from okareo_api_client.models.scenario_set_generate_generation_schema_type_0 import (
+    ScenarioSetGenerateGenerationSchemaType0,
 )
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
@@ -349,7 +349,7 @@ class Okareo:
         self.validate_response(response)
         assert isinstance(response, ModelUnderTestResponse)
 
-        if isinstance(response.models, ModelUnderTestResponseModels):
+        if isinstance(response.models, ModelUnderTestResponseModelsType0):
             model_data = response.models.to_dict()
         else:
             model_data = {}
@@ -601,7 +601,7 @@ class Okareo:
             and hasattr(create_request.generation_schema, "to_dict")
         ):
             create_request.generation_schema = (
-                ScenarioSetGenerateGenerationSchema.from_dict(
+                ScenarioSetGenerateGenerationSchemaType0.from_dict(
                     create_request.generation_schema.to_dict()
                 )
             )
@@ -1039,7 +1039,7 @@ class Okareo:
         tags: Union[List[str], None] = None,
         source: Union[dict, None] = None,
     ) -> Any:
-        request_body = CreateGroupV0GroupsPostSource()
+        request_body = CreateGroupV0GroupsPostBodyType0()
         if source:
             request_body.additional_properties.update(source)
         response = create_group_v0_groups_post.sync_detailed(

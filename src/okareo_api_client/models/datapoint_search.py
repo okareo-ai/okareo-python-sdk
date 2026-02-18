@@ -18,8 +18,8 @@ T = TypeVar("T", bound="DatapointSearch")
 class DatapointSearch:
     """
     Attributes:
-        tags (list[str] | Unset): Tags are strings that can be used to filter datapoints in the Okareo app
-        from_date (datetime.datetime | Unset): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
+        tags (list[str] | None | Unset): Tags are strings that can be used to filter datapoints in the Okareo app
+        from_date (datetime.datetime | None | Unset): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
         to_date (datetime.datetime | None | Unset): Latest date
         feedback (float | None | Unset): Feedback is a 0 to 1 float value that captures user feedback range for related
             datapoint results
@@ -36,8 +36,8 @@ class DatapointSearch:
         datapoint_ids (list[UUID] | None | Unset): List of datapoint IDs to filter by
     """
 
-    tags: list[str] | Unset = UNSET
-    from_date: datetime.datetime | Unset = isoparse("2022-12-31T23:59:59.999999")
+    tags: list[str] | None | Unset = UNSET
+    from_date: datetime.datetime | None | Unset = isoparse("2022-12-31T23:59:59.999999")
     to_date: datetime.datetime | None | Unset = UNSET
     feedback: float | None | Unset = UNSET
     error_code: None | str | Unset = UNSET
@@ -52,13 +52,22 @@ class DatapointSearch:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
             tags = self.tags
 
-        from_date: str | Unset = UNSET
-        if not isinstance(self.from_date, Unset):
+        else:
+            tags = self.tags
+
+        from_date: None | str | Unset
+        if isinstance(self.from_date, Unset):
+            from_date = UNSET
+        elif isinstance(self.from_date, datetime.datetime):
             from_date = self.from_date.isoformat()
+        else:
+            from_date = self.from_date
 
         to_date: None | str | Unset
         if isinstance(self.to_date, Unset):
@@ -173,14 +182,40 @@ class DatapointSearch:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        tags = cast(list[str], d.pop("tags", UNSET))
 
-        _from_date = d.pop("from_date", UNSET)
-        from_date: datetime.datetime | Unset
-        if isinstance(_from_date, Unset):
-            from_date = UNSET
-        else:
-            from_date = isoparse(_from_date)
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
+
+        def _parse_from_date(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                from_date_type_0 = isoparse(data)
+
+                return from_date_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        from_date = _parse_from_date(d.pop("from_date", UNSET))
 
         def _parse_to_date(data: object) -> datetime.datetime | None | Unset:
             if data is None:

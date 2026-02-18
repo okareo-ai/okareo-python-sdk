@@ -12,8 +12,8 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
-    from ..models.test_run_item_simulation_params import TestRunItemSimulationParams
+    from ..models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
+    from ..models.test_run_item_simulation_params_type_0 import TestRunItemSimulationParamsType0
 
 
 T = TypeVar("T", bound="TestRunItem")
@@ -29,18 +29,18 @@ class TestRunItem:
         scenario_set_id (None | Unset | UUID):
         filter_group_id (None | Unset | UUID):
         name (None | str | Unset):
-        tags (list[str] | Unset):
-        type_ (None | str | Unset):
+        tags (list[str] | None | Unset):
+        type_ (str | Unset):
         start_time (datetime.datetime | None | Unset):
         end_time (datetime.datetime | None | Unset):
         test_data_point_count (int | None | Unset):
-        model_metrics (None | TestRunItemModelMetrics | Unset):
+        model_metrics (None | TestRunItemModelMetricsType0 | Unset):
         error_matrix (list[Any] | None | Unset):
         status (None | str | Unset):
         failure_message (None | str | Unset):
-        progress (int | Unset): Number in percent of progress of test run Default: 0.
+        progress (int | None | Unset): Number in percent of progress of test run Default: 0.
         app_link (str | Unset): This URL links to the Okareo webpage for this test run Default: ''.
-        simulation_params (None | TestRunItemSimulationParams | Unset):
+        simulation_params (None | TestRunItemSimulationParamsType0 | Unset):
         driver_id (None | Unset | UUID): ID of the driver used for the run, if applicable.
     """
 
@@ -50,24 +50,24 @@ class TestRunItem:
     scenario_set_id: None | Unset | UUID = UNSET
     filter_group_id: None | Unset | UUID = UNSET
     name: None | str | Unset = UNSET
-    tags: list[str] | Unset = UNSET
-    type_: None | str | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
+    type_: str | Unset = UNSET
     start_time: datetime.datetime | None | Unset = UNSET
     end_time: datetime.datetime | None | Unset = UNSET
     test_data_point_count: int | None | Unset = UNSET
-    model_metrics: None | TestRunItemModelMetrics | Unset = UNSET
+    model_metrics: None | TestRunItemModelMetricsType0 | Unset = UNSET
     error_matrix: list[Any] | None | Unset = UNSET
     status: None | str | Unset = UNSET
     failure_message: None | str | Unset = UNSET
-    progress: int | Unset = 0
+    progress: int | None | Unset = 0
     app_link: str | Unset = ""
-    simulation_params: None | TestRunItemSimulationParams | Unset = UNSET
+    simulation_params: None | TestRunItemSimulationParamsType0 | Unset = UNSET
     driver_id: None | Unset | UUID = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
-        from ..models.test_run_item_simulation_params import TestRunItemSimulationParams
+        from ..models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
+        from ..models.test_run_item_simulation_params_type_0 import TestRunItemSimulationParamsType0
 
         id = str(self.id)
 
@@ -103,15 +103,16 @@ class TestRunItem:
         else:
             name = self.name
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
             tags = self.tags
 
-        type_: None | str | Unset
-        if isinstance(self.type_, Unset):
-            type_ = UNSET
         else:
-            type_ = self.type_
+            tags = self.tags
+
+        type_ = self.type_
 
         start_time: None | str | Unset
         if isinstance(self.start_time, Unset):
@@ -138,7 +139,7 @@ class TestRunItem:
         model_metrics: dict[str, Any] | None | Unset
         if isinstance(self.model_metrics, Unset):
             model_metrics = UNSET
-        elif isinstance(self.model_metrics, TestRunItemModelMetrics):
+        elif isinstance(self.model_metrics, TestRunItemModelMetricsType0):
             model_metrics = self.model_metrics.to_dict()
         else:
             model_metrics = self.model_metrics
@@ -164,14 +165,18 @@ class TestRunItem:
         else:
             failure_message = self.failure_message
 
-        progress = self.progress
+        progress: int | None | Unset
+        if isinstance(self.progress, Unset):
+            progress = UNSET
+        else:
+            progress = self.progress
 
         app_link = self.app_link
 
         simulation_params: dict[str, Any] | None | Unset
         if isinstance(self.simulation_params, Unset):
             simulation_params = UNSET
-        elif isinstance(self.simulation_params, TestRunItemSimulationParams):
+        elif isinstance(self.simulation_params, TestRunItemSimulationParamsType0):
             simulation_params = self.simulation_params.to_dict()
         else:
             simulation_params = self.simulation_params
@@ -231,8 +236,8 @@ class TestRunItem:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.test_run_item_model_metrics import TestRunItemModelMetrics
-        from ..models.test_run_item_simulation_params import TestRunItemSimulationParams
+        from ..models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
+        from ..models.test_run_item_simulation_params_type_0 import TestRunItemSimulationParamsType0
 
         d = dict(src_dict)
         id = UUID(d.pop("id"))
@@ -299,16 +304,24 @@ class TestRunItem:
 
         name = _parse_name(d.pop("name", UNSET))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
-
-        def _parse_type_(data: object) -> None | str | Unset:
+        def _parse_tags(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
 
-        type_ = _parse_type_(d.pop("type", UNSET))
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
+
+        type_ = d.pop("type", UNSET)
 
         def _parse_start_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -353,7 +366,7 @@ class TestRunItem:
 
         test_data_point_count = _parse_test_data_point_count(d.pop("test_data_point_count", UNSET))
 
-        def _parse_model_metrics(data: object) -> None | TestRunItemModelMetrics | Unset:
+        def _parse_model_metrics(data: object) -> None | TestRunItemModelMetricsType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -361,12 +374,12 @@ class TestRunItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                model_metrics_type_0 = TestRunItemModelMetrics.from_dict(data)
+                model_metrics_type_0 = TestRunItemModelMetricsType0.from_dict(data)
 
                 return model_metrics_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | TestRunItemModelMetrics | Unset, data)
+            return cast(None | TestRunItemModelMetricsType0 | Unset, data)
 
         model_metrics = _parse_model_metrics(d.pop("model_metrics", UNSET))
 
@@ -405,11 +418,18 @@ class TestRunItem:
 
         failure_message = _parse_failure_message(d.pop("failure_message", UNSET))
 
-        progress = d.pop("progress", UNSET)
+        def _parse_progress(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        progress = _parse_progress(d.pop("progress", UNSET))
 
         app_link = d.pop("app_link", UNSET)
 
-        def _parse_simulation_params(data: object) -> None | TestRunItemSimulationParams | Unset:
+        def _parse_simulation_params(data: object) -> None | TestRunItemSimulationParamsType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -417,12 +437,12 @@ class TestRunItem:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                simulation_params_type_0 = TestRunItemSimulationParams.from_dict(data)
+                simulation_params_type_0 = TestRunItemSimulationParamsType0.from_dict(data)
 
                 return simulation_params_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | TestRunItemSimulationParams | Unset, data)
+            return cast(None | TestRunItemSimulationParamsType0 | Unset, data)
 
         simulation_params = _parse_simulation_params(d.pop("simulation_params", UNSET))
 

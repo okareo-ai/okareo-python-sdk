@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     mut_id: str,
-    nats_invoke_id: str | Unset = UNSET,
+    nats_invoke_id: None | str | Unset = UNSET,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -22,7 +22,12 @@ def _get_kwargs(
 
     params["mut_id"] = mut_id
 
-    params["nats_invoke_id"] = nats_invoke_id
+    json_nats_invoke_id: None | str | Unset
+    if isinstance(nats_invoke_id, Unset):
+        json_nats_invoke_id = UNSET
+    else:
+        json_nats_invoke_id = nats_invoke_id
+    params["nats_invoke_id"] = json_nats_invoke_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -69,14 +74,14 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     mut_id: str,
-    nats_invoke_id: str | Unset = UNSET,
+    nats_invoke_id: None | str | Unset = UNSET,
     api_key: str,
 ) -> Response[Any | HTTPValidationError]:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
-        nats_invoke_id (str | Unset):
+        nats_invoke_id (None | str | Unset):
         api_key (str):
 
     Raises:
@@ -104,14 +109,14 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     mut_id: str,
-    nats_invoke_id: str | Unset = UNSET,
+    nats_invoke_id: None | str | Unset = UNSET,
     api_key: str,
 ) -> Any | HTTPValidationError | None:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
-        nats_invoke_id (str | Unset):
+        nats_invoke_id (None | str | Unset):
         api_key (str):
 
     Raises:
@@ -134,14 +139,14 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     mut_id: str,
-    nats_invoke_id: str | Unset = UNSET,
+    nats_invoke_id: None | str | Unset = UNSET,
     api_key: str,
 ) -> Response[Any | HTTPValidationError]:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
-        nats_invoke_id (str | Unset):
+        nats_invoke_id (None | str | Unset):
         api_key (str):
 
     Raises:
@@ -167,14 +172,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     mut_id: str,
-    nats_invoke_id: str | Unset = UNSET,
+    nats_invoke_id: None | str | Unset = UNSET,
     api_key: str,
 ) -> Any | HTTPValidationError | None:
     """Internal Custom Model Listener
 
     Args:
         mut_id (str):
-        nats_invoke_id (str | Unset):
+        nats_invoke_id (None | str | Unset):
         api_key (str):
 
     Raises:

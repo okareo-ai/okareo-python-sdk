@@ -19,6 +19,7 @@ from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
 from okareo_api_client.models.scenario_type import ScenarioType
+from okareo_api_client.types import Unset
 
 
 @pytest.fixture(scope="module")
@@ -462,7 +463,7 @@ def test_generate_scenarios_empty(
     ) as record:
         generated_scenario = okareo_client.generate_scenario_set(scenario_set_generate)
         assert generated_scenario is not None
-        assert generated_scenario.scenario_id == ""
+        assert isinstance(generated_scenario.scenario_id, Unset)
         assert generated_scenario.time_created
         assert generated_scenario.type_ == "SYNONYMS"
         if not record:

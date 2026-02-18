@@ -12,7 +12,7 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+    from ..models.evaluator_brief_response_check_config_type_0 import EvaluatorBriefResponseCheckConfigType0
 
 
 T = TypeVar("T", bound="EvaluatorBriefResponse")
@@ -24,24 +24,24 @@ class EvaluatorBriefResponse:
     Attributes:
         id (None | Unset | UUID):
         name (None | str | Unset):
-        description (str | Unset):  Default: ''.
-        output_data_type (str | Unset):  Default: ''.
+        description (None | str | Unset):  Default: ''.
+        output_data_type (None | str | Unset):  Default: ''.
         time_created (datetime.datetime | None | Unset):
-        check_config (EvaluatorBriefResponseCheckConfig | None | Unset):
-        is_predefined (bool | Unset):  Default: False.
+        check_config (EvaluatorBriefResponseCheckConfigType0 | None | Unset):
+        is_predefined (bool | None | Unset):  Default: False.
     """
 
     id: None | Unset | UUID = UNSET
     name: None | str | Unset = UNSET
-    description: str | Unset = ""
-    output_data_type: str | Unset = ""
+    description: None | str | Unset = ""
+    output_data_type: None | str | Unset = ""
     time_created: datetime.datetime | None | Unset = UNSET
-    check_config: EvaluatorBriefResponseCheckConfig | None | Unset = UNSET
-    is_predefined: bool | Unset = False
+    check_config: EvaluatorBriefResponseCheckConfigType0 | None | Unset = UNSET
+    is_predefined: bool | None | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+        from ..models.evaluator_brief_response_check_config_type_0 import EvaluatorBriefResponseCheckConfigType0
 
         id: None | str | Unset
         if isinstance(self.id, Unset):
@@ -57,9 +57,17 @@ class EvaluatorBriefResponse:
         else:
             name = self.name
 
-        description = self.description
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
 
-        output_data_type = self.output_data_type
+        output_data_type: None | str | Unset
+        if isinstance(self.output_data_type, Unset):
+            output_data_type = UNSET
+        else:
+            output_data_type = self.output_data_type
 
         time_created: None | str | Unset
         if isinstance(self.time_created, Unset):
@@ -72,12 +80,16 @@ class EvaluatorBriefResponse:
         check_config: dict[str, Any] | None | Unset
         if isinstance(self.check_config, Unset):
             check_config = UNSET
-        elif isinstance(self.check_config, EvaluatorBriefResponseCheckConfig):
+        elif isinstance(self.check_config, EvaluatorBriefResponseCheckConfigType0):
             check_config = self.check_config.to_dict()
         else:
             check_config = self.check_config
 
-        is_predefined = self.is_predefined
+        is_predefined: bool | None | Unset
+        if isinstance(self.is_predefined, Unset):
+            is_predefined = UNSET
+        else:
+            is_predefined = self.is_predefined
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -101,7 +113,7 @@ class EvaluatorBriefResponse:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+        from ..models.evaluator_brief_response_check_config_type_0 import EvaluatorBriefResponseCheckConfigType0
 
         d = dict(src_dict)
 
@@ -131,9 +143,23 @@ class EvaluatorBriefResponse:
 
         name = _parse_name(d.pop("name", UNSET))
 
-        description = d.pop("description", UNSET)
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        output_data_type = d.pop("output_data_type", UNSET)
+        description = _parse_description(d.pop("description", UNSET))
+
+        def _parse_output_data_type(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        output_data_type = _parse_output_data_type(d.pop("output_data_type", UNSET))
 
         def _parse_time_created(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -152,7 +178,7 @@ class EvaluatorBriefResponse:
 
         time_created = _parse_time_created(d.pop("time_created", UNSET))
 
-        def _parse_check_config(data: object) -> EvaluatorBriefResponseCheckConfig | None | Unset:
+        def _parse_check_config(data: object) -> EvaluatorBriefResponseCheckConfigType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -160,16 +186,23 @@ class EvaluatorBriefResponse:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                check_config_type_0 = EvaluatorBriefResponseCheckConfig.from_dict(data)
+                check_config_type_0 = EvaluatorBriefResponseCheckConfigType0.from_dict(data)
 
                 return check_config_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(EvaluatorBriefResponseCheckConfig | None | Unset, data)
+            return cast(EvaluatorBriefResponseCheckConfigType0 | None | Unset, data)
 
         check_config = _parse_check_config(d.pop("check_config", UNSET))
 
-        is_predefined = d.pop("is_predefined", UNSET)
+        def _parse_is_predefined(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        is_predefined = _parse_is_predefined(d.pop("is_predefined", UNSET))
 
         evaluator_brief_response = cls(
             id=id,

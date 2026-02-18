@@ -25,8 +25,8 @@ class DatapointSummaryItem:
         issues (int): The total count of issues for the group.
         errors (int): The total count of errors for the group.
         feedback_ranges (list[FeedbackRangeSummary] | None | Unset): List of feedback range summaries for the date.
-        avg_latency (float | None | Unset): The average latency for the group.
-        sum_cost (float | None | Unset): The total cost for the group.
+        avg_latency (float | Unset): The average latency for the group.
+        sum_cost (float | Unset): The total cost for the group.
         user_metadata (Any | DatapointSummaryItemUserMetadataType0 | None | Unset): Number of distinct values found for
             each key in user metadata for the group.
     """
@@ -36,8 +36,8 @@ class DatapointSummaryItem:
     issues: int
     errors: int
     feedback_ranges: list[FeedbackRangeSummary] | None | Unset = UNSET
-    avg_latency: float | None | Unset = UNSET
-    sum_cost: float | None | Unset = UNSET
+    avg_latency: float | Unset = UNSET
+    sum_cost: float | Unset = UNSET
     user_metadata: Any | DatapointSummaryItemUserMetadataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -64,17 +64,9 @@ class DatapointSummaryItem:
         else:
             feedback_ranges = self.feedback_ranges
 
-        avg_latency: float | None | Unset
-        if isinstance(self.avg_latency, Unset):
-            avg_latency = UNSET
-        else:
-            avg_latency = self.avg_latency
+        avg_latency = self.avg_latency
 
-        sum_cost: float | None | Unset
-        if isinstance(self.sum_cost, Unset):
-            sum_cost = UNSET
-        else:
-            sum_cost = self.sum_cost
+        sum_cost = self.sum_cost
 
         user_metadata: Any | dict[str, Any] | None | Unset
         if isinstance(self.user_metadata, Unset):
@@ -141,23 +133,9 @@ class DatapointSummaryItem:
 
         feedback_ranges = _parse_feedback_ranges(d.pop("feedback_ranges", UNSET))
 
-        def _parse_avg_latency(data: object) -> float | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(float | None | Unset, data)
+        avg_latency = d.pop("avg_latency", UNSET)
 
-        avg_latency = _parse_avg_latency(d.pop("avg_latency", UNSET))
-
-        def _parse_sum_cost(data: object) -> float | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(float | None | Unset, data)
-
-        sum_cost = _parse_sum_cost(d.pop("sum_cost", UNSET))
+        sum_cost = d.pop("sum_cost", UNSET)
 
         def _parse_user_metadata(data: object) -> Any | DatapointSummaryItemUserMetadataType0 | None | Unset:
             if data is None:

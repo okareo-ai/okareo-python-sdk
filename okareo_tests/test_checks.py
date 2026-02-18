@@ -26,6 +26,7 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
 
 def test_generate_and_create_check(okareo_client: Okareo) -> None:
     generate_request = EvaluatorSpecRequest(
+        project_id=okareo_client.get_projects()[0].id,
         description="""
         Return True if the model_output is at least 20 characters long, otherwise return False.""",
         requires_scenario_input=False,

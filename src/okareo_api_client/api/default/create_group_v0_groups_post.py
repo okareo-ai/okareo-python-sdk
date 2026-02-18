@@ -5,19 +5,19 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.create_group_v0_groups_post_body_type_0 import CreateGroupV0GroupsPostBodyType0
 from ...models.create_group_v0_groups_post_response_create_group_v0_groups_post import (
     CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost,
 )
-from ...models.create_group_v0_groups_post_source import CreateGroupV0GroupsPostSource
 from ...models.error_response import ErrorResponse
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
+    body: CreateGroupV0GroupsPostBodyType0 | None | Unset = UNSET,
     name: str,
-    tags: list[str] | Unset = UNSET,
+    tags: list[str] | None | Unset = UNSET,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -27,10 +27,14 @@ def _get_kwargs(
 
     params["name"] = name
 
-    json_tags: list[str] | Unset = UNSET
-    if not isinstance(tags, Unset):
+    json_tags: list[str] | None | Unset
+    if isinstance(tags, Unset):
+        json_tags = UNSET
+    elif isinstance(tags, list):
         json_tags = tags
 
+    else:
+        json_tags = tags
     params["tags"] = json_tags
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
@@ -41,8 +45,10 @@ def _get_kwargs(
         "params": params,
     }
 
-    if not isinstance(body, Unset):
+    if isinstance(body, CreateGroupV0GroupsPostBodyType0):
         _kwargs["json"] = body.to_dict()
+    else:
+        _kwargs["json"] = body
 
     headers["Content-Type"] = "application/json"
 
@@ -98,9 +104,9 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
+    body: CreateGroupV0GroupsPostBodyType0 | None | Unset = UNSET,
     name: str,
-    tags: list[str] | Unset = UNSET,
+    tags: list[str] | None | Unset = UNSET,
     api_key: str,
 ) -> Response[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse]:
     """Create Group
@@ -112,9 +118,9 @@ def sync_detailed(
 
     Args:
         name (str): The name of the group
-        tags (list[str] | Unset): Tags for the group
+        tags (list[str] | None | Unset): Tags for the group
         api_key (str):
-        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
+        body (CreateGroupV0GroupsPostBodyType0 | None | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,9 +147,9 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
+    body: CreateGroupV0GroupsPostBodyType0 | None | Unset = UNSET,
     name: str,
-    tags: list[str] | Unset = UNSET,
+    tags: list[str] | None | Unset = UNSET,
     api_key: str,
 ) -> CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse | None:
     """Create Group
@@ -155,9 +161,9 @@ def sync(
 
     Args:
         name (str): The name of the group
-        tags (list[str] | Unset): Tags for the group
+        tags (list[str] | None | Unset): Tags for the group
         api_key (str):
-        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
+        body (CreateGroupV0GroupsPostBodyType0 | None | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -179,9 +185,9 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
+    body: CreateGroupV0GroupsPostBodyType0 | None | Unset = UNSET,
     name: str,
-    tags: list[str] | Unset = UNSET,
+    tags: list[str] | None | Unset = UNSET,
     api_key: str,
 ) -> Response[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse]:
     """Create Group
@@ -193,9 +199,9 @@ async def asyncio_detailed(
 
     Args:
         name (str): The name of the group
-        tags (list[str] | Unset): Tags for the group
+        tags (list[str] | None | Unset): Tags for the group
         api_key (str):
-        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
+        body (CreateGroupV0GroupsPostBodyType0 | None | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -220,9 +226,9 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
+    body: CreateGroupV0GroupsPostBodyType0 | None | Unset = UNSET,
     name: str,
-    tags: list[str] | Unset = UNSET,
+    tags: list[str] | None | Unset = UNSET,
     api_key: str,
 ) -> CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse | None:
     """Create Group
@@ -234,9 +240,9 @@ async def asyncio(
 
     Args:
         name (str): The name of the group
-        tags (list[str] | Unset): Tags for the group
+        tags (list[str] | None | Unset): Tags for the group
         api_key (str):
-        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
+        body (CreateGroupV0GroupsPostBodyType0 | None | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

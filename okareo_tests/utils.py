@@ -10,11 +10,11 @@ from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
-from okareo_api_client.models.full_data_point_item_baseline_metrics import (
-    FullDataPointItemBaselineMetrics,
+from okareo_api_client.models.full_data_point_item_baseline_metrics_type_0 import (
+    FullDataPointItemBaselineMetricsType0,
 )
-from okareo_api_client.models.full_data_point_item_checks_metadata import (
-    FullDataPointItemChecksMetadata,
+from okareo_api_client.models.full_data_point_item_checks_metadata_type_0 import (
+    FullDataPointItemChecksMetadataType0,
 )
 from okareo_api_client.models.model_under_test_response import (
     ModelUnderTestResponse,
@@ -111,7 +111,7 @@ def _parse_check_metrics(
     if isinstance(tdp, FullDataPointItem) and tdp.checks_metadata:
         meta = tdp.checks_metadata  # type: ignore[attr-defined]
         if (
-            isinstance(meta, FullDataPointItemChecksMetadata)
+            isinstance(meta, FullDataPointItemChecksMetadataType0)
             and meta.additional_properties.get(check) is not None
         ):
             check_meta = meta.additional_properties.get(check)
@@ -137,7 +137,7 @@ def _parse_baseline_metrics(
     baseline = None
     if isinstance(tdp, FullDataPointItem) and tdp.baseline_metrics:
         baseline = tdp.baseline_metrics  # type: ignore[attr-defined]
-        if isinstance(baseline, FullDataPointItemBaselineMetrics):
+        if isinstance(baseline, FullDataPointItemBaselineMetricsType0):
             tdp_baseline_metrics = baseline.additional_properties
             baseline_metrics["latency"].append(
                 tdp_baseline_metrics[latency_key_baseline]
@@ -168,7 +168,7 @@ def _parse_baseline_metrics(
     if cost:
         if isinstance(baseline, dict) and cost_key in baseline:
             baseline_metrics["cost"].append(baseline[cost_key])
-        elif isinstance(baseline, FullDataPointItemBaselineMetrics):
+        elif isinstance(baseline, FullDataPointItemBaselineMetricsType0):
             baseline_metrics["cost"].append(baseline.additional_properties[cost_key])
     return baseline_metrics
 

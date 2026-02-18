@@ -21,23 +21,23 @@ class GeneralFindPayload:
         project_id (None | Unset | UUID): ID for the project
         mut_id (None | Unset | UUID): ID of the model
         scenario_set_id (None | Unset | UUID): ID of the scenario set
-        tags (list[str] | Unset): Tags are strings that can be used to filter test runs in the Okareo app
+        tags (list[str] | None | Unset): Tags are strings that can be used to filter test runs in the Okareo app
         types (list[TestRunType] | None | Unset): List of test run types to filter by. If provided, only test runs
             matching these types will be returned.
-        return_model_metrics (bool | Unset): Boolean value indicating if model metrics should be returned. This
+        return_model_metrics (bool | None | Unset): Boolean value indicating if model metrics should be returned. This
             increases the response size. Default: False.
-        return_error_matrix (bool | Unset): Boolean value indicating if error matrix should be returned. This increases
-            the response size. Default: False.
+        return_error_matrix (bool | None | Unset): Boolean value indicating if error matrix should be returned. This
+            increases the response size. Default: False.
     """
 
     id: None | Unset | UUID = UNSET
     project_id: None | Unset | UUID = UNSET
     mut_id: None | Unset | UUID = UNSET
     scenario_set_id: None | Unset | UUID = UNSET
-    tags: list[str] | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     types: list[TestRunType] | None | Unset = UNSET
-    return_model_metrics: bool | Unset = False
-    return_error_matrix: bool | Unset = False
+    return_model_metrics: bool | None | Unset = False
+    return_error_matrix: bool | None | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -73,8 +73,13 @@ class GeneralFindPayload:
         else:
             scenario_set_id = self.scenario_set_id
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
             tags = self.tags
 
         types: list[str] | None | Unset
@@ -89,9 +94,17 @@ class GeneralFindPayload:
         else:
             types = self.types
 
-        return_model_metrics = self.return_model_metrics
+        return_model_metrics: bool | None | Unset
+        if isinstance(self.return_model_metrics, Unset):
+            return_model_metrics = UNSET
+        else:
+            return_model_metrics = self.return_model_metrics
 
-        return_error_matrix = self.return_error_matrix
+        return_error_matrix: bool | None | Unset
+        if isinstance(self.return_error_matrix, Unset):
+            return_error_matrix = UNSET
+        else:
+            return_error_matrix = self.return_error_matrix
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -187,7 +200,22 @@ class GeneralFindPayload:
 
         scenario_set_id = _parse_scenario_set_id(d.pop("scenario_set_id", UNSET))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         def _parse_types(data: object) -> list[TestRunType] | None | Unset:
             if data is None:
@@ -211,9 +239,23 @@ class GeneralFindPayload:
 
         types = _parse_types(d.pop("types", UNSET))
 
-        return_model_metrics = d.pop("return_model_metrics", UNSET)
+        def _parse_return_model_metrics(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
 
-        return_error_matrix = d.pop("return_error_matrix", UNSET)
+        return_model_metrics = _parse_return_model_metrics(d.pop("return_model_metrics", UNSET))
+
+        def _parse_return_error_matrix(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        return_error_matrix = _parse_return_error_matrix(d.pop("return_error_matrix", UNSET))
 
         general_find_payload = cls(
             id=id,

@@ -12,7 +12,7 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
+    from ..models.evaluator_detailed_response_check_config_type_0 import EvaluatorDetailedResponseCheckConfigType0
 
 
 T = TypeVar("T", bound="EvaluatorDetailedResponse")
@@ -25,33 +25,33 @@ class EvaluatorDetailedResponse:
         id (None | Unset | UUID):
         project_id (None | Unset | UUID):
         name (None | str | Unset):
-        description (str | Unset):  Default: ''.
+        description (None | str | Unset):  Default: ''.
         requires_scenario_input (bool | None | Unset):
         requires_scenario_result (bool | None | Unset):
-        output_data_type (str | Unset):  Default: ''.
-        code_contents (str | Unset):  Default: ''.
+        output_data_type (None | str | Unset):  Default: ''.
+        code_contents (None | str | Unset):  Default: ''.
         time_created (datetime.datetime | None | Unset):
         warning (None | str | Unset):
-        check_config (EvaluatorDetailedResponseCheckConfig | None | Unset):
-        is_predefined (bool | Unset):  Default: False.
+        check_config (EvaluatorDetailedResponseCheckConfigType0 | None | Unset):
+        is_predefined (bool | None | Unset):  Default: False.
     """
 
     id: None | Unset | UUID = UNSET
     project_id: None | Unset | UUID = UNSET
     name: None | str | Unset = UNSET
-    description: str | Unset = ""
+    description: None | str | Unset = ""
     requires_scenario_input: bool | None | Unset = UNSET
     requires_scenario_result: bool | None | Unset = UNSET
-    output_data_type: str | Unset = ""
-    code_contents: str | Unset = ""
+    output_data_type: None | str | Unset = ""
+    code_contents: None | str | Unset = ""
     time_created: datetime.datetime | None | Unset = UNSET
     warning: None | str | Unset = UNSET
-    check_config: EvaluatorDetailedResponseCheckConfig | None | Unset = UNSET
-    is_predefined: bool | Unset = False
+    check_config: EvaluatorDetailedResponseCheckConfigType0 | None | Unset = UNSET
+    is_predefined: bool | None | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
+        from ..models.evaluator_detailed_response_check_config_type_0 import EvaluatorDetailedResponseCheckConfigType0
 
         id: None | str | Unset
         if isinstance(self.id, Unset):
@@ -75,7 +75,11 @@ class EvaluatorDetailedResponse:
         else:
             name = self.name
 
-        description = self.description
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
 
         requires_scenario_input: bool | None | Unset
         if isinstance(self.requires_scenario_input, Unset):
@@ -89,9 +93,17 @@ class EvaluatorDetailedResponse:
         else:
             requires_scenario_result = self.requires_scenario_result
 
-        output_data_type = self.output_data_type
+        output_data_type: None | str | Unset
+        if isinstance(self.output_data_type, Unset):
+            output_data_type = UNSET
+        else:
+            output_data_type = self.output_data_type
 
-        code_contents = self.code_contents
+        code_contents: None | str | Unset
+        if isinstance(self.code_contents, Unset):
+            code_contents = UNSET
+        else:
+            code_contents = self.code_contents
 
         time_created: None | str | Unset
         if isinstance(self.time_created, Unset):
@@ -110,12 +122,16 @@ class EvaluatorDetailedResponse:
         check_config: dict[str, Any] | None | Unset
         if isinstance(self.check_config, Unset):
             check_config = UNSET
-        elif isinstance(self.check_config, EvaluatorDetailedResponseCheckConfig):
+        elif isinstance(self.check_config, EvaluatorDetailedResponseCheckConfigType0):
             check_config = self.check_config.to_dict()
         else:
             check_config = self.check_config
 
-        is_predefined = self.is_predefined
+        is_predefined: bool | None | Unset
+        if isinstance(self.is_predefined, Unset):
+            is_predefined = UNSET
+        else:
+            is_predefined = self.is_predefined
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -149,7 +165,7 @@ class EvaluatorDetailedResponse:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.evaluator_detailed_response_check_config import EvaluatorDetailedResponseCheckConfig
+        from ..models.evaluator_detailed_response_check_config_type_0 import EvaluatorDetailedResponseCheckConfigType0
 
         d = dict(src_dict)
 
@@ -196,7 +212,14 @@ class EvaluatorDetailedResponse:
 
         name = _parse_name(d.pop("name", UNSET))
 
-        description = d.pop("description", UNSET)
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
 
         def _parse_requires_scenario_input(data: object) -> bool | None | Unset:
             if data is None:
@@ -216,9 +239,23 @@ class EvaluatorDetailedResponse:
 
         requires_scenario_result = _parse_requires_scenario_result(d.pop("requires_scenario_result", UNSET))
 
-        output_data_type = d.pop("output_data_type", UNSET)
+        def _parse_output_data_type(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        code_contents = d.pop("code_contents", UNSET)
+        output_data_type = _parse_output_data_type(d.pop("output_data_type", UNSET))
+
+        def _parse_code_contents(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        code_contents = _parse_code_contents(d.pop("code_contents", UNSET))
 
         def _parse_time_created(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -246,7 +283,7 @@ class EvaluatorDetailedResponse:
 
         warning = _parse_warning(d.pop("warning", UNSET))
 
-        def _parse_check_config(data: object) -> EvaluatorDetailedResponseCheckConfig | None | Unset:
+        def _parse_check_config(data: object) -> EvaluatorDetailedResponseCheckConfigType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -254,16 +291,23 @@ class EvaluatorDetailedResponse:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                check_config_type_0 = EvaluatorDetailedResponseCheckConfig.from_dict(data)
+                check_config_type_0 = EvaluatorDetailedResponseCheckConfigType0.from_dict(data)
 
                 return check_config_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(EvaluatorDetailedResponseCheckConfig | None | Unset, data)
+            return cast(EvaluatorDetailedResponseCheckConfigType0 | None | Unset, data)
 
         check_config = _parse_check_config(d.pop("check_config", UNSET))
 
-        is_predefined = d.pop("is_predefined", UNSET)
+        def _parse_is_predefined(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        is_predefined = _parse_is_predefined(d.pop("is_predefined", UNSET))
 
         evaluator_detailed_response = cls(
             id=id,

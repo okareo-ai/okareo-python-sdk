@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    scenario_id: UUID | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
+    scenario_id: None | Unset | UUID = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -22,14 +22,22 @@ def _get_kwargs(
 
     params: dict[str, Any] = {}
 
-    json_scenario_id: str | Unset = UNSET
-    if not isinstance(scenario_id, Unset):
+    json_scenario_id: None | str | Unset
+    if isinstance(scenario_id, Unset):
+        json_scenario_id = UNSET
+    elif isinstance(scenario_id, UUID):
         json_scenario_id = str(scenario_id)
+    else:
+        json_scenario_id = scenario_id
     params["scenario_id"] = json_scenario_id
 
-    json_project_id: str | Unset = UNSET
-    if not isinstance(project_id, Unset):
+    json_project_id: None | str | Unset
+    if isinstance(project_id, Unset):
+        json_project_id = UNSET
+    elif isinstance(project_id, UUID):
         json_project_id = str(project_id)
+    else:
+        json_project_id = project_id
     params["project_id"] = json_project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
@@ -97,8 +105,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    scenario_id: UUID | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
+    scenario_id: None | Unset | UUID = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> Response[ErrorResponse | list[ScenarioSetResponse]]:
     """Get Scenario Sets
@@ -109,8 +117,8 @@ def sync_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (UUID | Unset): The ID of the scenario set
-        project_id (UUID | Unset): The ID of the project
+        scenario_id (None | Unset | UUID): The ID of the scenario set
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -137,8 +145,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    scenario_id: UUID | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
+    scenario_id: None | Unset | UUID = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> ErrorResponse | list[ScenarioSetResponse] | None:
     """Get Scenario Sets
@@ -149,8 +157,8 @@ def sync(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (UUID | Unset): The ID of the scenario set
-        project_id (UUID | Unset): The ID of the project
+        scenario_id (None | Unset | UUID): The ID of the scenario set
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -172,8 +180,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    scenario_id: UUID | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
+    scenario_id: None | Unset | UUID = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> Response[ErrorResponse | list[ScenarioSetResponse]]:
     """Get Scenario Sets
@@ -184,8 +192,8 @@ async def asyncio_detailed(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (UUID | Unset): The ID of the scenario set
-        project_id (UUID | Unset): The ID of the project
+        scenario_id (None | Unset | UUID): The ID of the scenario set
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -210,8 +218,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    scenario_id: UUID | Unset = UNSET,
-    project_id: UUID | Unset = UNSET,
+    scenario_id: None | Unset | UUID = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> ErrorResponse | list[ScenarioSetResponse] | None:
     """Get Scenario Sets
@@ -222,8 +230,8 @@ async def asyncio(
         a list of scenario sets (project id) or a list of scenarios (scenario id)
 
     Args:
-        scenario_id (UUID | Unset): The ID of the scenario set
-        project_id (UUID | Unset): The ID of the project
+        scenario_id (None | Unset | UUID): The ID of the scenario set
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:

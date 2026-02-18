@@ -47,17 +47,17 @@ from okareo_api_client.models.evaluation_payload_metrics_kwargs import (
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.target_model_response import TargetModelResponse
 from okareo_api_client.models.test_run_payload_v2 import TestRunPayloadV2
-from okareo_api_client.models.test_run_payload_v2_api_keys import (
-    TestRunPayloadV2ApiKeys,
+from okareo_api_client.models.test_run_payload_v2_api_keys_type_0 import (
+    TestRunPayloadV2ApiKeysType0,
 )
 from okareo_api_client.models.test_run_payload_v2_metrics_kwargs import (
     TestRunPayloadV2MetricsKwargs,
 )
-from okareo_api_client.models.test_run_payload_v2_model_results import (
-    TestRunPayloadV2ModelResults,
+from okareo_api_client.models.test_run_payload_v2_model_results_type_0 import (
+    TestRunPayloadV2ModelResultsType0,
 )
-from okareo_api_client.models.test_run_payload_v2_simulation_params import (
-    TestRunPayloadV2SimulationParams,
+from okareo_api_client.models.test_run_payload_v2_simulation_params_type_0 import (
+    TestRunPayloadV2SimulationParamsType0,
 )
 from okareo_api_client.models.voice_driver_model_response import (
     VoiceDriverModelResponse,
@@ -381,7 +381,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         return TestRunPayloadV2(
             mut_id=self.mut_id,
             api_keys=(
-                TestRunPayloadV2ApiKeys.from_dict(run_api_keys)
+                TestRunPayloadV2ApiKeysType0.from_dict(run_api_keys)
                 if api_keys or api_key
                 else UNSET
             ),
@@ -393,13 +393,13 @@ class ModelUnderTest(AsyncProcessorMixin):
                 metrics_kwargs or {}
             ),
             model_results=(
-                TestRunPayloadV2ModelResults.from_dict(model_data)
+                TestRunPayloadV2ModelResultsType0.from_dict(model_data)
                 if self._has_custom_model()
                 else UNSET
             ),
             checks=checks if checks else UNSET,
             simulation_params=(
-                TestRunPayloadV2SimulationParams.from_dict(simulation_params.to_dict())
+                TestRunPayloadV2SimulationParamsType0.from_dict(simulation_params.to_dict())
                 if simulation_params
                 else UNSET
             ),

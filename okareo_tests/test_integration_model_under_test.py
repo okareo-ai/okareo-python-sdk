@@ -33,7 +33,7 @@ from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_item import TestRunItem
-from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
+from okareo_api_client.models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
 from okareo_api_client.models.test_run_type import TestRunType
 
 from .check_tool_call import Check
@@ -630,7 +630,7 @@ def test_run_batch_model_classification(
         test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
     )
     assert isinstance(run_resp, TestRunItem)
-    assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
+    assert isinstance(run_resp.model_metrics, TestRunItemModelMetricsType0)
     assert run_resp.status == "FINISHED"
     clf_avg_results = run_resp.model_metrics.additional_properties["weighted_average"]
 
@@ -664,7 +664,7 @@ def test_run_batch_model_classification(
         test_run_type=TestRunType.MULTI_CLASS_CLASSIFICATION,
     )
     assert isinstance(batch_run_resp, TestRunItem)
-    assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetrics)
+    assert isinstance(batch_run_resp.model_metrics, TestRunItemModelMetricsType0)
     assert batch_run_resp.status == "FINISHED"
     clf_batch_avg_results = batch_run_resp.model_metrics.additional_properties[
         "weighted_average"

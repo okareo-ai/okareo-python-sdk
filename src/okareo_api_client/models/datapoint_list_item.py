@@ -13,8 +13,8 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
-    from ..models.datapoint_list_item_checks import DatapointListItemChecks
-    from ..models.datapoint_list_item_checks_metadata import DatapointListItemChecksMetadata
+    from ..models.datapoint_list_item_checks_metadata_type_0 import DatapointListItemChecksMetadataType0
+    from ..models.datapoint_list_item_checks_type_0 import DatapointListItemChecksType0
     from ..models.datapoint_list_item_input_tools_type_0_item import DatapointListItemInputToolsType0Item
     from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
     from ..models.datapoint_list_item_result_embeddings_type_0_item import DatapointListItemResultEmbeddingsType0Item
@@ -30,17 +30,17 @@ class DatapointListItem:
     """
     Attributes:
         id (UUID):
-        tags (list[str] | Unset):
+        tags (list[str] | None | Unset):
         input_ (Any | Unset):
-        input_datetime (datetime.datetime | None | Unset):
+        input_datetime (datetime.datetime | Unset):
         result (Any | Unset):
-        result_datetime (datetime.datetime | None | Unset):
+        result_datetime (datetime.datetime | Unset):
         feedback (float | None | Unset):
         error_message (None | str | Unset):
         error_code (None | str | Unset):
         error_type (None | str | Unset):
         context_token (None | str | Unset):
-        time_created (datetime.datetime | None | Unset):
+        time_created (datetime.datetime | Unset):
         model_metadata (Any | DatapointListItemModelMetadataType0 | None | Unset):
         project_id (None | Unset | UUID):
         mut_id (None | Unset | UUID):
@@ -56,8 +56,8 @@ class DatapointListItem:
         input_tools (list[DatapointListItemInputToolsType0Item] | None | Unset):
         result_tool_calls (list[DatapointListItemResultToolCallsType0Item] | None | Unset):
         result_embeddings (list[DatapointListItemResultEmbeddingsType0Item] | None | Unset):
-        checks (DatapointListItemChecks | Unset):
-        checks_metadata (DatapointListItemChecksMetadata | Unset):
+        checks (DatapointListItemChecksType0 | None | Unset):
+        checks_metadata (DatapointListItemChecksMetadataType0 | None | Unset):
         agent_metadata (Any | DatapointListItemAgentMetadataType0 | None | Unset):
         provider (None | str | Unset):
         total_search_count (int | None | Unset):
@@ -65,9 +65,9 @@ class DatapointListItem:
         request_model_name (None | str | Unset):
         response_model_name (None | str | Unset):
         cost (float | None | Unset):
-        status (str | Unset):  Default: ''.
-        failed_checks (list[str] | Unset): Array of failed check names
-        resolved (bool | Unset): Manual marking from user on resolved status Default: False.
+        status (None | str | Unset):  Default: ''.
+        failed_checks (list[str] | None | Unset): Array of failed check names
+        resolved (bool | None | Unset): Manual marking from user on resolved status Default: False.
         user_metadata (Any | DatapointListItemUserMetadataType0 | None | Unset): User-provided metadata provided as
             context to the completion call.
         otel_trace_id (None | str | Unset): OpenTelemetry Trace ID
@@ -75,17 +75,17 @@ class DatapointListItem:
     """
 
     id: UUID
-    tags: list[str] | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     input_: Any | Unset = UNSET
-    input_datetime: datetime.datetime | None | Unset = UNSET
+    input_datetime: datetime.datetime | Unset = UNSET
     result: Any | Unset = UNSET
-    result_datetime: datetime.datetime | None | Unset = UNSET
+    result_datetime: datetime.datetime | Unset = UNSET
     feedback: float | None | Unset = UNSET
     error_message: None | str | Unset = UNSET
     error_code: None | str | Unset = UNSET
     error_type: None | str | Unset = UNSET
     context_token: None | str | Unset = UNSET
-    time_created: datetime.datetime | None | Unset = UNSET
+    time_created: datetime.datetime | Unset = UNSET
     model_metadata: Any | DatapointListItemModelMetadataType0 | None | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
     mut_id: None | Unset | UUID = UNSET
@@ -101,8 +101,8 @@ class DatapointListItem:
     input_tools: list[DatapointListItemInputToolsType0Item] | None | Unset = UNSET
     result_tool_calls: list[DatapointListItemResultToolCallsType0Item] | None | Unset = UNSET
     result_embeddings: list[DatapointListItemResultEmbeddingsType0Item] | None | Unset = UNSET
-    checks: DatapointListItemChecks | Unset = UNSET
-    checks_metadata: DatapointListItemChecksMetadata | Unset = UNSET
+    checks: DatapointListItemChecksType0 | None | Unset = UNSET
+    checks_metadata: DatapointListItemChecksMetadataType0 | None | Unset = UNSET
     agent_metadata: Any | DatapointListItemAgentMetadataType0 | None | Unset = UNSET
     provider: None | str | Unset = UNSET
     total_search_count: int | None | Unset = UNSET
@@ -110,9 +110,9 @@ class DatapointListItem:
     request_model_name: None | str | Unset = UNSET
     response_model_name: None | str | Unset = UNSET
     cost: float | None | Unset = UNSET
-    status: str | Unset = ""
-    failed_checks: list[str] | Unset = UNSET
-    resolved: bool | Unset = False
+    status: None | str | Unset = ""
+    failed_checks: list[str] | None | Unset = UNSET
+    resolved: bool | None | Unset = False
     user_metadata: Any | DatapointListItemUserMetadataType0 | None | Unset = UNSET
     otel_trace_id: None | str | Unset = UNSET
     otel_span_id: None | str | Unset = UNSET
@@ -120,34 +120,33 @@ class DatapointListItem:
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
+        from ..models.datapoint_list_item_checks_metadata_type_0 import DatapointListItemChecksMetadataType0
+        from ..models.datapoint_list_item_checks_type_0 import DatapointListItemChecksType0
         from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
         from ..models.datapoint_list_item_user_metadata_type_0 import DatapointListItemUserMetadataType0
 
         id = str(self.id)
 
-        tags: list[str] | Unset = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
             tags = self.tags
 
         input_ = self.input_
 
-        input_datetime: None | str | Unset
-        if isinstance(self.input_datetime, Unset):
-            input_datetime = UNSET
-        elif isinstance(self.input_datetime, datetime.datetime):
+        input_datetime: str | Unset = UNSET
+        if not isinstance(self.input_datetime, Unset):
             input_datetime = self.input_datetime.isoformat()
-        else:
-            input_datetime = self.input_datetime
 
         result = self.result
 
-        result_datetime: None | str | Unset
-        if isinstance(self.result_datetime, Unset):
-            result_datetime = UNSET
-        elif isinstance(self.result_datetime, datetime.datetime):
+        result_datetime: str | Unset = UNSET
+        if not isinstance(self.result_datetime, Unset):
             result_datetime = self.result_datetime.isoformat()
-        else:
-            result_datetime = self.result_datetime
 
         feedback: float | None | Unset
         if isinstance(self.feedback, Unset):
@@ -179,13 +178,9 @@ class DatapointListItem:
         else:
             context_token = self.context_token
 
-        time_created: None | str | Unset
-        if isinstance(self.time_created, Unset):
-            time_created = UNSET
-        elif isinstance(self.time_created, datetime.datetime):
+        time_created: str | Unset = UNSET
+        if not isinstance(self.time_created, Unset):
             time_created = self.time_created.isoformat()
-        else:
-            time_created = self.time_created
 
         model_metadata: Any | dict[str, Any] | None | Unset
         if isinstance(self.model_metadata, Unset):
@@ -309,13 +304,21 @@ class DatapointListItem:
         else:
             result_embeddings = self.result_embeddings
 
-        checks: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.checks, Unset):
+        checks: dict[str, Any] | None | Unset
+        if isinstance(self.checks, Unset):
+            checks = UNSET
+        elif isinstance(self.checks, DatapointListItemChecksType0):
             checks = self.checks.to_dict()
+        else:
+            checks = self.checks
 
-        checks_metadata: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.checks_metadata, Unset):
+        checks_metadata: dict[str, Any] | None | Unset
+        if isinstance(self.checks_metadata, Unset):
+            checks_metadata = UNSET
+        elif isinstance(self.checks_metadata, DatapointListItemChecksMetadataType0):
             checks_metadata = self.checks_metadata.to_dict()
+        else:
+            checks_metadata = self.checks_metadata
 
         agent_metadata: Any | dict[str, Any] | None | Unset
         if isinstance(self.agent_metadata, Unset):
@@ -361,13 +364,26 @@ class DatapointListItem:
         else:
             cost = self.cost
 
-        status = self.status
+        status: None | str | Unset
+        if isinstance(self.status, Unset):
+            status = UNSET
+        else:
+            status = self.status
 
-        failed_checks: list[str] | Unset = UNSET
-        if not isinstance(self.failed_checks, Unset):
+        failed_checks: list[str] | None | Unset
+        if isinstance(self.failed_checks, Unset):
+            failed_checks = UNSET
+        elif isinstance(self.failed_checks, list):
             failed_checks = self.failed_checks
 
-        resolved = self.resolved
+        else:
+            failed_checks = self.failed_checks
+
+        resolved: bool | None | Unset
+        if isinstance(self.resolved, Unset):
+            resolved = UNSET
+        else:
+            resolved = self.resolved
 
         user_metadata: Any | dict[str, Any] | None | Unset
         if isinstance(self.user_metadata, Unset):
@@ -484,8 +500,8 @@ class DatapointListItem:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
-        from ..models.datapoint_list_item_checks import DatapointListItemChecks
-        from ..models.datapoint_list_item_checks_metadata import DatapointListItemChecksMetadata
+        from ..models.datapoint_list_item_checks_metadata_type_0 import DatapointListItemChecksMetadataType0
+        from ..models.datapoint_list_item_checks_type_0 import DatapointListItemChecksType0
         from ..models.datapoint_list_item_input_tools_type_0_item import DatapointListItemInputToolsType0Item
         from ..models.datapoint_list_item_model_metadata_type_0 import DatapointListItemModelMetadataType0
         from ..models.datapoint_list_item_result_embeddings_type_0_item import (
@@ -497,45 +513,40 @@ class DatapointListItem:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
-        tags = cast(list[str], d.pop("tags", UNSET))
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         input_ = d.pop("input", UNSET)
 
-        def _parse_input_datetime(data: object) -> datetime.datetime | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                input_datetime_type_0 = isoparse(data)
-
-                return input_datetime_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(datetime.datetime | None | Unset, data)
-
-        input_datetime = _parse_input_datetime(d.pop("input_datetime", UNSET))
+        _input_datetime = d.pop("input_datetime", UNSET)
+        input_datetime: datetime.datetime | Unset
+        if isinstance(_input_datetime, Unset):
+            input_datetime = UNSET
+        else:
+            input_datetime = isoparse(_input_datetime)
 
         result = d.pop("result", UNSET)
 
-        def _parse_result_datetime(data: object) -> datetime.datetime | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                result_datetime_type_0 = isoparse(data)
-
-                return result_datetime_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(datetime.datetime | None | Unset, data)
-
-        result_datetime = _parse_result_datetime(d.pop("result_datetime", UNSET))
+        _result_datetime = d.pop("result_datetime", UNSET)
+        result_datetime: datetime.datetime | Unset
+        if isinstance(_result_datetime, Unset):
+            result_datetime = UNSET
+        else:
+            result_datetime = isoparse(_result_datetime)
 
         def _parse_feedback(data: object) -> float | None | Unset:
             if data is None:
@@ -582,22 +593,12 @@ class DatapointListItem:
 
         context_token = _parse_context_token(d.pop("context_token", UNSET))
 
-        def _parse_time_created(data: object) -> datetime.datetime | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                time_created_type_0 = isoparse(data)
-
-                return time_created_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(datetime.datetime | None | Unset, data)
-
-        time_created = _parse_time_created(d.pop("time_created", UNSET))
+        _time_created = d.pop("time_created", UNSET)
+        time_created: datetime.datetime | Unset
+        if isinstance(_time_created, Unset):
+            time_created = UNSET
+        else:
+            time_created = isoparse(_time_created)
 
         def _parse_model_metadata(data: object) -> Any | DatapointListItemModelMetadataType0 | None | Unset:
             if data is None:
@@ -835,19 +836,39 @@ class DatapointListItem:
 
         result_embeddings = _parse_result_embeddings(d.pop("result_embeddings", UNSET))
 
-        _checks = d.pop("checks", UNSET)
-        checks: DatapointListItemChecks | Unset
-        if isinstance(_checks, Unset):
-            checks = UNSET
-        else:
-            checks = DatapointListItemChecks.from_dict(_checks)
+        def _parse_checks(data: object) -> DatapointListItemChecksType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                checks_type_0 = DatapointListItemChecksType0.from_dict(data)
 
-        _checks_metadata = d.pop("checks_metadata", UNSET)
-        checks_metadata: DatapointListItemChecksMetadata | Unset
-        if isinstance(_checks_metadata, Unset):
-            checks_metadata = UNSET
-        else:
-            checks_metadata = DatapointListItemChecksMetadata.from_dict(_checks_metadata)
+                return checks_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(DatapointListItemChecksType0 | None | Unset, data)
+
+        checks = _parse_checks(d.pop("checks", UNSET))
+
+        def _parse_checks_metadata(data: object) -> DatapointListItemChecksMetadataType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                checks_metadata_type_0 = DatapointListItemChecksMetadataType0.from_dict(data)
+
+                return checks_metadata_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(DatapointListItemChecksMetadataType0 | None | Unset, data)
+
+        checks_metadata = _parse_checks_metadata(d.pop("checks_metadata", UNSET))
 
         def _parse_agent_metadata(data: object) -> Any | DatapointListItemAgentMetadataType0 | None | Unset:
             if data is None:
@@ -920,11 +941,40 @@ class DatapointListItem:
 
         cost = _parse_cost(d.pop("cost", UNSET))
 
-        status = d.pop("status", UNSET)
+        def _parse_status(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        failed_checks = cast(list[str], d.pop("failed_checks", UNSET))
+        status = _parse_status(d.pop("status", UNSET))
 
-        resolved = d.pop("resolved", UNSET)
+        def _parse_failed_checks(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                failed_checks_type_0 = cast(list[str], data)
+
+                return failed_checks_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        failed_checks = _parse_failed_checks(d.pop("failed_checks", UNSET))
+
+        def _parse_resolved(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        resolved = _parse_resolved(d.pop("resolved", UNSET))
 
         def _parse_user_metadata(data: object) -> Any | DatapointListItemUserMetadataType0 | None | Unset:
             if data is None:

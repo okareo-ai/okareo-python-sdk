@@ -14,7 +14,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -22,9 +22,13 @@ def _get_kwargs(
 
     params: dict[str, Any] = {}
 
-    json_project_id: str | Unset = UNSET
-    if not isinstance(project_id, Unset):
+    json_project_id: None | str | Unset
+    if isinstance(project_id, Unset):
+        json_project_id = UNSET
+    elif isinstance(project_id, UUID):
         json_project_id = str(project_id)
+    else:
+        json_project_id = project_id
     params["project_id"] = json_project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
@@ -93,13 +97,13 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> Response[HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]]:
     """Get All Drivers
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -125,13 +129,13 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse] | None:
     """Get All Drivers
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -152,13 +156,13 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> Response[HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]]:
     """Get All Drivers
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -182,13 +186,13 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    project_id: UUID | Unset = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse] | None:
     """Get All Drivers
 
     Args:
-        project_id (UUID | Unset): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:

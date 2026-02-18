@@ -23,33 +23,33 @@ class DatapointFilterSearch:
     """
     Attributes:
         filters (list[FilterCondition]): List of filter conditions to apply
-        from_date (datetime.datetime | Unset): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
+        from_date (datetime.datetime | None | Unset): Earliest date Default: isoparse('2022-12-31T23:59:59.999999').
         to_date (datetime.datetime | None | Unset): Latest date
         project_id (None | Unset | UUID): Project ID to search within
         offset (int | None | Unset): Offset for pagination
         limit (int | None | Unset): Limit for pagination
-        issues_only (bool | Unset): Only return issues Default: False.
-        errors_only (bool | Unset): Only return errors Default: False.
+        issues_only (bool | None | Unset): Only return issues Default: False.
+        errors_only (bool | None | Unset): Only return errors Default: False.
         checks (list[Any] | None | Unset): List of checks to only flag issues for
         filter_group_id (None | Unset | UUID): Filter group ID to search with
         timezone (None | str | Unset): IANA timezone to use for date filtering/aggregation (e.g., 'America/New_York').
             Defaults to None (i.e., UTC).
-        precision (str | Unset): Time precision for the filter search. Valid values include ['day', 'hour', 'minute'].
-            Applied to 'from_date'. Defaults to 'day'. Default: 'day'.
+        precision (None | str | Unset): Time precision for the filter search. Valid values include ['day', 'hour',
+            'minute']. Applied to 'from_date'. Defaults to 'day'. Default: 'day'.
     """
 
     filters: list[FilterCondition]
-    from_date: datetime.datetime | Unset = isoparse("2022-12-31T23:59:59.999999")
+    from_date: datetime.datetime | None | Unset = isoparse("2022-12-31T23:59:59.999999")
     to_date: datetime.datetime | None | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
     offset: int | None | Unset = UNSET
     limit: int | None | Unset = UNSET
-    issues_only: bool | Unset = False
-    errors_only: bool | Unset = False
+    issues_only: bool | None | Unset = False
+    errors_only: bool | None | Unset = False
     checks: list[Any] | None | Unset = UNSET
     filter_group_id: None | Unset | UUID = UNSET
     timezone: None | str | Unset = UNSET
-    precision: str | Unset = "day"
+    precision: None | str | Unset = "day"
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,9 +58,13 @@ class DatapointFilterSearch:
             filters_item = filters_item_data.to_dict()
             filters.append(filters_item)
 
-        from_date: str | Unset = UNSET
-        if not isinstance(self.from_date, Unset):
+        from_date: None | str | Unset
+        if isinstance(self.from_date, Unset):
+            from_date = UNSET
+        elif isinstance(self.from_date, datetime.datetime):
             from_date = self.from_date.isoformat()
+        else:
+            from_date = self.from_date
 
         to_date: None | str | Unset
         if isinstance(self.to_date, Unset):
@@ -90,9 +94,17 @@ class DatapointFilterSearch:
         else:
             limit = self.limit
 
-        issues_only = self.issues_only
+        issues_only: bool | None | Unset
+        if isinstance(self.issues_only, Unset):
+            issues_only = UNSET
+        else:
+            issues_only = self.issues_only
 
-        errors_only = self.errors_only
+        errors_only: bool | None | Unset
+        if isinstance(self.errors_only, Unset):
+            errors_only = UNSET
+        else:
+            errors_only = self.errors_only
 
         checks: list[Any] | None | Unset
         if isinstance(self.checks, Unset):
@@ -117,7 +129,11 @@ class DatapointFilterSearch:
         else:
             timezone = self.timezone
 
-        precision = self.precision
+        precision: None | str | Unset
+        if isinstance(self.precision, Unset):
+            precision = UNSET
+        else:
+            precision = self.precision
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -163,12 +179,22 @@ class DatapointFilterSearch:
 
             filters.append(filters_item)
 
-        _from_date = d.pop("from_date", UNSET)
-        from_date: datetime.datetime | Unset
-        if isinstance(_from_date, Unset):
-            from_date = UNSET
-        else:
-            from_date = isoparse(_from_date)
+        def _parse_from_date(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                from_date_type_0 = isoparse(data)
+
+                return from_date_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        from_date = _parse_from_date(d.pop("from_date", UNSET))
 
         def _parse_to_date(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -222,9 +248,23 @@ class DatapointFilterSearch:
 
         limit = _parse_limit(d.pop("limit", UNSET))
 
-        issues_only = d.pop("issues_only", UNSET)
+        def _parse_issues_only(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
 
-        errors_only = d.pop("errors_only", UNSET)
+        issues_only = _parse_issues_only(d.pop("issues_only", UNSET))
+
+        def _parse_errors_only(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        errors_only = _parse_errors_only(d.pop("errors_only", UNSET))
 
         def _parse_checks(data: object) -> list[Any] | None | Unset:
             if data is None:
@@ -269,7 +309,14 @@ class DatapointFilterSearch:
 
         timezone = _parse_timezone(d.pop("timezone", UNSET))
 
-        precision = d.pop("precision", UNSET)
+        def _parse_precision(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        precision = _parse_precision(d.pop("precision", UNSET))
 
         datapoint_filter_search = cls(
             filters=filters,

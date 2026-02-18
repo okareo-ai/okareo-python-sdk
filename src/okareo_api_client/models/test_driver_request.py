@@ -18,7 +18,7 @@ class TestDriverRequest:
         test_input (str): Test prompt to which the driver model will respond.
         prompt_template (None | str | Unset): Prompt template for the driver model. If not provided, backend will
             generate one based on language parameter.
-        temperature (float | Unset): Temperature of the driver model Default: 0.0.
+        temperature (float | None | Unset): Temperature of the driver model Default: 0.0.
         voice_instructions (None | str | Unset): Voice instructions for the driver model
         voice_profile (None | str | Unset): Voice profile for the driver model. Select from the following list of
             options: friendly, angry, confused, whispering, shouting, annoyed, urgent.
@@ -30,7 +30,7 @@ class TestDriverRequest:
 
     test_input: str
     prompt_template: None | str | Unset = UNSET
-    temperature: float | Unset = 0.0
+    temperature: float | None | Unset = 0.0
     voice_instructions: None | str | Unset = UNSET
     voice_profile: None | str | Unset = UNSET
     voice: None | str | Unset = UNSET
@@ -46,7 +46,11 @@ class TestDriverRequest:
         else:
             prompt_template = self.prompt_template
 
-        temperature = self.temperature
+        temperature: float | None | Unset
+        if isinstance(self.temperature, Unset):
+            temperature = UNSET
+        else:
+            temperature = self.temperature
 
         voice_instructions: None | str | Unset
         if isinstance(self.voice_instructions, Unset):
@@ -108,7 +112,14 @@ class TestDriverRequest:
 
         prompt_template = _parse_prompt_template(d.pop("prompt_template", UNSET))
 
-        temperature = d.pop("temperature", UNSET)
+        def _parse_temperature(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        temperature = _parse_temperature(d.pop("temperature", UNSET))
 
         def _parse_voice_instructions(data: object) -> None | str | Unset:
             if data is None:
