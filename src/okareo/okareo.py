@@ -46,8 +46,8 @@ from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_
     BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
 )
 from okareo_api_client.models.check_create_update_schema import CheckCreateUpdateSchema
-from okareo_api_client.models.check_create_update_schema_check_config import (
-    CheckCreateUpdateSchemaCheckConfig,
+from okareo_api_client.models.check_create_update_schema_check_config_type_0 import (
+    CheckCreateUpdateSchemaCheckConfigType0,
 )
 from okareo_api_client.models.create_group_v0_groups_post_body_type_0 import (
     CreateGroupV0GroupsPostBodyType0,
@@ -1018,7 +1018,7 @@ class Okareo:
         print(response)
         ```
         """
-        check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(
+        check_config = CheckCreateUpdateSchemaCheckConfigType0.from_dict(
             check.check_config()
         )
         response = check_create_or_update_v0_check_create_or_update_post.sync(
