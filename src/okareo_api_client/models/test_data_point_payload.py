@@ -19,13 +19,13 @@ class TestDataPointPayload:
         metric_value (str):
         test_run_id (None | Unset | UUID): ID for the testrun
         scenario_data_point_id (None | Unset | UUID): ID of the scenario data point
-        metric_type (str | Unset):
+        metric_type (None | str | Unset):
     """
 
     metric_value: str
     test_run_id: None | Unset | UUID = UNSET
     scenario_data_point_id: None | Unset | UUID = UNSET
-    metric_type: str | Unset = UNSET
+    metric_type: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,7 +47,11 @@ class TestDataPointPayload:
         else:
             scenario_data_point_id = self.scenario_data_point_id
 
-        metric_type = self.metric_type
+        metric_type: None | str | Unset
+        if isinstance(self.metric_type, Unset):
+            metric_type = UNSET
+        else:
+            metric_type = self.metric_type
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -104,7 +108,14 @@ class TestDataPointPayload:
 
         scenario_data_point_id = _parse_scenario_data_point_id(d.pop("scenario_data_point_id", UNSET))
 
-        metric_type = d.pop("metric_type", UNSET)
+        def _parse_metric_type(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        metric_type = _parse_metric_type(d.pop("metric_type", UNSET))
 
         test_data_point_payload = cls(
             metric_value=metric_value,

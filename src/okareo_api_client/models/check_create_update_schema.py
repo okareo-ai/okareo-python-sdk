@@ -10,7 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.check_create_update_schema_check_config import CheckCreateUpdateSchemaCheckConfig
+    from ..models.check_create_update_schema_check_config_type_0 import CheckCreateUpdateSchemaCheckConfigType0
 
 
 T = TypeVar("T", bound="CheckCreateUpdateSchema")
@@ -21,20 +21,22 @@ class CheckCreateUpdateSchema:
     """
     Attributes:
         check_id (None | Unset | UUID): When provided, update existing check by ID (allows name change)
-        name (str | Unset):
-        description (str | Unset):
-        check_config (CheckCreateUpdateSchemaCheckConfig | Unset):
+        name (None | str | Unset):
+        description (None | str | Unset):
+        check_config (CheckCreateUpdateSchemaCheckConfigType0 | None | Unset):
         project_id (None | Unset | UUID): ID of the project
     """
 
     check_id: None | Unset | UUID = UNSET
-    name: str | Unset = UNSET
-    description: str | Unset = UNSET
-    check_config: CheckCreateUpdateSchemaCheckConfig | Unset = UNSET
+    name: None | str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    check_config: CheckCreateUpdateSchemaCheckConfigType0 | None | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.check_create_update_schema_check_config_type_0 import CheckCreateUpdateSchemaCheckConfigType0
+
         check_id: None | str | Unset
         if isinstance(self.check_id, Unset):
             check_id = UNSET
@@ -43,13 +45,25 @@ class CheckCreateUpdateSchema:
         else:
             check_id = self.check_id
 
-        name = self.name
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
 
-        description = self.description
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
 
-        check_config: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.check_config, Unset):
+        check_config: dict[str, Any] | None | Unset
+        if isinstance(self.check_config, Unset):
+            check_config = UNSET
+        elif isinstance(self.check_config, CheckCreateUpdateSchemaCheckConfigType0):
             check_config = self.check_config.to_dict()
+        else:
+            check_config = self.check_config
 
         project_id: None | str | Unset
         if isinstance(self.project_id, Unset):
@@ -77,7 +91,7 @@ class CheckCreateUpdateSchema:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.check_create_update_schema_check_config import CheckCreateUpdateSchemaCheckConfig
+        from ..models.check_create_update_schema_check_config_type_0 import CheckCreateUpdateSchemaCheckConfigType0
 
         d = dict(src_dict)
 
@@ -98,16 +112,40 @@ class CheckCreateUpdateSchema:
 
         check_id = _parse_check_id(d.pop("check_id", UNSET))
 
-        name = d.pop("name", UNSET)
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        description = d.pop("description", UNSET)
+        name = _parse_name(d.pop("name", UNSET))
 
-        _check_config = d.pop("check_config", UNSET)
-        check_config: CheckCreateUpdateSchemaCheckConfig | Unset
-        if isinstance(_check_config, Unset):
-            check_config = UNSET
-        else:
-            check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(_check_config)
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
+
+        def _parse_check_config(data: object) -> CheckCreateUpdateSchemaCheckConfigType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                check_config_type_0 = CheckCreateUpdateSchemaCheckConfigType0.from_dict(data)
+
+                return check_config_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(CheckCreateUpdateSchemaCheckConfigType0 | None | Unset, data)
+
+        check_config = _parse_check_config(d.pop("check_config", UNSET))
 
         def _parse_project_id(data: object) -> None | Unset | UUID:
             if data is None:

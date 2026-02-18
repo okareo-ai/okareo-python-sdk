@@ -30,7 +30,7 @@ class TestRunItem:
         filter_group_id (None | Unset | UUID):
         name (None | str | Unset):
         tags (list[str] | None | Unset):
-        type_ (str | Unset):
+        type_ (None | str | Unset):
         start_time (datetime.datetime | None | Unset):
         end_time (datetime.datetime | None | Unset):
         test_data_point_count (int | None | Unset):
@@ -38,7 +38,7 @@ class TestRunItem:
         error_matrix (list[Any] | None | Unset):
         status (None | str | Unset):
         failure_message (None | str | Unset):
-        progress (int | None | Unset): Number in percent of progress of test run Default: 0.
+        progress (float | None | Unset): Number in percent of progress of test run Default: 0.0.
         app_link (str | Unset): This URL links to the Okareo webpage for this test run Default: ''.
         simulation_params (None | TestRunItemSimulationParamsType0 | Unset):
         driver_id (None | Unset | UUID): ID of the driver used for the run, if applicable.
@@ -51,7 +51,7 @@ class TestRunItem:
     filter_group_id: None | Unset | UUID = UNSET
     name: None | str | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
-    type_: str | Unset = UNSET
+    type_: None | str | Unset = UNSET
     start_time: datetime.datetime | None | Unset = UNSET
     end_time: datetime.datetime | None | Unset = UNSET
     test_data_point_count: int | None | Unset = UNSET
@@ -59,7 +59,7 @@ class TestRunItem:
     error_matrix: list[Any] | None | Unset = UNSET
     status: None | str | Unset = UNSET
     failure_message: None | str | Unset = UNSET
-    progress: int | None | Unset = 0
+    progress: float | None | Unset = 0.0
     app_link: str | Unset = ""
     simulation_params: None | TestRunItemSimulationParamsType0 | Unset = UNSET
     driver_id: None | Unset | UUID = UNSET
@@ -112,7 +112,11 @@ class TestRunItem:
         else:
             tags = self.tags
 
-        type_ = self.type_
+        type_: None | str | Unset
+        if isinstance(self.type_, Unset):
+            type_ = UNSET
+        else:
+            type_ = self.type_
 
         start_time: None | str | Unset
         if isinstance(self.start_time, Unset):
@@ -165,7 +169,7 @@ class TestRunItem:
         else:
             failure_message = self.failure_message
 
-        progress: int | None | Unset
+        progress: float | None | Unset
         if isinstance(self.progress, Unset):
             progress = UNSET
         else:
@@ -321,7 +325,14 @@ class TestRunItem:
 
         tags = _parse_tags(d.pop("tags", UNSET))
 
-        type_ = d.pop("type", UNSET)
+        def _parse_type_(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        type_ = _parse_type_(d.pop("type", UNSET))
 
         def _parse_start_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -418,12 +429,12 @@ class TestRunItem:
 
         failure_message = _parse_failure_message(d.pop("failure_message", UNSET))
 
-        def _parse_progress(data: object) -> int | None | Unset:
+        def _parse_progress(data: object) -> float | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(int | None | Unset, data)
+            return cast(float | None | Unset, data)
 
         progress = _parse_progress(d.pop("progress", UNSET))
 

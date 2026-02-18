@@ -29,7 +29,7 @@ class TestRunPayloadV2:
         api_keys (None | TestRunPayloadV2ApiKeysType0 | Unset): Dictionary that maps model type to the respective API
             keys
         metrics_kwargs (TestRunPayloadV2MetricsKwargs | Unset): Dictionary of metrics to be measured
-        name (str | Unset): Name of the test run
+        name (None | str | Unset): Name of the test run
         type_ (TestRunType | Unset):
         calculate_metrics (bool | Unset): Boolean value indicating if metrics should be calculated for the test run
             Default: True.
@@ -46,7 +46,7 @@ class TestRunPayloadV2:
     scenario_id: UUID
     api_keys: None | TestRunPayloadV2ApiKeysType0 | Unset = UNSET
     metrics_kwargs: TestRunPayloadV2MetricsKwargs | Unset = UNSET
-    name: str | Unset = UNSET
+    name: None | str | Unset = UNSET
     type_: TestRunType | Unset = UNSET
     calculate_metrics: bool | Unset = True
     tags: list[str] | Unset = UNSET
@@ -78,7 +78,11 @@ class TestRunPayloadV2:
         if not isinstance(self.metrics_kwargs, Unset):
             metrics_kwargs = self.metrics_kwargs.to_dict()
 
-        name = self.name
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
 
         type_: str | Unset = UNSET
         if not isinstance(self.type_, Unset):
@@ -198,7 +202,14 @@ class TestRunPayloadV2:
         else:
             metrics_kwargs = TestRunPayloadV2MetricsKwargs.from_dict(_metrics_kwargs)
 
-        name = d.pop("name", UNSET)
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        name = _parse_name(d.pop("name", UNSET))
 
         _type_ = d.pop("type", UNSET)
         type_: TestRunType | Unset

@@ -20,7 +20,7 @@ class DatapointSchema:
     Attributes:
         input_ (str): Inputted value into the model
         result (str): Outputted value from the model based on the input
-        mut_id (UUID | Unset): Model ID
+        mut_id (None | Unset | UUID): Model ID
         input_datetime (datetime.datetime | None | Unset): Datetime for the input
         result_datetime (datetime.datetime | None | Unset): Datetime for the result
         tags (list[str] | None | Unset): Tags are strings that can be used to filter datapoints in the Okareo app
@@ -39,7 +39,7 @@ class DatapointSchema:
 
     input_: str
     result: str
-    mut_id: UUID | Unset = UNSET
+    mut_id: None | Unset | UUID = UNSET
     input_datetime: datetime.datetime | None | Unset = UNSET
     result_datetime: datetime.datetime | None | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
@@ -59,9 +59,13 @@ class DatapointSchema:
 
         result = self.result
 
-        mut_id: str | Unset = UNSET
-        if not isinstance(self.mut_id, Unset):
+        mut_id: None | str | Unset
+        if isinstance(self.mut_id, Unset):
+            mut_id = UNSET
+        elif isinstance(self.mut_id, UUID):
             mut_id = str(self.mut_id)
+        else:
+            mut_id = self.mut_id
 
         input_datetime: None | str | Unset
         if isinstance(self.input_datetime, Unset):
@@ -190,12 +194,22 @@ class DatapointSchema:
 
         result = d.pop("result")
 
-        _mut_id = d.pop("mut_id", UNSET)
-        mut_id: UUID | Unset
-        if isinstance(_mut_id, Unset):
-            mut_id = UNSET
-        else:
-            mut_id = UUID(_mut_id)
+        def _parse_mut_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                mut_id_type_0 = UUID(data)
+
+                return mut_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        mut_id = _parse_mut_id(d.pop("mut_id", UNSET))
 
         def _parse_input_datetime(data: object) -> datetime.datetime | None | Unset:
             if data is None:

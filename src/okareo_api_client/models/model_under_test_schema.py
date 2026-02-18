@@ -10,7 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.model_under_test_schema_models import ModelUnderTestSchemaModels
+    from ..models.model_under_test_schema_models_type_0 import ModelUnderTestSchemaModelsType0
 
 
 T = TypeVar("T", bound="ModelUnderTestSchema")
@@ -20,8 +20,8 @@ T = TypeVar("T", bound="ModelUnderTestSchema")
 class ModelUnderTestSchema:
     """
     Attributes:
-        name (str | Unset): Name of the model
-        models (ModelUnderTestSchemaModels | Unset): Models to be added for testing
+        name (None | str | Unset): Name of the model
+        models (ModelUnderTestSchemaModelsType0 | None | Unset): Models to be added for testing
         version (int | Unset): Version of the model under test. Defaults to 1 if not provided. Default: 1.
         sensitive_fields (list[str] | None | Unset): List of sensitive fields in the model to redact. Should include
             nested fields, e.g. ['headers.authorization', 'body.password']
@@ -31,8 +31,8 @@ class ModelUnderTestSchema:
             Default: False.
     """
 
-    name: str | Unset = UNSET
-    models: ModelUnderTestSchemaModels | Unset = UNSET
+    name: None | str | Unset = UNSET
+    models: ModelUnderTestSchemaModelsType0 | None | Unset = UNSET
     version: int | Unset = 1
     sensitive_fields: list[str] | None | Unset = UNSET
     tags: list[str] | Unset = UNSET
@@ -41,11 +41,21 @@ class ModelUnderTestSchema:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name = self.name
+        from ..models.model_under_test_schema_models_type_0 import ModelUnderTestSchemaModelsType0
 
-        models: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.models, Unset):
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        models: dict[str, Any] | None | Unset
+        if isinstance(self.models, Unset):
+            models = UNSET
+        elif isinstance(self.models, ModelUnderTestSchemaModelsType0):
             models = self.models.to_dict()
+        else:
+            models = self.models
 
         version = self.version
 
@@ -98,17 +108,35 @@ class ModelUnderTestSchema:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.model_under_test_schema_models import ModelUnderTestSchemaModels
+        from ..models.model_under_test_schema_models_type_0 import ModelUnderTestSchemaModelsType0
 
         d = dict(src_dict)
-        name = d.pop("name", UNSET)
 
-        _models = d.pop("models", UNSET)
-        models: ModelUnderTestSchemaModels | Unset
-        if isinstance(_models, Unset):
-            models = UNSET
-        else:
-            models = ModelUnderTestSchemaModels.from_dict(_models)
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        name = _parse_name(d.pop("name", UNSET))
+
+        def _parse_models(data: object) -> ModelUnderTestSchemaModelsType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                models_type_0 = ModelUnderTestSchemaModelsType0.from_dict(data)
+
+                return models_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(ModelUnderTestSchemaModelsType0 | None | Unset, data)
+
+        models = _parse_models(d.pop("models", UNSET))
 
         version = d.pop("version", UNSET)
 

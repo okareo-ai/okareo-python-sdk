@@ -17,10 +17,10 @@ class EvaluatorSpecRequest:
     """
     Attributes:
         project_id (None | UUID): ID for the project
-        name (str | Unset): Name of the evaluator
+        name (None | str | Unset): Name of the evaluator
         user_input (None | str | Unset): Primary user instruction for generation. When set, used instead of description
             for the LLM prompt.
-        description (str | Unset): Description for the evaluator.
+        description (None | str | Unset): Description for the evaluator.
                         When this request is sent to generate an evaluator, this field will be used to generate it (or
             user_input if set).
         requires_scenario_input (bool | Unset): Whether the evaluator requires scenario input Default: False.
@@ -34,9 +34,9 @@ class EvaluatorSpecRequest:
     """
 
     project_id: None | UUID
-    name: str | Unset = UNSET
+    name: None | str | Unset = UNSET
     user_input: None | str | Unset = UNSET
-    description: str | Unset = UNSET
+    description: None | str | Unset = UNSET
     requires_scenario_input: bool | Unset = False
     requires_scenario_result: bool | Unset = False
     output_data_type: str | Unset = UNSET
@@ -52,7 +52,11 @@ class EvaluatorSpecRequest:
         else:
             project_id = self.project_id
 
-        name = self.name
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
 
         user_input: None | str | Unset
         if isinstance(self.user_input, Unset):
@@ -60,7 +64,11 @@ class EvaluatorSpecRequest:
         else:
             user_input = self.user_input
 
-        description = self.description
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
 
         requires_scenario_input = self.requires_scenario_input
 
@@ -133,7 +141,14 @@ class EvaluatorSpecRequest:
 
         project_id = _parse_project_id(d.pop("project_id"))
 
-        name = d.pop("name", UNSET)
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        name = _parse_name(d.pop("name", UNSET))
 
         def _parse_user_input(data: object) -> None | str | Unset:
             if data is None:
@@ -144,7 +159,14 @@ class EvaluatorSpecRequest:
 
         user_input = _parse_user_input(d.pop("user_input", UNSET))
 
-        description = d.pop("description", UNSET)
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
 
         requires_scenario_input = d.pop("requires_scenario_input", UNSET)
 

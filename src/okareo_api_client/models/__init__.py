@@ -11,7 +11,7 @@ from .assistant_thread_response import AssistantThreadResponse
 from .body_check_delete_v0_check_check_id_delete import BodyCheckDeleteV0CheckCheckIdDelete
 from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
 from .check_create_update_schema import CheckCreateUpdateSchema
-from .check_create_update_schema_check_config import CheckCreateUpdateSchemaCheckConfig
+from .check_create_update_schema_check_config_type_0 import CheckCreateUpdateSchemaCheckConfigType0
 from .check_validate_request import CheckValidateRequest
 from .check_validate_request_check_config import CheckValidateRequestCheckConfig
 from .check_validate_request_check_type import CheckValidateRequestCheckType
@@ -103,8 +103,8 @@ from .model_under_test_response_models_type_0_additional_property import (
     ModelUnderTestResponseModelsType0AdditionalProperty,
 )
 from .model_under_test_schema import ModelUnderTestSchema
-from .model_under_test_schema_models import ModelUnderTestSchemaModels
-from .model_under_test_schema_models_additional_property import ModelUnderTestSchemaModelsAdditionalProperty
+from .model_under_test_schema_models_type_0 import ModelUnderTestSchemaModelsType0
+from .model_under_test_schema_models_type_0_additional_property import ModelUnderTestSchemaModelsType0AdditionalProperty
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
 from .scenario_data_poin_response import ScenarioDataPoinResponse
@@ -180,7 +180,7 @@ __all__ = (
     "BodyCheckDeleteV0CheckCheckIdDelete",
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
     "CheckCreateUpdateSchema",
-    "CheckCreateUpdateSchemaCheckConfig",
+    "CheckCreateUpdateSchemaCheckConfigType0",
     "CheckValidateRequest",
     "CheckValidateRequestCheckConfig",
     "CheckValidateRequestCheckType",
@@ -256,8 +256,8 @@ __all__ = (
     "ModelUnderTestResponseModelsType0",
     "ModelUnderTestResponseModelsType0AdditionalProperty",
     "ModelUnderTestSchema",
-    "ModelUnderTestSchemaModels",
-    "ModelUnderTestSchemaModelsAdditionalProperty",
+    "ModelUnderTestSchemaModelsType0",
+    "ModelUnderTestSchemaModelsType0AdditionalProperty",
     "ProjectResponse",
     "ProjectSchema",
     "ScenarioDataPoinResponse",
