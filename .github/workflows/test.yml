@@ -60,3 +60,4 @@ jobs:
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_FROM_PHONE: ${{ secrets.TWILIO_FROM_PHONE }}
           TWILIO_TO_PHONE: ${{ secrets.TWILIO_TO_PHONE }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}

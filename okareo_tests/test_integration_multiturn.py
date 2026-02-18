@@ -35,7 +35,7 @@ from okareo_api_client.models.seed_data import SeedData
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "NOT SET")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "NOT SET")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini/gemini-2.5-flash-preview-09-2025")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini/gemini-3-flash-preview")
 base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
 
 
