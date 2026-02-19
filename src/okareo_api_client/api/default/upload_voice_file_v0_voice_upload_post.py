@@ -87,6 +87,8 @@ def sync_detailed(
 
      Upload a base64-encoded WAV audio file.
 
+    The file is stored as-is and duration is extracted from WAV headers.
+
     Args:
         api_key (str):
         body (VoiceUploadRequest):
@@ -121,6 +123,8 @@ def sync(
 
      Upload a base64-encoded WAV audio file.
 
+    The file is stored as-is and duration is extracted from WAV headers.
+
     Args:
         api_key (str):
         body (VoiceUploadRequest):
@@ -149,6 +153,8 @@ async def asyncio_detailed(
     """Upload Voice File
 
      Upload a base64-encoded WAV audio file.
+
+    The file is stored as-is and duration is extracted from WAV headers.
 
     Args:
         api_key (str):
@@ -181,6 +187,8 @@ async def asyncio(
     """Upload Voice File
 
      Upload a base64-encoded WAV audio file.
+
+    The file is stored as-is and duration is extracted from WAV headers.
 
     Args:
         api_key (str):
