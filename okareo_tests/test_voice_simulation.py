@@ -8,7 +8,8 @@ Tests for voice simulations via Twilio, covering:
 """
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
+from uuid import UUID
 
 import pytest
 from okareo_tests.common import random_string
@@ -90,12 +91,17 @@ def create_scenario(okareo: Okareo, name: str, inputs: List[Dict[str, Any]]) -> 
     return okareo.create_scenario_set(ScenarioSetCreate(name=name, seed_data=seed_data))
 
 
-def get_datapoints(okareo: Okareo, test_run_id: str) -> List[Any]:
+def get_datapoints(okareo: Okareo, test_run_id: Union[str, UUID]) -> List[Any]:
     """Fetch all datapoints for a test run."""
     from okareo_api_client.models.error_response import ErrorResponse
 
     datapoints = okareo.find_test_data_points(
-        FindTestDataPointPayload(test_run_id=test_run_id, full_data_point=True)
+        FindTestDataPointPayload(
+            test_run_id=(
+                UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+            ),
+            full_data_point=True,
+        )
     )
 
     # Handle potential error response
@@ -105,7 +111,9 @@ def get_datapoints(okareo: Okareo, test_run_id: str) -> List[Any]:
     return datapoints
 
 
-def get_messages(okareo: Okareo, test_run_id: str) -> List[List[Dict[str, Any]]]:
+def get_messages(
+    okareo: Okareo, test_run_id: Union[str, UUID]
+) -> List[List[Dict[str, Any]]]:
     """Fetch messages from all datapoints for a test run."""
     from okareo_api_client.models.full_data_point_item import FullDataPointItem
     from okareo_api_client.types import Unset

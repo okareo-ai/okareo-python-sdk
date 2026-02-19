@@ -1,4 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,74 +24,114 @@ T = TypeVar("T", bound="TestRunPayloadV2")
 class TestRunPayloadV2:
     """
     Attributes:
-        mut_id (str): ID of the model
-        scenario_id (str): ID of the scenario set
-        api_keys (Union[Unset, TestRunPayloadV2ApiKeys]): Dictionary that maps model type to the respective API keys
-        metrics_kwargs (Union[Unset, TestRunPayloadV2MetricsKwargs]): Dictionary of metrics to be measured
-        name (Union[Unset, str]): Name of the test run
-        type (Union[Unset, TestRunType]): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
-        calculate_metrics (Union[Unset, bool]): Boolean value indicating if metrics should be calculated for the test
-            run Default: True.
-        tags (Union[Unset, List[str]]): Tags are strings that can be used to filter test runs in the Okareo app
-        model_results (Union[Unset, TestRunPayloadV2ModelResults]):
-        checks (Union[Unset, List[str]]): List of checks to include in the test run.
-        simulation_params (Union[Unset, TestRunPayloadV2SimulationParams]): Simulation parameters for the test run.
-        driver_id (Union[Unset, str]): ID of the driver model to use, if applicable.
-        nats_invoke_id (Union[Unset, str]): Optional custom NATS invoke ID for the mut evaluation.
+        mut_id (UUID): ID of the model
+        scenario_id (UUID): ID of the scenario set
+        api_keys (None | TestRunPayloadV2ApiKeys | Unset): Dictionary that maps model type to the respective API keys
+        metrics_kwargs (TestRunPayloadV2MetricsKwargs | Unset): Dictionary of metrics to be measured
+        name (None | str | Unset): Name of the test run
+        type_ (TestRunType | Unset): An enumeration. Default: TestRunType.MULTI_CLASS_CLASSIFICATION.
+        calculate_metrics (bool | Unset): Boolean value indicating if metrics should be calculated for the test run
+            Default: True.
+        tags (list[str] | Unset): Tags are strings that can be used to filter test runs in the Okareo app
+        model_results (None | TestRunPayloadV2ModelResults | Unset):
+        checks (list[str] | None | Unset): List of checks to include in the test run.
+        simulation_params (None | TestRunPayloadV2SimulationParams | Unset): Simulation parameters for the test run.
+        driver_id (None | Unset | UUID): ID of the driver model to use, if applicable.
+        nats_invoke_id (None | str | Unset): Optional custom NATS invoke ID for the mut evaluation.
     """
 
-    mut_id: str
-    scenario_id: str
-    api_keys: Union[Unset, "TestRunPayloadV2ApiKeys"] = UNSET
-    metrics_kwargs: Union[Unset, "TestRunPayloadV2MetricsKwargs"] = UNSET
-    name: Union[Unset, str] = UNSET
-    type: Union[Unset, TestRunType] = TestRunType.MULTI_CLASS_CLASSIFICATION
-    calculate_metrics: Union[Unset, bool] = True
-    tags: Union[Unset, List[str]] = UNSET
-    model_results: Union[Unset, "TestRunPayloadV2ModelResults"] = UNSET
-    checks: Union[Unset, List[str]] = UNSET
-    simulation_params: Union[Unset, "TestRunPayloadV2SimulationParams"] = UNSET
-    driver_id: Union[Unset, str] = UNSET
-    nats_invoke_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    mut_id: UUID
+    scenario_id: UUID
+    api_keys: None | TestRunPayloadV2ApiKeys | Unset = UNSET
+    metrics_kwargs: TestRunPayloadV2MetricsKwargs | Unset = UNSET
+    name: None | str | Unset = UNSET
+    type_: TestRunType | Unset = TestRunType.MULTI_CLASS_CLASSIFICATION
+    calculate_metrics: bool | Unset = True
+    tags: list[str] | Unset = UNSET
+    model_results: None | TestRunPayloadV2ModelResults | Unset = UNSET
+    checks: list[str] | None | Unset = UNSET
+    simulation_params: None | TestRunPayloadV2SimulationParams | Unset = UNSET
+    driver_id: None | Unset | UUID = UNSET
+    nats_invoke_id: None | str | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        mut_id = self.mut_id
-        scenario_id = self.scenario_id
-        api_keys: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.api_keys, Unset):
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
+        from ..models.test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
+        from ..models.test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationParams
+
+        mut_id = str(self.mut_id)
+
+        scenario_id = str(self.scenario_id)
+
+        api_keys: dict[str, Any] | None | Unset
+        if isinstance(self.api_keys, Unset):
+            api_keys = UNSET
+        elif isinstance(self.api_keys, TestRunPayloadV2ApiKeys):
             api_keys = self.api_keys.to_dict()
+        else:
+            api_keys = self.api_keys
 
-        metrics_kwargs: Union[Unset, Dict[str, Any]] = UNSET
+        metrics_kwargs: dict[str, Any] | Unset = UNSET
         if not isinstance(self.metrics_kwargs, Unset):
             metrics_kwargs = self.metrics_kwargs.to_dict()
 
-        name = self.name
-        type: Union[Unset, str] = UNSET
-        if not isinstance(self.type, Unset):
-            type = self.type.value
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        type_: str | Unset = UNSET
+        if not isinstance(self.type_, Unset):
+            type_ = self.type_.value
 
         calculate_metrics = self.calculate_metrics
-        tags: Union[Unset, List[str]] = UNSET
+
+        tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        model_results: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.model_results, Unset):
+        model_results: dict[str, Any] | None | Unset
+        if isinstance(self.model_results, Unset):
+            model_results = UNSET
+        elif isinstance(self.model_results, TestRunPayloadV2ModelResults):
             model_results = self.model_results.to_dict()
+        else:
+            model_results = self.model_results
 
-        checks: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.checks, Unset):
+        checks: list[str] | None | Unset
+        if isinstance(self.checks, Unset):
+            checks = UNSET
+        elif isinstance(self.checks, list):
             checks = self.checks
 
-        simulation_params: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.simulation_params, Unset):
+        else:
+            checks = self.checks
+
+        simulation_params: dict[str, Any] | None | Unset
+        if isinstance(self.simulation_params, Unset):
+            simulation_params = UNSET
+        elif isinstance(self.simulation_params, TestRunPayloadV2SimulationParams):
             simulation_params = self.simulation_params.to_dict()
+        else:
+            simulation_params = self.simulation_params
 
-        driver_id = self.driver_id
-        nats_invoke_id = self.nats_invoke_id
+        driver_id: None | str | Unset
+        if isinstance(self.driver_id, Unset):
+            driver_id = UNSET
+        elif isinstance(self.driver_id, UUID):
+            driver_id = str(self.driver_id)
+        else:
+            driver_id = self.driver_id
 
-        field_dict: Dict[str, Any] = {}
+        nats_invoke_id: None | str | Unset
+        if isinstance(self.nats_invoke_id, Unset):
+            nats_invoke_id = UNSET
+        else:
+            nats_invoke_id = self.nats_invoke_id
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -101,8 +145,8 @@ class TestRunPayloadV2:
             field_dict["metrics_kwargs"] = metrics_kwargs
         if name is not UNSET:
             field_dict["name"] = name
-        if type is not UNSET:
-            field_dict["type"] = type
+        if type_ is not UNSET:
+            field_dict["type"] = type_
         if calculate_metrics is not UNSET:
             field_dict["calculate_metrics"] = calculate_metrics
         if tags is not UNSET:
@@ -121,63 +165,137 @@ class TestRunPayloadV2:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.test_run_payload_v2_api_keys import TestRunPayloadV2ApiKeys
         from ..models.test_run_payload_v2_metrics_kwargs import TestRunPayloadV2MetricsKwargs
         from ..models.test_run_payload_v2_model_results import TestRunPayloadV2ModelResults
         from ..models.test_run_payload_v2_simulation_params import TestRunPayloadV2SimulationParams
 
-        d = src_dict.copy()
-        mut_id = d.pop("mut_id")
+        d = dict(src_dict)
+        mut_id = UUID(d.pop("mut_id"))
 
-        scenario_id = d.pop("scenario_id")
+        scenario_id = UUID(d.pop("scenario_id"))
 
-        _api_keys = d.pop("api_keys", UNSET)
-        api_keys: Union[Unset, TestRunPayloadV2ApiKeys]
-        if isinstance(_api_keys, Unset):
-            api_keys = UNSET
-        else:
-            api_keys = TestRunPayloadV2ApiKeys.from_dict(_api_keys)
+        def _parse_api_keys(data: object) -> None | TestRunPayloadV2ApiKeys | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                api_keys_type_0 = TestRunPayloadV2ApiKeys.from_dict(data)
+
+                return api_keys_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | TestRunPayloadV2ApiKeys | Unset, data)
+
+        api_keys = _parse_api_keys(d.pop("api_keys", UNSET))
 
         _metrics_kwargs = d.pop("metrics_kwargs", UNSET)
-        metrics_kwargs: Union[Unset, TestRunPayloadV2MetricsKwargs]
+        metrics_kwargs: TestRunPayloadV2MetricsKwargs | Unset
         if isinstance(_metrics_kwargs, Unset):
             metrics_kwargs = UNSET
         else:
             metrics_kwargs = TestRunPayloadV2MetricsKwargs.from_dict(_metrics_kwargs)
 
-        name = d.pop("name", UNSET)
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        _type = d.pop("type", UNSET)
-        type: Union[Unset, TestRunType]
-        if isinstance(_type, Unset):
-            type = UNSET
+        name = _parse_name(d.pop("name", UNSET))
+
+        _type_ = d.pop("type", UNSET)
+        type_: TestRunType | Unset
+        if isinstance(_type_, Unset):
+            type_ = UNSET
         else:
-            type = TestRunType(_type)
+            type_ = TestRunType(_type_)
 
         calculate_metrics = d.pop("calculate_metrics", UNSET)
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        tags = cast(list[str], d.pop("tags", UNSET))
 
-        _model_results = d.pop("model_results", UNSET)
-        model_results: Union[Unset, TestRunPayloadV2ModelResults]
-        if isinstance(_model_results, Unset):
-            model_results = UNSET
-        else:
-            model_results = TestRunPayloadV2ModelResults.from_dict(_model_results)
+        def _parse_model_results(data: object) -> None | TestRunPayloadV2ModelResults | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                model_results_type_0 = TestRunPayloadV2ModelResults.from_dict(data)
 
-        checks = cast(List[str], d.pop("checks", UNSET))
+                return model_results_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | TestRunPayloadV2ModelResults | Unset, data)
 
-        _simulation_params = d.pop("simulation_params", UNSET)
-        simulation_params: Union[Unset, TestRunPayloadV2SimulationParams]
-        if isinstance(_simulation_params, Unset):
-            simulation_params = UNSET
-        else:
-            simulation_params = TestRunPayloadV2SimulationParams.from_dict(_simulation_params)
+        model_results = _parse_model_results(d.pop("model_results", UNSET))
 
-        driver_id = d.pop("driver_id", UNSET)
+        def _parse_checks(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                checks_type_0 = cast(list[str], data)
 
-        nats_invoke_id = d.pop("nats_invoke_id", UNSET)
+                return checks_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        checks = _parse_checks(d.pop("checks", UNSET))
+
+        def _parse_simulation_params(data: object) -> None | TestRunPayloadV2SimulationParams | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                simulation_params_type_0 = TestRunPayloadV2SimulationParams.from_dict(data)
+
+                return simulation_params_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | TestRunPayloadV2SimulationParams | Unset, data)
+
+        simulation_params = _parse_simulation_params(d.pop("simulation_params", UNSET))
+
+        def _parse_driver_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                driver_id_type_0 = UUID(data)
+
+                return driver_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        driver_id = _parse_driver_id(d.pop("driver_id", UNSET))
+
+        def _parse_nats_invoke_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        nats_invoke_id = _parse_nats_invoke_id(d.pop("nats_invoke_id", UNSET))
 
         test_run_payload_v2 = cls(
             mut_id=mut_id,
@@ -185,7 +303,7 @@ class TestRunPayloadV2:
             api_keys=api_keys,
             metrics_kwargs=metrics_kwargs,
             name=name,
-            type=type,
+            type_=type_,
             calculate_metrics=calculate_metrics,
             tags=tags,
             model_results=model_results,
@@ -199,7 +317,7 @@ class TestRunPayloadV2:
         return test_run_payload_v2
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

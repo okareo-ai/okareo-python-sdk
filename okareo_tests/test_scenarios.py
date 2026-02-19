@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import uuid
 from typing import List
 
 import pytest
@@ -203,7 +204,7 @@ def generate_scenarios_custom_with_schema(
 def get_scenario_data_points(
     okareo_client: Okareo, create_scenario_set: ScenarioSetResponse
 ) -> List[ScenarioDataPoinResponse]:
-    assert isinstance(create_scenario_set.scenario_id, str)
+    assert isinstance(create_scenario_set.scenario_id, (str, uuid.UUID))
     return okareo_client.get_scenario_data_points(create_scenario_set.scenario_id)
 
 
@@ -223,7 +224,7 @@ def assert_generated_scenarios_seed_ids(
     seed_dp = okareo_client.get_scenario_data_points(
         generated_scenario.tags[0].split(":")[1]  # type: ignore
     )
-    seed_ids = [dp.id for dp in seed_dp]
+    seed_ids = [str(dp.id) for dp in seed_dp]
 
     for dp in gen_dp:
         assert dp.meta_data
@@ -237,7 +238,7 @@ def assert_generated_scenarios_seed_ids(
 def test_create_scenario_set(
     create_scenario_set: ScenarioSetResponse, seed_data: List[SeedData]
 ) -> None:
-    assert create_scenario_set.type == "SEED"  # default test
+    assert create_scenario_set.type_ == "SEED"  # default test
     assert create_scenario_set.scenario_id
     assert create_scenario_set.project_id
     assert create_scenario_set.time_created
@@ -309,7 +310,7 @@ def test_create_scenario_set_all_fields(
         scenario_set_create
     )
 
-    assert create_scenario_set.type == "SEED"
+    assert create_scenario_set.type_ == "SEED"
     assert create_scenario_set.scenario_id
     assert create_scenario_set.project_id
     assert create_scenario_set.time_created
@@ -324,7 +325,7 @@ def test_generate_scenarios(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios.type == "REPHRASE_INVARIANT"
+    assert generate_scenarios.type_ == "REPHRASE_INVARIANT"
     assert generate_scenarios.seed_data == []
     assert generate_scenarios is not None
     assert generate_scenarios.scenario_id
@@ -340,7 +341,7 @@ def test_generate_scenarios_qa(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios_qa.type == "TEXT_REVERSE_QUESTION_ANSWER"
+    assert generate_scenarios_qa.type_ == "TEXT_REVERSE_QUESTION_ANSWER"
     assert generate_scenarios_qa.seed_data == []
     assert generate_scenarios_qa is not None
     assert generate_scenarios_qa.scenario_id
@@ -356,7 +357,7 @@ def test_generate_scenarios_synonyms(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios_synonym.type == "SYNONYMS"
+    assert generate_scenarios_synonym.type_ == "SYNONYMS"
     assert generate_scenarios_synonym.seed_data == []
     assert generate_scenarios_synonym is not None
     assert generate_scenarios_synonym.scenario_id
@@ -372,7 +373,7 @@ def test_generate_scenarios_custom(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios_custom.type == "CUSTOM_GENERATOR"
+    assert generate_scenarios_custom.type_ == "CUSTOM_GENERATOR"
     assert generate_scenarios_custom.seed_data == []
     assert generate_scenarios_custom is not None
     assert generate_scenarios_custom.scenario_id
@@ -388,7 +389,7 @@ def test_generate_scenarios_custom_multi_chunk(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios_custom_multi_chunk.type == "CUSTOM_MULTI_CHUNK_GENERATOR"
+    assert generate_scenarios_custom_multi_chunk.type_ == "CUSTOM_MULTI_CHUNK_GENERATOR"
     assert generate_scenarios_custom_multi_chunk.seed_data == []
     assert generate_scenarios_custom_multi_chunk is not None
     assert generate_scenarios_custom_multi_chunk.scenario_id
@@ -406,7 +407,7 @@ def test_generate_scenarios_custom_with_schema(
     seed_data: List[SeedData],
     okareo_client: Okareo,
 ) -> None:
-    assert generate_scenarios_custom_with_schema.type == "CUSTOM_GENERATOR"
+    assert generate_scenarios_custom_with_schema.type_ == "CUSTOM_GENERATOR"
     assert generate_scenarios_custom_with_schema.seed_data == []
     assert generate_scenarios_custom_with_schema is not None
     assert generate_scenarios_custom_with_schema.scenario_id
@@ -463,7 +464,7 @@ def test_generate_scenarios_empty(
         assert generated_scenario is not None
         assert generated_scenario.scenario_id == ""
         assert generated_scenario.time_created
-        assert generated_scenario.type == "SYNONYMS"
+        assert generated_scenario.type_ == "SYNONYMS"
         if not record:
             pytest.fail("Expected warning for empty generated scenario.")
 
@@ -532,7 +533,7 @@ def dtest_create_delete_scenario_set_contraction_tiny_load(
         assert isinstance(scenario.scenario_id, str)
         delete_scenario_data_points(API_KEY, scenario.scenario_id, scenario.name)
 
-    assert scenario.type == "COMMON_CONTRACTIONS"
+    assert scenario.type_ == "COMMON_CONTRACTIONS"
 
 
 def dtest_create_delete_scenario_set_misspelling_tiny_load(
@@ -568,4 +569,4 @@ def dtest_create_delete_scenario_set_misspelling_tiny_load(
 
         delete_scenario_data_points(API_KEY, scenario.scenario_id, scenario.name)
 
-    assert scenario.type == "COMMON_MISSPELLINGS"
+    assert scenario.type_ == "COMMON_MISSPELLINGS"

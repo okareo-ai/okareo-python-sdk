@@ -1,5 +1,7 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
@@ -11,45 +13,52 @@ from ...types import Response
 
 
 def _get_kwargs(
-    mut_id: str,
+    mut_id: UUID,
     *,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/models_under_test/{mut_id}".format(
-            mut_id=mut_id,
+            mut_id=quote(str(mut_id), safe=""),
         ),
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
-    if response.status_code == HTTPStatus.CREATED:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> ErrorResponse | ModelUnderTestResponse | None:
+    if response.status_code == 201:
         response_201 = ModelUnderTestResponse.from_dict(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -57,8 +66,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[ErrorResponse | ModelUnderTestResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,11 +77,11 @@ def _build_response(
 
 
 def sync_detailed(
-    mut_id: str,
+    mut_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
+) -> Response[ErrorResponse | ModelUnderTestResponse]:
     """Get Model Under Test
 
      Get a model under test
@@ -81,7 +90,7 @@ def sync_detailed(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model
+        mut_id (UUID): The ID of the model
         api_key (str):
 
     Raises:
@@ -89,7 +98,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ModelUnderTestResponse]]
+        Response[ErrorResponse | ModelUnderTestResponse]
     """
 
     kwargs = _get_kwargs(
@@ -105,11 +114,11 @@ def sync_detailed(
 
 
 def sync(
-    mut_id: str,
+    mut_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
+) -> ErrorResponse | ModelUnderTestResponse | None:
     """Get Model Under Test
 
      Get a model under test
@@ -118,7 +127,7 @@ def sync(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model
+        mut_id (UUID): The ID of the model
         api_key (str):
 
     Raises:
@@ -126,7 +135,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ModelUnderTestResponse]
+        ErrorResponse | ModelUnderTestResponse
     """
 
     return sync_detailed(
@@ -137,11 +146,11 @@ def sync(
 
 
 async def asyncio_detailed(
-    mut_id: str,
+    mut_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[ErrorResponse, ModelUnderTestResponse]]:
+) -> Response[ErrorResponse | ModelUnderTestResponse]:
     """Get Model Under Test
 
      Get a model under test
@@ -150,7 +159,7 @@ async def asyncio_detailed(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model
+        mut_id (UUID): The ID of the model
         api_key (str):
 
     Raises:
@@ -158,7 +167,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ModelUnderTestResponse]]
+        Response[ErrorResponse | ModelUnderTestResponse]
     """
 
     kwargs = _get_kwargs(
@@ -172,11 +181,11 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    mut_id: str,
+    mut_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ModelUnderTestResponse]]:
+) -> ErrorResponse | ModelUnderTestResponse | None:
     """Get Model Under Test
 
      Get a model under test
@@ -185,7 +194,7 @@ async def asyncio(
         the requested model under test
 
     Args:
-        mut_id (str): The ID of the model
+        mut_id (UUID): The ID of the model
         api_key (str):
 
     Raises:
@@ -193,7 +202,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ModelUnderTestResponse]
+        ErrorResponse | ModelUnderTestResponse
     """
 
     return (

@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, cast
 
 import httpx
 
@@ -13,54 +13,58 @@ def _get_kwargs(
     *,
     status: str,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
+
     params["status"] = status
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "put",
         "url": "/v0/onboarding_status",
         "params": params,
-        "headers": headers,
     }
 
+    _kwargs["headers"] = headers
+    return _kwargs
 
-def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, str]]:
-    if response.status_code == HTTPStatus.OK:
+
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorResponse | str | None:
+    if response.status_code == 200:
         response_200 = cast(str, response.json())
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, str]]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorResponse | str]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -71,10 +75,10 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     status: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, str]]:
+) -> Response[ErrorResponse | str]:
     """Update Onboarding Status
 
      Update the onboarding completion status for the organization
@@ -94,7 +98,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, str]]
+        Response[ErrorResponse | str]
     """
 
     kwargs = _get_kwargs(
@@ -111,10 +115,10 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     status: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, str]]:
+) -> ErrorResponse | str | None:
     """Update Onboarding Status
 
      Update the onboarding completion status for the organization
@@ -134,7 +138,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, str]
+        ErrorResponse | str
     """
 
     return sync_detailed(
@@ -146,10 +150,10 @@ def sync(
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     status: str,
     api_key: str,
-) -> Response[Union[ErrorResponse, str]]:
+) -> Response[ErrorResponse | str]:
     """Update Onboarding Status
 
      Update the onboarding completion status for the organization
@@ -169,7 +173,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, str]]
+        Response[ErrorResponse | str]
     """
 
     kwargs = _get_kwargs(
@@ -184,10 +188,10 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     status: str,
     api_key: str,
-) -> Optional[Union[ErrorResponse, str]]:
+) -> ErrorResponse | str | None:
     """Update Onboarding Status
 
      Update the onboarding completion status for the organization
@@ -207,7 +211,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, str]
+        ErrorResponse | str
     """
 
     return (

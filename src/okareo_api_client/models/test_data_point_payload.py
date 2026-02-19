@@ -1,4 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,25 +16,48 @@ T = TypeVar("T", bound="TestDataPointPayload")
 class TestDataPointPayload:
     """
     Attributes:
-        test_run_id (Union[Unset, str]): ID for the testrun
-        scenario_data_point_id (Union[Unset, str]): ID of the scenario data point
-        metric_type (Union[Unset, str]):
-        metric_value (Union[Unset, str]):
+        test_run_id (None | Unset | UUID): ID for the testrun
+        scenario_data_point_id (None | Unset | UUID): ID of the scenario data point
+        metric_type (None | str | Unset):
+        metric_value (None | str | Unset):
     """
 
-    test_run_id: Union[Unset, str] = UNSET
-    scenario_data_point_id: Union[Unset, str] = UNSET
-    metric_type: Union[Unset, str] = UNSET
-    metric_value: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    test_run_id: None | Unset | UUID = UNSET
+    scenario_data_point_id: None | Unset | UUID = UNSET
+    metric_type: None | str | Unset = UNSET
+    metric_value: None | str | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        test_run_id = self.test_run_id
-        scenario_data_point_id = self.scenario_data_point_id
-        metric_type = self.metric_type
-        metric_value = self.metric_value
+    def to_dict(self) -> dict[str, Any]:
+        test_run_id: None | str | Unset
+        if isinstance(self.test_run_id, Unset):
+            test_run_id = UNSET
+        elif isinstance(self.test_run_id, UUID):
+            test_run_id = str(self.test_run_id)
+        else:
+            test_run_id = self.test_run_id
 
-        field_dict: Dict[str, Any] = {}
+        scenario_data_point_id: None | str | Unset
+        if isinstance(self.scenario_data_point_id, Unset):
+            scenario_data_point_id = UNSET
+        elif isinstance(self.scenario_data_point_id, UUID):
+            scenario_data_point_id = str(self.scenario_data_point_id)
+        else:
+            scenario_data_point_id = self.scenario_data_point_id
+
+        metric_type: None | str | Unset
+        if isinstance(self.metric_type, Unset):
+            metric_type = UNSET
+        else:
+            metric_type = self.metric_type
+
+        metric_value: None | str | Unset
+        if isinstance(self.metric_value, Unset):
+            metric_value = UNSET
+        else:
+            metric_value = self.metric_value
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if test_run_id is not UNSET:
@@ -45,15 +72,60 @@ class TestDataPointPayload:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        test_run_id = d.pop("test_run_id", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
 
-        scenario_data_point_id = d.pop("scenario_data_point_id", UNSET)
+        def _parse_test_run_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                test_run_id_type_0 = UUID(data)
 
-        metric_type = d.pop("metric_type", UNSET)
+                return test_run_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
 
-        metric_value = d.pop("metric_value", UNSET)
+        test_run_id = _parse_test_run_id(d.pop("test_run_id", UNSET))
+
+        def _parse_scenario_data_point_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                scenario_data_point_id_type_0 = UUID(data)
+
+                return scenario_data_point_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        scenario_data_point_id = _parse_scenario_data_point_id(d.pop("scenario_data_point_id", UNSET))
+
+        def _parse_metric_type(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        metric_type = _parse_metric_type(d.pop("metric_type", UNSET))
+
+        def _parse_metric_value(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        metric_value = _parse_metric_value(d.pop("metric_value", UNSET))
 
         test_data_point_payload = cls(
             test_run_id=test_run_id,
@@ -66,7 +138,7 @@ class TestDataPointPayload:
         return test_data_point_payload
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

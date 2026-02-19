@@ -432,7 +432,7 @@ def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
                 FilterCondition(
                     field=DatapointField.TEST_RUN_ID,
                     operator=ComparisonOperator.EQUAL,
-                    value=tdp[0].id,
+                    value=str(tdp[0].id),
                 )
             ]
         )

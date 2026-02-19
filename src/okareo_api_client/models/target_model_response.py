@@ -1,4 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,22 +18,24 @@ T = TypeVar("T", bound="TargetModelResponse")
 class TargetModelResponse:
     """
     Attributes:
-        id (str):
+        id (UUID):
         name (str):
         target (TargetModelResponseTarget):
     """
 
-    id: str
+    id: UUID
     name: str
-    target: "TargetModelResponseTarget"
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    target: TargetModelResponseTarget
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
+    def to_dict(self) -> dict[str, Any]:
+        id = str(self.id)
+
         name = self.name
+
         target = self.target.to_dict()
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -42,11 +48,11 @@ class TargetModelResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.target_model_response_target import TargetModelResponseTarget
 
-        d = src_dict.copy()
-        id = d.pop("id")
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
         name = d.pop("name")
 
@@ -62,7 +68,7 @@ class TargetModelResponse:
         return target_model_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

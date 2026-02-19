@@ -335,7 +335,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -345,7 +345,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     for dp in test_data_points:
         update_test_data_point_v0_update_test_data_point_post.sync(
             client=okareo.client,
-            json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+            body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
                 tags=[["ci-testing"]],
                 ids=[dp.id],
             ),
@@ -367,7 +367,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     new_test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -409,7 +409,7 @@ def test_run_test_cohere_pinecone_ir_tags(
     )
     new_test_data_points_no_tag = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -494,7 +494,7 @@ def test_run_test_custom_ir_tags(
     )
     test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -502,7 +502,7 @@ def test_run_test_custom_ir_tags(
     assert isinstance(test_data_points, list)
     update_test_data_point_v0_update_test_data_point_post.sync(
         client=okareo.client,
-        json_body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
+        body=update_test_data_point_v0_update_test_data_point_post.UpdateTestDataPointPayload(
             tags=[["ci-testing"]],
             ids=[test_data_points[0].id],
         ),
@@ -520,7 +520,7 @@ def test_run_test_custom_ir_tags(
     )
     new_test_data_points = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,
@@ -587,7 +587,7 @@ def test_run_test_custom_ir_tags(
     )
     new_test_data_points_no_tag = find_test_data_points_v0_find_test_data_points_post.sync(
         client=okareo.client,
-        json_body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
+        body=find_test_data_points_v0_find_test_data_points_post.FindTestDataPointPayload(
             test_run_id=run_resp.id
         ),
         api_key=API_KEY,

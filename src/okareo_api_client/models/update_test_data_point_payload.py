@@ -1,4 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,21 +16,28 @@ T = TypeVar("T", bound="UpdateTestDataPointPayload")
 class UpdateTestDataPointPayload:
     """
     Attributes:
-        ids (Union[Unset, List[str]]): IDs of the datapoints to update
-        tags (Union[Unset, List[List[str]]]): Tags are strings that can be used to filter test data points in the Okareo
-            app
+        ids (list[UUID] | None | Unset): IDs of the datapoints to update
+        tags (list[list[str]] | Unset): Tags are strings that can be used to filter test data points in the Okareo app
     """
 
-    ids: Union[Unset, List[str]] = UNSET
-    tags: Union[Unset, List[List[str]]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    ids: list[UUID] | None | Unset = UNSET
+    tags: list[list[str]] | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        ids: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.ids, Unset):
+    def to_dict(self) -> dict[str, Any]:
+        ids: list[str] | None | Unset
+        if isinstance(self.ids, Unset):
+            ids = UNSET
+        elif isinstance(self.ids, list):
+            ids = []
+            for ids_type_0_item_data in self.ids:
+                ids_type_0_item = str(ids_type_0_item_data)
+                ids.append(ids_type_0_item)
+
+        else:
             ids = self.ids
 
-        tags: Union[Unset, List[List[str]]] = UNSET
+        tags: list[list[str]] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = []
             for tags_item_data in self.tags:
@@ -34,7 +45,7 @@ class UpdateTestDataPointPayload:
 
                 tags.append(tags_item)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if ids is not UNSET:
@@ -45,16 +56,39 @@ class UpdateTestDataPointPayload:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        ids = cast(List[str], d.pop("ids", UNSET))
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
 
-        tags = []
+        def _parse_ids(data: object) -> list[UUID] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                ids_type_0 = []
+                _ids_type_0 = data
+                for ids_type_0_item_data in _ids_type_0:
+                    ids_type_0_item = UUID(ids_type_0_item_data)
+
+                    ids_type_0.append(ids_type_0_item)
+
+                return ids_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[UUID] | None | Unset, data)
+
+        ids = _parse_ids(d.pop("ids", UNSET))
+
         _tags = d.pop("tags", UNSET)
-        for tags_item_data in _tags or []:
-            tags_item = cast(List[str], tags_item_data)
+        tags: list[list[str]] | Unset = UNSET
+        if _tags is not UNSET:
+            tags = []
+            for tags_item_data in _tags:
+                tags_item = cast(list[str], tags_item_data)
 
-            tags.append(tags_item)
+                tags.append(tags_item)
 
         update_test_data_point_payload = cls(
             ids=ids,
@@ -65,7 +99,7 @@ class UpdateTestDataPointPayload:
         return update_test_data_point_payload
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

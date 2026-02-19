@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, cast
 
 import httpx
 
@@ -12,40 +12,47 @@ from ...types import Response
 def _get_kwargs(
     *,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/filters/metadata",
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, List[str]]]:
-    if response.status_code == HTTPStatus.OK:
-        response_200 = cast(List[str], response.json())
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> ErrorResponse | list[str] | None:
+    if response.status_code == 200:
+        response_200 = cast(list[str], response.json())
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -53,8 +60,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, List[str]]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[ErrorResponse | list[str]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -65,9 +72,9 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[ErrorResponse, List[str]]]:
+) -> Response[ErrorResponse | list[str]]:
     """Get Filters Metadata
 
      Get all viable user-defined metadata column names for filters.
@@ -86,7 +93,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List[str]]]
+        Response[ErrorResponse | list[str]]
     """
 
     kwargs = _get_kwargs(
@@ -102,9 +109,9 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List[str]]]:
+) -> ErrorResponse | list[str] | None:
     """Get Filters Metadata
 
      Get all viable user-defined metadata column names for filters.
@@ -123,7 +130,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List[str]]
+        ErrorResponse | list[str]
     """
 
     return sync_detailed(
@@ -134,9 +141,9 @@ def sync(
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[ErrorResponse, List[str]]]:
+) -> Response[ErrorResponse | list[str]]:
     """Get Filters Metadata
 
      Get all viable user-defined metadata column names for filters.
@@ -155,7 +162,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, List[str]]]
+        Response[ErrorResponse | list[str]]
     """
 
     kwargs = _get_kwargs(
@@ -169,9 +176,9 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[ErrorResponse, List[str]]]:
+) -> ErrorResponse | list[str] | None:
     """Get Filters Metadata
 
      Get all viable user-defined metadata column names for filters.
@@ -190,7 +197,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, List[str]]
+        ErrorResponse | list[str]
     """
 
     return (

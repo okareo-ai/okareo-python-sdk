@@ -1,5 +1,7 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
@@ -10,53 +12,56 @@ from ...types import Response
 
 
 def _get_kwargs(
-    driver_id: str,
+    driver_id: UUID,
     *,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "delete",
         "url": "/v0/driver/{driver_id}".format(
-            driver_id=driver_id,
+            driver_id=quote(str(driver_id), safe=""),
         ),
-        "headers": headers,
     }
 
+    _kwargs["headers"] = headers
+    return _kwargs
 
-def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.NO_CONTENT:
+
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ErrorResponse | None:
+    if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[Any, ErrorResponse]]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,15 +71,15 @@ def _build_response(
 
 
 def sync_detailed(
-    driver_id: str,
+    driver_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Any | ErrorResponse]:
     """Delete Driver Model
 
     Args:
-        driver_id (str):
+        driver_id (UUID):
         api_key (str):
 
     Raises:
@@ -82,7 +87,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Any | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -98,15 +103,15 @@ def sync_detailed(
 
 
 def sync(
-    driver_id: str,
+    driver_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Any | ErrorResponse | None:
     """Delete Driver Model
 
     Args:
-        driver_id (str):
+        driver_id (UUID):
         api_key (str):
 
     Raises:
@@ -114,7 +119,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Any | ErrorResponse
     """
 
     return sync_detailed(
@@ -125,15 +130,15 @@ def sync(
 
 
 async def asyncio_detailed(
-    driver_id: str,
+    driver_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Any | ErrorResponse]:
     """Delete Driver Model
 
     Args:
-        driver_id (str):
+        driver_id (UUID):
         api_key (str):
 
     Raises:
@@ -141,7 +146,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Any | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -155,15 +160,15 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    driver_id: str,
+    driver_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Any | ErrorResponse | None:
     """Delete Driver Model
 
     Args:
-        driver_id (str):
+        driver_id (UUID):
         api_key (str):
 
     Raises:
@@ -171,7 +176,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Any | ErrorResponse
     """
 
     return (

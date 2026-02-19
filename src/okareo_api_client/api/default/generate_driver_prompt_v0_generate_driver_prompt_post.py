@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -13,33 +13,38 @@ from ...types import Response
 
 def _get_kwargs(
     *,
-    json_body: DriverPromptRequest,
+    body: DriverPromptRequest,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/generate_driver_prompt",
-        "json": json_json_body,
-        "headers": headers,
     }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[DriverPromptResponse, HTTPValidationError]]:
-    if response.status_code == HTTPStatus.OK:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> DriverPromptResponse | HTTPValidationError | None:
+    if response.status_code == 200:
         response_200 = DriverPromptResponse.from_dict(response.json())
 
         return response_200
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -47,8 +52,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[DriverPromptResponse, HTTPValidationError]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[DriverPromptResponse | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -59,26 +64,26 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverPromptRequest,
+    client: AuthenticatedClient | Client,
+    body: DriverPromptRequest,
     api_key: str,
-) -> Response[Union[DriverPromptResponse, HTTPValidationError]]:
+) -> Response[DriverPromptResponse | HTTPValidationError]:
     """Generate Driver Prompt
 
     Args:
         api_key (str):
-        json_body (DriverPromptRequest):
+        body (DriverPromptRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DriverPromptResponse, HTTPValidationError]]
+        Response[DriverPromptResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -91,53 +96,53 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverPromptRequest,
+    client: AuthenticatedClient | Client,
+    body: DriverPromptRequest,
     api_key: str,
-) -> Optional[Union[DriverPromptResponse, HTTPValidationError]]:
+) -> DriverPromptResponse | HTTPValidationError | None:
     """Generate Driver Prompt
 
     Args:
         api_key (str):
-        json_body (DriverPromptRequest):
+        body (DriverPromptRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DriverPromptResponse, HTTPValidationError]
+        DriverPromptResponse | HTTPValidationError
     """
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverPromptRequest,
+    client: AuthenticatedClient | Client,
+    body: DriverPromptRequest,
     api_key: str,
-) -> Response[Union[DriverPromptResponse, HTTPValidationError]]:
+) -> Response[DriverPromptResponse | HTTPValidationError]:
     """Generate Driver Prompt
 
     Args:
         api_key (str):
-        json_body (DriverPromptRequest):
+        body (DriverPromptRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DriverPromptResponse, HTTPValidationError]]
+        Response[DriverPromptResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -148,28 +153,28 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverPromptRequest,
+    client: AuthenticatedClient | Client,
+    body: DriverPromptRequest,
     api_key: str,
-) -> Optional[Union[DriverPromptResponse, HTTPValidationError]]:
+) -> DriverPromptResponse | HTTPValidationError | None:
     """Generate Driver Prompt
 
     Args:
         api_key (str):
-        json_body (DriverPromptRequest):
+        body (DriverPromptRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DriverPromptResponse, HTTPValidationError]
+        DriverPromptResponse | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

@@ -10,8 +10,12 @@ OPENAPI_SPEC ?= "https://api.okareo.com/openapi.json" # use in prod
 spec/update:
 	wget -q $(OPENAPI_SPEC) -O openapi.json
 
+.PHONY: spec/preprocess
+spec/preprocess:
+	python scripts/preprocess_openapi.py openapi.json openapi.json
+
 .PHONY: openapi/generate
-openapi/generate:
+openapi/generate: spec/preprocess
 	rm -rf src/okareo_api_client
 	openapi-python-client generate --path openapi.json --meta poetry
 	mv -f okareo-api-client/okareo_api_client src

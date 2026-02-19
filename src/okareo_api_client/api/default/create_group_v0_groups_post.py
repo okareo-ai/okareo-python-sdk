@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -15,62 +15,69 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    json_body: CreateGroupV0GroupsPostSource,
+    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
     name: str,
-    tags: Union[Unset, None, List[str]] = UNSET,
+    tags: list[str] | Unset = UNSET,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
+
     params["name"] = name
 
-    json_tags: Union[Unset, None, List[str]] = UNSET
+    json_tags: list[str] | Unset = UNSET
     if not isinstance(tags, Unset):
-        if tags is None:
-            json_tags = None
-        else:
-            json_tags = tags
+        json_tags = tags
 
     params["tags"] = json_tags
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/groups",
-        "json": json_json_body,
         "params": params,
-        "headers": headers,
     }
+
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
-    if response.status_code == HTTPStatus.CREATED:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse | None:
+    if response.status_code == 201:
         response_201 = CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost.from_dict(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -78,8 +85,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -90,12 +97,12 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: CreateGroupV0GroupsPostSource,
+    client: AuthenticatedClient | Client,
+    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
     name: str,
-    tags: Union[Unset, None, List[str]] = UNSET,
+    tags: list[str] | Unset = UNSET,
     api_key: str,
-) -> Response[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
+) -> Response[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse]:
     """Create Group
 
      Create a new group for models under test or return existing group with the same name.
@@ -105,20 +112,20 @@ def sync_detailed(
 
     Args:
         name (str): The name of the group
-        tags (Union[Unset, None, List[str]]): Tags for the group
+        tags (list[str] | Unset): Tags for the group
         api_key (str):
-        json_body (CreateGroupV0GroupsPostSource): Log source of the group
+        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]
+        Response[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         name=name,
         tags=tags,
         api_key=api_key,
@@ -133,12 +140,12 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: CreateGroupV0GroupsPostSource,
+    client: AuthenticatedClient | Client,
+    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
     name: str,
-    tags: Union[Unset, None, List[str]] = UNSET,
+    tags: list[str] | Unset = UNSET,
     api_key: str,
-) -> Optional[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
+) -> CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse | None:
     """Create Group
 
      Create a new group for models under test or return existing group with the same name.
@@ -148,21 +155,21 @@ def sync(
 
     Args:
         name (str): The name of the group
-        tags (Union[Unset, None, List[str]]): Tags for the group
+        tags (list[str] | Unset): Tags for the group
         api_key (str):
-        json_body (CreateGroupV0GroupsPostSource): Log source of the group
+        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]
+        CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse
     """
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
+        body=body,
         name=name,
         tags=tags,
         api_key=api_key,
@@ -171,12 +178,12 @@ def sync(
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: CreateGroupV0GroupsPostSource,
+    client: AuthenticatedClient | Client,
+    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
     name: str,
-    tags: Union[Unset, None, List[str]] = UNSET,
+    tags: list[str] | Unset = UNSET,
     api_key: str,
-) -> Response[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
+) -> Response[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse]:
     """Create Group
 
      Create a new group for models under test or return existing group with the same name.
@@ -186,20 +193,20 @@ async def asyncio_detailed(
 
     Args:
         name (str): The name of the group
-        tags (Union[Unset, None, List[str]]): Tags for the group
+        tags (list[str] | Unset): Tags for the group
         api_key (str):
-        json_body (CreateGroupV0GroupsPostSource): Log source of the group
+        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]
+        Response[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         name=name,
         tags=tags,
         api_key=api_key,
@@ -212,12 +219,12 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: CreateGroupV0GroupsPostSource,
+    client: AuthenticatedClient | Client,
+    body: CreateGroupV0GroupsPostSource | Unset = UNSET,
     name: str,
-    tags: Union[Unset, None, List[str]] = UNSET,
+    tags: list[str] | Unset = UNSET,
     api_key: str,
-) -> Optional[Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]]:
+) -> CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse | None:
     """Create Group
 
      Create a new group for models under test or return existing group with the same name.
@@ -227,22 +234,22 @@ async def asyncio(
 
     Args:
         name (str): The name of the group
-        tags (Union[Unset, None, List[str]]): Tags for the group
+        tags (list[str] | Unset): Tags for the group
         api_key (str):
-        json_body (CreateGroupV0GroupsPostSource): Log source of the group
+        body (CreateGroupV0GroupsPostSource | Unset): Log source of the group
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost, ErrorResponse]
+        CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost | ErrorResponse
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
+            body=body,
             name=name,
             tags=tags,
             api_key=api_key,

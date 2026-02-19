@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime
 from typing import Optional
 from unittest.mock import Mock
@@ -21,9 +22,12 @@ from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
 
+MOCK_UUID = "0156f5d7-4ac4-4568-9d44-24750aa08d1a"
+MOCK_UUID_2 = "1256f5d7-4ac4-4568-9d44-24750aa08d1a"
+
 GLOBAL_PROJECT_RESPONSE = [
     {
-        "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+        "id": MOCK_UUID,
         "name": "Global",
         "onboarding_status": "onboarding_status",
         "tags": [],
@@ -46,8 +50,8 @@ def helper_register_model(httpx_mock: HTTPXMock) -> ModelUnderTest:
 def get_mut_fixture(name: Optional[str] = None) -> dict:
     rnd_str = random_string(5)
     return {
-        "id": "1",
-        "project_id": "1",
+        "id": MOCK_UUID,
+        "project_id": MOCK_UUID,
         "version": 1,
         "name": name if name else f"CI-Test-Model-{rnd_str}",
         "tags": ["ci-testing"],
@@ -103,8 +107,8 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         httpx_mock.add_response(
             status_code=201,
             json={
-                "scenario_id": "scenario-id",
-                "project_id": "project-id",
+                "scenario_id": MOCK_UUID,
+                "project_id": MOCK_UUID,
                 "time_created": str(datetime.now()),
                 "type": "REPHRASE_INVARIANT",
             },
@@ -113,13 +117,13 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         httpx_mock.add_response(
             status_code=201,
             json={
-                "id": "test-run-item-id",
+                "id": MOCK_UUID_2,
                 "name": "CI run test",
                 "input": "",
                 "result": "",
-                "project_id": "",
-                "mut_id": "",
-                "scenario_set_id": "",
+                "project_id": MOCK_UUID,
+                "mut_id": MOCK_UUID,
+                "scenario_set_id": MOCK_UUID,
             },
         )
 
@@ -165,8 +169,8 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
         httpx_mock.add_response(
             status_code=201,
             json={
-                "scenario_id": "scenario-id",
-                "project_id": "project-id",
+                "scenario_id": MOCK_UUID,
+                "project_id": MOCK_UUID,
                 "time_created": str(datetime.now()),
                 "type": "REPHRASE_INVARIANT",
             },
@@ -176,13 +180,13 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
         httpx_mock.add_response(
             status_code=201,
             json={
-                "id": "test-run-item-id",
+                "id": MOCK_UUID_2,
                 "name": "CI run test",
                 "input": "",
                 "result": "",
-                "project_id": "",
-                "mut_id": "",
-                "scenario_set_id": "",
+                "project_id": MOCK_UUID,
+                "mut_id": MOCK_UUID,
+                "scenario_set_id": MOCK_UUID,
             },
         )
 
@@ -207,7 +211,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
     )
 
     # use the scenario id from one of the scenario set notebook examples
-    assert isinstance(response.scenario_id, str)
+    assert isinstance(response.scenario_id, uuid.UUID)
     test_run_item = mut.run_test(
         scenario=response.scenario_id,
         name="CI run test",
@@ -218,7 +222,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
 
 def test_add_datapoint(httpx_mock: HTTPXMock) -> None:
     registered_model = helper_register_model(httpx_mock)
-    fixture = {"id": "1", "project_id": "1", "mut_id": "1"}
+    fixture = {"id": MOCK_UUID, "project_id": MOCK_UUID, "mut_id": MOCK_UUID}
 
     httpx_mock.add_response(status_code=201, json=fixture)
     dp = registered_model.add_data_point(
@@ -235,7 +239,7 @@ def test_add_datapoint(httpx_mock: HTTPXMock) -> None:
 
 def test_add_datapoint_only_context_and_feedback(httpx_mock: HTTPXMock) -> None:
     registered_model = helper_register_model(httpx_mock)
-    fixture = {"id": "1", "project_id": "1", "mut_id": "1"}
+    fixture = {"id": MOCK_UUID, "project_id": MOCK_UUID, "mut_id": MOCK_UUID}
     httpx_mock.add_response(status_code=201, json=fixture)
     dp = registered_model.add_data_point(
         feedback=0,
@@ -251,10 +255,10 @@ def test_get_test_run(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         status_code=201,
         json={
-            "id": "test_id",
-            "project_id": "project_id",
-            "mut_id": "mut_id",
-            "scenario_set_id": "scenario_set_id",
+            "id": MOCK_UUID,
+            "project_id": MOCK_UUID,
+            "mut_id": MOCK_UUID,
+            "scenario_set_id": MOCK_UUID,
         },
     )
 

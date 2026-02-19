@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import datetime
-from typing import Any, Dict, List, Type, TypeVar
+from collections.abc import Mapping
+from typing import Any, TypeVar
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,25 +16,28 @@ T = TypeVar("T", bound="VoiceUploadResponse")
 class VoiceUploadResponse:
     """
     Attributes:
-        file_id (str): Unique identifier for the uploaded audio.
+        file_id (UUID): Unique identifier for the uploaded audio.
         file_url (str): Link to access the uploaded audio file.
         file_duration (float): Duration of the audio file in milliseconds.
         time_created (datetime.datetime): Timestamp indicating when audio file was created.
     """
 
-    file_id: str
+    file_id: UUID
     file_url: str
     file_duration: float
     time_created: datetime.datetime
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        file_id = self.file_id
+    def to_dict(self) -> dict[str, Any]:
+        file_id = str(self.file_id)
+
         file_url = self.file_url
+
         file_duration = self.file_duration
+
         time_created = self.time_created.isoformat()
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -44,9 +51,9 @@ class VoiceUploadResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        file_id = d.pop("file_id")
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        file_id = UUID(d.pop("file_id"))
 
         file_url = d.pop("file_url")
 
@@ -65,7 +72,7 @@ class VoiceUploadResponse:
         return voice_upload_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

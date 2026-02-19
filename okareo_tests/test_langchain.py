@@ -1,5 +1,6 @@
 import random
 import string
+import uuid
 from datetime import datetime
 from unittest import mock
 
@@ -25,13 +26,16 @@ MOCK_GLOBAL_RESPONSE = [
 ]
 
 
+MOCK_UUID = str(uuid.uuid4())
+
+
 def get_mut_response() -> dict:
     return ModelUnderTestResponse(
-        "id",
-        "my-project",
-        "langchain_test",
-        ["ci-run"],
-        datetime.now().isoformat(),
+        id=uuid.UUID(MOCK_UUID),
+        project_id=uuid.UUID(MOCK_UUID),
+        name="langchain_test",
+        tags=["ci-run"],
+        time_created=datetime.now().isoformat(),
     ).to_dict()
 
 

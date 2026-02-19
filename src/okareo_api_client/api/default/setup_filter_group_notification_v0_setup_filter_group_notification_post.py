@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from uuid import UUID
 
 import httpx
 
@@ -14,17 +15,19 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    filter_group_id: str,
+    filter_group_id: UUID,
     notification_type: str,
     status: str,
-    cooldown_seconds: Union[Unset, None, int] = 0,
+    cooldown_seconds: int | Unset = 0,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["filter_group_id"] = filter_group_id
+    params: dict[str, Any] = {}
+
+    json_filter_group_id = str(filter_group_id)
+    params["filter_group_id"] = json_filter_group_id
 
     params["notification_type"] = notification_type
 
@@ -34,44 +37,50 @@ def _get_kwargs(
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/setup_filter_group_notification",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[
-    Union[
-        ErrorResponse,
-        SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
-    ]
-]:
-    if response.status_code == HTTPStatus.OK:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> (
+    ErrorResponse
+    | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
+    | None
+):
+    if response.status_code == 200:
         response_200 = SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost.from_dict(
             response.json()
         )
 
         return response_200
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -79,12 +88,10 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
+    *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
-    Union[
-        ErrorResponse,
-        SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
-    ]
+    ErrorResponse
+    | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -96,17 +103,15 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    filter_group_id: str,
+    client: AuthenticatedClient | Client,
+    filter_group_id: UUID,
     notification_type: str,
     status: str,
-    cooldown_seconds: Union[Unset, None, int] = 0,
+    cooldown_seconds: int | Unset = 0,
     api_key: str,
 ) -> Response[
-    Union[
-        ErrorResponse,
-        SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
-    ]
+    ErrorResponse
+    | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
 ]:
     r"""Setup Filter Group Notification
 
@@ -124,10 +129,10 @@ def sync_detailed(
         dict: Details about the notification configuration
 
     Args:
-        filter_group_id (str):
+        filter_group_id (UUID):
         notification_type (str):
         status (str):
-        cooldown_seconds (Union[Unset, None, int]):
+        cooldown_seconds (int | Unset):  Default: 0.
         api_key (str):
 
     Raises:
@@ -135,7 +140,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost]]
+        Response[ErrorResponse | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost]
     """
 
     kwargs = _get_kwargs(
@@ -155,18 +160,17 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    filter_group_id: str,
+    client: AuthenticatedClient | Client,
+    filter_group_id: UUID,
     notification_type: str,
     status: str,
-    cooldown_seconds: Union[Unset, None, int] = 0,
+    cooldown_seconds: int | Unset = 0,
     api_key: str,
-) -> Optional[
-    Union[
-        ErrorResponse,
-        SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
-    ]
-]:
+) -> (
+    ErrorResponse
+    | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
+    | None
+):
     r"""Setup Filter Group Notification
 
      Set up or manage a notification for a specific filter group.
@@ -183,10 +187,10 @@ def sync(
         dict: Details about the notification configuration
 
     Args:
-        filter_group_id (str):
+        filter_group_id (UUID):
         notification_type (str):
         status (str):
-        cooldown_seconds (Union[Unset, None, int]):
+        cooldown_seconds (int | Unset):  Default: 0.
         api_key (str):
 
     Raises:
@@ -194,7 +198,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost]
+        ErrorResponse | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
     """
 
     return sync_detailed(
@@ -209,17 +213,15 @@ def sync(
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    filter_group_id: str,
+    client: AuthenticatedClient | Client,
+    filter_group_id: UUID,
     notification_type: str,
     status: str,
-    cooldown_seconds: Union[Unset, None, int] = 0,
+    cooldown_seconds: int | Unset = 0,
     api_key: str,
 ) -> Response[
-    Union[
-        ErrorResponse,
-        SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
-    ]
+    ErrorResponse
+    | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
 ]:
     r"""Setup Filter Group Notification
 
@@ -237,10 +239,10 @@ async def asyncio_detailed(
         dict: Details about the notification configuration
 
     Args:
-        filter_group_id (str):
+        filter_group_id (UUID):
         notification_type (str):
         status (str):
-        cooldown_seconds (Union[Unset, None, int]):
+        cooldown_seconds (int | Unset):  Default: 0.
         api_key (str):
 
     Raises:
@@ -248,7 +250,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost]]
+        Response[ErrorResponse | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost]
     """
 
     kwargs = _get_kwargs(
@@ -266,18 +268,17 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    filter_group_id: str,
+    client: AuthenticatedClient | Client,
+    filter_group_id: UUID,
     notification_type: str,
     status: str,
-    cooldown_seconds: Union[Unset, None, int] = 0,
+    cooldown_seconds: int | Unset = 0,
     api_key: str,
-) -> Optional[
-    Union[
-        ErrorResponse,
-        SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
-    ]
-]:
+) -> (
+    ErrorResponse
+    | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
+    | None
+):
     r"""Setup Filter Group Notification
 
      Set up or manage a notification for a specific filter group.
@@ -294,10 +295,10 @@ async def asyncio(
         dict: Details about the notification configuration
 
     Args:
-        filter_group_id (str):
+        filter_group_id (UUID):
         notification_type (str):
         status (str):
-        cooldown_seconds (Union[Unset, None, int]):
+        cooldown_seconds (int | Unset):  Default: 0.
         api_key (str):
 
     Raises:
@@ -305,7 +306,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost]
+        ErrorResponse | SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost
     """
 
     return (
