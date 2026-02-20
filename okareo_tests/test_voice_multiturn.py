@@ -217,6 +217,10 @@ def run_voice_multiturn_test(
     )
 
 
+@pytest.mark.skip(
+    reason="""When run in shards on blue deployment, yields 'Server disconnected' error.
+    Does not fail on non-sharded mode in prod (green) or on local runs."""
+)
 def test_voice_multiturn_audio_check(
     okareo: Okareo, twilio_voice_target: TwilioVoiceTarget, rnd: str
 ) -> None:
