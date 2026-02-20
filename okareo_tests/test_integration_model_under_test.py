@@ -33,7 +33,9 @@ from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.test_run_item import TestRunItem
-from okareo_api_client.models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
+from okareo_api_client.models.test_run_item_model_metrics_type_0 import (
+    TestRunItemModelMetricsType0,
+)
 from okareo_api_client.models.test_run_type import TestRunType
 
 from .check_tool_call import Check

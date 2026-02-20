@@ -15,7 +15,9 @@ from okareo_api_client.api.default import (
     delete_test_run_v0_test_runs_delete,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_api_client.models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
+from okareo_api_client.models.test_run_item_model_metrics_type_0 import (
+    TestRunItemModelMetricsType0,
+)
 
 # Constants
 FRUSTRATED_PROMPT = open(

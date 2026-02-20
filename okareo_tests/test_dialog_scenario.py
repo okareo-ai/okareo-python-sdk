@@ -8,7 +8,9 @@ from okareo import Okareo
 from okareo.model_under_test import GenerationModel
 from okareo_api_client.models import ScenarioSetResponse, TestRunType
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_api_client.models.test_run_item_model_metrics_type_0 import TestRunItemModelMetricsType0
+from okareo_api_client.models.test_run_item_model_metrics_type_0 import (
+    TestRunItemModelMetricsType0,
+)
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 rnd_str = random_string(5)

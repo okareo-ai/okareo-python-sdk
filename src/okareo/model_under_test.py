@@ -399,7 +399,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             ),
             checks=checks if checks else UNSET,
             simulation_params=(
-                TestRunPayloadV2SimulationParamsType0.from_dict(simulation_params.to_dict())
+                TestRunPayloadV2SimulationParamsType0.from_dict(
+                    simulation_params.to_dict()
+                )
                 if simulation_params
                 else UNSET
             ),
