@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -14,35 +14,38 @@ from ...types import Response
 
 def _get_kwargs(
     *,
-    json_body: DriverModelSchema,
+    body: DriverModelSchema,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/driver",
-        "json": json_json_body,
-        "headers": headers,
     }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
-    if response.status_code == HTTPStatus.CREATED:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> DriverModelResponse | VoiceDriverModelResponse | ErrorResponse | None:
+    if response.status_code == 201:
 
-        def _parse_response_201(data: object) -> Union["DriverModelResponse", "VoiceDriverModelResponse"]:
+        def _parse_response_201(data: object) -> DriverModelResponse | VoiceDriverModelResponse:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
                 response_201_type_0 = VoiceDriverModelResponse.from_dict(data)
 
                 return response_201_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
@@ -53,22 +56,27 @@ def _parse_response(
         response_201 = _parse_response_201(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -76,8 +84,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[DriverModelResponse | VoiceDriverModelResponse | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -88,26 +96,26 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
+    client: AuthenticatedClient | Client,
+    body: DriverModelSchema,
     api_key: str,
-) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
+) -> Response[DriverModelResponse | VoiceDriverModelResponse | ErrorResponse]:
     """Register Driver Model
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
+        body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
+        Response[DriverModelResponse | VoiceDriverModelResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -120,53 +128,53 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
+    client: AuthenticatedClient | Client,
+    body: DriverModelSchema,
     api_key: str,
-) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
+) -> DriverModelResponse | VoiceDriverModelResponse | ErrorResponse | None:
     """Register Driver Model
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
+        body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]
+        DriverModelResponse | VoiceDriverModelResponse | ErrorResponse
     """
 
     return sync_detailed(
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
+    client: AuthenticatedClient | Client,
+    body: DriverModelSchema,
     api_key: str,
-) -> Response[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
+) -> Response[DriverModelResponse | VoiceDriverModelResponse | ErrorResponse]:
     """Register Driver Model
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
+        body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
+        Response[DriverModelResponse | VoiceDriverModelResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -177,28 +185,28 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DriverModelSchema,
+    client: AuthenticatedClient | Client,
+    body: DriverModelSchema,
     api_key: str,
-) -> Optional[Union[ErrorResponse, Union["DriverModelResponse", "VoiceDriverModelResponse"]]]:
+) -> DriverModelResponse | VoiceDriverModelResponse | ErrorResponse | None:
     """Register Driver Model
 
     Args:
         api_key (str):
-        json_body (DriverModelSchema):
+        body (DriverModelSchema):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, Union['DriverModelResponse', 'VoiceDriverModelResponse']]
+        DriverModelResponse | VoiceDriverModelResponse | ErrorResponse
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

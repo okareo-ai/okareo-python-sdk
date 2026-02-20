@@ -1,4 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,38 +20,47 @@ T = TypeVar("T", bound="TestDataPointItem")
 class TestDataPointItem:
     """
     Attributes:
-        id (str):
-        scenario_data_point_id (str):
-        test_run_id (str):
+        id (UUID):
+        scenario_data_point_id (UUID):
+        test_run_id (UUID):
         metric_type (str):
         metric_value (TestDataPointItemMetricValue):
-        tags (Union[Unset, List[str]]):
-        checks (Union[Unset, Any]):
+        tags (list[str] | None | Unset):
+        checks (Any | Unset):
     """
 
-    id: str
-    scenario_data_point_id: str
-    test_run_id: str
+    id: UUID
+    scenario_data_point_id: UUID
+    test_run_id: UUID
     metric_type: str
-    metric_value: "TestDataPointItemMetricValue"
-    tags: Union[Unset, List[str]] = UNSET
-    checks: Union[Unset, Any] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    metric_value: TestDataPointItemMetricValue
+    tags: list[str] | None | Unset = UNSET
+    checks: Any | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        scenario_data_point_id = self.scenario_data_point_id
-        test_run_id = self.test_run_id
+    def to_dict(self) -> dict[str, Any]:
+        id = str(self.id)
+
+        scenario_data_point_id = str(self.scenario_data_point_id)
+
+        test_run_id = str(self.test_run_id)
+
         metric_type = self.metric_type
+
         metric_value = self.metric_value.to_dict()
 
-        tags: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.tags, Unset):
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
             tags = self.tags
 
         checks = self.checks
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -66,21 +79,36 @@ class TestDataPointItem:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.test_data_point_item_metric_value import TestDataPointItemMetricValue
 
-        d = src_dict.copy()
-        id = d.pop("id")
+        d = dict(src_dict)
+        id = UUID(d.pop("id"))
 
-        scenario_data_point_id = d.pop("scenario_data_point_id")
+        scenario_data_point_id = UUID(d.pop("scenario_data_point_id"))
 
-        test_run_id = d.pop("test_run_id")
+        test_run_id = UUID(d.pop("test_run_id"))
 
         metric_type = d.pop("metric_type")
 
         metric_value = TestDataPointItemMetricValue.from_dict(d.pop("metric_value"))
 
-        tags = cast(List[str], d.pop("tags", UNSET))
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
 
         checks = d.pop("checks", UNSET)
 
@@ -98,7 +126,7 @@ class TestDataPointItem:
         return test_data_point_item
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

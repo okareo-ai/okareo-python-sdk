@@ -23,6 +23,7 @@ from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_data_point_item_metric_value import (
     TestDataPointItemMetricValue,
 )
+from okareo_api_client.types import Unset
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 rnd_str = random_string(5)
@@ -104,7 +105,8 @@ def test_get_data_points(
         assert d.input_["animal"] in SCENARIO_INPUTS
         assert d.input_["color"] in SCENARIO_RESULTS
         assert d.result in SCENARIO_RESULTS
-    assert isinstance(create_scenario_set.scenario_id, str)
+    assert create_scenario_set.scenario_id is not None
+    assert not isinstance(create_scenario_set.scenario_id, Unset)
 
     sdp = okareo_client.get_scenario_data_points(
         scenario_id=create_scenario_set.scenario_id

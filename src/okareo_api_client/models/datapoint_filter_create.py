@@ -1,4 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,44 +20,74 @@ T = TypeVar("T", bound="DatapointFilterCreate")
 class DatapointFilterCreate:
     """
     Attributes:
-        filters (List['FilterCondition']): List of filter conditions to apply
-        name (Union[Unset, str]): Optional name describing this filter
-        description (Union[Unset, str]): Optional description of the filter
-        checks (Union[Unset, List[str]]): Optional list of checks to apply to datapoints in the filter
-        slack_enabled (Union[Unset, bool]): Whether to enable Slack notifications for this filter group. Default is
-            False (off).
-        email_enabled (Union[Unset, bool]): Whether to enable Email notifications for this filter group. Default is
-            False (off).
-        project_id (Union[Unset, str]): Project ID these filters belong to
+        filters (list[FilterCondition]): List of filter conditions to apply
+        name (None | str | Unset): Optional name describing this filter
+        description (None | str | Unset): Optional description of the filter
+        checks (list[str] | None | Unset): Optional list of checks to apply to datapoints in the filter
+        slack_enabled (bool | None | Unset): Whether to enable Slack notifications for this filter group. Default is
+            False (off). Default: False.
+        email_enabled (bool | None | Unset): Whether to enable Email notifications for this filter group. Default is
+            False (off). Default: False.
+        project_id (None | Unset | UUID): Project ID these filters belong to
     """
 
-    filters: List["FilterCondition"]
-    name: Union[Unset, str] = UNSET
-    description: Union[Unset, str] = UNSET
-    checks: Union[Unset, List[str]] = UNSET
-    slack_enabled: Union[Unset, bool] = False
-    email_enabled: Union[Unset, bool] = False
-    project_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    filters: list[FilterCondition]
+    name: None | str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    checks: list[str] | None | Unset = UNSET
+    slack_enabled: bool | None | Unset = False
+    email_enabled: bool | None | Unset = False
+    project_id: None | Unset | UUID = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         filters = []
         for filters_item_data in self.filters:
             filters_item = filters_item_data.to_dict()
-
             filters.append(filters_item)
 
-        name = self.name
-        description = self.description
-        checks: Union[Unset, List[str]] = UNSET
-        if not isinstance(self.checks, Unset):
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
+
+        checks: list[str] | None | Unset
+        if isinstance(self.checks, Unset):
+            checks = UNSET
+        elif isinstance(self.checks, list):
             checks = self.checks
 
-        slack_enabled = self.slack_enabled
-        email_enabled = self.email_enabled
-        project_id = self.project_id
+        else:
+            checks = self.checks
 
-        field_dict: Dict[str, Any] = {}
+        slack_enabled: bool | None | Unset
+        if isinstance(self.slack_enabled, Unset):
+            slack_enabled = UNSET
+        else:
+            slack_enabled = self.slack_enabled
+
+        email_enabled: bool | None | Unset
+        if isinstance(self.email_enabled, Unset):
+            email_enabled = UNSET
+        else:
+            email_enabled = self.email_enabled
+
+        project_id: None | str | Unset
+        if isinstance(self.project_id, Unset):
+            project_id = UNSET
+        elif isinstance(self.project_id, UUID):
+            project_id = str(self.project_id)
+        else:
+            project_id = self.project_id
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -76,10 +110,10 @@ class DatapointFilterCreate:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.filter_condition import FilterCondition
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         filters = []
         _filters = d.pop("filters")
         for filters_item_data in _filters:
@@ -87,17 +121,75 @@ class DatapointFilterCreate:
 
             filters.append(filters_item)
 
-        name = d.pop("name", UNSET)
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        description = d.pop("description", UNSET)
+        name = _parse_name(d.pop("name", UNSET))
 
-        checks = cast(List[str], d.pop("checks", UNSET))
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        slack_enabled = d.pop("slack_enabled", UNSET)
+        description = _parse_description(d.pop("description", UNSET))
 
-        email_enabled = d.pop("email_enabled", UNSET)
+        def _parse_checks(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                checks_type_0 = cast(list[str], data)
 
-        project_id = d.pop("project_id", UNSET)
+                return checks_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        checks = _parse_checks(d.pop("checks", UNSET))
+
+        def _parse_slack_enabled(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        slack_enabled = _parse_slack_enabled(d.pop("slack_enabled", UNSET))
+
+        def _parse_email_enabled(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        email_enabled = _parse_email_enabled(d.pop("email_enabled", UNSET))
+
+        def _parse_project_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                project_id_type_0 = UUID(data)
+
+                return project_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        project_id = _parse_project_id(d.pop("project_id", UNSET))
 
         datapoint_filter_create = cls(
             filters=filters,
@@ -113,7 +205,7 @@ class DatapointFilterCreate:
         return datapoint_filter_create
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

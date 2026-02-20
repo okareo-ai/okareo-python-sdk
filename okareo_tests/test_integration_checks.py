@@ -91,6 +91,7 @@ def test_generate_check(
     ]
     for check_dict in checks_to_generate:
         generate_request = EvaluatorSpecRequest(
+            project_id=okareo.get_projects()[0].id,
             description=str(check_dict["description"]),
             requires_scenario_input=bool(check_dict["requires_scenario_input"]),
             requires_scenario_result=bool(check_dict["requires_scenario_result"]),
@@ -432,7 +433,7 @@ def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
                 FilterCondition(
                     field=DatapointField.TEST_RUN_ID,
                     operator=ComparisonOperator.EQUAL,
-                    value=tdp[0].id,
+                    value=str(tdp[0].id),
                 )
             ]
         )

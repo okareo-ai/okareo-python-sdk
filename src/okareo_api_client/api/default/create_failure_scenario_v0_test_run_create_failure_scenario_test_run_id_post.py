@@ -1,5 +1,7 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
@@ -11,45 +13,52 @@ from ...types import Response
 
 
 def _get_kwargs(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/test_run/create_failure_scenario/{test_run_id}".format(
-            test_run_id=test_run_id,
+            test_run_id=quote(str(test_run_id), safe=""),
         ),
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
-    if response.status_code == HTTPStatus.CREATED:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> ErrorResponse | ScenarioSetResponse | None:
+    if response.status_code == 201:
         response_201 = ScenarioSetResponse.from_dict(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -57,8 +66,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[ErrorResponse | ScenarioSetResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,11 +77,11 @@ def _build_response(
 
 
 def sync_detailed(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
+) -> Response[ErrorResponse | ScenarioSetResponse]:
     """Create Failure Scenario
 
      Create a ScenarioSet using the failed data points from a TestRun.
@@ -81,7 +90,7 @@ def sync_detailed(
         the new Failure Scenario response
 
     Args:
-        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
+        test_run_id (UUID): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
 
     Raises:
@@ -89,7 +98,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ScenarioSetResponse]]
+        Response[ErrorResponse | ScenarioSetResponse]
     """
 
     kwargs = _get_kwargs(
@@ -105,11 +114,11 @@ def sync_detailed(
 
 
 def sync(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
+) -> ErrorResponse | ScenarioSetResponse | None:
     """Create Failure Scenario
 
      Create a ScenarioSet using the failed data points from a TestRun.
@@ -118,7 +127,7 @@ def sync(
         the new Failure Scenario response
 
     Args:
-        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
+        test_run_id (UUID): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
 
     Raises:
@@ -126,7 +135,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ScenarioSetResponse]
+        ErrorResponse | ScenarioSetResponse
     """
 
     return sync_detailed(
@@ -137,11 +146,11 @@ def sync(
 
 
 async def asyncio_detailed(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Union[ErrorResponse, ScenarioSetResponse]]:
+) -> Response[ErrorResponse | ScenarioSetResponse]:
     """Create Failure Scenario
 
      Create a ScenarioSet using the failed data points from a TestRun.
@@ -150,7 +159,7 @@ async def asyncio_detailed(
         the new Failure Scenario response
 
     Args:
-        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
+        test_run_id (UUID): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
 
     Raises:
@@ -158,7 +167,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ErrorResponse, ScenarioSetResponse]]
+        Response[ErrorResponse | ScenarioSetResponse]
     """
 
     kwargs = _get_kwargs(
@@ -172,11 +181,11 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    test_run_id: str,
+    test_run_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
     api_key: str,
-) -> Optional[Union[ErrorResponse, ScenarioSetResponse]]:
+) -> ErrorResponse | ScenarioSetResponse | None:
     """Create Failure Scenario
 
      Create a ScenarioSet using the failed data points from a TestRun.
@@ -185,7 +194,7 @@ async def asyncio(
         the new Failure Scenario response
 
     Args:
-        test_run_id (str): The ID of the test run to use for getting failed scenario data points.
+        test_run_id (UUID): The ID of the test run to use for getting failed scenario data points.
         api_key (str):
 
     Raises:
@@ -193,7 +202,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ErrorResponse, ScenarioSetResponse]
+        ErrorResponse | ScenarioSetResponse
     """
 
     return (

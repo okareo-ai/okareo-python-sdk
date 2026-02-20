@@ -14,7 +14,9 @@ from okareo.model_under_test import (
 )
 from okareo_api_client.models import ScenarioSetResponse, ScenarioType, TestRunType
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_api_client.models.test_run_item_model_metrics import TestRunItemModelMetrics
+from okareo_api_client.models.test_run_item_model_metrics_type_0 import (
+    TestRunItemModelMetricsType0,
+)
 
 today_with_time = datetime.now().strftime("%m-%d %H:%M:%S")
 rnd_str = random_string(5)
@@ -246,7 +248,7 @@ def test_generation_openai(
         checks=["consistency_summary", "compression_ratio", "levenshtein_distance"],
     )
     assert run_resp.name == test_run_name
-    assert isinstance(run_resp.model_metrics, TestRunItemModelMetrics)
+    assert isinstance(run_resp.model_metrics, TestRunItemModelMetricsType0)
     metrics_dict = run_resp.model_metrics.to_dict()
     assert metrics_dict["mean_scores"] is not None
     assert metrics_dict["scores_by_row"] is not None

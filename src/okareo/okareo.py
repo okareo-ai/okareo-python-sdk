@@ -4,6 +4,7 @@ import json
 import os
 import warnings
 from typing import Any, Dict, List, Optional, TypedDict, Union
+from uuid import UUID
 
 import httpx
 import pydantic
@@ -45,11 +46,11 @@ from okareo_api_client.models.body_scenario_sets_upload_v0_scenario_sets_upload_
     BodyScenarioSetsUploadV0ScenarioSetsUploadPost,
 )
 from okareo_api_client.models.check_create_update_schema import CheckCreateUpdateSchema
-from okareo_api_client.models.check_create_update_schema_check_config import (
-    CheckCreateUpdateSchemaCheckConfig,
+from okareo_api_client.models.check_create_update_schema_check_config_type_0 import (
+    CheckCreateUpdateSchemaCheckConfigType0,
 )
-from okareo_api_client.models.create_group_v0_groups_post_source import (
-    CreateGroupV0GroupsPostSource,
+from okareo_api_client.models.create_group_v0_groups_post_body_type_0 import (
+    CreateGroupV0GroupsPostBodyType0,
 )
 from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
@@ -71,8 +72,8 @@ from okareo_api_client.models.find_test_data_point_payload import (
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
-from okareo_api_client.models.model_under_test_response_models import (
-    ModelUnderTestResponseModels,
+from okareo_api_client.models.model_under_test_response_models_type_0 import (
+    ModelUnderTestResponseModelsType0,
 )
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
@@ -82,6 +83,9 @@ from okareo_api_client.models.scenario_data_poin_response import (
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
+from okareo_api_client.models.scenario_set_generate_generation_schema_type_0 import (
+    ScenarioSetGenerateGenerationSchemaType0,
+)
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
@@ -212,7 +216,7 @@ class Okareo:
         response = create_project_v0_projects_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=ProjectSchema(name=name, tags=tags),
+            body=ProjectSchema(name=name, tags=tags),
         )
         self.validate_response(response)
         assert isinstance(response, ProjectResponse)
@@ -259,7 +263,7 @@ class Okareo:
         self,
         name: str,
         tags: Union[List[str], None] = None,
-        project_id: Union[str, None] = None,
+        project_id: Union[str, UUID, None] = None,
         model: Union[None, BaseModel, List[BaseModel]] = None,
         update: bool = False,
         sensitive_fields: Union[List[str], None] = None,
@@ -310,9 +314,9 @@ class Okareo:
             )
         if project_id is not None:
             data["project_id"] = project_id
-        json_body = ModelUnderTestSchema.from_dict(data)
+        request_body = ModelUnderTestSchema.from_dict(data)
         response = register_model_v0_register_model_post.sync(
-            client=self.client, api_key=self.api_key, json_body=json_body
+            client=self.client, api_key=self.api_key, body=request_body
         )
 
         self.validate_response(response)
@@ -345,7 +349,7 @@ class Okareo:
         self.validate_response(response)
         assert isinstance(response, ModelUnderTestResponse)
 
-        if isinstance(response.models, ModelUnderTestResponseModels):
+        if isinstance(response.models, ModelUnderTestResponseModelsType0):
             model_data = response.models.to_dict()
         else:
             model_data = {}
@@ -391,7 +395,7 @@ class Okareo:
             raise ValueError("Non-empty seed data is required to create a scenario set")
 
         response = create_scenario_set_v0_scenario_sets_post.sync(
-            client=self.client, api_key=self.api_key, json_body=create_request
+            client=self.client, api_key=self.api_key, body=create_request
         )
 
         self.validate_response(response)
@@ -401,7 +405,10 @@ class Okareo:
         return response
 
     def upload_scenario_set(
-        self, scenario_name: str, file_path: str, project_id: Union[Unset, str] = UNSET
+        self,
+        scenario_name: str,
+        file_path: str,
+        project_id: Union[Unset, str, UUID] = UNSET,
     ) -> ScenarioSetResponse:
         """
         Upload a file as a scenario set to use in an Okareo evaluation or as a seed for synthetic data generation.
@@ -435,13 +442,18 @@ class Okareo:
             with open(file_path, "rb") as binary_io:
                 multipart_body = BodyScenarioSetsUploadV0ScenarioSetsUploadPost(
                     name=scenario_name,
-                    project_id=project_id,
+                    project_id=(
+                        UUID(project_id)
+                        if isinstance(project_id, str)
+                        and not isinstance(project_id, Unset)
+                        else project_id
+                    ),
                     file=File(file_name=file_name, payload=binary_io),
                 )
                 response = scenario_sets_upload_v0_scenario_sets_upload_post.sync(
                     client=self.client,
                     api_key=self.api_key,
-                    multipart_data=multipart_body,
+                    body=multipart_body,
                 )
 
             self.validate_response(response)
@@ -502,10 +514,10 @@ class Okareo:
 
     def generate_scenarios(
         self,
-        source_scenario: Union[str, ScenarioSetResponse],
+        source_scenario: Union[str, UUID, ScenarioSetResponse],
         name: str,
         number_examples: int,
-        project_id: Union[Unset, str] = UNSET,
+        project_id: Union[Unset, str, UUID] = UNSET,
         generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT,
     ) -> ScenarioSetResponse:
         """
@@ -545,10 +557,14 @@ class Okareo:
         )
         return self.generate_scenario_set(
             ScenarioSetGenerate(
-                source_scenario_id=scenario_id,
+                source_scenario_id=(
+                    UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+                ),
                 name=name,
                 number_examples=number_examples,
-                project_id=project_id,
+                project_id=(
+                    UUID(project_id) if isinstance(project_id, str) else project_id
+                ),
                 generation_type=generation_type,
             )
         )
@@ -578,8 +594,20 @@ class Okareo:
         print(generated_set.app_link)  # Prints the link to the generated scenario set
         ```
         """
+        # Convert BaseGenerationSchema class to the generated model type
+        if (
+            hasattr(create_request, "generation_schema")
+            and isinstance(create_request.generation_schema, type)
+            and hasattr(create_request.generation_schema, "to_dict")
+        ):
+            create_request.generation_schema = (
+                ScenarioSetGenerateGenerationSchemaType0.from_dict(
+                    create_request.generation_schema.to_dict()
+                )
+            )
+
         response = generate_scenario_set_v0_scenario_sets_generate_post.sync(
-            client=self.client, api_key=self.api_key, json_body=create_request
+            client=self.client, api_key=self.api_key, body=create_request
         )
 
         if self.validate_generate_scenario_response(response):
@@ -589,11 +617,13 @@ class Okareo:
             # return empty response
             return ScenarioSetResponse(
                 project_id=(
-                    create_request.project_id if create_request.project_id else ""
+                    create_request.project_id
+                    if create_request.project_id
+                    else UUID(int=0)
                 ),
-                scenario_id="",
+                scenario_id=UNSET,
                 time_created=datetime.datetime.now(),
-                type=(
+                type_=(
                     create_request.generation_type.value
                     if create_request.generation_type
                     else ""
@@ -603,7 +633,7 @@ class Okareo:
         return response
 
     def get_scenario_data_points(
-        self, scenario_id: str
+        self, scenario_id: Union[str, UUID]
     ) -> List[ScenarioDataPoinResponse]:
         """
         Fetch the scenario data points associated with a scenario set with scenario_id.
@@ -625,7 +655,11 @@ class Okareo:
         """
         response = (
             get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get.sync(
-                client=self.client, api_key=self.api_key, scenario_id=scenario_id
+                client=self.client,
+                api_key=self.api_key,
+                scenario_id=(
+                    UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+                ),
             )
         )
 
@@ -663,7 +697,7 @@ class Okareo:
         ```
         """
         data = find_test_data_points_v0_find_test_data_points_post.sync(
-            client=self.client, api_key=self.api_key, json_body=test_data_point_payload
+            client=self.client, api_key=self.api_key, body=test_data_point_payload
         )
         if not data:
             return []
@@ -741,7 +775,7 @@ class Okareo:
         data = get_datapoints_v0_find_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=datapoint_search,
+            body=datapoint_search,
         )
         if not data:
             return []
@@ -792,7 +826,7 @@ class Okareo:
         data = get_datapoints_filter_v0_find_datapoints_filter_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=datapoint_search,
+            body=datapoint_search,
         )
         if not data:
             return []
@@ -848,7 +882,7 @@ class Okareo:
         ```
         """
         response = check_generate_v0_check_generate_post.sync(
-            client=self.client, api_key=self.api_key, json_body=create_check
+            client=self.client, api_key=self.api_key, body=create_check
         )
         self.validate_response(response)
         assert isinstance(response, EvaluatorGenerateResponse)
@@ -889,7 +923,7 @@ class Okareo:
         check_deprecation_warning()
         return self.get_check(evaluator_id)
 
-    def get_check(self, check_id: str) -> EvaluatorDetailedResponse:
+    def get_check(self, check_id: Union[str, UUID]) -> EvaluatorDetailedResponse:
         """
         Fetch details for a specific check.
 
@@ -907,7 +941,9 @@ class Okareo:
         ```
         """
         response = get_check_v0_check_check_id_get.sync(
-            client=self.client, api_key=self.api_key, check_id=check_id
+            client=self.client,
+            api_key=self.api_key,
+            check_id=UUID(check_id) if isinstance(check_id, str) else check_id,
         )
         self.validate_response(response)
         assert isinstance(response, EvaluatorDetailedResponse)
@@ -918,7 +954,7 @@ class Okareo:
         check_deprecation_warning()
         return self.delete_check(evaluator_id, evaluator_name)
 
-    def delete_check(self, check_id: str, check_name: str) -> str:
+    def delete_check(self, check_id: Union[str, UUID], check_name: str) -> str:
         """
         Deletes a check identified by its ID and name.
 
@@ -938,10 +974,8 @@ class Okareo:
         check_delete_v0_check_check_id_delete.sync(
             client=self.client,
             api_key=self.api_key,
-            check_id=check_id,
-            form_data=BodyCheckDeleteV0CheckCheckIdDelete.from_dict(
-                {"name": check_name}
-            ),
+            check_id=UUID(check_id) if isinstance(check_id, str) else check_id,
+            body=BodyCheckDeleteV0CheckCheckIdDelete.from_dict({"name": check_name}),
         )
         return "Check deletion was successful"
 
@@ -984,13 +1018,13 @@ class Okareo:
         print(response)
         ```
         """
-        check_config = CheckCreateUpdateSchemaCheckConfig.from_dict(
+        check_config = CheckCreateUpdateSchemaCheckConfigType0.from_dict(
             check.check_config()
         )
         response = check_create_or_update_v0_check_create_or_update_post.sync(
             client=self.client,
             api_key=self.api_key,
-            json_body=CheckCreateUpdateSchema(
+            body=CheckCreateUpdateSchema(
                 name=name, description=description, check_config=check_config
             ),
         )
@@ -1005,14 +1039,14 @@ class Okareo:
         tags: Union[List[str], None] = None,
         source: Union[dict, None] = None,
     ) -> Any:
-        json_body = CreateGroupV0GroupsPostSource()
+        request_body = CreateGroupV0GroupsPostBodyType0()
         if source:
-            json_body.additional_properties.update(source)
+            request_body.additional_properties.update(source)
         response = create_group_v0_groups_post.sync_detailed(
             client=self.client,
-            json_body=json_body,
+            body=request_body,
             name=name,
-            tags=tags,
+            tags=tags if tags is not None else UNSET,
             api_key=self.api_key,
         )
         self.validate_response(response)
@@ -1120,10 +1154,10 @@ class Okareo:
             raise ValueError(
                 f"Invalid driver_temperature value: {driver.temperature}. Must be a number."
             ) from e
-        json_body = DriverModelSchema.from_dict(driver.to_dict())
+        request_body = DriverModelSchema.from_dict(driver.to_dict())
         response = register_driver_model_v0_driver_post.sync(
             client=self.client,
-            json_body=json_body,
+            body=request_body,
             api_key=self.api_key,
         )
         self.validate_response(response)
@@ -1209,9 +1243,9 @@ class Okareo:
         )
         if project_id is not None:
             data["project_id"] = project_id
-        json_body = ModelUnderTestSchema.from_dict(data)
+        request_body = ModelUnderTestSchema.from_dict(data)
         response = register_model_v0_register_model_post.sync(
-            client=self.client, api_key=self.api_key, json_body=json_body
+            client=self.client, api_key=self.api_key, body=request_body
         )
 
         self.validate_response(response)
@@ -1313,8 +1347,16 @@ class Okareo:
 
         # create MUT object
         dummy_response = ModelUnderTestResponse(
-            id=target_model.id if target_model.id else "",
-            project_id=project_id if project_id else "",
+            id=(
+                UUID(target_model.id)
+                if isinstance(target_model.id, str)
+                else (target_model.id if target_model.id else UUID(int=0))
+            ),
+            project_id=(
+                UUID(project_id)
+                if isinstance(project_id, str)
+                else (project_id if project_id else UUID(int=0))
+            ),
             name=target_model.name,
             tags=tags or [],
             time_created=datetime.datetime.now().isoformat(),
@@ -1341,7 +1383,7 @@ class Okareo:
             calculate_metrics=calculate_metrics,
             checks=checks,
             simulation_params=simulation_params,
-            driver_id=driver_model.id,
+            driver_id=str(driver_model.id) if driver_model.id else None,
         )
 
     def upload_voice(
@@ -1360,12 +1402,12 @@ class Okareo:
             raise ValueError("Either file_path or file_bytes must be provided.")
         audio_b64 = base64.b64encode(audio_data).decode("utf-8")
 
-        body = {"audio": audio_b64}
+        payload = {"audio": audio_b64}
         if project_id:
-            body["project_id"] = project_id
-        json_body = VoiceUploadRequest.from_dict(body)
+            payload["project_id"] = project_id
+        request_body = VoiceUploadRequest.from_dict(payload)
         response = upload_voice_file_v0_voice_upload_post.sync(
-            client=self.client, api_key=self.api_key, json_body=json_body
+            client=self.client, api_key=self.api_key, body=request_body
         )
 
         self.validate_response(response)

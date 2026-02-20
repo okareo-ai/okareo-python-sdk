@@ -35,7 +35,7 @@ class JSONReporter:
                     print(json.dumps(eval_dict, indent=2))
                     continue
 
-                eval_file_name: str = eval_item.id
+                eval_file_name: str = str(eval_item.id)
                 if eval_item.name not in (None, ""):
                     eval_file_name = str(eval_item.name)
                 file_name = eval_file_name.replace(" ", "_")

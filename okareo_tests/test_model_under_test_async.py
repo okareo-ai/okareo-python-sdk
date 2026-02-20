@@ -37,8 +37,8 @@ def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
 def get_mut_fixture(name: Optional[str] = None) -> dict:
     rnd_str = random_string(5)
     return {
-        "id": "1",
-        "project_id": "1",
+        "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+        "project_id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
         "version": 1,
         "name": name if name else f"CI-Async-Tests-{rnd_str}",
         "tags": ["ci-testing"],

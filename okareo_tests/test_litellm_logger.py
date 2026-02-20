@@ -1,4 +1,5 @@
 import time
+import uuid
 from datetime import datetime
 from unittest import mock
 
@@ -12,14 +13,16 @@ from okareo.litellm_logger import LiteLLMLogger, LiteLLMProxyLogger
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
+MOCK_UUID = str(uuid.uuid4())
+
 
 def get_mut_response() -> dict:
     return ModelUnderTestResponse(
-        "id",
-        "my-project",
-        "langchain_test",
-        ["ci-run"],
-        datetime.now().isoformat(),
+        id=uuid.UUID(MOCK_UUID),
+        project_id=uuid.UUID(MOCK_UUID),
+        name="langchain_test",
+        tags=["ci-run"],
+        time_created=datetime.now().isoformat(),
     ).to_dict()
 
 

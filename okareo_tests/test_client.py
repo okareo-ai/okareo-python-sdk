@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import datetime
+from uuid import UUID
 
 import pytest
 from okareo_tests.common import API_KEY, OkareoAPIhost, integration
@@ -11,6 +12,8 @@ from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.types import UNSET
+
+MOCK_UUID = str(uuid.uuid4())
 
 
 def test_can_instantiate() -> None:
@@ -38,9 +41,9 @@ def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
 def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
     # Mocking a successful response
     mock_response = {
-        "scenario_id": "scenario_id",
+        "scenario_id": MOCK_UUID,
         "name": "test_scenario",
-        "project_id": "test_id",
+        "project_id": MOCK_UUID,
         "type": "test_type",
         "time_created": "2023-10-20T13:51:57.334956",
         # ... any other fields ...
@@ -65,15 +68,19 @@ def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     scenario_request = ScenarioSetCreate(
         name="test_scenario",
         seed_data=[SeedData(input_="foo", result="bar")],
-        project_id="project_id" if okareo_api.is_mock else UNSET,
+        project_id=(
+            UUID("00000000-0000-0000-0000-000000000000")
+            if okareo_api.is_mock
+            else UNSET
+        ),
     )
     scenario_response = okareo.create_scenario_set(scenario_request)
 
     if okareo_api.is_mock:
-        assert scenario_response.scenario_id == "scenario_id"
+        assert str(scenario_response.scenario_id) == MOCK_UUID
     else:
         assert scenario_response.scenario_id
-        uuid.UUID(scenario_response.scenario_id)
+        assert isinstance(scenario_response.scenario_id, uuid.UUID)
     assert scenario_response.name == "test_scenario"
 
 
@@ -112,8 +119,8 @@ def test_create_scenario_set_raises_on_validation_error(
 def test_upload_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         json={
-            "scenario_id": "created-id",
-            "project_id": "new-project-id",
+            "scenario_id": MOCK_UUID,
+            "project_id": MOCK_UUID,
             "time_created": datetime.now().isoformat(),
             "type": "seed",
         },
@@ -128,8 +135,8 @@ def test_upload_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> No
 def test_generate_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         json={
-            "scenario_id": "created-id",
-            "project_id": "new-project-id",
+            "scenario_id": MOCK_UUID,
+            "project_id": MOCK_UUID,
             "time_created": datetime.now().isoformat(),
             "type": "seed",
         },
@@ -138,7 +145,7 @@ def test_generate_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> 
 
     okareo_client.generate_scenario_set(
         ScenarioSetGenerate(
-            source_scenario_id="just-a-random-scenario-id",
+            source_scenario_id=UUID(MOCK_UUID),
             name="my generation foo",
             number_examples=22,
         )
@@ -147,7 +154,7 @@ def test_generate_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> 
 
 def test_get_scenario_data_points(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(json={}, status_code=200)
-    okareo_client.get_scenario_data_points(scenario_id="scenario-id")
+    okareo_client.get_scenario_data_points(scenario_id=MOCK_UUID)
 
 
 def test_get_all_checks(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:

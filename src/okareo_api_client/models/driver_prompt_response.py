@@ -1,4 +1,7 @@
-from typing import Any, Dict, Type, TypeVar
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 
@@ -16,11 +19,13 @@ class DriverPromptResponse:
     driver_prompt: str
     suggested_name: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         driver_prompt = self.driver_prompt
+
         suggested_name = self.suggested_name
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
+
         field_dict.update(
             {
                 "driver_prompt": driver_prompt,
@@ -31,8 +36,8 @@ class DriverPromptResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
         driver_prompt = d.pop("driver_prompt")
 
         suggested_name = d.pop("suggested_name")

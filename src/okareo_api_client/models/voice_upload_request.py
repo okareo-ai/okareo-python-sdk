@@ -1,4 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,18 +17,21 @@ class VoiceUploadRequest:
     """
     Attributes:
         audio (str): Audio file (.wav) in base64-encoded bytes.
-        project_id (Union[Unset, str]): ID of the project to associate the audio file with.
+        project_id (UUID | Unset): ID of the project to associate the audio file with.
     """
 
     audio: str
-    project_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    project_id: UUID | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         audio = self.audio
-        project_id = self.project_id
 
-        field_dict: Dict[str, Any] = {}
+        project_id: str | Unset = UNSET
+        if not isinstance(self.project_id, Unset):
+            project_id = str(self.project_id)
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -37,11 +44,16 @@ class VoiceUploadRequest:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
         audio = d.pop("audio")
 
-        project_id = d.pop("project_id", UNSET)
+        _project_id = d.pop("project_id", UNSET)
+        project_id: UUID | Unset
+        if isinstance(_project_id, Unset):
+            project_id = UNSET
+        else:
+            project_id = UUID(_project_id)
 
         voice_upload_request = cls(
             audio=audio,
@@ -52,7 +64,7 @@ class VoiceUploadRequest:
         return voice_upload_request
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

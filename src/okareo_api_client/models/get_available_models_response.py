@@ -1,4 +1,7 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,20 +17,19 @@ T = TypeVar("T", bound="GetAvailableModelsResponse")
 class GetAvailableModelsResponse:
     """
     Attributes:
-        available_models (List['ModelInfo']): List of available models with provider and display information.
+        available_models (list[ModelInfo]): List of available models with provider and display information.
     """
 
-    available_models: List["ModelInfo"]
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    available_models: list[ModelInfo]
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         available_models = []
         for available_models_item_data in self.available_models:
             available_models_item = available_models_item_data.to_dict()
-
             available_models.append(available_models_item)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -38,10 +40,10 @@ class GetAvailableModelsResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.model_info import ModelInfo
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         available_models = []
         _available_models = d.pop("available_models")
         for available_models_item_data in _available_models:
@@ -57,7 +59,7 @@ class GetAvailableModelsResponse:
         return get_available_models_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:
