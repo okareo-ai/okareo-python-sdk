@@ -31,12 +31,12 @@ TWILIO_TO_PHONE = os.getenv("TWILIO_TO_PHONE")
 
 DRIVER_PROMPT = """
 ## Persona
-- **Identity:** You are a customer named {scenario_input.name} calling about {scenario_input.topic}.
+- **Identity:** You are {scenario_input.name} calling about {scenario_input.topic}.
 
 ## Rules
-- Start with a greeting and your question.
-- Keep messages brief and natural.
+- EVERY MESSAGE MUST BE THREE WORDS OR FEWER.
 - Ask one question at a time.
+- Never elaborate.
 """.strip()
 
 TARGET_WAITS_PROMPT = """
