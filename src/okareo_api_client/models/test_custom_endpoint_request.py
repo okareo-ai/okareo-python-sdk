@@ -10,6 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.test_custom_endpoint_request_auth_params_type_0 import TestCustomEndpointRequestAuthParamsType0
     from ..models.test_custom_endpoint_request_end_session_params_type_0 import (
         TestCustomEndpointRequestEndSessionParamsType0,
     )
@@ -32,6 +33,8 @@ class TestCustomEndpointRequest:
             a session. Optional
         end_session_params (None | TestCustomEndpointRequestEndSessionParamsType0 | Unset): API parameters to end a
             session. Optional.
+        auth_params (None | TestCustomEndpointRequestAuthParamsType0 | Unset): Credential authentication parameters.
+            Optional.
         mut_id (None | Unset | UUID): ID of the model to use for the custom endpoint. Optional.
         sensitive_fields (list[str] | None | Unset): List of sensitive fields to redact in the response. Optional.
     """
@@ -39,11 +42,13 @@ class TestCustomEndpointRequest:
     next_message_params: TestCustomEndpointRequestNextMessageParams
     start_session_params: None | TestCustomEndpointRequestStartSessionParamsType0 | Unset = UNSET
     end_session_params: None | TestCustomEndpointRequestEndSessionParamsType0 | Unset = UNSET
+    auth_params: None | TestCustomEndpointRequestAuthParamsType0 | Unset = UNSET
     mut_id: None | Unset | UUID = UNSET
     sensitive_fields: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from ..models.test_custom_endpoint_request_auth_params_type_0 import TestCustomEndpointRequestAuthParamsType0
         from ..models.test_custom_endpoint_request_end_session_params_type_0 import (
             TestCustomEndpointRequestEndSessionParamsType0,
         )
@@ -68,6 +73,14 @@ class TestCustomEndpointRequest:
             end_session_params = self.end_session_params.to_dict()
         else:
             end_session_params = self.end_session_params
+
+        auth_params: dict[str, Any] | None | Unset
+        if isinstance(self.auth_params, Unset):
+            auth_params = UNSET
+        elif isinstance(self.auth_params, TestCustomEndpointRequestAuthParamsType0):
+            auth_params = self.auth_params.to_dict()
+        else:
+            auth_params = self.auth_params
 
         mut_id: None | str | Unset
         if isinstance(self.mut_id, Unset):
@@ -97,6 +110,8 @@ class TestCustomEndpointRequest:
             field_dict["start_session_params"] = start_session_params
         if end_session_params is not UNSET:
             field_dict["end_session_params"] = end_session_params
+        if auth_params is not UNSET:
+            field_dict["auth_params"] = auth_params
         if mut_id is not UNSET:
             field_dict["mut_id"] = mut_id
         if sensitive_fields is not UNSET:
@@ -106,6 +121,7 @@ class TestCustomEndpointRequest:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.test_custom_endpoint_request_auth_params_type_0 import TestCustomEndpointRequestAuthParamsType0
         from ..models.test_custom_endpoint_request_end_session_params_type_0 import (
             TestCustomEndpointRequestEndSessionParamsType0,
         )
@@ -153,6 +169,23 @@ class TestCustomEndpointRequest:
 
         end_session_params = _parse_end_session_params(d.pop("end_session_params", UNSET))
 
+        def _parse_auth_params(data: object) -> None | TestCustomEndpointRequestAuthParamsType0 | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                auth_params_type_0 = TestCustomEndpointRequestAuthParamsType0.from_dict(data)
+
+                return auth_params_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | TestCustomEndpointRequestAuthParamsType0 | Unset, data)
+
+        auth_params = _parse_auth_params(d.pop("auth_params", UNSET))
+
         def _parse_mut_id(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
@@ -191,6 +224,7 @@ class TestCustomEndpointRequest:
             next_message_params=next_message_params,
             start_session_params=start_session_params,
             end_session_params=end_session_params,
+            auth_params=auth_params,
             mut_id=mut_id,
             sensitive_fields=sensitive_fields,
         )

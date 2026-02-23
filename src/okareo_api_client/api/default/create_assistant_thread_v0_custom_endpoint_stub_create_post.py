@@ -7,15 +7,19 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.assistant_thread_response import AssistantThreadResponse
 from ...models.error_response import ErrorResponse
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
+
+    if not isinstance(authorization, Unset):
+        headers["authorization"] = authorization
 
     _kwargs: dict[str, Any] = {
         "method": "post",
@@ -75,6 +79,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> Response[AssistantThreadResponse | ErrorResponse]:
     """Create Assistant Thread
 
@@ -85,6 +90,7 @@ def sync_detailed(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -96,6 +102,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         api_key=api_key,
+        authorization=authorization,
     )
 
     response = client.get_httpx_client().request(
@@ -109,6 +116,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> AssistantThreadResponse | ErrorResponse | None:
     """Create Assistant Thread
 
@@ -119,6 +127,7 @@ def sync(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -131,6 +140,7 @@ def sync(
     return sync_detailed(
         client=client,
         api_key=api_key,
+        authorization=authorization,
     ).parsed
 
 
@@ -138,6 +148,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> Response[AssistantThreadResponse | ErrorResponse]:
     """Create Assistant Thread
 
@@ -148,6 +159,7 @@ async def asyncio_detailed(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -159,6 +171,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         api_key=api_key,
+        authorization=authorization,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -170,6 +183,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> AssistantThreadResponse | ErrorResponse | None:
     """Create Assistant Thread
 
@@ -180,6 +194,7 @@ async def asyncio(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -193,5 +208,6 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             api_key=api_key,
+            authorization=authorization,
         )
     ).parsed

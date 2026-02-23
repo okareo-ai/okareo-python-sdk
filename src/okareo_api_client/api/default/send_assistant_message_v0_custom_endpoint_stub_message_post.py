@@ -8,16 +8,20 @@ from ...client import AuthenticatedClient, Client
 from ...models.assistant_message_request import AssistantMessageRequest
 from ...models.assistant_message_response import AssistantMessageResponse
 from ...models.error_response import ErrorResponse
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     body: AssistantMessageRequest,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
+
+    if not isinstance(authorization, Unset):
+        headers["authorization"] = authorization
 
     _kwargs: dict[str, Any] = {
         "method": "post",
@@ -82,6 +86,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: AssistantMessageRequest,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> Response[AssistantMessageResponse | ErrorResponse]:
     """Send Assistant Message
 
@@ -95,6 +100,7 @@ def sync_detailed(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
         body (AssistantMessageRequest):
 
     Raises:
@@ -108,6 +114,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         body=body,
         api_key=api_key,
+        authorization=authorization,
     )
 
     response = client.get_httpx_client().request(
@@ -122,6 +129,7 @@ def sync(
     client: AuthenticatedClient | Client,
     body: AssistantMessageRequest,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> AssistantMessageResponse | ErrorResponse | None:
     """Send Assistant Message
 
@@ -135,6 +143,7 @@ def sync(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
         body (AssistantMessageRequest):
 
     Raises:
@@ -149,6 +158,7 @@ def sync(
         client=client,
         body=body,
         api_key=api_key,
+        authorization=authorization,
     ).parsed
 
 
@@ -157,6 +167,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: AssistantMessageRequest,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> Response[AssistantMessageResponse | ErrorResponse]:
     """Send Assistant Message
 
@@ -170,6 +181,7 @@ async def asyncio_detailed(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
         body (AssistantMessageRequest):
 
     Raises:
@@ -183,6 +195,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         body=body,
         api_key=api_key,
+        authorization=authorization,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -195,6 +208,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: AssistantMessageRequest,
     api_key: str,
+    authorization: None | str | Unset = UNSET,
 ) -> AssistantMessageResponse | ErrorResponse | None:
     """Send Assistant Message
 
@@ -208,6 +222,7 @@ async def asyncio(
 
     Args:
         api_key (str):
+        authorization (None | str | Unset):
         body (AssistantMessageRequest):
 
     Raises:
@@ -223,5 +238,6 @@ async def asyncio(
             client=client,
             body=body,
             api_key=api_key,
+            authorization=authorization,
         )
     ).parsed

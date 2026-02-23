@@ -9,6 +9,7 @@ from .assistant_message_request import AssistantMessageRequest
 from .assistant_message_response import AssistantMessageResponse
 from .assistant_thread_response import AssistantThreadResponse
 from .body_check_delete_v0_check_check_id_delete import BodyCheckDeleteV0CheckCheckIdDelete
+from .body_oauth_token_v0_custom_endpoint_stub_token_post import BodyOauthTokenV0CustomEndpointStubTokenPost
 from .body_scenario_sets_upload_v0_scenario_sets_upload_post import BodyScenarioSetsUploadV0ScenarioSetsUploadPost
 from .check_create_update_schema import CheckCreateUpdateSchema
 from .check_create_update_schema_check_config_type_0 import CheckCreateUpdateSchemaCheckConfigType0
@@ -105,6 +106,7 @@ from .model_under_test_response_models_type_0_additional_property import (
 from .model_under_test_schema import ModelUnderTestSchema
 from .model_under_test_schema_models_type_0 import ModelUnderTestSchemaModelsType0
 from .model_under_test_schema_models_type_0_additional_property import ModelUnderTestSchemaModelsType0AdditionalProperty
+from .o_auth_token_response import OAuthTokenResponse
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
 from .scenario_data_poin_response import ScenarioDataPoinResponse
@@ -127,14 +129,18 @@ from .summary_datapoint_search import SummaryDatapointSearch
 from .target_model_response import TargetModelResponse
 from .target_model_response_target import TargetModelResponseTarget
 from .test_custom_endpoint_request import TestCustomEndpointRequest
+from .test_custom_endpoint_request_auth_params_type_0 import TestCustomEndpointRequestAuthParamsType0
 from .test_custom_endpoint_request_end_session_params_type_0 import TestCustomEndpointRequestEndSessionParamsType0
 from .test_custom_endpoint_request_next_message_params import TestCustomEndpointRequestNextMessageParams
 from .test_custom_endpoint_request_start_session_params_type_0 import TestCustomEndpointRequestStartSessionParamsType0
 from .test_custom_endpoint_response import TestCustomEndpointResponse
+from .test_custom_endpoint_response_auth_raw_response_type_0 import TestCustomEndpointResponseAuthRawResponseType0
 from .test_custom_endpoint_response_end_session_raw_response_type_0 import (
     TestCustomEndpointResponseEndSessionRawResponseType0,
 )
-from .test_custom_endpoint_response_next_message_raw_response import TestCustomEndpointResponseNextMessageRawResponse
+from .test_custom_endpoint_response_next_message_raw_response_type_0 import (
+    TestCustomEndpointResponseNextMessageRawResponseType0,
+)
 from .test_custom_endpoint_response_start_session_raw_response_type_0 import (
     TestCustomEndpointResponseStartSessionRawResponseType0,
 )
@@ -178,6 +184,7 @@ __all__ = (
     "AssistantMessageResponse",
     "AssistantThreadResponse",
     "BodyCheckDeleteV0CheckCheckIdDelete",
+    "BodyOauthTokenV0CustomEndpointStubTokenPost",
     "BodyScenarioSetsUploadV0ScenarioSetsUploadPost",
     "CheckCreateUpdateSchema",
     "CheckCreateUpdateSchemaCheckConfigType0",
@@ -258,6 +265,7 @@ __all__ = (
     "ModelUnderTestSchema",
     "ModelUnderTestSchemaModelsType0",
     "ModelUnderTestSchemaModelsType0AdditionalProperty",
+    "OAuthTokenResponse",
     "ProjectResponse",
     "ProjectSchema",
     "ScenarioDataPoinResponse",
@@ -276,12 +284,14 @@ __all__ = (
     "TargetModelResponse",
     "TargetModelResponseTarget",
     "TestCustomEndpointRequest",
+    "TestCustomEndpointRequestAuthParamsType0",
     "TestCustomEndpointRequestEndSessionParamsType0",
     "TestCustomEndpointRequestNextMessageParams",
     "TestCustomEndpointRequestStartSessionParamsType0",
     "TestCustomEndpointResponse",
+    "TestCustomEndpointResponseAuthRawResponseType0",
     "TestCustomEndpointResponseEndSessionRawResponseType0",
-    "TestCustomEndpointResponseNextMessageRawResponse",
+    "TestCustomEndpointResponseNextMessageRawResponseType0",
     "TestCustomEndpointResponseStartSessionRawResponseType0",
     "TestDataPointItem",
     "TestDataPointItemMetricValue",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,17 +16,21 @@ class FeedbackRangeSummary:
     """
     Attributes:
         count (int): The total count of feedbacks in the specified range for the given date.
-        feedback_range_start (float | Unset): The start of the feedback range.
+        feedback_range_start (float | None | Unset): The start of the feedback range.
     """
 
     count: int
-    feedback_range_start: float | Unset = UNSET
+    feedback_range_start: float | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         count = self.count
 
-        feedback_range_start = self.feedback_range_start
+        feedback_range_start: float | None | Unset
+        if isinstance(self.feedback_range_start, Unset):
+            feedback_range_start = UNSET
+        else:
+            feedback_range_start = self.feedback_range_start
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -45,7 +49,14 @@ class FeedbackRangeSummary:
         d = dict(src_dict)
         count = d.pop("count")
 
-        feedback_range_start = d.pop("feedback_range_start", UNSET)
+        def _parse_feedback_range_start(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        feedback_range_start = _parse_feedback_range_start(d.pop("feedback_range_start", UNSET))
 
         feedback_range_summary = cls(
             count=count,

@@ -16,7 +16,6 @@ T = TypeVar("T", bound="EvaluatorSpecRequest")
 class EvaluatorSpecRequest:
     """
     Attributes:
-        project_id (None | UUID): ID for the project
         name (None | str | Unset): Name of the evaluator
         user_input (None | str | Unset): Primary user instruction for generation. When set, used instead of description
             for the LLM prompt.
@@ -25,7 +24,8 @@ class EvaluatorSpecRequest:
             user_input if set).
         requires_scenario_input (bool | Unset): Whether the evaluator requires scenario input Default: False.
         requires_scenario_result (bool | Unset): Whether the evaluator requires scenario expected result Default: False.
-        output_data_type (str | Unset): Evaluator output data type (i.e., bool, int, float)
+        output_data_type (None | str | Unset): Evaluator output data type (i.e., bool, int, float)
+        project_id (None | Unset | UUID): ID for the project
         check_type (None | str | Unset): model or code based check Default: 'code'.
         prior_code (None | str | Unset): Existing code to refine (code branch). When set, LLM is asked to modify/improve
             it.
@@ -33,25 +33,19 @@ class EvaluatorSpecRequest:
             it.
     """
 
-    project_id: None | UUID
     name: None | str | Unset = UNSET
     user_input: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     requires_scenario_input: bool | Unset = False
     requires_scenario_result: bool | Unset = False
-    output_data_type: str | Unset = UNSET
+    output_data_type: None | str | Unset = UNSET
+    project_id: None | Unset | UUID = UNSET
     check_type: None | str | Unset = "code"
     prior_code: None | str | Unset = UNSET
     prior_prompt: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        project_id: None | str
-        if isinstance(self.project_id, UUID):
-            project_id = str(self.project_id)
-        else:
-            project_id = self.project_id
-
         name: None | str | Unset
         if isinstance(self.name, Unset):
             name = UNSET
@@ -74,7 +68,19 @@ class EvaluatorSpecRequest:
 
         requires_scenario_result = self.requires_scenario_result
 
-        output_data_type = self.output_data_type
+        output_data_type: None | str | Unset
+        if isinstance(self.output_data_type, Unset):
+            output_data_type = UNSET
+        else:
+            output_data_type = self.output_data_type
+
+        project_id: None | str | Unset
+        if isinstance(self.project_id, Unset):
+            project_id = UNSET
+        elif isinstance(self.project_id, UUID):
+            project_id = str(self.project_id)
+        else:
+            project_id = self.project_id
 
         check_type: None | str | Unset
         if isinstance(self.check_type, Unset):
@@ -96,11 +102,7 @@ class EvaluatorSpecRequest:
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "project_id": project_id,
-            }
-        )
+        field_dict.update({})
         if name is not UNSET:
             field_dict["name"] = name
         if user_input is not UNSET:
@@ -113,6 +115,8 @@ class EvaluatorSpecRequest:
             field_dict["requires_scenario_result"] = requires_scenario_result
         if output_data_type is not UNSET:
             field_dict["output_data_type"] = output_data_type
+        if project_id is not UNSET:
+            field_dict["project_id"] = project_id
         if check_type is not UNSET:
             field_dict["check_type"] = check_type
         if prior_code is not UNSET:
@@ -125,21 +129,6 @@ class EvaluatorSpecRequest:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-
-        def _parse_project_id(data: object) -> None | UUID:
-            if data is None:
-                return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                project_id_type_0 = UUID(data)
-
-                return project_id_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(None | UUID, data)
-
-        project_id = _parse_project_id(d.pop("project_id"))
 
         def _parse_name(data: object) -> None | str | Unset:
             if data is None:
@@ -172,7 +161,31 @@ class EvaluatorSpecRequest:
 
         requires_scenario_result = d.pop("requires_scenario_result", UNSET)
 
-        output_data_type = d.pop("output_data_type", UNSET)
+        def _parse_output_data_type(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        output_data_type = _parse_output_data_type(d.pop("output_data_type", UNSET))
+
+        def _parse_project_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                project_id_type_0 = UUID(data)
+
+                return project_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
+
+        project_id = _parse_project_id(d.pop("project_id", UNSET))
 
         def _parse_check_type(data: object) -> None | str | Unset:
             if data is None:
@@ -202,13 +215,13 @@ class EvaluatorSpecRequest:
         prior_prompt = _parse_prior_prompt(d.pop("prior_prompt", UNSET))
 
         evaluator_spec_request = cls(
-            project_id=project_id,
             name=name,
             user_input=user_input,
             description=description,
             requires_scenario_input=requires_scenario_input,
             requires_scenario_result=requires_scenario_result,
             output_data_type=output_data_type,
+            project_id=project_id,
             check_type=check_type,
             prior_code=prior_code,
             prior_prompt=prior_prompt,
