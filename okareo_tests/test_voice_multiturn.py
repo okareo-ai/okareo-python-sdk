@@ -302,95 +302,96 @@ def run_voice_multiturn_test_audio_check(
     print(evaluation.app_link)
 
 
-def voice_profile_fixed_driver() -> Driver:
-    return Driver(
-        name="Voice Simulation Driver Profile (fixed)",
-        temperature=0.5,
-        prompt_template=FRUSTRATED_PROMPT,
-        voice_profile="angry",
-        voice="ophelia",
-    )
+VOICE_PROFILE_SEEDS: list = [
+    {
+        "input": {
+            "name": "James Taylor",
+            "productType": "iPhone 17",
+            "voice_profile": "angry",
+            "voice_name": "oscar",
+        },
+        "result": "Receive an exchange or refund for malfunctioning iPhone 17.",
+    },
+    {
+        "input": {
+            "name": "Alice Johnson",
+            "productType": "Stanley Thermos",
+            "voice_profile": "confused",
+            "voice_name": "ophelia",
+        },
+        "result": "Receive an exchange or refund for malfunctioning Stanley Thermos.",
+    },
+]
+
+VOICE_PROFILE_DRIVERS = [
+    pytest.param(
+        "Fixed",
+        {
+            "name": "Voice Simulation Driver Profile (fixed)",
+            "temperature": 0.5,
+            "prompt_template": FRUSTRATED_PROMPT,
+            "voice_profile": "angry",
+            "voice": "ophelia",
+        },
+        id="fixed",
+    ),
+    pytest.param(
+        "Templated",
+        {
+            "name": "Voice Simulation Driver Profile (templated)",
+            "temperature": 0.5,
+            "prompt_template": FRUSTRATED_PROMPT,
+            "voice_instructions": "Speak in a {scenario_input.voice_profile} tone.",
+            "voice": "{scenario_input.voice_name}",
+        },
+        id="templated",
+    ),
+]
 
 
-def voice_profile_templated_driver() -> Driver:
-    return Driver(
-        name="Voice Simulation Driver Profile (templated)",
-        temperature=0.5,
-        prompt_template=FRUSTRATED_PROMPT,
-        voice_instructions="Speak in a {scenario_input.voice_profile} tone.",
-        voice="{scenario_input.voice_name}",
-    )
-
-
+@pytest.mark.parametrize("seed", VOICE_PROFILE_SEEDS, ids=["iphone", "thermos"])
+@pytest.mark.parametrize("driver_label,driver_kwargs", VOICE_PROFILE_DRIVERS)
 def test_voice_multiturn_voice_profile(
-    okareo: Okareo, twilio_voice_target: TwilioVoiceTarget, rnd: str
-) -> None:
-    run_voice_multiturn_test_voice_profile(okareo, twilio_voice_target, rnd)
-
-
-def run_voice_multiturn_test_voice_profile(
     okareo: Okareo,
-    voice_target: TwilioVoiceTarget,
+    twilio_voice_target: TwilioVoiceTarget,
     rnd: str,
+    driver_label: str,
+    driver_kwargs: dict,
+    seed: dict,
 ) -> None:
-
-    seed_data = Okareo.seed_data_from_list(
-        [
-            {
-                "input": {
-                    "name": "James Taylor",
-                    "productType": "iPhone 17",
-                    "voice_profile": "angry",
-                    "voice_name": "oscar",
-                },
-                "result": "Receive an exchange or refund for malfunctioning iPhone 17.",
-            },
-            {
-                "input": {
-                    "name": "Alice Johnson",
-                    "productType": "Stanley Thermos",
-                    "voice_profile": "confused",
-                    "voice_name": "ophelia",
-                },
-                "result": "Receive an exchange or refund for malfunctioning Stanley Thermos.",
-            },
-        ]
-    )
+    driver = Driver(**driver_kwargs)
 
     scenario = okareo.create_scenario_set(
         ScenarioSetCreate(
-            name=f"Product Returns — Broken Product (Voices + Voice Profiles) - {rnd}",
-            seed_data=seed_data,
+            name=f"Product Returns — Voice Profile ({driver_label}, {seed['input']['name']}) - {rnd}",
+            seed_data=Okareo.seed_data_from_list([seed]),  # type: ignore[list-item]
         )
     )
 
-    drivers = [voice_profile_fixed_driver(), voice_profile_templated_driver()]
-    eval_names = ["Fixed", "Templated"]
-    for driver, name in zip(drivers, eval_names):
-        eval_name = f"Voice Simulation Run - Voices + Voice Profiles ({name}) - {rnd}"
-        evaluation = okareo.run_simulation(
-            driver=driver,
-            target=Target(
-                name=f"Voice Sim Target - Voices + Voice Profiles ({name}) - {rnd}",
-                target=voice_target,
-            ),
-            name=eval_name,
-            scenario=scenario,
-            max_turns=1,
-            repeats=1,
-            first_turn="driver",
-            checks=[
-                "avg_turn_taking_latency",
-                "avg_words_per_minute",
-                "total_turn_count",
-            ],
-        )
+    eval_name = f"Voice Simulation Run - Voices + Voice Profiles ({driver_label}, {seed['input']['name']}) - {rnd}"
+    evaluation = okareo.run_simulation(
+        driver=driver,
+        target=Target(
+            name=f"Voice Sim Target - Voices + Voice Profiles ({driver_label}) - {rnd}",
+            target=twilio_voice_target,
+        ),
+        name=eval_name,
+        scenario=scenario,
+        max_turns=1,
+        repeats=1,
+        first_turn="driver",
+        checks=[
+            "avg_turn_taking_latency",
+            "avg_words_per_minute",
+            "total_turn_count",
+        ],
+    )
 
-        assert evaluation.name == eval_name
-        assert evaluation.status == "FINISHED"
-        assert evaluation.model_metrics is not None
-        assert isinstance(evaluation.model_metrics, TestRunItemModelMetricsType0)
-        metrics_dict = evaluation.model_metrics.to_dict()
-        assert isinstance(metrics_dict, dict)
-        assert metrics_dict.get("mean_scores") is not None
-        assert evaluation.app_link is not None
+    assert evaluation.name == eval_name
+    assert evaluation.status == "FINISHED"
+    assert evaluation.model_metrics is not None
+    assert isinstance(evaluation.model_metrics, TestRunItemModelMetricsType0)
+    metrics_dict = evaluation.model_metrics.to_dict()
+    assert isinstance(metrics_dict, dict)
+    assert metrics_dict.get("mean_scores") is not None
+    assert evaluation.app_link is not None
