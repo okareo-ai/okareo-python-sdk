@@ -1,5 +1,7 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
@@ -12,49 +14,57 @@ from ...types import Response
 
 
 def _get_kwargs(
-    filter_group_id: str,
+    filter_group_id: UUID,
     *,
-    json_body: DatapointFilterUpdate,
+    body: DatapointFilterUpdate,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    json_json_body = json_body.to_dict()
-
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "put",
         "url": "/v0/filters/{filter_group_id}".format(
-            filter_group_id=filter_group_id,
+            filter_group_id=quote(str(filter_group_id), safe=""),
         ),
-        "json": json_json_body,
-        "headers": headers,
     }
+
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[DatapointFilterItem, ErrorResponse]]:
-    if response.status_code == HTTPStatus.CREATED:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> DatapointFilterItem | ErrorResponse | None:
+    if response.status_code == 201:
         response_201 = DatapointFilterItem.from_dict(response.json())
 
         return response_201
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -62,8 +72,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[DatapointFilterItem, ErrorResponse]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[DatapointFilterItem | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,12 +83,12 @@ def _build_response(
 
 
 def sync_detailed(
-    filter_group_id: str,
+    filter_group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DatapointFilterUpdate,
+    client: AuthenticatedClient | Client,
+    body: DatapointFilterUpdate,
     api_key: str,
-) -> Response[Union[DatapointFilterItem, ErrorResponse]]:
+) -> Response[DatapointFilterItem | ErrorResponse]:
     """Update Filter
 
      Update an existing datapoint filter. Allows update on the name, description, and checks fields.
@@ -92,21 +102,21 @@ def sync_detailed(
         The created filter object
 
     Args:
-        filter_group_id (str): The ID of the filter group to update
+        filter_group_id (UUID): The ID of the filter group to update
         api_key (str):
-        json_body (DatapointFilterUpdate):
+        body (DatapointFilterUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DatapointFilterItem, ErrorResponse]]
+        Response[DatapointFilterItem | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
         filter_group_id=filter_group_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -118,12 +128,12 @@ def sync_detailed(
 
 
 def sync(
-    filter_group_id: str,
+    filter_group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DatapointFilterUpdate,
+    client: AuthenticatedClient | Client,
+    body: DatapointFilterUpdate,
     api_key: str,
-) -> Optional[Union[DatapointFilterItem, ErrorResponse]]:
+) -> DatapointFilterItem | ErrorResponse | None:
     """Update Filter
 
      Update an existing datapoint filter. Allows update on the name, description, and checks fields.
@@ -137,33 +147,33 @@ def sync(
         The created filter object
 
     Args:
-        filter_group_id (str): The ID of the filter group to update
+        filter_group_id (UUID): The ID of the filter group to update
         api_key (str):
-        json_body (DatapointFilterUpdate):
+        body (DatapointFilterUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DatapointFilterItem, ErrorResponse]
+        DatapointFilterItem | ErrorResponse
     """
 
     return sync_detailed(
         filter_group_id=filter_group_id,
         client=client,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    filter_group_id: str,
+    filter_group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DatapointFilterUpdate,
+    client: AuthenticatedClient | Client,
+    body: DatapointFilterUpdate,
     api_key: str,
-) -> Response[Union[DatapointFilterItem, ErrorResponse]]:
+) -> Response[DatapointFilterItem | ErrorResponse]:
     """Update Filter
 
      Update an existing datapoint filter. Allows update on the name, description, and checks fields.
@@ -177,21 +187,21 @@ async def asyncio_detailed(
         The created filter object
 
     Args:
-        filter_group_id (str): The ID of the filter group to update
+        filter_group_id (UUID): The ID of the filter group to update
         api_key (str):
-        json_body (DatapointFilterUpdate):
+        body (DatapointFilterUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DatapointFilterItem, ErrorResponse]]
+        Response[DatapointFilterItem | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
         filter_group_id=filter_group_id,
-        json_body=json_body,
+        body=body,
         api_key=api_key,
     )
 
@@ -201,12 +211,12 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    filter_group_id: str,
+    filter_group_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    json_body: DatapointFilterUpdate,
+    client: AuthenticatedClient | Client,
+    body: DatapointFilterUpdate,
     api_key: str,
-) -> Optional[Union[DatapointFilterItem, ErrorResponse]]:
+) -> DatapointFilterItem | ErrorResponse | None:
     """Update Filter
 
      Update an existing datapoint filter. Allows update on the name, description, and checks fields.
@@ -220,23 +230,23 @@ async def asyncio(
         The created filter object
 
     Args:
-        filter_group_id (str): The ID of the filter group to update
+        filter_group_id (UUID): The ID of the filter group to update
         api_key (str):
-        json_body (DatapointFilterUpdate):
+        body (DatapointFilterUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DatapointFilterItem, ErrorResponse]
+        DatapointFilterItem | ErrorResponse
     """
 
     return (
         await asyncio_detailed(
             filter_group_id=filter_group_id,
             client=client,
-            json_body=json_body,
+            body=body,
             api_key=api_key,
         )
     ).parsed

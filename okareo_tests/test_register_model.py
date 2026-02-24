@@ -1,12 +1,17 @@
+import uuid
+
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
 
+MOCK_UUID_1 = str(uuid.uuid4())
+MOCK_UUID_2 = str(uuid.uuid4())
+
 
 def test_register_model(httpx_mock: HTTPXMock) -> None:
     fixture = {
-        "id": "1",
-        "project_id": "1",
+        "id": MOCK_UUID_1,
+        "project_id": MOCK_UUID_2,
         "version": 1,
         "name": "NotebookModel",
         "tags": ["ci-testing"],
@@ -15,7 +20,7 @@ def test_register_model(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(
         json=[
             {
-                "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
+                "id": MOCK_UUID_1,
                 "name": "Global",
                 "onboarding_status": "onboarding_status",
                 "tags": [],

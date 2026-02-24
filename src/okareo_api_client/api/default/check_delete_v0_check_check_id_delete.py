@@ -1,5 +1,7 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, cast
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
@@ -11,55 +13,61 @@ from ...types import Response
 
 
 def _get_kwargs(
-    check_id: str,
+    check_id: UUID,
     *,
-    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
+    body: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "delete",
         "url": "/v0/check/{check_id}".format(
-            check_id=check_id,
+            check_id=quote(str(check_id), safe=""),
         ),
-        "data": form_data.to_dict(),
-        "headers": headers,
     }
 
+    _kwargs["data"] = body.to_dict()
 
-def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[Any, ErrorResponse]]:
-    if response.status_code == HTTPStatus.NO_CONTENT:
+    headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+    _kwargs["headers"] = headers
+    return _kwargs
+
+
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ErrorResponse | None:
+    if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
-    if response.status_code == HTTPStatus.BAD_REQUEST:
+
+    if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
+
+    if response.status_code == 401:
         response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
-    if response.status_code == HTTPStatus.NOT_FOUND:
+
+    if response.status_code == 404:
         response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[Any, ErrorResponse]]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -69,12 +77,12 @@ def _build_response(
 
 
 def sync_detailed(
-    check_id: str,
+    check_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
+    client: AuthenticatedClient | Client,
+    body: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Any | ErrorResponse]:
     """Check Delete
 
      Deletes a check
@@ -85,20 +93,21 @@ def sync_detailed(
     Returns: 204 status code on successful deletion
 
     Args:
-        check_id (str):
+        check_id (UUID): The ID of the Check to delete
         api_key (str):
+        body (BodyCheckDeleteV0CheckCheckIdDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Any | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
         check_id=check_id,
-        form_data=form_data,
+        body=body,
         api_key=api_key,
     )
 
@@ -110,12 +119,12 @@ def sync_detailed(
 
 
 def sync(
-    check_id: str,
+    check_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
+    client: AuthenticatedClient | Client,
+    body: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Any | ErrorResponse | None:
     """Check Delete
 
      Deletes a check
@@ -126,32 +135,33 @@ def sync(
     Returns: 204 status code on successful deletion
 
     Args:
-        check_id (str):
+        check_id (UUID): The ID of the Check to delete
         api_key (str):
+        body (BodyCheckDeleteV0CheckCheckIdDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Any | ErrorResponse
     """
 
     return sync_detailed(
         check_id=check_id,
         client=client,
-        form_data=form_data,
+        body=body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    check_id: str,
+    check_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
+    client: AuthenticatedClient | Client,
+    body: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
-) -> Response[Union[Any, ErrorResponse]]:
+) -> Response[Any | ErrorResponse]:
     """Check Delete
 
      Deletes a check
@@ -162,20 +172,21 @@ async def asyncio_detailed(
     Returns: 204 status code on successful deletion
 
     Args:
-        check_id (str):
+        check_id (UUID): The ID of the Check to delete
         api_key (str):
+        body (BodyCheckDeleteV0CheckCheckIdDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, ErrorResponse]]
+        Response[Any | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
         check_id=check_id,
-        form_data=form_data,
+        body=body,
         api_key=api_key,
     )
 
@@ -185,12 +196,12 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    check_id: str,
+    check_id: UUID,
     *,
-    client: Union[AuthenticatedClient, Client],
-    form_data: BodyCheckDeleteV0CheckCheckIdDelete,
+    client: AuthenticatedClient | Client,
+    body: BodyCheckDeleteV0CheckCheckIdDelete,
     api_key: str,
-) -> Optional[Union[Any, ErrorResponse]]:
+) -> Any | ErrorResponse | None:
     """Check Delete
 
      Deletes a check
@@ -201,22 +212,23 @@ async def asyncio(
     Returns: 204 status code on successful deletion
 
     Args:
-        check_id (str):
+        check_id (UUID): The ID of the Check to delete
         api_key (str):
+        body (BodyCheckDeleteV0CheckCheckIdDelete):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, ErrorResponse]
+        Any | ErrorResponse
     """
 
     return (
         await asyncio_detailed(
             check_id=check_id,
             client=client,
-            form_data=form_data,
+            body=body,
             api_key=api_key,
         )
     ).parsed

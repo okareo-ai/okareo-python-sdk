@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -8,7 +12,7 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+    from ..models.evaluator_brief_response_check_config_type_0 import EvaluatorBriefResponseCheckConfigType0
 
 
 T = TypeVar("T", bound="EvaluatorBriefResponse")
@@ -18,40 +22,76 @@ T = TypeVar("T", bound="EvaluatorBriefResponse")
 class EvaluatorBriefResponse:
     """
     Attributes:
-        id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):  Default: ''.
-        output_data_type (Union[Unset, str]):  Default: ''.
-        time_created (Union[Unset, datetime.datetime]):
-        check_config (Union[Unset, EvaluatorBriefResponseCheckConfig]):
-        is_predefined (Union[Unset, bool]):
+        id (None | Unset | UUID):
+        name (None | str | Unset):
+        description (None | str | Unset):  Default: ''.
+        output_data_type (None | str | Unset):  Default: ''.
+        time_created (datetime.datetime | None | Unset):
+        check_config (EvaluatorBriefResponseCheckConfigType0 | None | Unset):
+        is_predefined (bool | None | Unset):  Default: False.
     """
 
-    id: Union[Unset, str] = UNSET
-    name: Union[Unset, str] = UNSET
-    description: Union[Unset, str] = ""
-    output_data_type: Union[Unset, str] = ""
-    time_created: Union[Unset, datetime.datetime] = UNSET
-    check_config: Union[Unset, "EvaluatorBriefResponseCheckConfig"] = UNSET
-    is_predefined: Union[Unset, bool] = False
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    id: None | Unset | UUID = UNSET
+    name: None | str | Unset = UNSET
+    description: None | str | Unset = ""
+    output_data_type: None | str | Unset = ""
+    time_created: datetime.datetime | None | Unset = UNSET
+    check_config: EvaluatorBriefResponseCheckConfigType0 | None | Unset = UNSET
+    is_predefined: bool | None | Unset = False
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        id = self.id
-        name = self.name
-        description = self.description
-        output_data_type = self.output_data_type
-        time_created: Union[Unset, str] = UNSET
-        if not isinstance(self.time_created, Unset):
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.evaluator_brief_response_check_config_type_0 import EvaluatorBriefResponseCheckConfigType0
+
+        id: None | str | Unset
+        if isinstance(self.id, Unset):
+            id = UNSET
+        elif isinstance(self.id, UUID):
+            id = str(self.id)
+        else:
+            id = self.id
+
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
+
+        output_data_type: None | str | Unset
+        if isinstance(self.output_data_type, Unset):
+            output_data_type = UNSET
+        else:
+            output_data_type = self.output_data_type
+
+        time_created: None | str | Unset
+        if isinstance(self.time_created, Unset):
+            time_created = UNSET
+        elif isinstance(self.time_created, datetime.datetime):
             time_created = self.time_created.isoformat()
+        else:
+            time_created = self.time_created
 
-        check_config: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.check_config, Unset):
+        check_config: dict[str, Any] | None | Unset
+        if isinstance(self.check_config, Unset):
+            check_config = UNSET
+        elif isinstance(self.check_config, EvaluatorBriefResponseCheckConfigType0):
             check_config = self.check_config.to_dict()
+        else:
+            check_config = self.check_config
 
-        is_predefined = self.is_predefined
+        is_predefined: bool | None | Unset
+        if isinstance(self.is_predefined, Unset):
+            is_predefined = UNSET
+        else:
+            is_predefined = self.is_predefined
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if id is not UNSET:
@@ -72,33 +112,97 @@ class EvaluatorBriefResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.evaluator_brief_response_check_config import EvaluatorBriefResponseCheckConfig
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.evaluator_brief_response_check_config_type_0 import EvaluatorBriefResponseCheckConfigType0
 
-        d = src_dict.copy()
-        id = d.pop("id", UNSET)
+        d = dict(src_dict)
 
-        name = d.pop("name", UNSET)
+        def _parse_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                id_type_0 = UUID(data)
 
-        description = d.pop("description", UNSET)
+                return id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
 
-        output_data_type = d.pop("output_data_type", UNSET)
+        id = _parse_id(d.pop("id", UNSET))
 
-        _time_created = d.pop("time_created", UNSET)
-        time_created: Union[Unset, datetime.datetime]
-        if isinstance(_time_created, Unset):
-            time_created = UNSET
-        else:
-            time_created = isoparse(_time_created)
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        _check_config = d.pop("check_config", UNSET)
-        check_config: Union[Unset, EvaluatorBriefResponseCheckConfig]
-        if isinstance(_check_config, Unset):
-            check_config = UNSET
-        else:
-            check_config = EvaluatorBriefResponseCheckConfig.from_dict(_check_config)
+        name = _parse_name(d.pop("name", UNSET))
 
-        is_predefined = d.pop("is_predefined", UNSET)
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
+
+        def _parse_output_data_type(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        output_data_type = _parse_output_data_type(d.pop("output_data_type", UNSET))
+
+        def _parse_time_created(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                time_created_type_0 = isoparse(data)
+
+                return time_created_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        time_created = _parse_time_created(d.pop("time_created", UNSET))
+
+        def _parse_check_config(data: object) -> EvaluatorBriefResponseCheckConfigType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                check_config_type_0 = EvaluatorBriefResponseCheckConfigType0.from_dict(data)
+
+                return check_config_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(EvaluatorBriefResponseCheckConfigType0 | None | Unset, data)
+
+        check_config = _parse_check_config(d.pop("check_config", UNSET))
+
+        def _parse_is_predefined(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        is_predefined = _parse_is_predefined(d.pop("is_predefined", UNSET))
 
         evaluator_brief_response = cls(
             id=id,
@@ -114,7 +218,7 @@ class EvaluatorBriefResponse:
         return evaluator_brief_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

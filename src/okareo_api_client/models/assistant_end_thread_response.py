@@ -1,4 +1,7 @@
-from typing import Any, Dict, List, Type, TypeVar
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,13 +19,14 @@ class AssistantEndThreadResponse:
 
     thread_id: str
     thread_summary: str
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         thread_id = self.thread_id
+
         thread_summary = self.thread_summary
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -34,8 +38,8 @@ class AssistantEndThreadResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
         thread_id = d.pop("thread_id")
 
         thread_summary = d.pop("thread_summary")
@@ -49,7 +53,7 @@ class AssistantEndThreadResponse:
         return assistant_end_thread_response
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

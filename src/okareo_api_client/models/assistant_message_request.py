@@ -1,9 +1,10 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AssistantMessageRequest")
 
@@ -12,47 +13,54 @@ T = TypeVar("T", bound="AssistantMessageRequest")
 class AssistantMessageRequest:
     """
     Attributes:
+        thread_id (None | str):
         message (str):
-        thread_id (Union[Unset, str]):
     """
 
+    thread_id: None | str
     message: str
-    thread_id: Union[Unset, str] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        message = self.message
+    def to_dict(self) -> dict[str, Any]:
+        thread_id: None | str
         thread_id = self.thread_id
 
-        field_dict: Dict[str, Any] = {}
+        message = self.message
+
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
+                "thread_id": thread_id,
                 "message": message,
             }
         )
-        if thread_id is not UNSET:
-            field_dict["thread_id"] = thread_id
 
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+
+        def _parse_thread_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        thread_id = _parse_thread_id(d.pop("thread_id"))
+
         message = d.pop("message")
 
-        thread_id = d.pop("thread_id", UNSET)
-
         assistant_message_request = cls(
-            message=message,
             thread_id=thread_id,
+            message=message,
         )
 
         assistant_message_request.additional_properties = d
         return assistant_message_request
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

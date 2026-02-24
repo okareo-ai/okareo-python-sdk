@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -11,22 +11,26 @@ from ...models.twilio_call_status_v0_voice_twilio_status_post_response_twilio_ca
 from ...types import Response
 
 
-def _get_kwargs() -> Dict[str, Any]:
-    return {
+def _get_kwargs() -> dict[str, Any]:
+
+    _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/voice/twilio/status",
     }
 
+    return _kwargs
+
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost]:
-    if response.status_code == HTTPStatus.OK:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost | None:
+    if response.status_code == 200:
         response_200 = TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost.from_dict(
             response.json()
         )
 
         return response_200
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -34,7 +38,7 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
+    *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -46,7 +50,7 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
 ) -> Response[TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost]:
     """Twilio Call Status
 
@@ -69,8 +73,8 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost]:
+    client: AuthenticatedClient | Client,
+) -> TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost | None:
     """Twilio Call Status
 
     Raises:
@@ -88,7 +92,7 @@ def sync(
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
 ) -> Response[TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost]:
     """Twilio Call Status
 
@@ -109,8 +113,8 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost]:
+    client: AuthenticatedClient | Client,
+) -> TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost | None:
     """Twilio Call Status
 
     Raises:

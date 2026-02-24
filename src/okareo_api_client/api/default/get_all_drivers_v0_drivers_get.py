@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+from uuid import UUID
 
 import httpx
 
@@ -13,41 +14,51 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    project_id: Union[Unset, None, str] = UNSET,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> Dict[str, Any]:
-    headers = {}
+) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    params: Dict[str, Any] = {}
-    params["project_id"] = project_id
+    params: dict[str, Any] = {}
+
+    json_project_id: None | str | Unset
+    if isinstance(project_id, Unset):
+        json_project_id = UNSET
+    elif isinstance(project_id, UUID):
+        json_project_id = str(project_id)
+    else:
+        json_project_id = project_id
+    params["project_id"] = json_project_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
-    return {
+    _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/drivers",
         "params": params,
-        "headers": headers,
     }
+
+    _kwargs["headers"] = headers
+    return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
-    if response.status_code == HTTPStatus.OK:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse] | None:
+    if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
 
-            def _parse_response_200_item(data: object) -> Union["DriverModelResponse", "VoiceDriverModelResponse"]:
+            def _parse_response_200_item(data: object) -> DriverModelResponse | VoiceDriverModelResponse:
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()
                     response_200_item_type_0 = VoiceDriverModelResponse.from_dict(data)
 
                     return response_200_item_type_0
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 if not isinstance(data, dict):
                     raise TypeError()
@@ -60,10 +71,12 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
-    if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+
+    if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -71,8 +84,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -83,14 +96,14 @@ def _build_response(
 
 def sync_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    client: AuthenticatedClient | Client,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
+) -> Response[HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]]:
     """Get All Drivers
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -98,7 +111,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]]
+        Response[HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -115,14 +128,14 @@ def sync_detailed(
 
 def sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    client: AuthenticatedClient | Client,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
+) -> HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse] | None:
     """Get All Drivers
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -130,7 +143,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
+        HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]
     """
 
     return sync_detailed(
@@ -142,14 +155,14 @@ def sync(
 
 async def asyncio_detailed(
     *,
-    client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    client: AuthenticatedClient | Client,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> Response[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
+) -> Response[HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]]:
     """Get All Drivers
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -157,7 +170,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]]
+        Response[HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]]
     """
 
     kwargs = _get_kwargs(
@@ -172,14 +185,14 @@ async def asyncio_detailed(
 
 async def asyncio(
     *,
-    client: Union[AuthenticatedClient, Client],
-    project_id: Union[Unset, None, str] = UNSET,
+    client: AuthenticatedClient | Client,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> Optional[Union[HTTPValidationError, List[Union["DriverModelResponse", "VoiceDriverModelResponse"]]]]:
+) -> HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse] | None:
     """Get All Drivers
 
     Args:
-        project_id (Union[Unset, None, str]): The ID of the project
+        project_id (None | Unset | UUID): The ID of the project
         api_key (str):
 
     Raises:
@@ -187,7 +200,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, List[Union['DriverModelResponse', 'VoiceDriverModelResponse']]]
+        HTTPValidationError | list[DriverModelResponse | VoiceDriverModelResponse]
     """
 
     return (

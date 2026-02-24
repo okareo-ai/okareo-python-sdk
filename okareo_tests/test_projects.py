@@ -1,6 +1,7 @@
 import random
 from datetime import datetime
 from typing import List, Union
+from uuid import UUID
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -12,6 +13,7 @@ from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
+from okareo_api_client.types import Unset
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +94,8 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
     assert mut.project_id == project.id
 
     # use the scenario id from one of the scenario set notebook examples
-    assert isinstance(response.scenario_id, str)
+    assert response.scenario_id is not None
+    assert not isinstance(response.scenario_id, Unset)
     test_run_item = mut.run_test(
         scenario=response.scenario_id,
         name=f"CI test_full_eval_in_new_project {rnd}",
@@ -111,7 +114,9 @@ def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None
     assert_valid_test_run(test_run_get, project.id)
 
 
-def assert_valid_test_run(test_run_item: TestRunItem, project_id: str) -> None:
+def assert_valid_test_run(
+    test_run_item: TestRunItem, project_id: Union[str, UUID]
+) -> None:
     assert test_run_item
     assert test_run_item.id
     assert test_run_item.model_metrics

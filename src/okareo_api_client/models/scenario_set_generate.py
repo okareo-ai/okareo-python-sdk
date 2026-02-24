@@ -1,4 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -10,7 +14,7 @@ from ..types import UNSET, Unset
 if TYPE_CHECKING:
     from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
     from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
-    from ..models.scenario_set_generate_generation_schema import ScenarioSetGenerateGenerationSchema
+    from ..models.scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateGenerationSchemaType0
 
 
 T = TypeVar("T", bound="ScenarioSetGenerate")
@@ -22,101 +26,145 @@ class ScenarioSetGenerate:
     Attributes:
         name (str): Name of the generated scenario set
         number_examples (int): Number of examples to be generated for the scenario set
-        project_id (Union[Unset, str]): ID for the project
-        source_scenario_id (Union[Unset, str]): ID for the scenario set that the generated scenario set will use as a
+        project_id (None | Unset | UUID): ID for the project
+        source_scenario_id (None | Unset | UUID): ID for the scenario set that the generated scenario set will use as a
             source. Will throw an exception if 'source_scenario_rows' is also provided.
-        source_scenario_rows (Union[Unset, List['ScenarioDataPoinResponse']]): Rows for the scenario set that the
+        source_scenario_rows (list[ScenarioDataPoinResponse] | None | Unset): Rows for the scenario set that the
             generated scenario set will use as a source. Will throw an exception if 'source_scenario_id' is also provided.
-        synonym_sets (Union[Unset, List[List[str]]]): 2D list used by the generator to determine synonyms. Used with the
-            SYNONYMS generation type.
-        save_generated_scenario (Union[Unset, bool]): Whether to save the generated scenarios. Defaults to True.
-            Default: True.
-        generation_type (Union[Unset, ScenarioType]): An enumeration. Default: ScenarioType.REPHRASE_INVARIANT.
-        generation_tone (Union[Unset, GenerationTone]): An enumeration. Default: GenerationTone.NEUTRAL.
-        generation_prompt (Union[Unset, str]): Prompt for the generator to use when generating scenarios. Only supported
-            by CustomGenerator type.
-        generation_schema (Union[Unset, ScenarioSetGenerateGenerationSchema]): Structured output schema for the
+        synonym_sets (list[list[str]] | None | Unset): 2D list used by the generator to determine synonyms. Used with
+            the SYNONYMS generation type.
+        save_generated_scenario (bool | Unset): Whether to save the generated scenarios. Defaults to True. Default:
+            True.
+        generation_type (ScenarioType | Unset):
+        generation_tone (GenerationTone | Unset):
+        generation_prompt (None | str | Unset): Prompt for the generator to use when generating scenarios. Only
+            supported by CustomGenerator type.
+        generation_schema (None | ScenarioSetGenerateGenerationSchemaType0 | Unset): Structured output schema for the
             generator to use when generating scenarios. Only supported by CustomGenerator type.
-        pre_template (Union[Unset, str]): Template for pre-processing scenario before sending it to generator
-        post_template (Union[Unset, str]): Template for post-processing scenario after generator before it's saved
-        lock_result (Union[Unset, bool]): Whether to lock the result of the generated scenario. Used in the Custom
-            Generator type.
-        checks (Union[Unset, List[Union['ScenarioSetGenerateChecksItemType1', str]]]): List of check names or check
-            configs to run on the generated scenarios
+        pre_template (None | str | Unset): Template for pre-processing scenario before sending it to generator
+        post_template (None | str | Unset): Template for post-processing scenario after generator before it's saved
+        lock_result (bool | Unset): Whether to lock the result of the generated scenario. Used in the Custom Generator
+            type. Default: False.
+        checks (list[ScenarioSetGenerateChecksItemType1 | str] | Unset): List of check names or check configs to run on
+            the generated scenarios
     """
 
     name: str
     number_examples: int
-    project_id: Union[Unset, str] = UNSET
-    source_scenario_id: Union[Unset, str] = UNSET
-    source_scenario_rows: Union[Unset, List["ScenarioDataPoinResponse"]] = UNSET
-    synonym_sets: Union[Unset, List[List[str]]] = UNSET
-    save_generated_scenario: Union[Unset, bool] = True
-    generation_type: Union[Unset, ScenarioType] = ScenarioType.REPHRASE_INVARIANT
-    generation_tone: Union[Unset, GenerationTone] = GenerationTone.NEUTRAL
-    generation_prompt: Union[Unset, str] = UNSET
-    generation_schema: Union[Unset, "ScenarioSetGenerateGenerationSchema"] = UNSET
-    pre_template: Union[Unset, str] = UNSET
-    post_template: Union[Unset, str] = UNSET
-    lock_result: Union[Unset, bool] = False
-    checks: Union[Unset, List[Union["ScenarioSetGenerateChecksItemType1", str]]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    project_id: None | Unset | UUID = UNSET
+    source_scenario_id: None | Unset | UUID = UNSET
+    source_scenario_rows: list[ScenarioDataPoinResponse] | None | Unset = UNSET
+    synonym_sets: list[list[str]] | None | Unset = UNSET
+    save_generated_scenario: bool | Unset = True
+    generation_type: ScenarioType | Unset = UNSET
+    generation_tone: GenerationTone | Unset = UNSET
+    generation_prompt: None | str | Unset = UNSET
+    generation_schema: None | ScenarioSetGenerateGenerationSchemaType0 | Unset = UNSET
+    pre_template: None | str | Unset = UNSET
+    post_template: None | str | Unset = UNSET
+    lock_result: bool | Unset = False
+    checks: list[ScenarioSetGenerateChecksItemType1 | str] | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
+        from ..models.scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateGenerationSchemaType0
 
         name = self.name
+
         number_examples = self.number_examples
-        project_id = self.project_id
-        source_scenario_id = self.source_scenario_id
-        source_scenario_rows: Union[Unset, List[Dict[str, Any]]] = UNSET
-        if not isinstance(self.source_scenario_rows, Unset):
+
+        project_id: None | str | Unset
+        if isinstance(self.project_id, Unset):
+            project_id = UNSET
+        elif isinstance(self.project_id, UUID):
+            project_id = str(self.project_id)
+        else:
+            project_id = self.project_id
+
+        source_scenario_id: None | str | Unset
+        if isinstance(self.source_scenario_id, Unset):
+            source_scenario_id = UNSET
+        elif isinstance(self.source_scenario_id, UUID):
+            source_scenario_id = str(self.source_scenario_id)
+        else:
+            source_scenario_id = self.source_scenario_id
+
+        source_scenario_rows: list[dict[str, Any]] | None | Unset
+        if isinstance(self.source_scenario_rows, Unset):
+            source_scenario_rows = UNSET
+        elif isinstance(self.source_scenario_rows, list):
             source_scenario_rows = []
-            for source_scenario_rows_item_data in self.source_scenario_rows:
-                source_scenario_rows_item = source_scenario_rows_item_data.to_dict()
+            for source_scenario_rows_type_0_item_data in self.source_scenario_rows:
+                source_scenario_rows_type_0_item = source_scenario_rows_type_0_item_data.to_dict()
+                source_scenario_rows.append(source_scenario_rows_type_0_item)
 
-                source_scenario_rows.append(source_scenario_rows_item)
+        else:
+            source_scenario_rows = self.source_scenario_rows
 
-        synonym_sets: Union[Unset, List[List[str]]] = UNSET
-        if not isinstance(self.synonym_sets, Unset):
+        synonym_sets: list[list[str]] | None | Unset
+        if isinstance(self.synonym_sets, Unset):
+            synonym_sets = UNSET
+        elif isinstance(self.synonym_sets, list):
             synonym_sets = []
-            for synonym_sets_item_data in self.synonym_sets:
-                synonym_sets_item = synonym_sets_item_data
+            for synonym_sets_type_0_item_data in self.synonym_sets:
+                synonym_sets_type_0_item = synonym_sets_type_0_item_data
 
-                synonym_sets.append(synonym_sets_item)
+                synonym_sets.append(synonym_sets_type_0_item)
+
+        else:
+            synonym_sets = self.synonym_sets
 
         save_generated_scenario = self.save_generated_scenario
-        generation_type: Union[Unset, str] = UNSET
+
+        generation_type: str | Unset = UNSET
         if not isinstance(self.generation_type, Unset):
             generation_type = self.generation_type.value
 
-        generation_tone: Union[Unset, str] = UNSET
+        generation_tone: str | Unset = UNSET
         if not isinstance(self.generation_tone, Unset):
             generation_tone = self.generation_tone.value
 
-        generation_prompt = self.generation_prompt
-        generation_schema: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.generation_schema, Unset):
-            generation_schema = self.generation_schema.to_dict()
+        generation_prompt: None | str | Unset
+        if isinstance(self.generation_prompt, Unset):
+            generation_prompt = UNSET
+        else:
+            generation_prompt = self.generation_prompt
 
-        pre_template = self.pre_template
-        post_template = self.post_template
+        generation_schema: dict[str, Any] | None | Unset
+        if isinstance(self.generation_schema, Unset):
+            generation_schema = UNSET
+        elif isinstance(self.generation_schema, ScenarioSetGenerateGenerationSchemaType0):
+            generation_schema = self.generation_schema.to_dict()
+        else:
+            generation_schema = self.generation_schema
+
+        pre_template: None | str | Unset
+        if isinstance(self.pre_template, Unset):
+            pre_template = UNSET
+        else:
+            pre_template = self.pre_template
+
+        post_template: None | str | Unset
+        if isinstance(self.post_template, Unset):
+            post_template = UNSET
+        else:
+            post_template = self.post_template
+
         lock_result = self.lock_result
-        checks: Union[Unset, List[Union[Dict[str, Any], str]]] = UNSET
+
+        checks: list[dict[str, Any] | str] | Unset = UNSET
         if not isinstance(self.checks, Unset):
             checks = []
             for checks_item_data in self.checks:
-                checks_item: Union[Dict[str, Any], str]
-
+                checks_item: dict[str, Any] | str
                 if isinstance(checks_item_data, ScenarioSetGenerateChecksItemType1):
                     checks_item = checks_item_data.to_dict()
-
                 else:
                     checks_item = checks_item_data
-
                 checks.append(checks_item)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
@@ -154,83 +202,178 @@ class ScenarioSetGenerate:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.scenario_data_poin_response import ScenarioDataPoinResponse
         from ..models.scenario_set_generate_checks_item_type_1 import ScenarioSetGenerateChecksItemType1
-        from ..models.scenario_set_generate_generation_schema import ScenarioSetGenerateGenerationSchema
+        from ..models.scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateGenerationSchemaType0
 
-        d = src_dict.copy()
+        d = dict(src_dict)
         name = d.pop("name")
 
         number_examples = d.pop("number_examples")
 
-        project_id = d.pop("project_id", UNSET)
+        def _parse_project_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                project_id_type_0 = UUID(data)
 
-        source_scenario_id = d.pop("source_scenario_id", UNSET)
+                return project_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
 
-        source_scenario_rows = []
-        _source_scenario_rows = d.pop("source_scenario_rows", UNSET)
-        for source_scenario_rows_item_data in _source_scenario_rows or []:
-            source_scenario_rows_item = ScenarioDataPoinResponse.from_dict(source_scenario_rows_item_data)
+        project_id = _parse_project_id(d.pop("project_id", UNSET))
 
-            source_scenario_rows.append(source_scenario_rows_item)
+        def _parse_source_scenario_id(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                source_scenario_id_type_0 = UUID(data)
 
-        synonym_sets = []
-        _synonym_sets = d.pop("synonym_sets", UNSET)
-        for synonym_sets_item_data in _synonym_sets or []:
-            synonym_sets_item = cast(List[str], synonym_sets_item_data)
+                return source_scenario_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | UUID, data)
 
-            synonym_sets.append(synonym_sets_item)
+        source_scenario_id = _parse_source_scenario_id(d.pop("source_scenario_id", UNSET))
+
+        def _parse_source_scenario_rows(data: object) -> list[ScenarioDataPoinResponse] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                source_scenario_rows_type_0 = []
+                _source_scenario_rows_type_0 = data
+                for source_scenario_rows_type_0_item_data in _source_scenario_rows_type_0:
+                    source_scenario_rows_type_0_item = ScenarioDataPoinResponse.from_dict(
+                        source_scenario_rows_type_0_item_data
+                    )
+
+                    source_scenario_rows_type_0.append(source_scenario_rows_type_0_item)
+
+                return source_scenario_rows_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[ScenarioDataPoinResponse] | None | Unset, data)
+
+        source_scenario_rows = _parse_source_scenario_rows(d.pop("source_scenario_rows", UNSET))
+
+        def _parse_synonym_sets(data: object) -> list[list[str]] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                synonym_sets_type_0 = []
+                _synonym_sets_type_0 = data
+                for synonym_sets_type_0_item_data in _synonym_sets_type_0:
+                    synonym_sets_type_0_item = cast(list[str], synonym_sets_type_0_item_data)
+
+                    synonym_sets_type_0.append(synonym_sets_type_0_item)
+
+                return synonym_sets_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[list[str]] | None | Unset, data)
+
+        synonym_sets = _parse_synonym_sets(d.pop("synonym_sets", UNSET))
 
         save_generated_scenario = d.pop("save_generated_scenario", UNSET)
 
         _generation_type = d.pop("generation_type", UNSET)
-        generation_type: Union[Unset, ScenarioType]
+        generation_type: ScenarioType | Unset
         if isinstance(_generation_type, Unset):
             generation_type = UNSET
         else:
             generation_type = ScenarioType(_generation_type)
 
         _generation_tone = d.pop("generation_tone", UNSET)
-        generation_tone: Union[Unset, GenerationTone]
+        generation_tone: GenerationTone | Unset
         if isinstance(_generation_tone, Unset):
             generation_tone = UNSET
         else:
             generation_tone = GenerationTone(_generation_tone)
 
-        generation_prompt = d.pop("generation_prompt", UNSET)
+        def _parse_generation_prompt(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
 
-        _generation_schema = d.pop("generation_schema", UNSET)
-        generation_schema: Union[Unset, ScenarioSetGenerateGenerationSchema]
-        if isinstance(_generation_schema, Unset):
-            generation_schema = UNSET
-        else:
-            generation_schema = ScenarioSetGenerateGenerationSchema.from_dict(_generation_schema)
+        generation_prompt = _parse_generation_prompt(d.pop("generation_prompt", UNSET))
 
-        pre_template = d.pop("pre_template", UNSET)
+        def _parse_generation_schema(data: object) -> None | ScenarioSetGenerateGenerationSchemaType0 | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                generation_schema_type_0 = ScenarioSetGenerateGenerationSchemaType0.from_dict(data)
 
-        post_template = d.pop("post_template", UNSET)
+                return generation_schema_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | ScenarioSetGenerateGenerationSchemaType0 | Unset, data)
+
+        generation_schema = _parse_generation_schema(d.pop("generation_schema", UNSET))
+
+        def _parse_pre_template(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        pre_template = _parse_pre_template(d.pop("pre_template", UNSET))
+
+        def _parse_post_template(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        post_template = _parse_post_template(d.pop("post_template", UNSET))
 
         lock_result = d.pop("lock_result", UNSET)
 
-        checks = []
         _checks = d.pop("checks", UNSET)
-        for checks_item_data in _checks or []:
+        checks: list[ScenarioSetGenerateChecksItemType1 | str] | Unset = UNSET
+        if _checks is not UNSET:
+            checks = []
+            for checks_item_data in _checks:
 
-            def _parse_checks_item(data: object) -> Union["ScenarioSetGenerateChecksItemType1", str]:
-                try:
-                    if not isinstance(data, dict):
-                        raise TypeError()
-                    checks_item_type_1 = ScenarioSetGenerateChecksItemType1.from_dict(data)
+                def _parse_checks_item(data: object) -> ScenarioSetGenerateChecksItemType1 | str:
+                    try:
+                        if not isinstance(data, dict):
+                            raise TypeError()
+                        checks_item_type_1 = ScenarioSetGenerateChecksItemType1.from_dict(data)
 
-                    return checks_item_type_1
-                except:  # noqa: E722
-                    pass
-                return cast(Union["ScenarioSetGenerateChecksItemType1", str], data)
+                        return checks_item_type_1
+                    except (TypeError, ValueError, AttributeError, KeyError):
+                        pass
+                    return cast(ScenarioSetGenerateChecksItemType1 | str, data)
 
-            checks_item = _parse_checks_item(checks_item_data)
+                checks_item = _parse_checks_item(checks_item_data)
 
-            checks.append(checks_item)
+                checks.append(checks_item)
 
         scenario_set_generate = cls(
             name=name,
@@ -254,7 +397,7 @@ class ScenarioSetGenerate:
         return scenario_set_generate
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

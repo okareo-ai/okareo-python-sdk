@@ -1,9 +1,10 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="SeedData")
 
@@ -12,34 +13,36 @@ T = TypeVar("T", bound="SeedData")
 class SeedData:
     """
     Attributes:
-        input_ (Union[Unset, Any]):
-        result (Union[Unset, Any]):
+        input_ (Any):
+        result (Any):
     """
 
-    input_: Union[Unset, Any] = UNSET
-    result: Union[Unset, Any] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    input_: Any
+    result: Any
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         input_ = self.input_
+
         result = self.result
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if input_ is not UNSET:
-            field_dict["input"] = input_
-        if result is not UNSET:
-            field_dict["result"] = result
+        field_dict.update(
+            {
+                "input": input_,
+                "result": result,
+            }
+        )
 
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        d = src_dict.copy()
-        input_ = d.pop("input", UNSET)
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        input_ = d.pop("input")
 
-        result = d.pop("result", UNSET)
+        result = d.pop("result")
 
         seed_data = cls(
             input_=input_,
@@ -50,7 +53,7 @@ class SeedData:
         return seed_data
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

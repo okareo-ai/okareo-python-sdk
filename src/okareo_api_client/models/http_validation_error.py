@@ -1,4 +1,7 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,22 +19,21 @@ T = TypeVar("T", bound="HTTPValidationError")
 class HTTPValidationError:
     """
     Attributes:
-        detail (Union[Unset, List['ValidationError']]):
+        detail (list[ValidationError] | Unset):
     """
 
-    detail: Union[Unset, List["ValidationError"]] = UNSET
-    additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
+    detail: list[ValidationError] | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        detail: Union[Unset, List[Dict[str, Any]]] = UNSET
+    def to_dict(self) -> dict[str, Any]:
+        detail: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.detail, Unset):
             detail = []
             for detail_item_data in self.detail:
                 detail_item = detail_item_data.to_dict()
-
                 detail.append(detail_item)
 
-        field_dict: Dict[str, Any] = {}
+        field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if detail is not UNSET:
@@ -40,16 +42,18 @@ class HTTPValidationError:
         return field_dict
 
     @classmethod
-    def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.validation_error import ValidationError
 
-        d = src_dict.copy()
-        detail = []
+        d = dict(src_dict)
         _detail = d.pop("detail", UNSET)
-        for detail_item_data in _detail or []:
-            detail_item = ValidationError.from_dict(detail_item_data)
+        detail: list[ValidationError] | Unset = UNSET
+        if _detail is not UNSET:
+            detail = []
+            for detail_item_data in _detail:
+                detail_item = ValidationError.from_dict(detail_item_data)
 
-            detail.append(detail_item)
+                detail.append(detail_item)
 
         http_validation_error = cls(
             detail=detail,
@@ -59,7 +63,7 @@ class HTTPValidationError:
         return http_validation_error
 
     @property
-    def additional_keys(self) -> List[str]:
+    def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
     def __getitem__(self, key: str) -> Any:

@@ -107,7 +107,7 @@ def generate_random_string():  # type: ignore
 
 
 def find_datapoints(
-    api_key: Any, base_url: Any, filters: list[dict[str, str]], wait: int = 15
+    api_key: Any, base_url: Any, filters: list[dict[str, Any]], wait: int = 15
 ) -> list[dict[str, Any]]:
     """Find datapoints using /v0/find_datapoints_filter. Retries 3x with backoff."""
     if wait > 0:
@@ -670,7 +670,7 @@ def test_voice_simulation_trace_consistency_matching_and_mismatching(
 
     # Get context_token from the simulation datapoint using find_datapoints (returns DatapointListItem)
     filters = [
-        {"field": "test_run_id", "operator": "equal", "value": simulation_eval.id}
+        {"field": "test_run_id", "operator": "equal", "value": str(simulation_eval.id)}
     ]
     datapoints = find_datapoints(api_key, base_url, filters, wait=0)
     assert len(datapoints) > 0, "No datapoints found for voice simulation"
