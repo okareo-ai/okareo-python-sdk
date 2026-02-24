@@ -15,6 +15,7 @@ def _get_kwargs(
     project_id: UUID,
     file_id: UUID,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/voice/file/{project_id}/{file_id}".format(

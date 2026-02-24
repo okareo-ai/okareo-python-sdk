@@ -16,6 +16,7 @@ class TestRunPayloadV2MetricsKwargs:
     additional_properties: dict[str, list[int] | list[str]] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+
         field_dict: dict[str, Any] = {}
         for prop_name, prop in self.additional_properties.items():
             if isinstance(prop, list):

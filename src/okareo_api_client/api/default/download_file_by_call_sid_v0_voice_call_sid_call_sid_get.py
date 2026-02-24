@@ -13,6 +13,7 @@ from ...types import Response
 def _get_kwargs(
     call_sid: str,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/voice/call_sid/{call_sid}".format(

@@ -19,6 +19,7 @@ def _get_kwargs(
     project_id: None | Unset | UUID = UNSET,
     precision: UsagePrecision | Unset = UNSET,
 ) -> dict[str, Any]:
+
     params: dict[str, Any] = {}
 
     json_start_date: None | str | Unset
