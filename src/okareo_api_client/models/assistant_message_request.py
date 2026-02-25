@@ -6,6 +6,8 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 T = TypeVar("T", bound="AssistantMessageRequest")
 
 
@@ -13,47 +15,52 @@ T = TypeVar("T", bound="AssistantMessageRequest")
 class AssistantMessageRequest:
     """
     Attributes:
-        thread_id (None | str):
         message (str):
+        thread_id (None | str | Unset):
     """
 
-    thread_id: None | str
     message: str
+    thread_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        thread_id: None | str
-        thread_id = self.thread_id
-
         message = self.message
+
+        thread_id: None | str | Unset
+        if isinstance(self.thread_id, Unset):
+            thread_id = UNSET
+        else:
+            thread_id = self.thread_id
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "thread_id": thread_id,
                 "message": message,
             }
         )
+        if thread_id is not UNSET:
+            field_dict["thread_id"] = thread_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-
-        def _parse_thread_id(data: object) -> None | str:
-            if data is None:
-                return data
-            return cast(None | str, data)
-
-        thread_id = _parse_thread_id(d.pop("thread_id"))
-
         message = d.pop("message")
 
+        def _parse_thread_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        thread_id = _parse_thread_id(d.pop("thread_id", UNSET))
+
         assistant_message_request = cls(
-            thread_id=thread_id,
             message=message,
+            thread_id=thread_id,
         )
 
         assistant_message_request.additional_properties = d

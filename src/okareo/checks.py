@@ -71,15 +71,26 @@ class ModelBasedCheck(BaseCheck):
     The check output type should be one of the following:
     - CheckOutputType.SCORE -> this template should ask prompt the model a score (single number)
     - CheckOutputType.PASS_FAIL -> this template should prompt the model for a boolean value (True/False)
+
+    The 'is_audio' flag indicates whether the check is meant to evaluate audio data. If True, the system will handle
+    the audio data before passing it to the check, meaning you do not need to add any audio-specific prompt template
+    placeholders for this check.
     """
 
-    def __init__(self, prompt_template: str, check_type: CheckOutputType):
+    def __init__(
+        self, prompt_template: str, check_type: CheckOutputType, is_audio: bool = False
+    ):
         """Initialize the check with a prompt template and check type"""
         self.prompt_template = prompt_template
         self.check_type = check_type.value
+        self.is_audio = is_audio
 
     def check_config(self) -> dict:
-        return {"prompt_template": self.prompt_template, "type": self.check_type}
+        return {
+            "prompt_template": self.prompt_template,
+            "type": self.check_type,
+            "audio": self.is_audio,
+        }
 
     @staticmethod
     def evaluate(
