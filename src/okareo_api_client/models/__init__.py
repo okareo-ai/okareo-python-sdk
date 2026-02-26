@@ -92,6 +92,9 @@ from .get_groups_v0_groups_get_response_200_item import GetGroupsV0GroupsGetResp
 from .get_notification_history_v0_notification_history_get_response_200_item import (
     GetNotificationHistoryV0NotificationHistoryGetResponse200Item,
 )
+from .get_template_variables_v0_template_variables_get_response_get_template_variables_v0_template_variables_get import (
+    GetTemplateVariablesV0TemplateVariablesGetResponseGetTemplateVariablesV0TemplateVariablesGet,
+)
 from .group_schema import GroupSchema
 from .http_validation_error import HTTPValidationError
 from .metric_detail import MetricDetail
@@ -128,6 +131,7 @@ from .slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_g
 from .summary_datapoint_search import SummaryDatapointSearch
 from .target_model_response import TargetModelResponse
 from .target_model_response_target import TargetModelResponseTarget
+from .template_variable_definition import TemplateVariableDefinition
 from .test_custom_endpoint_request import TestCustomEndpointRequest
 from .test_custom_endpoint_request_auth_params_type_0 import TestCustomEndpointRequestAuthParamsType0
 from .test_custom_endpoint_request_end_session_params_type_0 import TestCustomEndpointRequestEndSessionParamsType0
@@ -253,6 +257,7 @@ __all__ = (
     "GetFilterGroupNotificationsV0FilterGroupNotificationsGetResponse200Item",
     "GetGroupsV0GroupsGetResponse200Item",
     "GetNotificationHistoryV0NotificationHistoryGetResponse200Item",
+    "GetTemplateVariablesV0TemplateVariablesGetResponseGetTemplateVariablesV0TemplateVariablesGet",
     "GroupSchema",
     "HTTPValidationError",
     "MetricDetail",
@@ -283,6 +288,7 @@ __all__ = (
     "SummaryDatapointSearch",
     "TargetModelResponse",
     "TargetModelResponseTarget",
+    "TemplateVariableDefinition",
     "TestCustomEndpointRequest",
     "TestCustomEndpointRequestAuthParamsType0",
     "TestCustomEndpointRequestEndSessionParamsType0",

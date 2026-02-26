@@ -1,70 +1,56 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="AssistantMessageRequest")
+T = TypeVar("T", bound="TemplateVariableDefinition")
 
 
 @_attrs_define
-class AssistantMessageRequest:
+class TemplateVariableDefinition:
     """
     Attributes:
-        message (str):
-        thread_id (None | str | Unset):
+        name (str):
+        description (str):
     """
 
-    message: str
-    thread_id: None | str | Unset = UNSET
+    name: str
+    description: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        message = self.message
+        name = self.name
 
-        thread_id: None | str | Unset
-        if isinstance(self.thread_id, Unset):
-            thread_id = UNSET
-        else:
-            thread_id = self.thread_id
+        description = self.description
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "message": message,
+                "name": name,
+                "description": description,
             }
         )
-        if thread_id is not UNSET:
-            field_dict["thread_id"] = thread_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        message = d.pop("message")
+        name = d.pop("name")
 
-        def _parse_thread_id(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
+        description = d.pop("description")
 
-        thread_id = _parse_thread_id(d.pop("thread_id", UNSET))
-
-        assistant_message_request = cls(
-            message=message,
-            thread_id=thread_id,
+        template_variable_definition = cls(
+            name=name,
+            description=description,
         )
 
-        assistant_message_request.additional_properties = d
-        return assistant_message_request
+        template_variable_definition.additional_properties = d
+        return template_variable_definition
 
     @property
     def additional_keys(self) -> list[str]:
