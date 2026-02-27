@@ -114,11 +114,16 @@ include = '\.pyi?$'
 
 [tool.pytest.ini_options]
 addopts = """\
+    -v \
     --cov okareo \
     --cov okareo_tests \
     --cov-report term-missing \
     --no-cov-on-fail \
 """
+filterwarnings = [
+    "ignore:Accessing the 'model_fields' attribute on the instance is deprecated:DeprecationWarning",
+    "ignore:The `dict` method is deprecated; use `model_dump` instead:DeprecationWarning",
+]
 
 [tool.coverage.report]
 fail_under = 80
