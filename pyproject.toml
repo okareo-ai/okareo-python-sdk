@@ -123,6 +123,7 @@ addopts = """\
 filterwarnings = [
     "ignore:Accessing the 'model_fields' attribute on the instance is deprecated:DeprecationWarning",
     "ignore:The `dict` method is deprecated; use `model_dump` instead:DeprecationWarning",
+    "ignore::pytest.PytestCollectionWarning",
 ]
 
 [tool.coverage.report]
