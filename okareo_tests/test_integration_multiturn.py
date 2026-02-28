@@ -29,6 +29,7 @@ from okareo.model_under_test import (
 from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
+from okareo_api_client.models.full_data_point_item import FullDataPointItem
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 
@@ -1185,6 +1186,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     assert len(tdps) > 0
 
     for tdp in tdps:
+        assert isinstance(tdp, FullDataPointItem)
         assert tdp.error_message is not None, "error_message should be populated"
         assert "Invalid Okareo API Token" in tdp.error_message
         assert redacted_str in tdp.error_message
