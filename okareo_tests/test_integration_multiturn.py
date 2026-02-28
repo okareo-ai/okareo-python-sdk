@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import re
 import time
 from typing import Any, Optional, Union
 
@@ -1163,33 +1162,32 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
-    # Run the test; ensure the api-key is redacted in the exception
-    redacted_str = re.escape("*" * 16)
-    base_url = os.environ.get("BASE_URL", "https://api.okareo.com")
-    with pytest.raises(
-        Exception,
-        match=(
-            "Custom endpoint failed with status_code 401. Full details: Request: POST "
-            + base_url
-            + "/v0/custom_endpoint_stub/create, "
-            + "Headers: {'api-key': '"
-            + redacted_str
-            + "', 'Content-Type': 'application/json; charset=utf-8'}, Body: {}. "
-            + 'Error message is: {"detail":"Invalid Okareo API Token. Please check the docs to '
-            + 'get Okareo API Token: https://okareo.com/docs/getting-started/overview"}.'
-        ),
-    ):
-        okareo.run_simulation(
-            target=target,
-            driver=driver,
-            name=f"Custom Endpoint Test Exception - {rnd}",
-            api_key=API_KEY,
-            scenario=scenario,
-            stop_check=StopConfig(check_name="task_completed"),
-            max_turns=2,
-            first_turn="driver",
-            checks=["task_completed"],
-        )
+    # Run the test; errors are now captured per-row in error_message
+    redacted_str = "*" * 16
+
+    test_run = okareo.run_simulation(
+        target=target,
+        driver=driver,
+        name=f"Custom Endpoint Test Exception - {rnd}",
+        api_key=API_KEY,
+        scenario=scenario,
+        stop_check=StopConfig(check_name="task_completed"),
+        max_turns=2,
+        first_turn="driver",
+        checks=["task_completed"],
+    )
+
+    # Fetch the test data points and verify error_message on each row
+    tdps = okareo.find_test_data_points(
+        FindTestDataPointPayload(test_run_id=test_run.id, full_data_point=True)
+    )
+    assert isinstance(tdps, list)
+    assert len(tdps) > 0
+
+    for tdp in tdps:
+        assert tdp.error_message is not None, "error_message should be populated"
+        assert "Invalid Okareo API Token" in tdp.error_message
+        assert redacted_str in tdp.error_message
 
 
 @pytest.mark.skip(reason="Skipping submit test for multiturn error")
