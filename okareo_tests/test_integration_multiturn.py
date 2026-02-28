@@ -1188,6 +1188,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     for tdp in tdps:
         assert isinstance(tdp, FullDataPointItem)
         assert tdp.error_message is not None, "error_message should be populated"
+        assert isinstance(tdp.error_message, str), "error_message should be a string"
         assert "Invalid Okareo API Token" in tdp.error_message
         assert redacted_str in tdp.error_message
 
