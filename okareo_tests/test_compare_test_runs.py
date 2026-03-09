@@ -385,9 +385,7 @@ def test_compare_concordance_table_sums(
             + check["concordant_pass"]
             + check["concordant_fail"]
         )
-        assert table_sum == matched, (
-            f"{check['name']}: {table_sum} != {matched}"
-        )
+        assert table_sum == matched, f"{check['name']}: {table_sum} != {matched}"
 
 
 def test_compare_mean_diff_direction(
