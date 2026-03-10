@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import time
+from datetime import datetime
 from typing import Any, Optional, Union
 
 import aiohttp
@@ -1158,8 +1159,9 @@ def test_multiturn_driver_with_custom_endpoint_exception(
         ),
     ]
 
+    unique_suffix = f"{rnd}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
     scenario_set_create = ScenarioSetCreate(
-        name=f"Custom Endpoint Test Scenario - {rnd}", seed_data=seeds
+        name=f"Custom Endpoint Test Scenario - {unique_suffix}", seed_data=seeds
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
@@ -1169,7 +1171,7 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     test_run = okareo.run_simulation(
         target=target,
         driver=driver,
-        name=f"Custom Endpoint Test Exception - {rnd}",
+        name=f"Custom Endpoint Test Exception - {unique_suffix}",
         api_key=API_KEY,
         scenario=scenario,
         stop_check=StopConfig(check_name="task_completed"),
