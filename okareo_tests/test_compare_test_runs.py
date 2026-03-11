@@ -533,10 +533,12 @@ def test_compare_with_repeats(
     assert 0.0 <= refusal_check["p_value"] <= 1.0
     assert 0.0 <= refusal_check["p_value_adjusted"] <= 1.0
     assert isinstance(refusal_check["significant"], bool)
-    assert 0.0 <= refusal_check["chance_to_beat"] <= 1.0
-    assert refusal_check["ci_lower"] <= refusal_check["ci_upper"]
-    assert refusal_check["risk_to_ship"] >= 0
-    assert refusal_check["risk_to_keep"] >= 0
+    # REPEAT_SEED_DATA has N=3 < 5, so Bayesian fields are omitted
+    assert refusal_check["chance_to_beat"] is None
+    assert refusal_check["ci_lower"] is None
+    assert refusal_check["ci_upper"] is None
+    assert refusal_check["risk_to_ship"] is None
+    assert refusal_check["risk_to_keep"] is None
 
     numeric_names = {c["name"] for c in stats["score_checks"]}
     assert (
@@ -549,10 +551,12 @@ def test_compare_with_repeats(
     assert 0.0 <= lev_check["p_value"] <= 1.0
     assert 0.0 <= lev_check["p_value_adjusted"] <= 1.0
     assert isinstance(lev_check["significant"], bool)
-    assert 0.0 <= lev_check["chance_to_beat"] <= 1.0
-    assert lev_check["ci_lower"] <= lev_check["ci_upper"]
-    assert lev_check["risk_to_ship"] >= 0
-    assert lev_check["risk_to_keep"] >= 0
+    # REPEAT_SEED_DATA has N=3 < 5, so Bayesian fields are omitted
+    assert lev_check["chance_to_beat"] is None
+    assert lev_check["ci_lower"] is None
+    assert lev_check["ci_upper"] is None
+    assert lev_check["risk_to_ship"] is None
+    assert lev_check["risk_to_keep"] is None
 
 
 def test_compare_repeat_cleanup(
