@@ -285,6 +285,11 @@ def test_compare_pass_fail_checks(
     assert 0.0 <= is_json_check["p_value_adjusted"] <= 1.0
     assert isinstance(is_json_check["significant"], bool)
 
+    assert 0.0 <= is_json_check["chance_to_beat"] <= 1.0
+    assert is_json_check["ci_lower"] <= is_json_check["ci_upper"]
+    assert is_json_check["risk_to_ship"] >= 0
+    assert is_json_check["risk_to_keep"] >= 0
+
 
 def test_compare_score_checks(
     okareo: Okareo, control_run: Any, variant_run: Any
@@ -307,6 +312,11 @@ def test_compare_score_checks(
         assert 0.0 <= check["p_value"] <= 1.0
         assert 0.0 <= check["p_value_adjusted"] <= 1.0
         assert isinstance(check["significant"], bool)
+
+        assert 0.0 <= check["chance_to_beat"] <= 1.0
+        assert check["ci_lower"] <= check["ci_upper"]
+        assert check["risk_to_ship"] >= 0
+        assert check["risk_to_keep"] >= 0
 
 
 def test_compare_bh_correction_applied(
@@ -523,6 +533,10 @@ def test_compare_with_repeats(
     assert 0.0 <= refusal_check["p_value"] <= 1.0
     assert 0.0 <= refusal_check["p_value_adjusted"] <= 1.0
     assert isinstance(refusal_check["significant"], bool)
+    assert 0.0 <= refusal_check["chance_to_beat"] <= 1.0
+    assert refusal_check["ci_lower"] <= refusal_check["ci_upper"]
+    assert refusal_check["risk_to_ship"] >= 0
+    assert refusal_check["risk_to_keep"] >= 0
 
     numeric_names = {c["name"] for c in stats["score_checks"]}
     assert (
@@ -535,6 +549,10 @@ def test_compare_with_repeats(
     assert 0.0 <= lev_check["p_value"] <= 1.0
     assert 0.0 <= lev_check["p_value_adjusted"] <= 1.0
     assert isinstance(lev_check["significant"], bool)
+    assert 0.0 <= lev_check["chance_to_beat"] <= 1.0
+    assert lev_check["ci_lower"] <= lev_check["ci_upper"]
+    assert lev_check["risk_to_ship"] >= 0
+    assert lev_check["risk_to_keep"] >= 0
 
 
 def test_compare_repeat_cleanup(
