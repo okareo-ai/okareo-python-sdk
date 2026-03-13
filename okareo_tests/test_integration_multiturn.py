@@ -14,6 +14,7 @@ from okareo_tests.utils import assert_baseline_metrics, create_dummy_mut
 from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import (
+    AuthConfig,
     CustomEndpointTarget,
     CustomMultiturnTarget,
     CustomMultiturnTargetAsync,
@@ -1024,6 +1025,18 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
 
     # Define API headers
     api_headers = json.dumps({"api-key": API_KEY, "Content-Type": "application/json"})
+    auth_headers = json.dumps(
+        {"api-key": API_KEY, "Content-Type": "application/x-www-form-urlencoded"}
+    )
+
+    # Create auth config
+    auth_config = AuthConfig(
+        url=f"{base_url}/v0/custom_endpoint_stub/token",
+        method="POST",
+        headers=auth_headers,
+        body=json.dumps({"grant_type": "client_credentials"}),
+        response_access_token_path="response.access_token",
+    )
 
     # Create start session config
     start_config = SessionConfig(
@@ -1056,7 +1069,9 @@ def test_multiturn_driver_with_custom_endpoint(rnd: str, okareo: Okareo) -> None
     model_name = f"Custom Endpoint Test {rnd}"
     target = Target(
         name=model_name,
-        target=CustomEndpointTarget(start_config, next_config, end_config),
+        target=CustomEndpointTarget(
+            start_config, next_config, end_config, auth=auth_config
+        ),
     )
 
     driver = Driver(
