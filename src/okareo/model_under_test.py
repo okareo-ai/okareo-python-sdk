@@ -1868,16 +1868,18 @@ class CustomEndpointTarget(BaseModel):
         self.max_parallel_requests = max_parallel_requests
 
     def params(self) -> dict:
-        return {
+        result = {
             "type": self.type,
             "start_session_params": self.start_session.to_dict(),
             "next_message_params": self.next_turn.to_dict(),
             "end_session_params": (
                 self.end_session.to_dict() if self.end_session is not None else {}
             ),
-            "auth_params": (self.auth.to_dict() if self.auth is not None else {}),
             "max_parallel_requests": self.max_parallel_requests,
         }
+        if self.auth is not None:
+            result["auth_params"] = self.auth.to_dict()
+        return result
 
 
 @_attrs_define
