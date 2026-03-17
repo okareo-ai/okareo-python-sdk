@@ -1666,6 +1666,43 @@ class StopConfig:
         return {"check_name": self.check_name, "stop_on": self.stop_on}
 
 
+class StreamingConfig:
+    """Configuration for streaming responses from a custom API endpoint.
+
+    When provided on a TurnConfig or SessionConfig, the server will consume the
+    endpoint's response as a Server-Sent Events (SSE) or NDJSON stream and
+    reassemble the tokens into the final response.
+
+    Arguments:
+        content_path: Dot-bracket path to extract the text token from each
+            streamed chunk. E.g., ``delta.content`` or ``choices[0].delta.content``.
+        done_signal: Optional raw-string sentinel that marks the end of the stream.
+            E.g., ``[DONE]``. When ``None``, the stream ends on connection close
+            or when ``done_path`` fires.
+        done_path: Optional dot-bracket path into each parsed JSON chunk whose
+            truthy value signals end-of-stream. E.g., ``is_finished`` for
+            Cohere-style ``{"is_finished": true}`` chunks.
+    """
+
+    def __init__(
+        self,
+        content_path: str,
+        done_signal: Optional[str] = None,
+        done_path: Optional[str] = None,
+    ) -> None:
+        self.content_path = content_path
+        self.done_signal = done_signal
+        self.done_path = done_path
+
+    def to_dict(self) -> dict:
+        d: dict = {"content_path": self.content_path}
+        if self.done_signal is not None:
+            d["done_signal"] = self.done_signal
+        if self.done_path is not None:
+            d["done_path"] = self.done_path
+        return d
+
+
 class SessionConfig:
     """Configuration for a custom API endpoint that starts a session.
 
@@ -1688,6 +1725,7 @@ class SessionConfig:
         status_code: Optional[int] = None,
         response_session_id_path: str = "",
         response_message_path: str = "",
+        streaming: Optional[StreamingConfig] = None,
     ) -> None:
         self.url = url
         self.method = method
@@ -1696,9 +1734,10 @@ class SessionConfig:
         self.status_code = status_code
         self.response_session_id_path = response_session_id_path
         self.response_message_path = response_message_path
+        self.streaming = streaming
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "url": self.url,
             "method": self.method,
             "headers": self.headers,
@@ -1707,6 +1746,9 @@ class SessionConfig:
             "response_session_id_path": self.response_session_id_path,
             "response_message_path": self.response_message_path,
         }
+        if self.streaming is not None:
+            d["streaming"] = self.streaming.to_dict()
+        return d
 
 
 class TurnConfig:
@@ -1738,6 +1780,7 @@ class TurnConfig:
         status_code: Optional[int] = None,
         response_message_path: str = "",
         response_tool_calls_path: str = "",
+        streaming: Optional[StreamingConfig] = None,
     ) -> None:
         self.url = url
         self.method = method
@@ -1748,9 +1791,10 @@ class TurnConfig:
         self.response_tool_calls_path = (
             response_tool_calls_path  # TODO: populate this once we support on BE
         )
+        self.streaming = streaming
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "url": self.url,
             "method": self.method,
             "headers": self.headers,
@@ -1759,6 +1803,9 @@ class TurnConfig:
             "response_message_path": self.response_message_path,
             "response_tool_calls_path": self.response_tool_calls_path,
         }
+        if self.streaming is not None:
+            d["streaming"] = self.streaming.to_dict()
+        return d
 
 
 class EndSessionConfig:

@@ -25,6 +25,7 @@ from okareo.model_under_test import (
     OpenAIModel,
     SessionConfig,
     StopConfig,
+    StreamingConfig,
     Target,
     TurnConfig,
 )
@@ -1401,6 +1402,7 @@ def _create_custom_endpoint_configs(
     include_end: bool = True,
     api_key: str = API_KEY,
     session_id: Optional[str] = None,
+    streaming: Optional[StreamingConfig] = None,
 ) -> Any:
     """Helper method to create custom endpoint configurations"""
     api_headers = json.dumps({"api-key": api_key, "Content-Type": "application/json"})
@@ -1425,6 +1427,7 @@ def _create_custom_endpoint_configs(
         body=json.dumps({"thread_id": session_id, "message": "{latest_message}"}),
         status_code=next_status_code,
         response_message_path="response.assistant_response",
+        streaming=streaming,
     ).to_dict()
 
     end_config = {}
@@ -1508,6 +1511,72 @@ def test_test_custom_endpoint_combinations() -> None:
         include_end=False,
         session_id=thread_id,
     )
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+
+def test_test_custom_endpoint_combinations_streaming() -> None:
+    """Test custom endpoint combinations with streaming enabled on next_message.
+
+    Same scenarios as test_test_custom_endpoint_combinations but the next_message
+    config includes a StreamingConfig and hits the /message/stream endpoint.
+    The stub returns SSE (data: {json}\n\n) with delta.content tokens and a
+    [DONE] sentinel. The server should reassemble the streamed tokens into
+    the same response shape as the non-streaming path.
+    """
+    streaming = StreamingConfig(
+        content_path="delta.content",
+        done_signal="[DONE]",
+    )
+
+    def _point_to_stream_endpoint(next_config: dict) -> dict:
+        """Rewrite the URL to hit /message/stream instead of /message."""
+        next_config["url"] = next_config["url"].replace(
+            "/custom_endpoint_stub/message",
+            "/custom_endpoint_stub/message/stream",
+        )
+        return next_config
+
+    # Scenario 1: All configs provided (streaming on next_message)
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        streaming=streaming,
+    )
+    nt_config = _point_to_stream_endpoint(nt_config)
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+    # Scenario 2: Only next config provided, no start or end config
+    thread_id = json.loads(
+        response.get("next_message_raw_response", {}).get("body", "{}")
+    ).get("thread_id", None)
+    assert (
+        thread_id is not None
+    ), "Thread ID should be present in the streaming response of Scenario #1"
+
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        include_start=False,
+        include_end=False,
+        session_id=thread_id,
+        streaming=streaming,
+    )
+    nt_config = _point_to_stream_endpoint(nt_config)
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+    # Scenario 3: Start and next config provided, no end config
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        include_start=True,
+        include_end=False,
+        session_id=thread_id,
+        streaming=streaming,
+    )
+    nt_config = _point_to_stream_endpoint(nt_config)
 
     response = _call_test_custom_endpoint(
         start_config=ss_config, next_config=nt_config, end_config=en_config
