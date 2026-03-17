@@ -1403,6 +1403,7 @@ def _create_custom_endpoint_configs(
     api_key: str = API_KEY,
     session_id: Optional[str] = None,
     streaming: Optional[StreamingConfig] = None,
+    response_message_path: str = "response.assistant_response",
 ) -> Any:
     """Helper method to create custom endpoint configurations"""
     api_headers = json.dumps({"api-key": api_key, "Content-Type": "application/json"})
@@ -1426,7 +1427,7 @@ def _create_custom_endpoint_configs(
         headers=api_headers,
         body=json.dumps({"thread_id": session_id, "message": "{latest_message}"}),
         status_code=next_status_code,
-        response_message_path="response.assistant_response",
+        response_message_path=response_message_path,
         streaming=streaming,
     ).to_dict()
 
@@ -1527,7 +1528,6 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
     the same response shape as the non-streaming path.
     """
     streaming = StreamingConfig(
-        content_path="delta.content",
         done_signal="[DONE]",
     )
 
@@ -1540,8 +1540,11 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
         return next_config
 
     # Scenario 1: All configs provided (streaming on next_message)
+    # response_message_path points to the chunk shape (delta.content) since
+    # streaming uses the same path field for token extraction.
     ss_config, nt_config, en_config = _create_custom_endpoint_configs(
         streaming=streaming,
+        response_message_path="response.delta.content",
     )
     nt_config = _point_to_stream_endpoint(nt_config)
 
@@ -1562,6 +1565,7 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
         include_end=False,
         session_id=thread_id,
         streaming=streaming,
+        response_message_path="response.delta.content",
     )
     nt_config = _point_to_stream_endpoint(nt_config)
 
@@ -1575,6 +1579,7 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
         include_end=False,
         session_id=thread_id,
         streaming=streaming,
+        response_message_path="response.delta.content",
     )
     nt_config = _point_to_stream_endpoint(nt_config)
 

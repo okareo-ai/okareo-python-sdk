@@ -1673,29 +1673,39 @@ class StreamingConfig:
     endpoint's response as a Server-Sent Events (SSE) or NDJSON stream and
     reassemble the tokens into the final response.
 
+    The server uses the parent config's ``response_message_path`` to locate the
+    text token in each streamed chunk — the same field used for batch responses.
+    Since only one mode (batch or streaming) runs at a time, set
+    ``response_message_path`` to the *chunk* shape when streaming is enabled
+    (e.g., ``response.delta.content`` for OpenAI-style SSE streams).
+
     Arguments:
-        content_path: Dot-bracket path to extract the text token from each
-            streamed chunk. E.g., ``delta.content`` or ``choices[0].delta.content``.
-        done_signal: Optional raw-string sentinel that marks the end of the stream.
-            E.g., ``[DONE]``. When ``None``, the stream ends on connection close
-            or when ``done_path`` fires.
-        done_path: Optional dot-bracket path into each parsed JSON chunk whose
-            truthy value signals end-of-stream. E.g., ``is_finished`` for
-            Cohere-style ``{"is_finished": true}`` chunks.
+        done_signal: Controls stream termination.
+            - When ``done_path`` is **not** set: raw-string sentinel matched
+              against the SSE ``data:`` payload before JSON parsing.
+              E.g., ``"[DONE]"``.
+            - When ``done_path`` **is** set: the value to match at that path.
+              ``"true"`` and ``"false"`` (case-insensitive) match JSON
+              booleans. ``"*"`` matches any non-null value (presence check).
+              Everything else is compared as a string.
+        done_path: Dot-bracket path into each parsed JSON chunk, prefixed
+            with ``response.``. E.g., ``response.is_finished``.
+            - When ``done_signal`` is also set: the value at this path is
+              compared against ``done_signal``.
+            - When ``done_signal`` is **not** set: stream ends when the value
+              at this path is truthy.
     """
 
     def __init__(
         self,
-        content_path: str,
         done_signal: Optional[str] = None,
         done_path: Optional[str] = None,
     ) -> None:
-        self.content_path = content_path
         self.done_signal = done_signal
         self.done_path = done_path
 
     def to_dict(self) -> dict:
-        d: dict = {"content_path": self.content_path}
+        d: dict = {}
         if self.done_signal is not None:
             d["done_signal"] = self.done_signal
         if self.done_path is not None:
