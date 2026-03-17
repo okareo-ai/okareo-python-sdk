@@ -17,6 +17,8 @@ from .check_validate_request import CheckValidateRequest
 from .check_validate_request_check_config import CheckValidateRequestCheckConfig
 from .check_validate_request_check_type import CheckValidateRequestCheckType
 from .check_validate_response import CheckValidateResponse
+from .compare_test_runs_payload import CompareTestRunsPayload
+from .compare_test_runs_response import CompareTestRunsResponse
 from .comparison_operator import ComparisonOperator
 from .create_group_v0_groups_post_body_type_0 import CreateGroupV0GroupsPostBodyType0
 from .create_group_v0_groups_post_response_create_group_v0_groups_post import (
@@ -110,8 +112,10 @@ from .model_under_test_schema import ModelUnderTestSchema
 from .model_under_test_schema_models_type_0 import ModelUnderTestSchemaModelsType0
 from .model_under_test_schema_models_type_0_additional_property import ModelUnderTestSchemaModelsType0AdditionalProperty
 from .o_auth_token_response import OAuthTokenResponse
+from .pass_fail_check_result import PassFailCheckResult
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
+from .scenario_comparison_item import ScenarioComparisonItem
 from .scenario_data_poin_response import ScenarioDataPoinResponse
 from .scenario_data_poin_response_meta_data_type_0 import ScenarioDataPoinResponseMetaDataType0
 from .scenario_set_create import ScenarioSetCreate
@@ -121,6 +125,7 @@ from .scenario_set_generate_generation_schema_type_0 import ScenarioSetGenerateG
 from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
+from .score_check_result import ScoreCheckResult
 from .seed_data import SeedData
 from .setup_filter_group_notification_v0_setup_filter_group_notification_post_response_setup_filter_group_notification_v0_setup_filter_group_notification_post import (
     SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
@@ -128,6 +133,7 @@ from .setup_filter_group_notification_v0_setup_filter_group_notification_post_re
 from .slack_oauth_callback_v0_slack_get_response_slack_oauth_callback_v0_slack_get import (
     SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet,
 )
+from .statistical_tests import StatisticalTests
 from .summary_datapoint_search import SummaryDatapointSearch
 from .target_model_response import TargetModelResponse
 from .target_model_response_target import TargetModelResponseTarget
@@ -177,8 +183,6 @@ from .usage_precision import UsagePrecision
 from .validation_error import ValidationError
 from .voice_driver_model_response import VoiceDriverModelResponse
 from .voice_profile_response import VoiceProfileResponse
-from .voice_upload_request import VoiceUploadRequest
-from .voice_upload_response import VoiceUploadResponse
 
 __all__ = (
     "AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost",
@@ -196,6 +200,8 @@ __all__ = (
     "CheckValidateRequestCheckConfig",
     "CheckValidateRequestCheckType",
     "CheckValidateResponse",
+    "CompareTestRunsPayload",
+    "CompareTestRunsResponse",
     "ComparisonOperator",
     "CreateGroupV0GroupsPostBodyType0",
     "CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost",
@@ -271,8 +277,10 @@ __all__ = (
     "ModelUnderTestSchemaModelsType0",
     "ModelUnderTestSchemaModelsType0AdditionalProperty",
     "OAuthTokenResponse",
+    "PassFailCheckResult",
     "ProjectResponse",
     "ProjectSchema",
+    "ScenarioComparisonItem",
     "ScenarioDataPoinResponse",
     "ScenarioDataPoinResponseMetaDataType0",
     "ScenarioSetCreate",
@@ -282,9 +290,11 @@ __all__ = (
     "ScenarioSetResponse",
     "ScenarioSetUpdate",
     "ScenarioType",
+    "ScoreCheckResult",
     "SeedData",
     "SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost",
     "SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet",
+    "StatisticalTests",
     "SummaryDatapointSearch",
     "TargetModelResponse",
     "TargetModelResponseTarget",
@@ -324,6 +334,4 @@ __all__ = (
     "ValidationError",
     "VoiceDriverModelResponse",
     "VoiceProfileResponse",
-    "VoiceUploadRequest",
-    "VoiceUploadResponse",
 )

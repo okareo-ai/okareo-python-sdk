@@ -5,15 +5,15 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.compare_test_runs_payload import CompareTestRunsPayload
+from ...models.compare_test_runs_response import CompareTestRunsResponse
 from ...models.error_response import ErrorResponse
-from ...models.voice_upload_request import VoiceUploadRequest
-from ...models.voice_upload_response import VoiceUploadResponse
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    body: VoiceUploadRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -21,7 +21,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/voice/upload",
+        "url": "/v0/test_runs/compare",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -34,11 +34,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | VoiceUploadResponse | None:
-    if response.status_code == 201:
-        response_201 = VoiceUploadResponse.from_dict(response.json())
+) -> CompareTestRunsResponse | ErrorResponse | None:
+    if response.status_code == 200:
+        response_200 = CompareTestRunsResponse.from_dict(response.json())
 
-        return response_201
+        return response_200
 
     if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
@@ -68,7 +68,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | VoiceUploadResponse]:
+) -> Response[CompareTestRunsResponse | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,25 +80,28 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: VoiceUploadRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-) -> Response[ErrorResponse | VoiceUploadResponse]:
-    """Upload Voice File
+) -> Response[CompareTestRunsResponse | ErrorResponse]:
+    """Compare Test Runs
 
-     Upload a base64-encoded WAV audio file.
+     Compare one or two test runs.
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        body (VoiceUploadRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | VoiceUploadResponse]
+        Response[CompareTestRunsResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -116,25 +119,28 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: VoiceUploadRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-) -> ErrorResponse | VoiceUploadResponse | None:
-    """Upload Voice File
+) -> CompareTestRunsResponse | ErrorResponse | None:
+    """Compare Test Runs
 
-     Upload a base64-encoded WAV audio file.
+     Compare one or two test runs.
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        body (VoiceUploadRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | VoiceUploadResponse
+        CompareTestRunsResponse | ErrorResponse
     """
 
     return sync_detailed(
@@ -147,25 +153,28 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: VoiceUploadRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-) -> Response[ErrorResponse | VoiceUploadResponse]:
-    """Upload Voice File
+) -> Response[CompareTestRunsResponse | ErrorResponse]:
+    """Compare Test Runs
 
-     Upload a base64-encoded WAV audio file.
+     Compare one or two test runs.
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        body (VoiceUploadRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | VoiceUploadResponse]
+        Response[CompareTestRunsResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -181,25 +190,28 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: VoiceUploadRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-) -> ErrorResponse | VoiceUploadResponse | None:
-    """Upload Voice File
+) -> CompareTestRunsResponse | ErrorResponse | None:
+    """Compare Test Runs
 
-     Upload a base64-encoded WAV audio file.
+     Compare one or two test runs.
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        body (VoiceUploadRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | VoiceUploadResponse
+        CompareTestRunsResponse | ErrorResponse
     """
 
     return (

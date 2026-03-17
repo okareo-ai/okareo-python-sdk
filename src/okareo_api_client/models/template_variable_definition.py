@@ -15,10 +15,12 @@ class TemplateVariableDefinition:
     Attributes:
         name (str):
         description (str):
+        deprecated (bool):
     """
 
     name: str
     description: str
+    deprecated: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -26,12 +28,15 @@ class TemplateVariableDefinition:
 
         description = self.description
 
+        deprecated = self.deprecated
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "name": name,
                 "description": description,
+                "deprecated": deprecated,
             }
         )
 
@@ -44,9 +49,12 @@ class TemplateVariableDefinition:
 
         description = d.pop("description")
 
+        deprecated = d.pop("deprecated")
+
         template_variable_definition = cls(
             name=name,
             description=description,
+            deprecated=deprecated,
         )
 
         template_variable_definition.additional_properties = d
