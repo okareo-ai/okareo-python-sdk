@@ -12,6 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
+    thread_id: None | str | Unset = UNSET,
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
@@ -21,9 +22,21 @@ def _get_kwargs(
     if not isinstance(authorization, Unset):
         headers["authorization"] = authorization
 
+    params: dict[str, Any] = {}
+
+    json_thread_id: None | str | Unset
+    if isinstance(thread_id, Unset):
+        json_thread_id = UNSET
+    else:
+        json_thread_id = thread_id
+    params["thread_id"] = json_thread_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/v0/custom_endpoint_stub/create",
+        "params": params,
     }
 
     _kwargs["headers"] = headers
@@ -78,6 +91,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
+    thread_id: None | str | Unset = UNSET,
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> Response[AssistantThreadResponse | ErrorResponse]:
@@ -89,6 +103,7 @@ def sync_detailed(
         AssistantThreadResponse: Contains the thread_id for future messages
 
     Args:
+        thread_id (None | str | Unset):
         api_key (str):
         authorization (None | str | Unset):
 
@@ -101,6 +116,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
+        thread_id=thread_id,
         api_key=api_key,
         authorization=authorization,
     )
@@ -115,6 +131,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
+    thread_id: None | str | Unset = UNSET,
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> AssistantThreadResponse | ErrorResponse | None:
@@ -126,6 +143,7 @@ def sync(
         AssistantThreadResponse: Contains the thread_id for future messages
 
     Args:
+        thread_id (None | str | Unset):
         api_key (str):
         authorization (None | str | Unset):
 
@@ -139,6 +157,7 @@ def sync(
 
     return sync_detailed(
         client=client,
+        thread_id=thread_id,
         api_key=api_key,
         authorization=authorization,
     ).parsed
@@ -147,6 +166,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
+    thread_id: None | str | Unset = UNSET,
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> Response[AssistantThreadResponse | ErrorResponse]:
@@ -158,6 +178,7 @@ async def asyncio_detailed(
         AssistantThreadResponse: Contains the thread_id for future messages
 
     Args:
+        thread_id (None | str | Unset):
         api_key (str):
         authorization (None | str | Unset):
 
@@ -170,6 +191,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
+        thread_id=thread_id,
         api_key=api_key,
         authorization=authorization,
     )
@@ -182,6 +204,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
+    thread_id: None | str | Unset = UNSET,
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> AssistantThreadResponse | ErrorResponse | None:
@@ -193,6 +216,7 @@ async def asyncio(
         AssistantThreadResponse: Contains the thread_id for future messages
 
     Args:
+        thread_id (None | str | Unset):
         api_key (str):
         authorization (None | str | Unset):
 
@@ -207,6 +231,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
+            thread_id=thread_id,
             api_key=api_key,
             authorization=authorization,
         )

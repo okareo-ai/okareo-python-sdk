@@ -30,15 +30,15 @@ class DatapointFilterItem:
         checks (list[str] | None | Unset): Checks to apply to datapoints in the filter.
         project_id (None | Unset | UUID): Project ID these filters belong to
         filter_group_id (None | Unset | UUID): Group ID for filter
-        latest_test_run (Any | DatapointFilterItemLatestTestRunType0 | None | Unset): Group ID for filter
-        datapoint_count (Any | int | None | Unset): Group ID for filter
-        issue_count (Any | int | None | Unset): Count of issues for this filter
-        error_count (Any | int | None | Unset): Count of errors for this filter
-        average_metrics (Any | DatapointFilterItemAverageMetricsType0 | None | Unset): Metrics for checks in this filter
-        failed_checks (Any | Unset): Array of failed cheßck names Default: [].
-        avg_latency (Any | float | None | Unset): Average latency for completions
-        total_cost (Any | float | None | Unset): Total dollar cost of all completions
-        avg_num_turns (Any | float | None | Unset): Average number of turns for completions
+        latest_test_run (DatapointFilterItemLatestTestRunType0 | None | Unset): Group ID for filter
+        datapoint_count (int | None | Unset): Group ID for filter
+        issue_count (int | None | Unset): Count of issues for this filter
+        error_count (int | None | Unset): Count of errors for this filter
+        average_metrics (DatapointFilterItemAverageMetricsType0 | None | Unset): Metrics for checks in this filter
+        failed_checks (list[str] | Unset): Array of failed check names
+        avg_latency (float | None | Unset): Average latency for completions
+        total_cost (float | None | Unset): Total dollar cost of all completions
+        avg_num_turns (float | None | Unset): Average number of turns for completions
         slack_enabled (bool | None | Unset): Whether Slack notifications are enabled for this filter group
         email_enabled (bool | None | Unset): Whether Email notifications are enabled for this filter group
         time_created (datetime.datetime | None | Unset): Created datetime for this filter group
@@ -51,15 +51,15 @@ class DatapointFilterItem:
     checks: list[str] | None | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
     filter_group_id: None | Unset | UUID = UNSET
-    latest_test_run: Any | DatapointFilterItemLatestTestRunType0 | None | Unset = UNSET
-    datapoint_count: Any | int | None | Unset = UNSET
-    issue_count: Any | int | None | Unset = UNSET
-    error_count: Any | int | None | Unset = UNSET
-    average_metrics: Any | DatapointFilterItemAverageMetricsType0 | None | Unset = UNSET
-    failed_checks: Any | Unset = []
-    avg_latency: Any | float | None | Unset = UNSET
-    total_cost: Any | float | None | Unset = UNSET
-    avg_num_turns: Any | float | None | Unset = UNSET
+    latest_test_run: DatapointFilterItemLatestTestRunType0 | None | Unset = UNSET
+    datapoint_count: int | None | Unset = UNSET
+    issue_count: int | None | Unset = UNSET
+    error_count: int | None | Unset = UNSET
+    average_metrics: DatapointFilterItemAverageMetricsType0 | None | Unset = UNSET
+    failed_checks: list[str] | Unset = UNSET
+    avg_latency: float | None | Unset = UNSET
+    total_cost: float | None | Unset = UNSET
+    avg_num_turns: float | None | Unset = UNSET
     slack_enabled: bool | None | Unset = UNSET
     email_enabled: bool | None | Unset = UNSET
     time_created: datetime.datetime | None | Unset = UNSET
@@ -112,7 +112,7 @@ class DatapointFilterItem:
         else:
             filter_group_id = self.filter_group_id
 
-        latest_test_run: Any | dict[str, Any] | None | Unset
+        latest_test_run: dict[str, Any] | None | Unset
         if isinstance(self.latest_test_run, Unset):
             latest_test_run = UNSET
         elif isinstance(self.latest_test_run, DatapointFilterItemLatestTestRunType0):
@@ -120,25 +120,25 @@ class DatapointFilterItem:
         else:
             latest_test_run = self.latest_test_run
 
-        datapoint_count: Any | int | None | Unset
+        datapoint_count: int | None | Unset
         if isinstance(self.datapoint_count, Unset):
             datapoint_count = UNSET
         else:
             datapoint_count = self.datapoint_count
 
-        issue_count: Any | int | None | Unset
+        issue_count: int | None | Unset
         if isinstance(self.issue_count, Unset):
             issue_count = UNSET
         else:
             issue_count = self.issue_count
 
-        error_count: Any | int | None | Unset
+        error_count: int | None | Unset
         if isinstance(self.error_count, Unset):
             error_count = UNSET
         else:
             error_count = self.error_count
 
-        average_metrics: Any | dict[str, Any] | None | Unset
+        average_metrics: dict[str, Any] | None | Unset
         if isinstance(self.average_metrics, Unset):
             average_metrics = UNSET
         elif isinstance(self.average_metrics, DatapointFilterItemAverageMetricsType0):
@@ -146,21 +146,23 @@ class DatapointFilterItem:
         else:
             average_metrics = self.average_metrics
 
-        failed_checks = self.failed_checks
+        failed_checks: list[str] | Unset = UNSET
+        if not isinstance(self.failed_checks, Unset):
+            failed_checks = self.failed_checks
 
-        avg_latency: Any | float | None | Unset
+        avg_latency: float | None | Unset
         if isinstance(self.avg_latency, Unset):
             avg_latency = UNSET
         else:
             avg_latency = self.avg_latency
 
-        total_cost: Any | float | None | Unset
+        total_cost: float | None | Unset
         if isinstance(self.total_cost, Unset):
             total_cost = UNSET
         else:
             total_cost = self.total_cost
 
-        avg_num_turns: Any | float | None | Unset
+        avg_num_turns: float | None | Unset
         if isinstance(self.avg_num_turns, Unset):
             avg_num_turns = UNSET
         else:
@@ -323,7 +325,7 @@ class DatapointFilterItem:
 
         filter_group_id = _parse_filter_group_id(d.pop("filter_group_id", UNSET))
 
-        def _parse_latest_test_run(data: object) -> Any | DatapointFilterItemLatestTestRunType0 | None | Unset:
+        def _parse_latest_test_run(data: object) -> DatapointFilterItemLatestTestRunType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -336,38 +338,38 @@ class DatapointFilterItem:
                 return latest_test_run_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Any | DatapointFilterItemLatestTestRunType0 | None | Unset, data)
+            return cast(DatapointFilterItemLatestTestRunType0 | None | Unset, data)
 
         latest_test_run = _parse_latest_test_run(d.pop("latest_test_run", UNSET))
 
-        def _parse_datapoint_count(data: object) -> Any | int | None | Unset:
+        def _parse_datapoint_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Any | int | None | Unset, data)
+            return cast(int | None | Unset, data)
 
         datapoint_count = _parse_datapoint_count(d.pop("datapoint_count", UNSET))
 
-        def _parse_issue_count(data: object) -> Any | int | None | Unset:
+        def _parse_issue_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Any | int | None | Unset, data)
+            return cast(int | None | Unset, data)
 
         issue_count = _parse_issue_count(d.pop("issue_count", UNSET))
 
-        def _parse_error_count(data: object) -> Any | int | None | Unset:
+        def _parse_error_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Any | int | None | Unset, data)
+            return cast(int | None | Unset, data)
 
         error_count = _parse_error_count(d.pop("error_count", UNSET))
 
-        def _parse_average_metrics(data: object) -> Any | DatapointFilterItemAverageMetricsType0 | None | Unset:
+        def _parse_average_metrics(data: object) -> DatapointFilterItemAverageMetricsType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -380,36 +382,36 @@ class DatapointFilterItem:
                 return average_metrics_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Any | DatapointFilterItemAverageMetricsType0 | None | Unset, data)
+            return cast(DatapointFilterItemAverageMetricsType0 | None | Unset, data)
 
         average_metrics = _parse_average_metrics(d.pop("average_metrics", UNSET))
 
-        failed_checks = d.pop("failed_checks", UNSET)
+        failed_checks = cast(list[str], d.pop("failed_checks", UNSET))
 
-        def _parse_avg_latency(data: object) -> Any | float | None | Unset:
+        def _parse_avg_latency(data: object) -> float | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Any | float | None | Unset, data)
+            return cast(float | None | Unset, data)
 
         avg_latency = _parse_avg_latency(d.pop("avg_latency", UNSET))
 
-        def _parse_total_cost(data: object) -> Any | float | None | Unset:
+        def _parse_total_cost(data: object) -> float | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Any | float | None | Unset, data)
+            return cast(float | None | Unset, data)
 
         total_cost = _parse_total_cost(d.pop("total_cost", UNSET))
 
-        def _parse_avg_num_turns(data: object) -> Any | float | None | Unset:
+        def _parse_avg_num_turns(data: object) -> float | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Any | float | None | Unset, data)
+            return cast(float | None | Unset, data)
 
         avg_num_turns = _parse_avg_num_turns(d.pop("avg_num_turns", UNSET))
 

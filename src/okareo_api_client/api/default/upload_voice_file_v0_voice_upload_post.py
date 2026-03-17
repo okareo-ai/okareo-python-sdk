@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
+from ...models.http_validation_error import HTTPValidationError
 from ...models.voice_upload_request import VoiceUploadRequest
 from ...models.voice_upload_response import VoiceUploadResponse
 from ...types import Response
@@ -34,29 +34,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | VoiceUploadResponse | None:
+) -> HTTPValidationError | VoiceUploadResponse | None:
     if response.status_code == 201:
         response_201 = VoiceUploadResponse.from_dict(response.json())
 
         return response_201
 
-    if response.status_code == 400:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
-
-    if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
-
-        return response_401
-
-    if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
-
-        return response_404
-
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
 
@@ -68,7 +53,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | VoiceUploadResponse]:
+) -> Response[HTTPValidationError | VoiceUploadResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -82,12 +67,14 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: VoiceUploadRequest,
     api_key: str,
-) -> Response[ErrorResponse | VoiceUploadResponse]:
+) -> Response[HTTPValidationError | VoiceUploadResponse]:
     """Upload Voice File
 
-     Upload a base64-encoded WAV audio file.
+     Upload a base64-encoded audio file (WAV or MP3).
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    All files are coerced to MP3 for uniform storage. WAV inputs are
+    converted in-process via lameenc; MP3 inputs are stored as-is.
+    Duration is extracted from audio headers before conversion.
 
     Args:
         api_key (str):
@@ -98,7 +85,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | VoiceUploadResponse]
+        Response[HTTPValidationError | VoiceUploadResponse]
     """
 
     kwargs = _get_kwargs(
@@ -118,12 +105,14 @@ def sync(
     client: AuthenticatedClient | Client,
     body: VoiceUploadRequest,
     api_key: str,
-) -> ErrorResponse | VoiceUploadResponse | None:
+) -> HTTPValidationError | VoiceUploadResponse | None:
     """Upload Voice File
 
-     Upload a base64-encoded WAV audio file.
+     Upload a base64-encoded audio file (WAV or MP3).
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    All files are coerced to MP3 for uniform storage. WAV inputs are
+    converted in-process via lameenc; MP3 inputs are stored as-is.
+    Duration is extracted from audio headers before conversion.
 
     Args:
         api_key (str):
@@ -134,7 +123,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | VoiceUploadResponse
+        HTTPValidationError | VoiceUploadResponse
     """
 
     return sync_detailed(
@@ -149,12 +138,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: VoiceUploadRequest,
     api_key: str,
-) -> Response[ErrorResponse | VoiceUploadResponse]:
+) -> Response[HTTPValidationError | VoiceUploadResponse]:
     """Upload Voice File
 
-     Upload a base64-encoded WAV audio file.
+     Upload a base64-encoded audio file (WAV or MP3).
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    All files are coerced to MP3 for uniform storage. WAV inputs are
+    converted in-process via lameenc; MP3 inputs are stored as-is.
+    Duration is extracted from audio headers before conversion.
 
     Args:
         api_key (str):
@@ -165,7 +156,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | VoiceUploadResponse]
+        Response[HTTPValidationError | VoiceUploadResponse]
     """
 
     kwargs = _get_kwargs(
@@ -183,12 +174,14 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: VoiceUploadRequest,
     api_key: str,
-) -> ErrorResponse | VoiceUploadResponse | None:
+) -> HTTPValidationError | VoiceUploadResponse | None:
     """Upload Voice File
 
-     Upload a base64-encoded WAV audio file.
+     Upload a base64-encoded audio file (WAV or MP3).
 
-    The file is stored as-is and duration is extracted from WAV headers.
+    All files are coerced to MP3 for uniform storage. WAV inputs are
+    converted in-process via lameenc; MP3 inputs are stored as-is.
+    Duration is extracted from audio headers before conversion.
 
     Args:
         api_key (str):
@@ -199,7 +192,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | VoiceUploadResponse
+        HTTPValidationError | VoiceUploadResponse
     """
 
     return (

@@ -5,27 +5,23 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.assistant_message_request import AssistantMessageRequest
-from ...models.assistant_message_response import AssistantMessageResponse
+from ...models.compare_test_runs_payload import CompareTestRunsPayload
+from ...models.compare_test_runs_response import CompareTestRunsResponse
 from ...models.error_response import ErrorResponse
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
     *,
-    body: AssistantMessageRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    if not isinstance(authorization, Unset):
-        headers["authorization"] = authorization
-
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/custom_endpoint_stub/message",
+        "url": "/v0/test_runs/compare",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -38,9 +34,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> AssistantMessageResponse | ErrorResponse | None:
+) -> CompareTestRunsResponse | ErrorResponse | None:
     if response.status_code == 200:
-        response_200 = AssistantMessageResponse.from_dict(response.json())
+        response_200 = CompareTestRunsResponse.from_dict(response.json())
 
         return response_200
 
@@ -72,7 +68,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[AssistantMessageResponse | ErrorResponse]:
+) -> Response[CompareTestRunsResponse | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -84,37 +80,33 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> Response[AssistantMessageResponse | ErrorResponse]:
-    """Send Assistant Message
+) -> Response[CompareTestRunsResponse | ErrorResponse]:
+    """Compare Test Runs
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Compare one or two test runs.
 
-    Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AssistantMessageResponse | ErrorResponse]
+        Response[CompareTestRunsResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
         body=body,
         api_key=api_key,
-        authorization=authorization,
     )
 
     response = client.get_httpx_client().request(
@@ -127,75 +119,67 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> AssistantMessageResponse | ErrorResponse | None:
-    """Send Assistant Message
+) -> CompareTestRunsResponse | ErrorResponse | None:
+    """Compare Test Runs
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Compare one or two test runs.
 
-    Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AssistantMessageResponse | ErrorResponse
+        CompareTestRunsResponse | ErrorResponse
     """
 
     return sync_detailed(
         client=client,
         body=body,
         api_key=api_key,
-        authorization=authorization,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> Response[AssistantMessageResponse | ErrorResponse]:
-    """Send Assistant Message
+) -> Response[CompareTestRunsResponse | ErrorResponse]:
+    """Compare Test Runs
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Compare one or two test runs.
 
-    Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AssistantMessageResponse | ErrorResponse]
+        Response[CompareTestRunsResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
         body=body,
         api_key=api_key,
-        authorization=authorization,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -206,31 +190,28 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
+    body: CompareTestRunsPayload,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> AssistantMessageResponse | ErrorResponse | None:
-    """Send Assistant Message
+) -> CompareTestRunsResponse | ErrorResponse | None:
+    """Compare Test Runs
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Compare one or two test runs.
 
-    Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
+    Send both IDs for a side-by-side comparison with paired scenarios.
+    Send only one ID to get scenario-grouped datapoints for a single run.
+    Statistical tests are only computed when both runs are provided
+    and the type is generation/multi-turn.
 
     Args:
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
+        body (CompareTestRunsPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AssistantMessageResponse | ErrorResponse
+        CompareTestRunsResponse | ErrorResponse
     """
 
     return (
@@ -238,6 +219,5 @@ async def asyncio(
             client=client,
             body=body,
             api_key=api_key,
-            authorization=authorization,
         )
     ).parsed

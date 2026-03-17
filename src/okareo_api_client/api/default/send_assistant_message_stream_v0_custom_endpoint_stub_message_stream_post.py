@@ -6,7 +6,6 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.assistant_message_request import AssistantMessageRequest
-from ...models.assistant_message_response import AssistantMessageResponse
 from ...models.error_response import ErrorResponse
 from ...types import UNSET, Response, Unset
 
@@ -25,7 +24,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/custom_endpoint_stub/message",
+        "url": "/v0/custom_endpoint_stub/message/stream",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -36,12 +35,9 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> AssistantMessageResponse | ErrorResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ErrorResponse | None:
     if response.status_code == 200:
-        response_200 = AssistantMessageResponse.from_dict(response.json())
-
+        response_200 = response.json()
         return response_200
 
     if response.status_code == 400:
@@ -70,9 +66,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[AssistantMessageResponse | ErrorResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -87,16 +81,21 @@ def sync_detailed(
     body: AssistantMessageRequest,
     api_key: str,
     authorization: None | str | Unset = UNSET,
-) -> Response[AssistantMessageResponse | ErrorResponse]:
-    """Send Assistant Message
+) -> Response[Any | ErrorResponse]:
+    """Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing Assistant thread and returns an SSE stream
+    of token chunks.
+
+    This is a **parse-only test stub**: the full LLM response is generated eagerly
+    and then split into word-level SSE chunks with no inter-chunk delay.  It does
+    not simulate real streaming latency or backpressure.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        StreamingResponse (text/event-stream)
 
     Args:
         api_key (str):
@@ -108,7 +107,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AssistantMessageResponse | ErrorResponse]
+        Response[Any | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -130,16 +129,21 @@ def sync(
     body: AssistantMessageRequest,
     api_key: str,
     authorization: None | str | Unset = UNSET,
-) -> AssistantMessageResponse | ErrorResponse | None:
-    """Send Assistant Message
+) -> Any | ErrorResponse | None:
+    """Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing Assistant thread and returns an SSE stream
+    of token chunks.
+
+    This is a **parse-only test stub**: the full LLM response is generated eagerly
+    and then split into word-level SSE chunks with no inter-chunk delay.  It does
+    not simulate real streaming latency or backpressure.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        StreamingResponse (text/event-stream)
 
     Args:
         api_key (str):
@@ -151,7 +155,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AssistantMessageResponse | ErrorResponse
+        Any | ErrorResponse
     """
 
     return sync_detailed(
@@ -168,16 +172,21 @@ async def asyncio_detailed(
     body: AssistantMessageRequest,
     api_key: str,
     authorization: None | str | Unset = UNSET,
-) -> Response[AssistantMessageResponse | ErrorResponse]:
-    """Send Assistant Message
+) -> Response[Any | ErrorResponse]:
+    """Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing Assistant thread and returns an SSE stream
+    of token chunks.
+
+    This is a **parse-only test stub**: the full LLM response is generated eagerly
+    and then split into word-level SSE chunks with no inter-chunk delay.  It does
+    not simulate real streaming latency or backpressure.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        StreamingResponse (text/event-stream)
 
     Args:
         api_key (str):
@@ -189,7 +198,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AssistantMessageResponse | ErrorResponse]
+        Response[Any | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -209,16 +218,21 @@ async def asyncio(
     body: AssistantMessageRequest,
     api_key: str,
     authorization: None | str | Unset = UNSET,
-) -> AssistantMessageResponse | ErrorResponse | None:
-    """Send Assistant Message
+) -> Any | ErrorResponse | None:
+    """Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing Assistant thread and returns an SSE stream
+    of token chunks.
+
+    This is a **parse-only test stub**: the full LLM response is generated eagerly
+    and then split into word-level SSE chunks with no inter-chunk delay.  It does
+    not simulate real streaming latency or backpressure.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        StreamingResponse (text/event-stream)
 
     Args:
         api_key (str):
@@ -230,7 +244,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AssistantMessageResponse | ErrorResponse
+        Any | ErrorResponse
     """
 
     return (
