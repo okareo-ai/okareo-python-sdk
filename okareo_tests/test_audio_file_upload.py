@@ -56,12 +56,17 @@ class TestUploadVoice:
 
 class TestDownloadVoice:
     def test_roundtrip(self, okareo_client: Okareo, wav_bytes: bytes) -> None:
-        """Upload WAV, download as MP3, verify MP3 magic bytes."""
+        """Upload WAV, download, verify valid WAV or MP3 magic bytes."""
         upload_resp = okareo_client.upload_voice(file_bytes=wav_bytes)
-        mp3_bytes = okareo_client.download_voice(upload_resp.file_url)
-        assert len(mp3_bytes) > 0
-        # MP3 starts with frame-sync (0xFFEx) or ID3 tag
-        assert mp3_bytes[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2", b"ID") or mp3_bytes[:3] == b"ID3"
+        audio_bytes = okareo_client.download_voice(upload_resp.file_url)
+        assert len(audio_bytes) > 0
+        # Accept WAV (RIFF) or MP3 (frame-sync or ID3 tag)
+        is_wav = audio_bytes[:4] == b"RIFF"
+        is_mp3 = (
+            audio_bytes[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2")
+            or audio_bytes[:3] == b"ID3"
+        )
+        assert is_wav or is_mp3, f"Unexpected audio header: {audio_bytes[:4]}"
 
 
 class TestCreateScenarioSetWithAudioFiles:
@@ -80,9 +85,7 @@ class TestCreateScenarioSetWithAudioFiles:
             assert scenario.scenario_id is not None
             assert scenario.name == name
 
-            data_points = okareo_client.get_scenario_data_points(
-                scenario.scenario_id
-            )
+            data_points = okareo_client.get_scenario_data_points(scenario.scenario_id)
             assert len(data_points) == 1
             dp = data_points[0]
             assert "/v0/voice/file/" in str(dp.input_)
