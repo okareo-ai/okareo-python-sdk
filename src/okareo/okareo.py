@@ -9,6 +9,7 @@ from uuid import UUID
 import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
+from tqdm import tqdm  # type: ignore
 
 from okareo.checks import BaseCheck
 from okareo.model_under_test import Driver, Simulation, StopConfig, Target
@@ -1465,9 +1466,10 @@ class Okareo:
         Returns:
             ScenarioSetResponse from the created scenario set.
         """
+
         uploaded_data: List[SeedDataRow] = []
         pid = str(project_id) if project_id else None
-        for item in data_list:
+        for item in tqdm(data_list, desc="Uploading audio files"):
             upload_response = self.upload_voice(
                 file_path=item["input"],
                 project_id=pid,
