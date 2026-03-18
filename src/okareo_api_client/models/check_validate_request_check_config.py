@@ -11,7 +11,7 @@ T = TypeVar("T", bound="CheckValidateRequestCheckConfig")
 
 @_attrs_define
 class CheckValidateRequestCheckConfig:
-    """Check config: code_contents for code-based, prompt_template for model-based."""
+    """Check config: code_contents for code-based, prompt_template for model-based or audio."""
 
     additional_properties: dict[str, str] = _attrs_field(init=False, factory=dict)
 
