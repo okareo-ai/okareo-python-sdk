@@ -183,6 +183,8 @@ from .usage_precision import UsagePrecision
 from .validation_error import ValidationError
 from .voice_driver_model_response import VoiceDriverModelResponse
 from .voice_profile_response import VoiceProfileResponse
+from .voice_upload_request import VoiceUploadRequest
+from .voice_upload_response import VoiceUploadResponse
 
 __all__ = (
     "AddModelToGroupV0GroupsGroupIdModelsPostResponseAddModelToGroupV0GroupsGroupIdModelsPost",
@@ -334,4 +336,6 @@ __all__ = (
     "ValidationError",
     "VoiceDriverModelResponse",
     "VoiceProfileResponse",
+    "VoiceUploadRequest",
+    "VoiceUploadResponse",
 )

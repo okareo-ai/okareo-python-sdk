@@ -9,6 +9,7 @@ from uuid import UUID
 import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
+from tqdm import tqdm  # type: ignore
 
 from okareo.checks import BaseCheck
 from okareo.model_under_test import Driver, Simulation, StopConfig, Target
@@ -1414,3 +1415,76 @@ class Okareo:
         assert isinstance(response, VoiceUploadResponse)
 
         return response
+
+    def download_voice(
+        self,
+        file_url: str,
+    ) -> bytes:
+        """Download a voice file from Okareo.
+
+        Files are always stored as MP3 on the server.
+
+        Args:
+            file_url: The file URL returned by upload_voice()
+                      (e.g. https://api.okareo.com/v0/voice/file/{project_id}/{file_id}).
+
+        Returns:
+            Raw MP3 audio bytes.
+        """
+        parts = file_url.rstrip("/").split("/")
+        file_id = parts[-1]
+        project_id = parts[-2]
+
+        url = f"{BASE_URL}/v0/voice/file/{project_id}/{file_id}"
+        response = httpx.get(
+            url,
+            headers={"api-key": self.api_key},
+            timeout=120,
+        )
+        response.raise_for_status()
+
+        return response.content
+
+    def create_scenario_set_with_audio_files(
+        self,
+        name: str,
+        data_list: List[Dict[str, str]],
+        project_id: Optional[Union[str, UUID]] = None,
+    ) -> ScenarioSetResponse:
+        """Upload local audio files and create a scenario set in one call.
+
+        Each item's 'input' field should be a local file path to a WAV or MP3
+        file. The file is uploaded to Okareo (coerced to MP3), and 'input' is
+        replaced with the returned file URL before creating the scenario.
+
+        Args:
+            name: Scenario set name.
+            data_list: List of dicts with 'input' (local file path) and
+                       'result' (expected transcript string).
+            project_id: Optional project to associate files and scenario with.
+
+        Returns:
+            ScenarioSetResponse from the created scenario set.
+        """
+
+        uploaded_data: List[SeedDataRow] = []
+        pid = str(project_id) if project_id else None
+        for item in tqdm(data_list, desc="Uploading audio files"):
+            upload_response = self.upload_voice(
+                file_path=item["input"],
+                project_id=pid,
+            )
+            uploaded_data.append(
+                {
+                    "input": upload_response.file_url,
+                    "result": item["result"],
+                }
+            )
+
+        seed_data = self.seed_data_from_list(uploaded_data)
+        create_request = ScenarioSetCreate(
+            name=name,
+            seed_data=seed_data,
+            project_id=UUID(str(project_id)) if project_id else UNSET,
+        )
+        return self.create_scenario_set(create_request)
