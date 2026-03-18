@@ -66,7 +66,7 @@ class TestDownloadVoice:
             audio_bytes[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2")
             or audio_bytes[:3] == b"ID3"
         )
-        assert is_wav or is_mp3, f"Unexpected audio header: {audio_bytes[:4]}"
+        assert is_wav or is_mp3, f"Unexpected audio header: {audio_bytes[:4]!r}"
 
 
 class TestCreateScenarioSetWithAudioFiles:
@@ -85,7 +85,7 @@ class TestCreateScenarioSetWithAudioFiles:
             assert scenario.scenario_id is not None
             assert scenario.name == name
 
-            data_points = okareo_client.get_scenario_data_points(scenario.scenario_id)
+            data_points = okareo_client.get_scenario_data_points(str(scenario.scenario_id))
             assert len(data_points) == 1
             dp = data_points[0]
             assert "/v0/voice/file/" in str(dp.input_)
