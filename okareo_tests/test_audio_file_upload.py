@@ -85,7 +85,9 @@ class TestCreateScenarioSetWithAudioFiles:
             assert scenario.scenario_id is not None
             assert scenario.name == name
 
-            data_points = okareo_client.get_scenario_data_points(str(scenario.scenario_id))
+            data_points = okareo_client.get_scenario_data_points(
+                str(scenario.scenario_id)
+            )
             assert len(data_points) == 1
             dp = data_points[0]
             assert "/v0/voice/file/" in str(dp.input_)
