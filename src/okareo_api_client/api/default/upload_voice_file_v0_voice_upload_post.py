@@ -72,9 +72,8 @@ def sync_detailed(
 
      Upload a base64-encoded audio file (WAV or MP3).
 
-    All files are coerced to MP3 for uniform storage. WAV inputs are
-    converted in-process via lameenc; MP3 inputs are stored as-is.
-    Duration is extracted from audio headers before conversion.
+    Files are stored in their original format. Duration is extracted
+    from audio headers.
 
     Args:
         api_key (str):
@@ -110,9 +109,8 @@ def sync(
 
      Upload a base64-encoded audio file (WAV or MP3).
 
-    All files are coerced to MP3 for uniform storage. WAV inputs are
-    converted in-process via lameenc; MP3 inputs are stored as-is.
-    Duration is extracted from audio headers before conversion.
+    Files are stored in their original format. Duration is extracted
+    from audio headers.
 
     Args:
         api_key (str):
@@ -143,9 +141,8 @@ async def asyncio_detailed(
 
      Upload a base64-encoded audio file (WAV or MP3).
 
-    All files are coerced to MP3 for uniform storage. WAV inputs are
-    converted in-process via lameenc; MP3 inputs are stored as-is.
-    Duration is extracted from audio headers before conversion.
+    Files are stored in their original format. Duration is extracted
+    from audio headers.
 
     Args:
         api_key (str):
@@ -179,9 +176,8 @@ async def asyncio(
 
      Upload a base64-encoded audio file (WAV or MP3).
 
-    All files are coerced to MP3 for uniform storage. WAV inputs are
-    converted in-process via lameenc; MP3 inputs are stored as-is.
-    Duration is extracted from audio headers before conversion.
+    Files are stored in their original format. Duration is extracted
+    from audio headers.
 
     Args:
         api_key (str):

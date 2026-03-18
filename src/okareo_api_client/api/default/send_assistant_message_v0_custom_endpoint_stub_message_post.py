@@ -90,13 +90,13 @@ def sync_detailed(
 ) -> Response[AssistantMessageResponse | ErrorResponse]:
     """Send Assistant Message
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing OpenAI Assistant thread and returns the response.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        AssistantMessageResponse: Contains the assistant's response
 
     Args:
         api_key (str):
@@ -133,13 +133,13 @@ def sync(
 ) -> AssistantMessageResponse | ErrorResponse | None:
     """Send Assistant Message
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing OpenAI Assistant thread and returns the response.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        AssistantMessageResponse: Contains the assistant's response
 
     Args:
         api_key (str):
@@ -171,13 +171,13 @@ async def asyncio_detailed(
 ) -> Response[AssistantMessageResponse | ErrorResponse]:
     """Send Assistant Message
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing OpenAI Assistant thread and returns the response.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        AssistantMessageResponse: Contains the assistant's response
 
     Args:
         api_key (str):
@@ -212,13 +212,13 @@ async def asyncio(
 ) -> AssistantMessageResponse | ErrorResponse | None:
     """Send Assistant Message
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Sends a new message to an existing OpenAI Assistant thread and returns the response.
 
     Args:
         payload: Contains thread_id and the user message
 
     Returns:
-        AssistantMessageResponse
+        AssistantMessageResponse: Contains the assistant's response
 
     Args:
         api_key (str):
