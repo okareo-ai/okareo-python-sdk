@@ -1666,6 +1666,55 @@ class StopConfig:
         return {"check_name": self.check_name, "stop_on": self.stop_on}
 
 
+class StreamingStopCondition:
+    """A condition that terminates the stream when matched.
+
+    Stop conditions use OR semantics — any single match ends the stream.
+
+    Arguments:
+        value: The value to match. Supports:
+            - ``"true"`` / ``"false"`` (case-insensitive) for JSON booleans
+            - ``"*"`` for presence check (any non-None value)
+            - Any other string for exact string comparison
+        path: Optional ``response.``-prefixed dot-bracket path into each
+            parsed JSON chunk. E.g., ``response.is_finished``.
+            When omitted, ``value`` is matched as a raw string against the
+            SSE ``data:`` payload before JSON parsing (e.g., ``"[DONE]"``).
+    """
+
+    def __init__(self, value: str, path: Optional[str] = None) -> None:
+        self.value = value
+        self.path = path
+
+    def to_dict(self) -> dict:
+        d: dict = {"value": self.value}
+        if self.path is not None:
+            d["path"] = self.path
+        return d
+
+
+class StreamingSelectCondition:
+    """A condition that filters which chunks have their content extracted.
+
+    Select conditions use AND semantics — all conditions must match for a
+    chunk's content to be extracted.
+
+    Arguments:
+        path: Required ``response.``-prefixed dot-bracket path into each
+            parsed JSON chunk. E.g., ``response.role``.
+        value: The value to match at that path. Same matching rules as
+            :class:`StreamingStopCondition`: ``"true"``/``"false"`` for booleans,
+            ``"*"`` for presence, anything else for exact string comparison.
+    """
+
+    def __init__(self, path: str, value: str) -> None:
+        self.path = path
+        self.value = value
+
+    def to_dict(self) -> dict:
+        return {"path": self.path, "value": self.value}
+
+
 class StreamingConfig:
     """Configuration for streaming responses from a custom API endpoint.
 
@@ -1673,43 +1722,34 @@ class StreamingConfig:
     endpoint's response as a Server-Sent Events (SSE) or NDJSON stream and
     reassemble the tokens into the final response.
 
-    The server uses the parent config's ``response_message_path`` to locate the
-    text token in each streamed chunk — the same field used for batch responses.
-    Since only one mode (batch or streaming) runs at a time, set
-    ``response_message_path`` to the *chunk* shape when streaming is enabled
-    (e.g., ``response.delta.content`` for OpenAI-style SSE streams).
+    The text extraction path is specified via ``response_message_path`` on the
+    parent TurnConfig/SessionConfig — set it to the chunk shape when streaming
+    (e.g., ``response.choices[0].delta.content``).
 
     Arguments:
-        done_signal: Controls stream termination.
-            - When ``done_path`` is **not** set: raw-string sentinel matched
-              against the SSE ``data:`` payload before JSON parsing.
-              E.g., ``"[DONE]"``.
-            - When ``done_path`` **is** set: the value to match at that path.
-              ``"true"`` and ``"false"`` (case-insensitive) match JSON
-              booleans. ``"*"`` matches any non-null value (presence check).
-              Everything else is compared as a string.
-        done_path: Dot-bracket path into each parsed JSON chunk, prefixed
-            with ``response.``. E.g., ``response.is_finished``.
-            - When ``done_signal`` is also set: the value at this path is
-              compared against ``done_signal``.
-            - When ``done_signal`` is **not** set: stream ends when the value
-              at this path is truthy.
+        stop: List of :class:`StreamingStopCondition` objects. The stream terminates
+            when **any** condition matches (OR semantics). A stop condition
+            without a ``path`` matches as a raw string against the SSE
+            ``data:`` payload before JSON parsing (e.g., ``[DONE]``).
+        select: List of :class:`StreamingSelectCondition` objects. **All** conditions
+            must match for a chunk's content to be extracted (AND semantics).
+            When omitted or empty, content is extracted from every chunk.
     """
 
     def __init__(
         self,
-        done_signal: Optional[str] = None,
-        done_path: Optional[str] = None,
+        stop: Optional[list] = None,
+        select: Optional[list] = None,
     ) -> None:
-        self.done_signal = done_signal
-        self.done_path = done_path
+        self.stop = stop
+        self.select = select
 
     def to_dict(self) -> dict:
         d: dict = {}
-        if self.done_signal is not None:
-            d["done_signal"] = self.done_signal
-        if self.done_path is not None:
-            d["done_path"] = self.done_path
+        if self.stop:
+            d["stop"] = [c.to_dict() for c in self.stop]
+        if self.select:
+            d["select"] = [c.to_dict() for c in self.select]
         return d
 
 
@@ -1912,8 +1952,8 @@ class CustomEndpointTarget(BaseModel):
 
     def __init__(
         self,
+        start_session: Optional[SessionConfig],
         next_turn: TurnConfig,
-        start_session: Optional[SessionConfig] = None,
         end_session: Optional[EndSessionConfig] = None,
         auth: Optional[AuthConfig] = None,
         max_parallel_requests: Optional[int] = None,

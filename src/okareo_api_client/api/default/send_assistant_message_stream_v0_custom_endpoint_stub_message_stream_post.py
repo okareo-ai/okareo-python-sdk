@@ -82,20 +82,25 @@ def sync_detailed(
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> Response[Any | ErrorResponse]:
-    """Send Assistant Message Stream
+    r"""Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns an SSE stream
-    of token chunks.
+     SSE stream stub that emits chunks with mixed roles (agent / system).
 
     This is a **parse-only test stub**: the full LLM response is generated eagerly
-    and then split into word-level SSE chunks with no inter-chunk delay.  It does
-    not simulate real streaming latency or backpressure.
+    and then split into word-level SSE chunks with no inter-chunk delay.
 
-    Args:
-        payload: Contains thread_id and the user message
+    Chunk format::
 
-    Returns:
-        StreamingResponse (text/event-stream)
+        {\"thread_id\": ..., \"message_id\": ..., \"role\": \"agent\"|\"system\",
+         \"assistant_response\": token, \"is_final\": false}
+
+    The stream starts with a ``role: \"system\"`` chunk (useful for testing
+    ``select`` conditions that filter by role), followed by ``role: \"agent\"``
+    content chunks, and ends with an ``is_final: true`` agent chunk.
+
+    The ``assistant_response`` content key matches the default
+    ``response_message_path`` (``response.assistant_response``) so existing
+    integration tests work without change.
 
     Args:
         api_key (str):
@@ -130,20 +135,25 @@ def sync(
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> Any | ErrorResponse | None:
-    """Send Assistant Message Stream
+    r"""Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns an SSE stream
-    of token chunks.
+     SSE stream stub that emits chunks with mixed roles (agent / system).
 
     This is a **parse-only test stub**: the full LLM response is generated eagerly
-    and then split into word-level SSE chunks with no inter-chunk delay.  It does
-    not simulate real streaming latency or backpressure.
+    and then split into word-level SSE chunks with no inter-chunk delay.
 
-    Args:
-        payload: Contains thread_id and the user message
+    Chunk format::
 
-    Returns:
-        StreamingResponse (text/event-stream)
+        {\"thread_id\": ..., \"message_id\": ..., \"role\": \"agent\"|\"system\",
+         \"assistant_response\": token, \"is_final\": false}
+
+    The stream starts with a ``role: \"system\"`` chunk (useful for testing
+    ``select`` conditions that filter by role), followed by ``role: \"agent\"``
+    content chunks, and ends with an ``is_final: true`` agent chunk.
+
+    The ``assistant_response`` content key matches the default
+    ``response_message_path`` (``response.assistant_response``) so existing
+    integration tests work without change.
 
     Args:
         api_key (str):
@@ -173,20 +183,25 @@ async def asyncio_detailed(
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> Response[Any | ErrorResponse]:
-    """Send Assistant Message Stream
+    r"""Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns an SSE stream
-    of token chunks.
+     SSE stream stub that emits chunks with mixed roles (agent / system).
 
     This is a **parse-only test stub**: the full LLM response is generated eagerly
-    and then split into word-level SSE chunks with no inter-chunk delay.  It does
-    not simulate real streaming latency or backpressure.
+    and then split into word-level SSE chunks with no inter-chunk delay.
 
-    Args:
-        payload: Contains thread_id and the user message
+    Chunk format::
 
-    Returns:
-        StreamingResponse (text/event-stream)
+        {\"thread_id\": ..., \"message_id\": ..., \"role\": \"agent\"|\"system\",
+         \"assistant_response\": token, \"is_final\": false}
+
+    The stream starts with a ``role: \"system\"`` chunk (useful for testing
+    ``select`` conditions that filter by role), followed by ``role: \"agent\"``
+    content chunks, and ends with an ``is_final: true`` agent chunk.
+
+    The ``assistant_response`` content key matches the default
+    ``response_message_path`` (``response.assistant_response``) so existing
+    integration tests work without change.
 
     Args:
         api_key (str):
@@ -219,20 +234,25 @@ async def asyncio(
     api_key: str,
     authorization: None | str | Unset = UNSET,
 ) -> Any | ErrorResponse | None:
-    """Send Assistant Message Stream
+    r"""Send Assistant Message Stream
 
-     Sends a new message to an existing Assistant thread and returns an SSE stream
-    of token chunks.
+     SSE stream stub that emits chunks with mixed roles (agent / system).
 
     This is a **parse-only test stub**: the full LLM response is generated eagerly
-    and then split into word-level SSE chunks with no inter-chunk delay.  It does
-    not simulate real streaming latency or backpressure.
+    and then split into word-level SSE chunks with no inter-chunk delay.
 
-    Args:
-        payload: Contains thread_id and the user message
+    Chunk format::
 
-    Returns:
-        StreamingResponse (text/event-stream)
+        {\"thread_id\": ..., \"message_id\": ..., \"role\": \"agent\"|\"system\",
+         \"assistant_response\": token, \"is_final\": false}
+
+    The stream starts with a ``role: \"system\"`` chunk (useful for testing
+    ``select`` conditions that filter by role), followed by ``role: \"agent\"``
+    content chunks, and ends with an ``is_final: true`` agent chunk.
+
+    The ``assistant_response`` content key matches the default
+    ``response_message_path`` (``response.assistant_response``) so existing
+    integration tests work without change.
 
     Args:
         api_key (str):

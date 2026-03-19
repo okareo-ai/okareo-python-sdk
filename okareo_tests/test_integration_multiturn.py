@@ -26,6 +26,8 @@ from okareo.model_under_test import (
     SessionConfig,
     StopConfig,
     StreamingConfig,
+    StreamingSelectCondition,
+    StreamingStopCondition,
     Target,
     TurnConfig,
 )
@@ -1529,12 +1531,15 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
 
     Same scenarios as test_test_custom_endpoint_combinations but the next_message
     config includes a StreamingConfig and hits the /message/stream endpoint.
-    The stub returns SSE (data: {json}\n\n) with assistant_response tokens and a
-    [DONE] sentinel. The server should reassemble the streamed tokens and
+    The stub returns SSE (data: {json}\n\n) with multi-role chunks (system +
+    agent) using ``assistant_response`` as the content key. The ``is_final``
+    in-band field terminates the stream and a ``select`` condition filters out
+    system chunks. The server should reassemble the streamed agent tokens and
     return a diagnostic body with response_text, chunk_count, and done_reason.
     """
     streaming = StreamingConfig(
-        done_signal="[DONE]",
+        stop=[StreamingStopCondition(value="true", path="response.is_final")],
+        select=[StreamingSelectCondition(path="response.role", value="agent")],
     )
 
     def _point_to_stream_endpoint(next_config: dict) -> dict:
