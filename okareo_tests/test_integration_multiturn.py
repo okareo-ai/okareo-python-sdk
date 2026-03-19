@@ -1471,8 +1471,14 @@ def _call_test_custom_endpoint(
             raw_response["status_code"] // 100 == 2
         ), f"'status_code' for {key} should be 2xx"
         response_body = json.loads(raw_response.get("body", "{}"))
-        # all custom endpoint stub responses should include thread_id
-        assert response_body.get("thread_id") is not None
+        # Non-streaming stub responses include thread_id;
+        # streaming responses return a diagnostic body with session_id instead.
+        print(f"response body: {response_body}")
+        has_id = (
+            response_body.get("thread_id") is not None
+            or response_body.get("session_id") is not None
+        )
+        assert has_id, f"'{key}' body should contain thread_id or session_id"
 
     return response_json
 
@@ -1523,9 +1529,9 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
 
     Same scenarios as test_test_custom_endpoint_combinations but the next_message
     config includes a StreamingConfig and hits the /message/stream endpoint.
-    The stub returns SSE (data: {json}\n\n) with delta.content tokens and a
-    [DONE] sentinel. The server should reassemble the streamed tokens into
-    the same response shape as the non-streaming path.
+    The stub returns SSE (data: {json}\n\n) with assistant_response tokens and a
+    [DONE] sentinel. The server should reassemble the streamed tokens and
+    return a diagnostic body with response_text, chunk_count, and done_reason.
     """
     streaming = StreamingConfig(
         done_signal="[DONE]",
@@ -1540,11 +1546,11 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
         return next_config
 
     # Scenario 1: All configs provided (streaming on next_message)
-    # response_message_path points to the chunk shape (delta.content) since
-    # streaming uses the same path field for token extraction.
+    # response_message_path points to the chunk content key (assistant_response)
+    # since streaming uses the same path field for token extraction.
     ss_config, nt_config, en_config = _create_custom_endpoint_configs(
         streaming=streaming,
-        response_message_path="response.delta.content",
+        response_message_path="response.assistant_response",
     )
     nt_config = _point_to_stream_endpoint(nt_config)
 
@@ -1553,19 +1559,21 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
     )
 
     # Scenario 2: Only next config provided, no start or end config
-    thread_id = json.loads(
+    # Streaming returns a diagnostic body with session_id (not thread_id)
+    next_body = json.loads(
         response.get("next_message_raw_response", {}).get("body", "{}")
-    ).get("thread_id", None)
+    )
+    thread_id = next_body.get("session_id", None)
     assert (
         thread_id is not None
-    ), "Thread ID should be present in the streaming response of Scenario #1"
+    ), "session_id should be present in the streaming diagnostic body of Scenario #1"
 
     ss_config, nt_config, en_config = _create_custom_endpoint_configs(
         include_start=False,
         include_end=False,
         session_id=thread_id,
         streaming=streaming,
-        response_message_path="response.delta.content",
+        response_message_path="response.assistant_response",
     )
     nt_config = _point_to_stream_endpoint(nt_config)
 
@@ -1579,7 +1587,7 @@ def test_test_custom_endpoint_combinations_streaming() -> None:
         include_end=False,
         session_id=thread_id,
         streaming=streaming,
-        response_message_path="response.delta.content",
+        response_message_path="response.assistant_response",
     )
     nt_config = _point_to_stream_endpoint(nt_config)
 

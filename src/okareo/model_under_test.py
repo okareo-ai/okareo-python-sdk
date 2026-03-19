@@ -1912,8 +1912,8 @@ class CustomEndpointTarget(BaseModel):
 
     def __init__(
         self,
-        start_session: SessionConfig,
         next_turn: TurnConfig,
+        start_session: Optional[SessionConfig] = None,
         end_session: Optional[EndSessionConfig] = None,
         auth: Optional[AuthConfig] = None,
         max_parallel_requests: Optional[int] = None,
@@ -1927,10 +1927,12 @@ class CustomEndpointTarget(BaseModel):
     def params(self) -> dict:
         result = {
             "type": self.type,
-            "start_session_params": self.start_session.to_dict(),
+            "start_session_params": (
+                self.start_session.to_dict() if self.start_session is not None else None
+            ),
             "next_message_params": self.next_turn.to_dict(),
             "end_session_params": (
-                self.end_session.to_dict() if self.end_session is not None else {}
+                self.end_session.to_dict() if self.end_session is not None else None
             ),
             "max_parallel_requests": self.max_parallel_requests,
         }
