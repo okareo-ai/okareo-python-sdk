@@ -97,6 +97,9 @@ from .get_notification_history_v0_notification_history_get_response_200_item imp
 from .get_template_variables_v0_template_variables_get_response_get_template_variables_v0_template_variables_get import (
     GetTemplateVariablesV0TemplateVariablesGetResponseGetTemplateVariablesV0TemplateVariablesGet,
 )
+from .get_test_run_trace_metrics_v0_test_runs_test_run_id_trace_metrics_get_response_get_test_run_trace_metrics_v0_test_runs_test_run_id_trace_metrics_get import (
+    GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet,
+)
 from .group_schema import GroupSchema
 from .http_validation_error import HTTPValidationError
 from .metric_detail import MetricDetail
@@ -266,6 +269,7 @@ __all__ = (
     "GetGroupsV0GroupsGetResponse200Item",
     "GetNotificationHistoryV0NotificationHistoryGetResponse200Item",
     "GetTemplateVariablesV0TemplateVariablesGetResponseGetTemplateVariablesV0TemplateVariablesGet",
+    "GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet",
     "GroupSchema",
     "HTTPValidationError",
     "MetricDetail",

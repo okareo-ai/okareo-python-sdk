@@ -18,10 +18,13 @@ class FindTracesRequest:
     Attributes:
         project_id (UUID): Project UUID to fetch traces from
         otel_trace_id (None | str | Unset): Trace ID to fetch
+        context_token (None | str | Unset): Context token to look up traces for a conversation (alternative to
+            otel_trace_id)
     """
 
     project_id: UUID
     otel_trace_id: None | str | Unset = UNSET
+    context_token: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -33,6 +36,12 @@ class FindTracesRequest:
         else:
             otel_trace_id = self.otel_trace_id
 
+        context_token: None | str | Unset
+        if isinstance(self.context_token, Unset):
+            context_token = UNSET
+        else:
+            context_token = self.context_token
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -42,6 +51,8 @@ class FindTracesRequest:
         )
         if otel_trace_id is not UNSET:
             field_dict["otel_trace_id"] = otel_trace_id
+        if context_token is not UNSET:
+            field_dict["context_token"] = context_token
 
         return field_dict
 
@@ -59,9 +70,19 @@ class FindTracesRequest:
 
         otel_trace_id = _parse_otel_trace_id(d.pop("otel_trace_id", UNSET))
 
+        def _parse_context_token(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        context_token = _parse_context_token(d.pop("context_token", UNSET))
+
         find_traces_request = cls(
             project_id=project_id,
             otel_trace_id=otel_trace_id,
+            context_token=context_token,
         )
 
         find_traces_request.additional_properties = d
