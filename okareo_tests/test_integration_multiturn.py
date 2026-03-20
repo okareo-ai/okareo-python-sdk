@@ -25,6 +25,9 @@ from okareo.model_under_test import (
     OpenAIModel,
     SessionConfig,
     StopConfig,
+    StreamingConfig,
+    StreamingSelectCondition,
+    StreamingStopCondition,
     Target,
     TurnConfig,
 )
@@ -1401,6 +1404,8 @@ def _create_custom_endpoint_configs(
     include_end: bool = True,
     api_key: str = API_KEY,
     session_id: Optional[str] = None,
+    streaming: Optional[StreamingConfig] = None,
+    response_message_path: str = "response.assistant_response",
 ) -> Any:
     """Helper method to create custom endpoint configurations"""
     api_headers = json.dumps({"api-key": api_key, "Content-Type": "application/json"})
@@ -1424,7 +1429,8 @@ def _create_custom_endpoint_configs(
         headers=api_headers,
         body=json.dumps({"thread_id": session_id, "message": "{latest_message}"}),
         status_code=next_status_code,
-        response_message_path="response.assistant_response",
+        response_message_path=response_message_path,
+        streaming=streaming,
     ).to_dict()
 
     end_config = {}
@@ -1467,8 +1473,14 @@ def _call_test_custom_endpoint(
             raw_response["status_code"] // 100 == 2
         ), f"'status_code' for {key} should be 2xx"
         response_body = json.loads(raw_response.get("body", "{}"))
-        # all custom endpoint stub responses should include thread_id
-        assert response_body.get("thread_id") is not None
+        # Non-streaming stub responses include thread_id;
+        # streaming responses return a diagnostic body with session_id instead.
+        print(f"response body: {response_body}")
+        has_id = (
+            response_body.get("thread_id") is not None
+            or response_body.get("session_id") is not None
+        )
+        assert has_id, f"'{key}' body should contain thread_id or session_id"
 
     return response_json
 
@@ -1508,6 +1520,81 @@ def test_test_custom_endpoint_combinations() -> None:
         include_end=False,
         session_id=thread_id,
     )
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+
+def test_test_custom_endpoint_combinations_streaming() -> None:
+    """Test custom endpoint combinations with streaming enabled on next_message.
+
+    Same scenarios as test_test_custom_endpoint_combinations but the next_message
+    config includes a StreamingConfig and hits the /message/stream endpoint.
+    The stub returns SSE (data: {json}\n\n) with multi-role chunks (system +
+    agent) using ``assistant_response`` as the content key. The ``is_final``
+    in-band field terminates the stream and a ``select`` condition filters out
+    system chunks. The server should reassemble the streamed agent tokens and
+    return a diagnostic body with response_text, chunk_count, and done_reason.
+    """
+    streaming = StreamingConfig(
+        stop=[StreamingStopCondition(value="true", path="response.is_final")],
+        select=[StreamingSelectCondition(path="response.role", value="agent")],
+    )
+
+    def _point_to_stream_endpoint(next_config: dict) -> dict:
+        """Rewrite the URL to hit /message/stream instead of /message."""
+        next_config["url"] = next_config["url"].replace(
+            "/custom_endpoint_stub/message",
+            "/custom_endpoint_stub/message/stream",
+        )
+        return next_config
+
+    # Scenario 1: All configs provided (streaming on next_message)
+    # response_message_path points to the chunk content key (assistant_response)
+    # since streaming uses the same path field for token extraction.
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        streaming=streaming,
+        response_message_path="response.assistant_response",
+    )
+    nt_config = _point_to_stream_endpoint(nt_config)
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+    # Scenario 2: Only next config provided, no start or end config
+    # Streaming returns a diagnostic body with session_id (not thread_id)
+    next_body = json.loads(
+        response.get("next_message_raw_response", {}).get("body", "{}")
+    )
+    thread_id = next_body.get("session_id", None)
+    assert (
+        thread_id is not None
+    ), "session_id should be present in the streaming diagnostic body of Scenario #1"
+
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        include_start=False,
+        include_end=False,
+        session_id=thread_id,
+        streaming=streaming,
+        response_message_path="response.assistant_response",
+    )
+    nt_config = _point_to_stream_endpoint(nt_config)
+
+    response = _call_test_custom_endpoint(
+        start_config=ss_config, next_config=nt_config, end_config=en_config
+    )
+
+    # Scenario 3: Start and next config provided, no end config
+    ss_config, nt_config, en_config = _create_custom_endpoint_configs(
+        include_start=True,
+        include_end=False,
+        session_id=thread_id,
+        streaming=streaming,
+        response_message_path="response.assistant_response",
+    )
+    nt_config = _point_to_stream_endpoint(nt_config)
 
     response = _call_test_custom_endpoint(
         start_config=ss_config, next_config=nt_config, end_config=en_config

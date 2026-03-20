@@ -11,11 +11,16 @@ from pytest_httpx import HTTPXMock
 from okareo import ModelUnderTest, Okareo
 from okareo.error import TestRunError
 from okareo.model_under_test import (
+    AuthConfig,
     CohereModel,
+    CustomEndpointTarget,
+    EndSessionConfig,
     OpenAIModel,
     OpenAIVoiceTarget,
     PineconeDb,
+    SessionConfig,
     Target,
+    TurnConfig,
     TwilioVoiceTarget,
 )
 from okareo_api_client.models import SeedData
@@ -364,3 +369,72 @@ def test_target_to_dict_other_voice_targets_have_no_sensitive_fields() -> None:
     # Only Twilio declares sensitive fields, others should not
     assert "sensitive_fields" not in payload
     assert payload["target"]["edge_type"] == "openai"
+
+
+# ---------------------------------------------------------------------------
+# CustomEndpointTarget.params() serialization
+# ---------------------------------------------------------------------------
+MINIMAL_TURN = TurnConfig(
+    url="https://api.example.com/message",
+    method="POST",
+)
+
+
+class TestCustomEndpointTargetParams:
+    """Verify that CustomEndpointTarget.params() serializes optional fields correctly."""
+
+    def test_omitted_optional_params_serialize_as_none(self) -> None:
+        """When start_session and end_session are omitted, params() must emit null (not {})."""
+        target = CustomEndpointTarget(None, MINIMAL_TURN)
+        result = target.params()
+        assert result["start_session_params"] is None
+        assert result["end_session_params"] is None
+        assert "auth_params" not in result
+
+    def test_explicit_none_optional_params_serialize_as_none(self) -> None:
+        target = CustomEndpointTarget(
+            start_session=None,
+            next_turn=MINIMAL_TURN,
+            end_session=None,
+            auth=None,
+        )
+        result = target.params()
+        assert result["start_session_params"] is None
+        assert result["end_session_params"] is None
+        assert "auth_params" not in result
+
+    def test_provided_start_session_serializes_as_dict(self) -> None:
+        session = SessionConfig(url="https://api.example.com/start")
+        target = CustomEndpointTarget(session, MINIMAL_TURN)
+        result = target.params()
+        assert isinstance(result["start_session_params"], dict)
+        assert result["start_session_params"]["url"] == "https://api.example.com/start"
+
+    def test_provided_end_session_serializes_as_dict(self) -> None:
+        end = EndSessionConfig(url="https://api.example.com/end")
+        target = CustomEndpointTarget(None, MINIMAL_TURN, end_session=end)
+        result = target.params()
+        assert isinstance(result["end_session_params"], dict)
+        assert result["end_session_params"]["url"] == "https://api.example.com/end"
+
+    def test_provided_auth_serializes_as_dict(self) -> None:
+        auth = AuthConfig(url="https://auth.example.com/token")
+        target = CustomEndpointTarget(None, MINIMAL_TURN, auth=auth)
+        result = target.params()
+        assert "auth_params" in result
+        assert result["auth_params"]["url"] == "https://auth.example.com/token"
+
+    def test_next_turn_always_serializes_as_dict(self) -> None:
+        target = CustomEndpointTarget(None, MINIMAL_TURN)
+        result = target.params()
+        assert isinstance(result["next_message_params"], dict)
+        assert result["next_message_params"]["url"] == "https://api.example.com/message"
+
+    def test_max_parallel_requests_passed_through(self) -> None:
+        target = CustomEndpointTarget(None, MINIMAL_TURN, max_parallel_requests=5)
+        result = target.params()
+        assert result["max_parallel_requests"] == 5
+
+    def test_type_is_custom_endpoint(self) -> None:
+        target = CustomEndpointTarget(None, MINIMAL_TURN)
+        assert target.params()["type"] == "custom_endpoint"

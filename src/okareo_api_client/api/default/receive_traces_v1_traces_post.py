@@ -6,6 +6,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
+from ...models.receive_traces_response import ReceiveTracesResponse
 from ...types import Response
 
 
@@ -25,9 +26,12 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ErrorResponse | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> ErrorResponse | ReceiveTracesResponse | None:
     if response.status_code == 201:
-        response_201 = response.json()
+        response_201 = ReceiveTracesResponse.from_dict(response.json())
+
         return response_201
 
     if response.status_code == 400:
@@ -56,7 +60,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ErrorResponse]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[ErrorResponse | ReceiveTracesResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -69,7 +75,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Any | ErrorResponse]:
+) -> Response[ErrorResponse | ReceiveTracesResponse]:
     """Receive Traces
 
     Args:
@@ -80,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse]
+        Response[ErrorResponse | ReceiveTracesResponse]
     """
 
     kwargs = _get_kwargs(
@@ -98,7 +104,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
-) -> Any | ErrorResponse | None:
+) -> ErrorResponse | ReceiveTracesResponse | None:
     """Receive Traces
 
     Args:
@@ -109,7 +115,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse
+        ErrorResponse | ReceiveTracesResponse
     """
 
     return sync_detailed(
@@ -122,7 +128,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
-) -> Response[Any | ErrorResponse]:
+) -> Response[ErrorResponse | ReceiveTracesResponse]:
     """Receive Traces
 
     Args:
@@ -133,7 +139,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse]
+        Response[ErrorResponse | ReceiveTracesResponse]
     """
 
     kwargs = _get_kwargs(
@@ -149,7 +155,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     api_key: str,
-) -> Any | ErrorResponse | None:
+) -> ErrorResponse | ReceiveTracesResponse | None:
     """Receive Traces
 
     Args:
@@ -160,7 +166,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse
+        ErrorResponse | ReceiveTracesResponse
     """
 
     return (

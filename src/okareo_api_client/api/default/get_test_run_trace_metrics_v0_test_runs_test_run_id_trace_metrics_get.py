@@ -1,36 +1,33 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.assistant_message_request import AssistantMessageRequest
-from ...models.assistant_message_response import AssistantMessageResponse
 from ...models.error_response import ErrorResponse
-from ...types import UNSET, Response, Unset
+from ...models.get_test_run_trace_metrics_v0_test_runs_test_run_id_trace_metrics_get_response_get_test_run_trace_metrics_v0_test_runs_test_run_id_trace_metrics_get import (
+    GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet,
+)
+from ...types import Response
 
 
 def _get_kwargs(
+    test_run_id: UUID,
     *,
-    body: AssistantMessageRequest,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
-    if not isinstance(authorization, Unset):
-        headers["authorization"] = authorization
-
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v0/custom_endpoint_stub/message",
+        "method": "get",
+        "url": "/v0/test_runs/{test_run_id}/trace_metrics".format(
+            test_run_id=quote(str(test_run_id), safe=""),
+        ),
     }
-
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -38,9 +35,15 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> AssistantMessageResponse | ErrorResponse | None:
+) -> (
+    ErrorResponse
+    | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
+    | None
+):
     if response.status_code == 200:
-        response_200 = AssistantMessageResponse.from_dict(response.json())
+        response_200 = GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet.from_dict(
+            response.json()
+        )
 
         return response_200
 
@@ -72,7 +75,10 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[AssistantMessageResponse | ErrorResponse]:
+) -> Response[
+    ErrorResponse
+    | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -82,39 +88,35 @@ def _build_response(
 
 
 def sync_detailed(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> Response[AssistantMessageResponse | ErrorResponse]:
-    """Send Assistant Message
+) -> Response[
+    ErrorResponse
+    | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
+]:
+    """Get Test Run Trace Metrics
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Get aggregate trace check metrics for a test run's simulation.
 
-    Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
+    Returns only model_metrics (no datapoints).
 
     Args:
+        test_run_id (UUID): ID of test run
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AssistantMessageResponse | ErrorResponse]
+        Response[ErrorResponse | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        test_run_id=test_run_id,
         api_key=api_key,
-        authorization=authorization,
     )
 
     response = client.get_httpx_client().request(
@@ -125,77 +127,70 @@ def sync_detailed(
 
 
 def sync(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> AssistantMessageResponse | ErrorResponse | None:
-    """Send Assistant Message
+) -> (
+    ErrorResponse
+    | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
+    | None
+):
+    """Get Test Run Trace Metrics
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Get aggregate trace check metrics for a test run's simulation.
+
+    Returns only model_metrics (no datapoints).
 
     Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
-
-    Args:
+        test_run_id (UUID): ID of test run
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AssistantMessageResponse | ErrorResponse
+        ErrorResponse | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
     """
 
     return sync_detailed(
+        test_run_id=test_run_id,
         client=client,
-        body=body,
         api_key=api_key,
-        authorization=authorization,
     ).parsed
 
 
 async def asyncio_detailed(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> Response[AssistantMessageResponse | ErrorResponse]:
-    """Send Assistant Message
+) -> Response[
+    ErrorResponse
+    | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
+]:
+    """Get Test Run Trace Metrics
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Get aggregate trace check metrics for a test run's simulation.
 
-    Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
+    Returns only model_metrics (no datapoints).
 
     Args:
+        test_run_id (UUID): ID of test run
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AssistantMessageResponse | ErrorResponse]
+        Response[ErrorResponse | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        test_run_id=test_run_id,
         api_key=api_key,
-        authorization=authorization,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -204,40 +199,37 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: AssistantMessageRequest,
     api_key: str,
-    authorization: None | str | Unset = UNSET,
-) -> AssistantMessageResponse | ErrorResponse | None:
-    """Send Assistant Message
+) -> (
+    ErrorResponse
+    | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
+    | None
+):
+    """Get Test Run Trace Metrics
 
-     Sends a new message to an existing Assistant thread and returns the JSON response.
+     Get aggregate trace check metrics for a test run's simulation.
+
+    Returns only model_metrics (no datapoints).
 
     Args:
-        payload: Contains thread_id and the user message
-
-    Returns:
-        AssistantMessageResponse
-
-    Args:
+        test_run_id (UUID): ID of test run
         api_key (str):
-        authorization (None | str | Unset):
-        body (AssistantMessageRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AssistantMessageResponse | ErrorResponse
+        ErrorResponse | GetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGetResponseGetTestRunTraceMetricsV0TestRunsTestRunIdTraceMetricsGet
     """
 
     return (
         await asyncio_detailed(
+            test_run_id=test_run_id,
             client=client,
-            body=body,
             api_key=api_key,
-            authorization=authorization,
         )
     ).parsed

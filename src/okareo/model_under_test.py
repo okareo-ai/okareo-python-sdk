@@ -1666,6 +1666,93 @@ class StopConfig:
         return {"check_name": self.check_name, "stop_on": self.stop_on}
 
 
+class StreamingStopCondition:
+    """A condition that terminates the stream when matched.
+
+    Stop conditions use OR semantics — any single match ends the stream.
+
+    Arguments:
+        value: The value to match. Supports:
+            - ``"true"`` / ``"false"`` (case-insensitive) for JSON booleans
+            - ``"*"`` for presence check (any non-None value)
+            - Any other string for exact string comparison
+        path: Optional ``response.``-prefixed dot-bracket path into each
+            parsed JSON chunk. E.g., ``response.is_finished``.
+            When omitted, ``value`` is matched as a raw string against the
+            SSE ``data:`` payload before JSON parsing (e.g., ``"[DONE]"``).
+    """
+
+    def __init__(self, value: str, path: Optional[str] = None) -> None:
+        self.value = value
+        self.path = path
+
+    def to_dict(self) -> dict:
+        d: dict = {"value": self.value}
+        if self.path is not None:
+            d["path"] = self.path
+        return d
+
+
+class StreamingSelectCondition:
+    """A condition that filters which chunks have their content extracted.
+
+    Select conditions use AND semantics — all conditions must match for a
+    chunk's content to be extracted.
+
+    Arguments:
+        path: Required ``response.``-prefixed dot-bracket path into each
+            parsed JSON chunk. E.g., ``response.role``.
+        value: The value to match at that path. Same matching rules as
+            :class:`StreamingStopCondition`: ``"true"``/``"false"`` for booleans,
+            ``"*"`` for presence, anything else for exact string comparison.
+    """
+
+    def __init__(self, path: str, value: str) -> None:
+        self.path = path
+        self.value = value
+
+    def to_dict(self) -> dict:
+        return {"path": self.path, "value": self.value}
+
+
+class StreamingConfig:
+    """Configuration for streaming responses from a custom API endpoint.
+
+    When provided on a TurnConfig or SessionConfig, the server will consume the
+    endpoint's response as a Server-Sent Events (SSE) or NDJSON stream and
+    reassemble the tokens into the final response.
+
+    The text extraction path is specified via ``response_message_path`` on the
+    parent TurnConfig/SessionConfig — set it to the chunk shape when streaming
+    (e.g., ``response.choices[0].delta.content``).
+
+    Arguments:
+        stop: List of :class:`StreamingStopCondition` objects. The stream terminates
+            when **any** condition matches (OR semantics). A stop condition
+            without a ``path`` matches as a raw string against the SSE
+            ``data:`` payload before JSON parsing (e.g., ``[DONE]``).
+        select: List of :class:`StreamingSelectCondition` objects. **All** conditions
+            must match for a chunk's content to be extracted (AND semantics).
+            When omitted or empty, content is extracted from every chunk.
+    """
+
+    def __init__(
+        self,
+        stop: Optional[list] = None,
+        select: Optional[list] = None,
+    ) -> None:
+        self.stop = stop
+        self.select = select
+
+    def to_dict(self) -> dict:
+        d: dict = {}
+        if self.stop:
+            d["stop"] = [c.to_dict() for c in self.stop]
+        if self.select:
+            d["select"] = [c.to_dict() for c in self.select]
+        return d
+
+
 class SessionConfig:
     """Configuration for a custom API endpoint that starts a session.
 
@@ -1688,6 +1775,7 @@ class SessionConfig:
         status_code: Optional[int] = None,
         response_session_id_path: str = "",
         response_message_path: str = "",
+        streaming: Optional[StreamingConfig] = None,
     ) -> None:
         self.url = url
         self.method = method
@@ -1696,9 +1784,10 @@ class SessionConfig:
         self.status_code = status_code
         self.response_session_id_path = response_session_id_path
         self.response_message_path = response_message_path
+        self.streaming = streaming
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "url": self.url,
             "method": self.method,
             "headers": self.headers,
@@ -1707,6 +1796,9 @@ class SessionConfig:
             "response_session_id_path": self.response_session_id_path,
             "response_message_path": self.response_message_path,
         }
+        if self.streaming is not None:
+            d["streaming"] = self.streaming.to_dict()
+        return d
 
 
 class TurnConfig:
@@ -1726,6 +1818,9 @@ class TurnConfig:
         response_message_path: Path to extract the model's generated message from the response.
             E.g., `response.completion.message.content` will parse out the corresponding field of
             the response JSON object as the model's generated response.
+        response_session_id_path: Path to extract the session ID from the response.
+            E.g., `response.result.contextId` will use the `contextId` field of the response
+            JSON object to set the `session_id` for subsequent turns.
         response_tool_calls_path: Path to extract tool calls from the response.
     """
 
@@ -1737,7 +1832,9 @@ class TurnConfig:
         body: Union[str, dict] = "{}",
         status_code: Optional[int] = None,
         response_message_path: str = "",
+        response_session_id_path: str = "",
         response_tool_calls_path: str = "",
+        streaming: Optional[StreamingConfig] = None,
     ) -> None:
         self.url = url
         self.method = method
@@ -1745,20 +1842,26 @@ class TurnConfig:
         self.body = body
         self.status_code = status_code
         self.response_message_path = response_message_path
+        self.response_session_id_path = response_session_id_path
         self.response_tool_calls_path = (
             response_tool_calls_path  # TODO: populate this once we support on BE
         )
+        self.streaming = streaming
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "url": self.url,
             "method": self.method,
             "headers": self.headers,
             "body": self.body,
             "status_code": self.status_code,
             "response_message_path": self.response_message_path,
+            "response_session_id_path": self.response_session_id_path,
             "response_tool_calls_path": self.response_tool_calls_path,
         }
+        if self.streaming is not None:
+            d["streaming"] = self.streaming.to_dict()
+        return d
 
 
 class EndSessionConfig:
@@ -1855,7 +1958,7 @@ class CustomEndpointTarget(BaseModel):
 
     def __init__(
         self,
-        start_session: SessionConfig,
+        start_session: Optional[SessionConfig],
         next_turn: TurnConfig,
         end_session: Optional[EndSessionConfig] = None,
         auth: Optional[AuthConfig] = None,
@@ -1870,10 +1973,12 @@ class CustomEndpointTarget(BaseModel):
     def params(self) -> dict:
         result = {
             "type": self.type,
-            "start_session_params": self.start_session.to_dict(),
+            "start_session_params": (
+                self.start_session.to_dict() if self.start_session is not None else None
+            ),
             "next_message_params": self.next_turn.to_dict(),
             "end_session_params": (
-                self.end_session.to_dict() if self.end_session is not None else {}
+                self.end_session.to_dict() if self.end_session is not None else None
             ),
             "max_parallel_requests": self.max_parallel_requests,
         }
