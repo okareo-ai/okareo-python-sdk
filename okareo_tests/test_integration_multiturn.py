@@ -1489,7 +1489,9 @@ def _call_test_custom_endpoint(
             or parsed_values.get("session_id") is not None
         )
         if not has_id:
-            print(f"Note: '{key}' has no thread_id/session_id (expected for streaming next_message)")
+            print(
+                f"Note: '{key}' has no thread_id/session_id (expected for streaming next_message)"
+            )
 
     return response_json
 
