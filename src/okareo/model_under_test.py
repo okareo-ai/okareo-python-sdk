@@ -1818,6 +1818,9 @@ class TurnConfig:
         response_message_path: Path to extract the model's generated message from the response.
             E.g., `response.completion.message.content` will parse out the corresponding field of
             the response JSON object as the model's generated response.
+        response_session_id_path: Path to extract the session ID from the response.
+            E.g., `response.result.contextId` will use the `contextId` field of the response
+            JSON object to set the `session_id` for subsequent turns.
         response_tool_calls_path: Path to extract tool calls from the response.
     """
 
@@ -1829,6 +1832,7 @@ class TurnConfig:
         body: Union[str, dict] = "{}",
         status_code: Optional[int] = None,
         response_message_path: str = "",
+        response_session_id_path: str = "",
         response_tool_calls_path: str = "",
         streaming: Optional[StreamingConfig] = None,
     ) -> None:
@@ -1838,6 +1842,7 @@ class TurnConfig:
         self.body = body
         self.status_code = status_code
         self.response_message_path = response_message_path
+        self.response_session_id_path = response_session_id_path
         self.response_tool_calls_path = (
             response_tool_calls_path  # TODO: populate this once we support on BE
         )
@@ -1851,6 +1856,7 @@ class TurnConfig:
             "body": self.body,
             "status_code": self.status_code,
             "response_message_path": self.response_message_path,
+            "response_session_id_path": self.response_session_id_path,
             "response_tool_calls_path": self.response_tool_calls_path,
         }
         if self.streaming is not None:
