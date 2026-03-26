@@ -431,7 +431,7 @@ class TestVoiceSanity:
         - Duration > 0 for each message
         - Conversation order is sequential
         """
-        num_parallel = 1
+        num_parallel = 5
 
         driver = Driver(
             name=f"Sanity Driver - {rnd}",
