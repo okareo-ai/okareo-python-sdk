@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 import pytest
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY, OPENAI_MODEL, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import GenerationModel
@@ -95,7 +95,7 @@ def test_dialog_input(
     mut = okareo_client.register_model(
         name=test_run_name,
         model=GenerationModel(
-            model_id="gpt-4.1-mini",
+            model_id=OPENAI_MODEL,
             temperature=0,
             dialog_template="{scenario_input}",
         ),
@@ -137,7 +137,7 @@ def test_dialog_template(
     mut = okareo_client.register_model(
         name=test_run_name,
         model=GenerationModel(
-            model_id="gpt-4.1-mini",
+            model_id=OPENAI_MODEL,
             temperature=0,
             dialog_template=DAILOG_TEMPLATE,
         ),

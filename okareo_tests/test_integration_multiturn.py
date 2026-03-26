@@ -8,7 +8,7 @@ from typing import Any, Optional, Union
 import aiohttp
 import pytest
 import requests  # type:ignore
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY, OPENAI_MODEL, random_string
 from okareo_tests.utils import assert_baseline_metrics, create_dummy_mut
 
 from okareo import Okareo
@@ -59,7 +59,7 @@ def test_run_register_multiturn(rnd: str, okareo: Okareo) -> None:
     target = Target(
         name=rnd,
         target=OpenAIModel(
-            model_id="gpt-4o-mini",
+            model_id=OPENAI_MODEL,
             temperature=0,
             system_prompt_template="target_system_prompt",
         ),
@@ -146,7 +146,7 @@ def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
         Target(
             name=rnd,
             target=GenerationModel(
-                model_id="gpt-4o-mini",
+                model_id=OPENAI_MODEL,
                 temperature=0,
                 system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
             ),
@@ -199,7 +199,7 @@ def test_run_multiturn_with_driver_model_id(
     target = Target(
         name=f"{rnd}_{first_turn}",
         target=GenerationModel(
-            model_id="gpt-4o-mini",
+            model_id=OPENAI_MODEL,
             temperature=0,
             system_prompt_template="Ignore what the user is saying and say: I can't help you with that",
         ),
@@ -244,7 +244,7 @@ def test_run_multiturn_run_test_multiple_checks(rnd: str, okareo: Okareo) -> Non
     target = Target(
         name=rnd,
         target=OpenAIModel(
-            model_id="gpt-4o-mini",
+            model_id=OPENAI_MODEL,
             temperature=1,
             system_prompt_template="Be very brief. Finish all of your responses with a haiku about your favorite color",
         ),
@@ -591,7 +591,7 @@ class OpenAIRequestsModel(CustomMultiturnTarget):
                 "Authorization": f"Bearer {OPENAI_API_KEY}",
             }
             payload = {
-                "model": "gpt-4.1-mini",
+                "model": OPENAI_MODEL,
                 "messages": (
                     messages
                     if messages
@@ -629,7 +629,7 @@ class OpenAIRequestsModelAsync(CustomMultiturnTargetAsync):
                 "Authorization": f"Bearer {OPENAI_API_KEY}",
             }
             payload = {
-                "model": "gpt-4.1-mini",
+                "model": OPENAI_MODEL,
                 "messages": (
                     messages
                     if messages
