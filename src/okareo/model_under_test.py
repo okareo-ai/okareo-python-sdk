@@ -1265,6 +1265,8 @@ class GenerationModel(BaseModel):
         user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
         dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
         tools: List of tools to pass to the model.
+        base_url: Optional base URL to use for the completion request.
+        extra_headers: Optional headers to pass to the completion request for authentication (e.g., 'api-key' or 'Authorization').
     """
 
     type = "generation"
@@ -1274,6 +1276,8 @@ class GenerationModel(BaseModel):
     user_prompt_template: Optional[str] = None
     dialog_template: Optional[str] = None
     tools: Optional[List] = None
+    base_url: Optional[str] = None
+    extra_headers: Optional[dict] = None
 
     def params(self) -> dict:
         return {
@@ -1284,6 +1288,8 @@ class GenerationModel(BaseModel):
             "dialog_template": self.dialog_template,
             "type": self.type,
             "tools": self.tools,
+            "base_url": self.base_url,
+            "extra_headers": self.extra_headers,
         }
 
 
