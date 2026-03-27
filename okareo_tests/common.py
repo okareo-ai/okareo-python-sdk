@@ -30,3 +30,4 @@ def random_string(length: int) -> str:
 
 # if unavailable, mock a valid OpenAI API kley
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", f"sk-{random_string(48)}")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")

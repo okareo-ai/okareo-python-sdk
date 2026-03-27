@@ -5,7 +5,13 @@ from typing import Optional
 from unittest.mock import Mock
 
 import pytest
-from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_string
+from okareo_tests.common import (
+    API_KEY,
+    OPENAI_MODEL,
+    OkareoAPIhost,
+    integration,
+    random_string,
+)
 from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
@@ -148,7 +154,7 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
         name=mut_fixture["name"],
         tags=mut_fixture["tags"],
         model=OpenAIModel(
-            model_id="gpt-4o-mini",
+            model_id=OPENAI_MODEL,
             temperature=1,
             system_prompt_template="system_prompt_template",
         ),
@@ -209,7 +215,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
         name=mut_fixture["name"],
         tags=mut_fixture["tags"],
         model=OpenAIModel(
-            model_id="gpt-4o-mini",
+            model_id=OPENAI_MODEL,
             temperature=1,
             system_prompt_template="system_prompt_template",
         ),

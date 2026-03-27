@@ -11,7 +11,7 @@ from typing import Any, Generator
 import pytest
 import requests  # type: ignore
 from google.protobuf.json_format import ParseDict  # type: ignore
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY, OPENAI_MODEL, random_string
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,  # type: ignore
 )
@@ -147,7 +147,7 @@ def build_otel_trace_payload(
     completion: str,
     test_identifier: str | None = None,
     service_name: str = "okareo_test",
-    model_name: str = "gpt-4",
+    model_name: str = OPENAI_MODEL,
     system_name: str = "openai",
 ) -> dict[str, Any]:
     """Build an OTEL trace payload with the given conversation data.

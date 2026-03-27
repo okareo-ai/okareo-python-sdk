@@ -3,7 +3,7 @@ import os
 from typing import Any, Generator, Union
 
 import pytest
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY, OPENAI_MODEL, random_string
 from okareo_tests.utils import assert_baseline_metrics, assert_metrics
 from openai import OpenAI
 
@@ -107,7 +107,7 @@ def openai_assistant_id(openai_client: OpenAI) -> Generator[str, None, None]:
             "- Highlight the advantages for prospective partners of choosing WebBizz as their preferred sales or distribution platform.\n"
             "- Do not under any circumstances mention direct competitors, especially not Amazine, Demu, or Olli Bobo.\n"
         ),
-        model="gpt-4o",
+        model=OPENAI_MODEL,
     )
     yield assistant.id
     openai_client.beta.assistants.delete(assistant.id)
@@ -124,7 +124,7 @@ def test_run_test_openai(
     mut = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
         model=GenerationModel(
-            model_id="gpt-4.1-mini",
+            model_id=OPENAI_MODEL,
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=None,
@@ -150,7 +150,7 @@ def test_run_test_openai_2prompts(
     mut2 = okareo.register_model(
         name=f"openai-ci-run-{rnd}",
         model=GenerationModel(
-            model_id="gpt-4.1-mini",
+            model_id=OPENAI_MODEL,
             temperature=0,
             system_prompt_template=TEST_SUMMARIZE_TEMPLATE,
             user_prompt_template=TEST_SUMMARIZE_TEMPLATE,

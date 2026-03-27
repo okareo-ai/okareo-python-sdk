@@ -1,7 +1,7 @@
 from typing import Any
 
 from autogen import ConversableAgent  # type: ignore
-from okareo_tests.common import API_KEY, OPENAI_API_KEY, random_string
+from okareo_tests.common import API_KEY, OPENAI_API_KEY, OPENAI_MODEL, random_string
 
 from okareo import Okareo
 from okareo.autogen_logger import AutogenLogger
@@ -20,7 +20,7 @@ def get_logger_config() -> dict[str, Any]:
 def get_gpt_config() -> dict[str, Any]:
     gpt4_config_list = [
         {
-            "model": "gpt-4-0125-preview",
+            "model": OPENAI_MODEL,
             "api_key": OPENAI_API_KEY,
         }
     ]
