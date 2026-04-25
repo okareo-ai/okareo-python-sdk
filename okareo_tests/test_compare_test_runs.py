@@ -209,10 +209,9 @@ def _compare_test_runs(
     control_id: str | None = None,
     variant_id: str | None = None,
     alpha: float = 0.05,
-    include_scenarios: bool = True,
 ) -> dict[str, Any]:
     """Call POST /v0/test_runs/compare directly via the client's httpx instance."""
-    body: dict[str, Any] = {"alpha": alpha, "include_scenarios": include_scenarios}
+    body: dict[str, Any] = {"alpha": alpha}
     if control_id is not None:
         body["control_test_run_id"] = str(control_id)
     if variant_id is not None:
@@ -239,22 +238,22 @@ def test_compare_returns_correct_structure(
     assert result["control_test_run_id"] == str(control_run.id)
     assert result["variant_test_run_id"] == str(variant_run.id)
 
-    assert "scenarios" in result
     assert result["statistical_tests"] is not None
+    assert result.get("trace_statistical_tests") is None
 
 
-def test_compare_scenarios_match_seed_count(
+def test_compare_statistical_tests_shape(
     okareo: Okareo, control_run: Any, variant_run: Any
 ) -> None:
     result = _compare_test_runs(okareo, control_run.id, variant_run.id)
+    stats = result["statistical_tests"]
+    assert stats is not None
 
-    scenarios = result["scenarios"]
-    assert len(scenarios) == len(SEED_DATA)
-
-    for scenario in scenarios:
-        assert "scenario_data_point_id" in scenario
-        assert len(scenario["control"]) >= 1
-        assert len(scenario["variant"]) >= 1
+    assert stats["matched_scenario_count"] == len(SEED_DATA)
+    assert len(stats["pass_fail_checks"]) >= 1
+    assert len(stats["score_checks"]) >= 1
+    assert "correction_method" in stats
+    assert "alpha" in stats
 
 
 def test_compare_pass_fail_checks(
@@ -274,6 +273,7 @@ def test_compare_pass_fail_checks(
     ), f"is_json not found in pass_fail_checks: {pass_fail_checks}"
 
     assert is_json_check["check_type"] == "pass_fail"
+    assert is_json_check.get("check_id") is not None
     assert 0.0 <= is_json_check["control_pass_rate"] <= 1.0
     assert 0.0 <= is_json_check["variant_pass_rate"] <= 1.0
     assert is_json_check["control_pass_rate"] > is_json_check["variant_pass_rate"]
@@ -301,6 +301,7 @@ def test_compare_score_checks(
 
     for check in score_checks:
         assert check["check_type"] == "score"
+        assert check.get("check_id") is not None
         assert isinstance(check["control_summary"], (int, float))
         assert isinstance(check["variant_summary"], (int, float))
         assert isinstance(check["mean_diff"], (int, float))
@@ -333,13 +334,7 @@ def test_compare_single_control_only(
     assert result["control_test_run_id"] == str(control_run.id)
     assert result["variant_test_run_id"] is None
     assert result["statistical_tests"] is None
-
-    scenarios = result["scenarios"]
-    assert len(scenarios) == len(SEED_DATA)
-
-    for scenario in scenarios:
-        assert len(scenario["control"]) >= 1
-        assert scenario["variant"] == []
+    assert result.get("trace_statistical_tests") is None
 
 
 def test_compare_single_variant_only(
@@ -352,13 +347,7 @@ def test_compare_single_variant_only(
     assert result["control_test_run_id"] is None
     assert result["variant_test_run_id"] == str(variant_run.id)
     assert result["statistical_tests"] is None
-
-    scenarios = result["scenarios"]
-    assert len(scenarios) == len(SEED_DATA)
-
-    for scenario in scenarios:
-        assert scenario["control"] == []
-        assert len(scenario["variant"]) >= 1
+    assert result.get("trace_statistical_tests") is None
 
 
 def test_compare_excluded_tie_count(
@@ -418,21 +407,6 @@ def test_compare_custom_alpha(
             f"{check['name']}: significant={check['significant']} but "
             f"p_value_adjusted={check['p_value_adjusted']}"
         )
-
-
-def test_compare_include_scenarios_false(
-    okareo: Okareo, control_run: Any, variant_run: Any
-) -> None:
-    """include_scenarios=False should return empty scenarios but valid stats."""
-    result = _compare_test_runs(
-        okareo, control_run.id, variant_run.id, include_scenarios=False
-    )
-
-    assert result["scenarios"] == []
-    stats = result["statistical_tests"]
-    assert stats is not None
-    assert len(stats["pass_fail_checks"]) >= 1
-    assert len(stats["score_checks"]) >= 1
 
 
 def test_compare_cleanup(okareo: Okareo, control_run: Any, variant_run: Any) -> None:
@@ -504,14 +478,8 @@ def test_compare_with_repeats(
     assert result["control_test_run_id"] == str(control_repeat_run.id)
     assert result["variant_test_run_id"] == str(variant_repeat_run.id)
 
-    scenarios = result["scenarios"]
-    assert len(scenarios) == len(REPEAT_SEED_DATA)
-
-    for scenario in scenarios:
-        assert len(scenario["control"]) == 3
-        assert len(scenario["variant"]) == 3
-
     stats = result["statistical_tests"]
+    assert stats is not None
     assert stats["matched_scenario_count"] == len(REPEAT_SEED_DATA)
 
     binary_names = {c["name"] for c in stats["pass_fail_checks"]}
@@ -520,6 +488,7 @@ def test_compare_with_repeats(
     refusal_check = next(
         c for c in stats["pass_fail_checks"] if c["name"] == "model_refusal"
     )
+    assert refusal_check.get("check_id") is not None
     assert 0.0 <= refusal_check["p_value"] <= 1.0
     assert 0.0 <= refusal_check["p_value_adjusted"] <= 1.0
     assert isinstance(refusal_check["significant"], bool)
@@ -532,9 +501,16 @@ def test_compare_with_repeats(
     lev_check = next(
         c for c in stats["score_checks"] if c["name"] == "levenshtein_distance"
     )
+    assert lev_check.get("check_id") is not None
     assert 0.0 <= lev_check["p_value"] <= 1.0
     assert 0.0 <= lev_check["p_value_adjusted"] <= 1.0
     assert isinstance(lev_check["significant"], bool)
+
+    trace_stats = result.get("trace_statistical_tests")
+    if trace_stats is not None:
+        assert "pass_fail_checks" in trace_stats
+        assert "score_checks" in trace_stats
+        assert "matched_scenario_count" in trace_stats
 
 
 def test_compare_repeat_cleanup(
@@ -601,16 +577,7 @@ def test_compare_classification(
     assert result["control_test_run_id"] == str(clf_control_run.id)
     assert result["variant_test_run_id"] == str(clf_variant_run.id)
     assert result["statistical_tests"] is None
-
-    scenarios = result["scenarios"]
-    assert len(scenarios) == len(CLASSIFICATION_SEED_DATA)
-
-    for scenario in scenarios:
-        assert len(scenario["control"]) >= 1
-        assert len(scenario["variant"]) >= 1
-        ctrl_dp = scenario["control"][0]
-        assert "metric_value" in ctrl_dp
-        assert "metric_type" in ctrl_dp
+    assert result.get("trace_statistical_tests") is None
 
 
 def test_compare_classification_cleanup(
@@ -676,16 +643,7 @@ def test_compare_retrieval(
     assert result["control_test_run_id"] == str(ret_control_run.id)
     assert result["variant_test_run_id"] == str(ret_variant_run.id)
     assert result["statistical_tests"] is None
-
-    scenarios = result["scenarios"]
-    assert len(scenarios) == len(RETRIEVAL_SEED_DATA)
-
-    for scenario in scenarios:
-        assert len(scenario["control"]) >= 1
-        assert len(scenario["variant"]) >= 1
-        ctrl_dp = scenario["control"][0]
-        assert "metric_value" in ctrl_dp
-        assert "metric_type" in ctrl_dp
+    assert result.get("trace_statistical_tests") is None
 
 
 def test_compare_retrieval_cleanup(
