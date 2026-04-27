@@ -1,11 +1,10 @@
-"""Integration tests for check versioning (M8 backend).
+"""Integration tests for check versioning.
 
-All check-endpoint calls use raw httpx via okareo.client.get_httpx_client().
-Existing Okareo SDK methods are used for run_test / find_test_data_points.
-Tags are out of scope for this pass.
+All tests use the SDK methods (get_all_checks, get_check, create_or_update_check,
+delete_check). Each test uses unique randomized names and cleans up after itself.
 """
 
-from typing import Any, Union, cast
+from typing import Any, Optional, Union, cast
 from uuid import UUID
 
 import pytest
@@ -35,76 +34,25 @@ def okareo() -> Okareo:
 # ---- helpers ----------------------------------------------------------------
 
 
-def _headers(okareo: Okareo) -> dict[str, str]:
-    return {"api-key": okareo.api_key, "Content-Type": "application/json"}
-
-
-def _create_check(
+def _sdk_check(
     okareo: Okareo,
     name: str,
-    description: str = "test check",
     prompt_template: str = "Return True if the model_output has more than 3 words. Output: {model_output}",
-    check_type: str = "pass_fail",
-) -> dict[str, Any]:
-    body = {
+    description: str = "test check",
+    tags: Optional[list[str]] = None,
+) -> Any:
+    """Create a check via the SDK and return the EvaluatorDetailedResponse."""
+    kwargs: dict[str, Any] = {
         "name": name,
         "description": description,
-        "check_config": {
-            "prompt_template": prompt_template,
-            "type": check_type,
-        },
+        "check": ModelBasedCheck(
+            prompt_template=prompt_template,
+            check_type=CheckOutputType.PASS_FAIL,
+        ),
     }
-    resp = okareo.client.get_httpx_client().request(
-        method="post",
-        url="/v0/check_create_or_update",
-        json=body,
-        headers=_headers(okareo),
-    )
-    assert (
-        resp.status_code == 200
-    ), f"Create check failed {resp.status_code}: {resp.text}"
-    return cast(dict[str, Any], resp.json())
-
-
-def _get_check(okareo: Okareo, check_id: str) -> dict[str, Any]:
-    resp = okareo.client.get_httpx_client().request(
-        method="get",
-        url=f"/v0/check/{check_id}",
-        headers=_headers(okareo),
-    )
-    assert resp.status_code in (
-        200,
-        201,
-    ), f"Get check failed {resp.status_code}: {resp.text}"
-    return cast(dict[str, Any], resp.json())
-
-
-def _get_all_checks(okareo: Okareo, all_versions: bool = False) -> list[dict[str, Any]]:
-    url = "/v0/checks"
-    if all_versions:
-        url += "?all-versions=true"
-    resp = okareo.client.get_httpx_client().request(
-        method="get",
-        url=url,
-        headers=_headers(okareo),
-    )
-    assert resp.status_code in (
-        200,
-        201,
-    ), f"Get all checks failed {resp.status_code}: {resp.text}"
-    return cast(list[dict[str, Any]], resp.json())
-
-
-def _delete_check(okareo: Okareo, check_id: str, check_name: str) -> None:
-    resp = okareo.client.get_httpx_client().request(
-        method="delete",
-        url=f"/v0/check/{check_id}",
-        data={"name": check_name},
-        headers={"api-key": okareo.api_key},
-    )
-    assert (
-        resp.status_code == 204
-    ), f"Delete check failed {resp.status_code}: {resp.text}"
+    if tags is not None:
+        kwargs["tags"] = tags
+    return okareo.create_or_update_check(**kwargs)
 
 
 # ---- Group 1: Version fields on responses -----------------------------------
@@ -113,36 +61,33 @@ def _delete_check(okareo: Okareo, check_id: str, check_name: str) -> None:
 class TestVersionFieldsOnResponses:
     def test_create_check_returns_version_1(self, okareo: Okareo, rnd: str) -> None:
         name = f"ver-create-v1-{rnd}"
-        check = _create_check(okareo, name)
+        check = _sdk_check(okareo, name)
         try:
-            assert check["version"] == 1
+            assert check.additional_properties.get("version") == 1
         finally:
-            _delete_check(okareo, check["id"], name)
+            okareo.delete_check(cast(UUID, check.id), name)
 
     def test_get_check_includes_version(self, okareo: Okareo, rnd: str) -> None:
         name = f"ver-get-single-{rnd}"
-        created = _create_check(okareo, name)
+        created = _sdk_check(okareo, name)
         try:
-            fetched = _get_check(okareo, created["id"])
-            assert "version" in fetched
-            assert fetched["version"] == 1
+            fetched = okareo.get_check(str(created.id))
+            assert fetched.additional_properties.get("version") == 1
         finally:
-            _delete_check(okareo, created["id"], name)
+            okareo.delete_check(cast(UUID, created.id), name)
 
     def test_get_all_checks_version_on_custom_check(
         self, okareo: Okareo, rnd: str
     ) -> None:
         name = f"ver-list-custom-{rnd}"
-        created = _create_check(okareo, name)
+        created = _sdk_check(okareo, name)
         try:
-            all_checks = _get_all_checks(okareo)
-            match = [c for c in all_checks if c["id"] == created["id"]]
-            assert (
-                len(match) == 1
-            ), f"Custom check not found in list by id={created['id']}"
-            assert match[0]["version"] is not None
+            all_checks = okareo.get_all_checks()
+            match = [c for c in all_checks if str(c.id) == str(created.id)]
+            assert len(match) == 1, f"Custom check not found in list by id={created.id}"
+            assert match[0].additional_properties.get("version") is not None
         finally:
-            _delete_check(okareo, created["id"], name)
+            okareo.delete_check(cast(UUID, created.id), name)
 
 
 # ---- Group 2: Versioning behavior -------------------------------------------
@@ -151,44 +96,48 @@ class TestVersionFieldsOnResponses:
 class TestVersioningBehavior:
     def test_config_change_creates_new_version(self, okareo: Okareo, rnd: str) -> None:
         name = f"ver-bump-{rnd}"
-        v1 = _create_check(okareo, name)
-        v1_id = v1["id"]
+        v1 = _sdk_check(okareo, name)
+        v1_id = str(v1.id)
         try:
-            v2 = _create_check(
+            v2 = _sdk_check(
                 okareo,
                 name,
                 prompt_template="Return True if model_output is valid JSON. Output: {model_output}",
             )
-            assert v2["version"] == 2
-            assert v2["id"] != v1_id
+            assert v2.additional_properties.get("version") == 2
+            assert str(v2.id) != v1_id
         finally:
-            _delete_check(okareo, v1_id, name)
+            okareo.delete_check(UUID(v1_id), name)
 
     def test_same_config_returns_existing_version(
         self, okareo: Okareo, rnd: str
     ) -> None:
         name = f"ver-no-bump-same-{rnd}"
-        v1 = _create_check(okareo, name, prompt_template="Same prompt {model_output}")
+        v1 = _sdk_check(okareo, name, prompt_template="Same prompt {model_output}")
         try:
-            v1_again = _create_check(
+            v1_again = _sdk_check(
                 okareo, name, prompt_template="Same prompt {model_output}"
             )
-            assert v1_again["id"] == v1["id"]
-            assert v1_again["version"] == v1["version"]
+            assert str(v1_again.id) == str(v1.id)
+            assert v1_again.additional_properties.get(
+                "version"
+            ) == v1.additional_properties.get("version")
         finally:
-            _delete_check(okareo, v1["id"], name)
+            okareo.delete_check(cast(UUID, v1.id), name)
 
     def test_description_only_change_no_new_version(
         self, okareo: Okareo, rnd: str
     ) -> None:
         name = f"ver-desc-only-{rnd}"
-        v1 = _create_check(okareo, name, description="original description")
+        v1 = _sdk_check(okareo, name, description="original description")
         try:
-            updated = _create_check(okareo, name, description="updated description")
-            assert updated["id"] == v1["id"]
-            assert updated["version"] == v1["version"]
+            updated = _sdk_check(okareo, name, description="updated description")
+            assert str(updated.id) == str(v1.id)
+            assert updated.additional_properties.get(
+                "version"
+            ) == v1.additional_properties.get("version")
         finally:
-            _delete_check(okareo, v1["id"], name)
+            okareo.delete_check(cast(UUID, v1.id), name)
 
 
 # ---- Group 3: Version history -----------------------------------------------
@@ -199,44 +148,44 @@ class TestVersionHistory:
         self, okareo: Okareo, rnd: str
     ) -> None:
         name = f"ver-hist-latest-{rnd}"
-        v1 = _create_check(okareo, name)
-        v1_id = v1["id"]
-        v2 = _create_check(
+        v1 = _sdk_check(okareo, name)
+        v1_id = str(v1.id)
+        v2 = _sdk_check(
             okareo,
             name,
             prompt_template="Different config for v2 {model_output}",
         )
         try:
-            all_checks = _get_all_checks(okareo, all_versions=False)
-            matches = [c for c in all_checks if c["name"] == name]
+            all_checks = okareo.get_all_checks()
+            matches = [c for c in all_checks if c.name == name]
             assert (
                 len(matches) == 1
             ), f"Expected 1 entry for '{name}', got {len(matches)}"
-            assert matches[0]["id"] == v2["id"]
+            assert str(matches[0].id) == str(v2.id)
         finally:
-            _delete_check(okareo, v1_id, name)
+            okareo.delete_check(UUID(v1_id), name)
 
     def test_get_all_checks_all_versions_returns_history(
         self, okareo: Okareo, rnd: str
     ) -> None:
         name = f"ver-hist-all-{rnd}"
-        v1 = _create_check(okareo, name)
-        v1_id = v1["id"]
-        _create_check(
+        v1 = _sdk_check(okareo, name)
+        v1_id = str(v1.id)
+        _sdk_check(
             okareo,
             name,
             prompt_template="Different config for v2 history {model_output}",
         )
         try:
-            all_checks = _get_all_checks(okareo, all_versions=True)
-            matches = [c for c in all_checks if c["name"] == name]
+            all_checks = okareo.get_all_checks(all_versions=True)
+            matches = [c for c in all_checks if c.name == name]
             assert (
                 len(matches) == 2
             ), f"Expected 2 entries for '{name}', got {len(matches)}"
-            versions = {c["version"] for c in matches}
+            versions = {c.additional_properties.get("version") for c in matches}
             assert versions == {1, 2}
         finally:
-            _delete_check(okareo, v1_id, name)
+            okareo.delete_check(UUID(v1_id), name)
 
 
 # ---- Group 4: Delete archives all versions ----------------------------------
@@ -245,32 +194,32 @@ class TestVersionHistory:
 class TestDeleteArchivesAllVersions:
     def test_delete_archives_all_versions(self, okareo: Okareo, rnd: str) -> None:
         name = f"ver-del-all-{rnd}"
-        v1 = _create_check(okareo, name)
-        v1_id = v1["id"]
-        _create_check(
+        v1 = _sdk_check(okareo, name)
+        v1_id = str(v1.id)
+        _sdk_check(
             okareo,
             name,
             prompt_template="Different config for v2 delete {model_output}",
         )
-        _delete_check(okareo, v1_id, name)
+        okareo.delete_check(UUID(v1_id), name)
 
-        all_checks = _get_all_checks(okareo, all_versions=True)
-        matches = [c for c in all_checks if c["name"] == name]
+        all_checks = okareo.get_all_checks(all_versions=True)
+        matches = [c for c in all_checks if c.name == name]
         assert len(matches) == 0, f"Expected 0 entries after delete, got {len(matches)}"
 
     def test_deleted_check_name_reusable(self, okareo: Okareo, rnd: str) -> None:
         name = f"ver-del-reuse-{rnd}"
-        original = _create_check(okareo, name)
-        _delete_check(okareo, original["id"], name)
+        original = _sdk_check(okareo, name)
+        okareo.delete_check(cast(UUID, original.id), name)
 
-        reused = _create_check(
+        reused = _sdk_check(
             okareo, name, prompt_template="Reused name check {model_output}"
         )
         try:
-            assert reused["version"] == 1
-            assert reused["id"] != original["id"]
+            assert reused.additional_properties.get("version") == 1
+            assert str(reused.id) != str(original.id)
         finally:
-            _delete_check(okareo, reused["id"], name)
+            okareo.delete_check(cast(UUID, reused.id), name)
 
 
 # ---- Group 5: UUID-based check selection in runs ----------------------------
@@ -401,6 +350,101 @@ class TestUuidCheckSelection:
                             ), f"Expected check_id={v1_id} (v1) but got {cv_data['check_id']}"
         finally:
             okareo.delete_check(cast(UUID, v1.id), cast(str, v1.name))
+
+
+# ---- Group 6: get_check by name / version -----------------------------------
+
+
+class TestSDKGetCheckByName:
+    def test_get_check_by_uuid_backward_compat(self, okareo: Okareo, rnd: str) -> None:
+        name = f"sdk-getchk-uuid-{rnd}"
+        created = _sdk_check(okareo, name)
+        try:
+            fetched = okareo.get_check(str(created.id))
+            assert str(fetched.id) == str(created.id)
+            assert fetched.name == name
+        finally:
+            okareo.delete_check(cast(UUID, created.id), name)
+
+    def test_get_check_by_name_returns_latest(self, okareo: Okareo, rnd: str) -> None:
+        name = f"sdk-getchk-latest-{rnd}"
+        v1 = _sdk_check(okareo, name)
+        v1_id = str(v1.id)
+        v2 = _sdk_check(
+            okareo,
+            name,
+            prompt_template="SDK get_check latest v2 {model_output}",
+        )
+        try:
+            fetched = okareo.get_check(name)
+            assert str(fetched.id) == str(v2.id)
+            assert fetched.additional_properties.get("version") == 2
+        finally:
+            okareo.delete_check(UUID(v1_id), name)
+
+    def test_get_check_by_name_and_version(self, okareo: Okareo, rnd: str) -> None:
+        name = f"sdk-getchk-pinned-{rnd}"
+        v1 = _sdk_check(okareo, name)
+        v1_id = str(v1.id)
+        _sdk_check(
+            okareo,
+            name,
+            prompt_template="SDK get_check pinned v2 {model_output}",
+        )
+        try:
+            fetched = okareo.get_check(name, version=1)
+            assert str(fetched.id) == v1_id
+            assert fetched.additional_properties.get("version") == 1
+        finally:
+            okareo.delete_check(UUID(v1_id), name)
+
+    def test_get_check_by_name_not_found(self, okareo: Okareo, rnd: str) -> None:
+        with pytest.raises(ValueError, match="No check found"):
+            okareo.get_check(f"nonexistent-check-{rnd}")
+
+    def test_get_check_by_name_version_not_found(
+        self, okareo: Okareo, rnd: str
+    ) -> None:
+        name = f"sdk-getchk-badver-{rnd}"
+        created = _sdk_check(okareo, name)
+        try:
+            with pytest.raises(ValueError, match="version 99"):
+                okareo.get_check(name, version=99)
+        finally:
+            okareo.delete_check(cast(UUID, created.id), name)
+
+
+# ---- Group 7: create_or_update_check with tags ------------------------------
+
+
+class TestSDKCheckTags:
+    def test_create_check_with_tags(self, okareo: Okareo, rnd: str) -> None:
+        name = f"sdk-tags-create-{rnd}"
+        check = _sdk_check(okareo, name, tags=["prod", "v1"])
+        try:
+            assert check.additional_properties.get("tags") == ["prod", "v1"]
+        finally:
+            okareo.delete_check(cast(UUID, check.id), name)
+
+    def test_fetch_check_tags_persist(self, okareo: Okareo, rnd: str) -> None:
+        name = f"sdk-tags-persist-{rnd}"
+        created = _sdk_check(okareo, name, tags=["staging"])
+        try:
+            fetched = okareo.get_check(str(created.id))
+            assert fetched.additional_properties.get("tags") == ["staging"]
+        finally:
+            okareo.delete_check(cast(UUID, created.id), name)
+
+    def test_list_checks_show_tags(self, okareo: Okareo, rnd: str) -> None:
+        name = f"sdk-tags-list-{rnd}"
+        created = _sdk_check(okareo, name, tags=["release"])
+        try:
+            checks = okareo.get_all_checks()
+            match = [c for c in checks if c.name == name]
+            assert len(match) == 1
+            assert match[0].additional_properties.get("tags") == ["release"]
+        finally:
+            okareo.delete_check(cast(UUID, created.id), name)
 
 
 # ---- internal model for Group 5 tests ---------------------------------------
