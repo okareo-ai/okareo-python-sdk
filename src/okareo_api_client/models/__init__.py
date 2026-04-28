@@ -17,13 +17,26 @@ from .check_validate_request import CheckValidateRequest
 from .check_validate_request_check_config import CheckValidateRequestCheckConfig
 from .check_validate_request_check_type import CheckValidateRequestCheckType
 from .check_validate_response import CheckValidateResponse
+from .check_value_item import CheckValueItem
+from .check_value_item_check_metadata_type_0 import CheckValueItemCheckMetadataType0
 from .compare_test_runs_payload import CompareTestRunsPayload
-from .compare_test_runs_response import CompareTestRunsResponse
 from .comparison_operator import ComparisonOperator
+from .conversation_audio import ConversationAudio
+from .conversation_audio_type import ConversationAudioType
+from .conversation_ingest_request import ConversationIngestRequest
+from .conversation_ingest_request_metadata import ConversationIngestRequestMetadata
+from .conversation_ingest_response import ConversationIngestResponse
+from .conversation_ingest_response_conversations_item import ConversationIngestResponseConversationsItem
+from .conversation_turn import ConversationTurn
 from .create_group_v0_groups_post_body_type_0 import CreateGroupV0GroupsPostBodyType0
 from .create_group_v0_groups_post_response_create_group_v0_groups_post import (
     CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost,
 )
+from .create_provider_integration_request import CreateProviderIntegrationRequest
+from .create_provider_integration_request_metadata import CreateProviderIntegrationRequestMetadata
+from .create_provider_integration_request_provider import CreateProviderIntegrationRequestProvider
+from .create_provider_integration_request_secrets import CreateProviderIntegrationRequestSecrets
+from .create_provider_integration_request_webhook_auth_type import CreateProviderIntegrationRequestWebhookAuthType
 from .create_trace_eval_v0_groups_group_id_trace_eval_post_response_create_trace_eval_v0_groups_group_id_trace_eval_post import (
     CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost,
 )
@@ -103,6 +116,7 @@ from .get_test_run_trace_metrics_v0_test_runs_test_run_id_trace_metrics_get_resp
 )
 from .group_schema import GroupSchema
 from .http_validation_error import HTTPValidationError
+from .ingest_payload import IngestPayload
 from .ingestion_summary import IngestionSummary
 from .metric_detail import MetricDetail
 from .metrics import Metrics
@@ -120,8 +134,16 @@ from .o_auth_token_response import OAuthTokenResponse
 from .pass_fail_check_result import PassFailCheckResult
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
+from .provider_integration_response import ProviderIntegrationResponse
+from .provider_integration_response_metadata import ProviderIntegrationResponseMetadata
+from .provider_integration_response_provider import ProviderIntegrationResponseProvider
+from .provider_integration_response_webhook_auth_type import ProviderIntegrationResponseWebhookAuthType
+from .provider_integration_status_response import ProviderIntegrationStatusResponse
+from .provider_integration_status_response_status import ProviderIntegrationStatusResponseStatus
 from .receive_traces_response import ReceiveTracesResponse
-from .scenario_comparison_item import ScenarioComparisonItem
+from .rotate_provider_integration_secrets_request import RotateProviderIntegrationSecretsRequest
+from .rotate_provider_integration_secrets_request_secrets import RotateProviderIntegrationSecretsRequestSecrets
+from .sample_count import SampleCount
 from .scenario_data_poin_response import ScenarioDataPoinResponse
 from .scenario_data_poin_response_meta_data_type_0 import ScenarioDataPoinResponseMetaDataType0
 from .scenario_set_create import ScenarioSetCreate
@@ -132,6 +154,8 @@ from .scenario_set_response import ScenarioSetResponse
 from .scenario_set_update import ScenarioSetUpdate
 from .scenario_type import ScenarioType
 from .score_check_result import ScoreCheckResult
+from .secret_summary_response import SecretSummaryResponse
+from .secret_summary_response_statuses import SecretSummaryResponseStatuses
 from .seed_data import SeedData
 from .setup_filter_group_notification_v0_setup_filter_group_notification_post_response_setup_filter_group_notification_v0_setup_filter_group_notification_post import (
     SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost,
@@ -185,6 +209,10 @@ from .twilio_call_status_v0_voice_twilio_status_post_response_twilio_call_status
 from .twilio_recording_callback_v0_voice_twilio_recording_post_response_twilio_recording_callback_v0_voice_twilio_recording_post import (
     TwilioRecordingCallbackV0VoiceTwilioRecordingPostResponseTwilioRecordingCallbackV0VoiceTwilioRecordingPost,
 )
+from .update_provider_integration_request import UpdateProviderIntegrationRequest
+from .update_provider_integration_request_metadata import UpdateProviderIntegrationRequestMetadata
+from .update_provider_integration_status_request import UpdateProviderIntegrationStatusRequest
+from .update_provider_integration_status_request_status import UpdateProviderIntegrationStatusRequestStatus
 from .update_test_data_point_payload import UpdateTestDataPointPayload
 from .usage_metrics_period import UsageMetricsPeriod
 from .usage_metrics_response import UsageMetricsResponse
@@ -211,11 +239,24 @@ __all__ = (
     "CheckValidateRequestCheckConfig",
     "CheckValidateRequestCheckType",
     "CheckValidateResponse",
+    "CheckValueItem",
+    "CheckValueItemCheckMetadataType0",
     "CompareTestRunsPayload",
-    "CompareTestRunsResponse",
     "ComparisonOperator",
+    "ConversationAudio",
+    "ConversationAudioType",
+    "ConversationIngestRequest",
+    "ConversationIngestRequestMetadata",
+    "ConversationIngestResponse",
+    "ConversationIngestResponseConversationsItem",
+    "ConversationTurn",
     "CreateGroupV0GroupsPostBodyType0",
     "CreateGroupV0GroupsPostResponseCreateGroupV0GroupsPost",
+    "CreateProviderIntegrationRequest",
+    "CreateProviderIntegrationRequestMetadata",
+    "CreateProviderIntegrationRequestProvider",
+    "CreateProviderIntegrationRequestSecrets",
+    "CreateProviderIntegrationRequestWebhookAuthType",
     "CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost",
     "DatapointField",
     "DatapointFilterCreate",
@@ -280,6 +321,7 @@ __all__ = (
     "GroupSchema",
     "HTTPValidationError",
     "IngestionSummary",
+    "IngestPayload",
     "MetricDetail",
     "Metrics",
     "ModelInfo",
@@ -294,8 +336,16 @@ __all__ = (
     "PassFailCheckResult",
     "ProjectResponse",
     "ProjectSchema",
+    "ProviderIntegrationResponse",
+    "ProviderIntegrationResponseMetadata",
+    "ProviderIntegrationResponseProvider",
+    "ProviderIntegrationResponseWebhookAuthType",
+    "ProviderIntegrationStatusResponse",
+    "ProviderIntegrationStatusResponseStatus",
     "ReceiveTracesResponse",
-    "ScenarioComparisonItem",
+    "RotateProviderIntegrationSecretsRequest",
+    "RotateProviderIntegrationSecretsRequestSecrets",
+    "SampleCount",
     "ScenarioDataPoinResponse",
     "ScenarioDataPoinResponseMetaDataType0",
     "ScenarioSetCreate",
@@ -306,6 +356,8 @@ __all__ = (
     "ScenarioSetUpdate",
     "ScenarioType",
     "ScoreCheckResult",
+    "SecretSummaryResponse",
+    "SecretSummaryResponseStatuses",
     "SeedData",
     "SetupFilterGroupNotificationV0SetupFilterGroupNotificationPostResponseSetupFilterGroupNotificationV0SetupFilterGroupNotificationPost",
     "SlackOauthCallbackV0SlackGetResponseSlackOauthCallbackV0SlackGet",
@@ -345,6 +397,10 @@ __all__ = (
     "TestRunType",
     "TwilioCallStatusV0VoiceTwilioStatusPostResponseTwilioCallStatusV0VoiceTwilioStatusPost",
     "TwilioRecordingCallbackV0VoiceTwilioRecordingPostResponseTwilioRecordingCallbackV0VoiceTwilioRecordingPost",
+    "UpdateProviderIntegrationRequest",
+    "UpdateProviderIntegrationRequestMetadata",
+    "UpdateProviderIntegrationStatusRequest",
+    "UpdateProviderIntegrationStatusRequestStatus",
     "UpdateTestDataPointPayload",
     "UsageMetricsPeriod",
     "UsageMetricsResponse",

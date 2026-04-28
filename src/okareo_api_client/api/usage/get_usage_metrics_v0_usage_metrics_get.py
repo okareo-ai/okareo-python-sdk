@@ -18,6 +18,7 @@ def _get_kwargs(
     end_date: None | str | Unset = UNSET,
     project_id: None | Unset | UUID = UNSET,
     precision: UsagePrecision | Unset = UNSET,
+    timezone: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -50,6 +51,13 @@ def _get_kwargs(
         json_precision = precision.value
 
     params["precision"] = json_precision
+
+    json_timezone: None | str | Unset
+    if isinstance(timezone, Unset):
+        json_timezone = UNSET
+    else:
+        json_timezone = timezone
+    params["timezone"] = json_timezone
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -99,6 +107,7 @@ def sync_detailed(
     end_date: None | str | Unset = UNSET,
     project_id: None | Unset | UUID = UNSET,
     precision: UsagePrecision | Unset = UNSET,
+    timezone: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | UsageMetricsResponse]:
     """Get usage metrics
 
@@ -140,6 +149,8 @@ def sync_detailed(
         project_id (None | Unset | UUID): Optional project filter - only include metrics for this
             project
         precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        timezone (None | str | Unset): IANA timezone name for period grouping (e.g.
+            America/Los_Angeles). Defaults to America/Los_Angeles.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -154,6 +165,7 @@ def sync_detailed(
         end_date=end_date,
         project_id=project_id,
         precision=precision,
+        timezone=timezone,
     )
 
     response = client.get_httpx_client().request(
@@ -170,6 +182,7 @@ def sync(
     end_date: None | str | Unset = UNSET,
     project_id: None | Unset | UUID = UNSET,
     precision: UsagePrecision | Unset = UNSET,
+    timezone: None | str | Unset = UNSET,
 ) -> HTTPValidationError | UsageMetricsResponse | None:
     """Get usage metrics
 
@@ -211,6 +224,8 @@ def sync(
         project_id (None | Unset | UUID): Optional project filter - only include metrics for this
             project
         precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        timezone (None | str | Unset): IANA timezone name for period grouping (e.g.
+            America/Los_Angeles). Defaults to America/Los_Angeles.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -226,6 +241,7 @@ def sync(
         end_date=end_date,
         project_id=project_id,
         precision=precision,
+        timezone=timezone,
     ).parsed
 
 
@@ -236,6 +252,7 @@ async def asyncio_detailed(
     end_date: None | str | Unset = UNSET,
     project_id: None | Unset | UUID = UNSET,
     precision: UsagePrecision | Unset = UNSET,
+    timezone: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | UsageMetricsResponse]:
     """Get usage metrics
 
@@ -277,6 +294,8 @@ async def asyncio_detailed(
         project_id (None | Unset | UUID): Optional project filter - only include metrics for this
             project
         precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        timezone (None | str | Unset): IANA timezone name for period grouping (e.g.
+            America/Los_Angeles). Defaults to America/Los_Angeles.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -291,6 +310,7 @@ async def asyncio_detailed(
         end_date=end_date,
         project_id=project_id,
         precision=precision,
+        timezone=timezone,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -305,6 +325,7 @@ async def asyncio(
     end_date: None | str | Unset = UNSET,
     project_id: None | Unset | UUID = UNSET,
     precision: UsagePrecision | Unset = UNSET,
+    timezone: None | str | Unset = UNSET,
 ) -> HTTPValidationError | UsageMetricsResponse | None:
     """Get usage metrics
 
@@ -346,6 +367,8 @@ async def asyncio(
         project_id (None | Unset | UUID): Optional project filter - only include metrics for this
             project
         precision (UsagePrecision | Unset): Time period precision for usage metrics.
+        timezone (None | str | Unset): IANA timezone name for period grouping (e.g.
+            America/Los_Angeles). Defaults to America/Los_Angeles.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -362,5 +385,6 @@ async def asyncio(
             end_date=end_date,
             project_id=project_id,
             precision=precision,
+            timezone=timezone,
         )
     ).parsed

@@ -10,6 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.check_value_item import CheckValueItem
     from ..models.test_data_point_item_metric_value import TestDataPointItemMetricValue
 
 
@@ -27,6 +28,7 @@ class TestDataPointItem:
         metric_value (TestDataPointItemMetricValue):
         tags (list[str] | None | Unset):
         checks (Any | Unset):
+        check_values (list[CheckValueItem] | None | Unset):
     """
 
     id: UUID
@@ -36,6 +38,7 @@ class TestDataPointItem:
     metric_value: TestDataPointItemMetricValue
     tags: list[str] | None | Unset = UNSET
     checks: Any | Unset = UNSET
+    check_values: list[CheckValueItem] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,6 +63,18 @@ class TestDataPointItem:
 
         checks = self.checks
 
+        check_values: list[dict[str, Any]] | None | Unset
+        if isinstance(self.check_values, Unset):
+            check_values = UNSET
+        elif isinstance(self.check_values, list):
+            check_values = []
+            for check_values_type_0_item_data in self.check_values:
+                check_values_type_0_item = check_values_type_0_item_data.to_dict()
+                check_values.append(check_values_type_0_item)
+
+        else:
+            check_values = self.check_values
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -75,11 +90,14 @@ class TestDataPointItem:
             field_dict["tags"] = tags
         if checks is not UNSET:
             field_dict["checks"] = checks
+        if check_values is not UNSET:
+            field_dict["check_values"] = check_values
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.check_value_item import CheckValueItem
         from ..models.test_data_point_item_metric_value import TestDataPointItemMetricValue
 
         d = dict(src_dict)
@@ -112,6 +130,28 @@ class TestDataPointItem:
 
         checks = d.pop("checks", UNSET)
 
+        def _parse_check_values(data: object) -> list[CheckValueItem] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                check_values_type_0 = []
+                _check_values_type_0 = data
+                for check_values_type_0_item_data in _check_values_type_0:
+                    check_values_type_0_item = CheckValueItem.from_dict(check_values_type_0_item_data)
+
+                    check_values_type_0.append(check_values_type_0_item)
+
+                return check_values_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[CheckValueItem] | None | Unset, data)
+
+        check_values = _parse_check_values(d.pop("check_values", UNSET))
+
         test_data_point_item = cls(
             id=id,
             scenario_data_point_id=scenario_data_point_id,
@@ -120,6 +160,7 @@ class TestDataPointItem:
             metric_value=metric_value,
             tags=tags,
             checks=checks,
+            check_values=check_values,
         )
 
         test_data_point_item.additional_properties = d

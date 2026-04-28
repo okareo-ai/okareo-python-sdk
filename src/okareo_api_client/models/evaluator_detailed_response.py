@@ -34,6 +34,8 @@ class EvaluatorDetailedResponse:
         warning (None | str | Unset):
         check_config (EvaluatorDetailedResponseCheckConfigType0 | None | Unset):
         is_predefined (bool | None | Unset):  Default: False.
+        version (int | None | Unset):
+        tags (list[str] | None | Unset):
     """
 
     id: None | Unset | UUID = UNSET
@@ -48,6 +50,8 @@ class EvaluatorDetailedResponse:
     warning: None | str | Unset = UNSET
     check_config: EvaluatorDetailedResponseCheckConfigType0 | None | Unset = UNSET
     is_predefined: bool | None | Unset = False
+    version: int | None | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -133,6 +137,21 @@ class EvaluatorDetailedResponse:
         else:
             is_predefined = self.is_predefined
 
+        version: int | None | Unset
+        if isinstance(self.version, Unset):
+            version = UNSET
+        else:
+            version = self.version
+
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
+            tags = self.tags
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -160,6 +179,10 @@ class EvaluatorDetailedResponse:
             field_dict["check_config"] = check_config
         if is_predefined is not UNSET:
             field_dict["is_predefined"] = is_predefined
+        if version is not UNSET:
+            field_dict["version"] = version
+        if tags is not UNSET:
+            field_dict["tags"] = tags
 
         return field_dict
 
@@ -309,6 +332,32 @@ class EvaluatorDetailedResponse:
 
         is_predefined = _parse_is_predefined(d.pop("is_predefined", UNSET))
 
+        def _parse_version(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        version = _parse_version(d.pop("version", UNSET))
+
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
+
         evaluator_detailed_response = cls(
             id=id,
             project_id=project_id,
@@ -322,6 +371,8 @@ class EvaluatorDetailedResponse:
             warning=warning,
             check_config=check_config,
             is_predefined=is_predefined,
+            version=version,
+            tags=tags,
         )
 
         evaluator_detailed_response.additional_properties = d

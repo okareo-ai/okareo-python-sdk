@@ -16,17 +16,14 @@ T = TypeVar("T", bound="CompareTestRunsPayload")
 class CompareTestRunsPayload:
     """
     Attributes:
-        control_test_run_id (None | Unset | UUID): ID of the control (baseline) test run
-        variant_test_run_id (None | Unset | UUID): ID of the variant (candidate) test run
-        alpha (float | None | Unset): Significance threshold for statistical tests
-        include_scenarios (bool | None | Unset): When False, skip building paired scenario data to reduce response size
-            Default: True.
+        control_test_run_id (None | Unset | UUID):
+        variant_test_run_id (None | Unset | UUID):
+        alpha (float | None | Unset):
     """
 
     control_test_run_id: None | Unset | UUID = UNSET
     variant_test_run_id: None | Unset | UUID = UNSET
     alpha: float | None | Unset = UNSET
-    include_scenarios: bool | None | Unset = True
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,12 +49,6 @@ class CompareTestRunsPayload:
         else:
             alpha = self.alpha
 
-        include_scenarios: bool | None | Unset
-        if isinstance(self.include_scenarios, Unset):
-            include_scenarios = UNSET
-        else:
-            include_scenarios = self.include_scenarios
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -67,8 +58,6 @@ class CompareTestRunsPayload:
             field_dict["variant_test_run_id"] = variant_test_run_id
         if alpha is not UNSET:
             field_dict["alpha"] = alpha
-        if include_scenarios is not UNSET:
-            field_dict["include_scenarios"] = include_scenarios
 
         return field_dict
 
@@ -119,20 +108,10 @@ class CompareTestRunsPayload:
 
         alpha = _parse_alpha(d.pop("alpha", UNSET))
 
-        def _parse_include_scenarios(data: object) -> bool | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(bool | None | Unset, data)
-
-        include_scenarios = _parse_include_scenarios(d.pop("include_scenarios", UNSET))
-
         compare_test_runs_payload = cls(
             control_test_run_id=control_test_run_id,
             variant_test_run_id=variant_test_run_id,
             alpha=alpha,
-            include_scenarios=include_scenarios,
         )
 
         compare_test_runs_payload.additional_properties = d

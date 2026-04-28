@@ -1,32 +1,30 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
-from ...models.find_test_data_point_payload import FindTestDataPointPayload
-from ...models.full_data_point_item import FullDataPointItem
+from ...models.http_validation_error import HTTPValidationError
 from ...types import Response
 
 
 def _get_kwargs(
+    integration_id: UUID,
     *,
-    body: FindTestDataPointPayload,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v0/find_test_data_points",
+        "method": "delete",
+        "url": "/v0/integration/{integration_id}".format(
+            integration_id=quote(str(integration_id), safe=""),
+        ),
     }
-
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -34,34 +32,13 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | list[FullDataPointItem] | None:
-    if response.status_code == 201:
-        response_201 = []
-        _response_201 = response.json()
-        for response_201_item_data in _response_201:
-            response_201_item = FullDataPointItem.from_dict(response_201_item_data)
-
-            response_201.append(response_201_item)
-
-        return response_201
-
-    if response.status_code == 400:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
-
-    if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
-
-        return response_401
-
-    if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
-
-        return response_404
+) -> Any | HTTPValidationError | None:
+    if response.status_code == 204:
+        response_204 = cast(Any, None)
+        return response_204
 
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
 
@@ -73,7 +50,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | list[FullDataPointItem]]:
+) -> Response[Any | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -83,32 +60,27 @@ def _build_response(
 
 
 def sync_detailed(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
     api_key: str,
-) -> Response[ErrorResponse | list[FullDataPointItem]]:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> Response[Any | HTTPValidationError]:
+    """Delete Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[FullDataPointItem]]
+        Response[Any | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        integration_id=integration_id,
         api_key=api_key,
     )
 
@@ -120,64 +92,54 @@ def sync_detailed(
 
 
 def sync(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
     api_key: str,
-) -> ErrorResponse | list[FullDataPointItem] | None:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> Any | HTTPValidationError | None:
+    """Delete Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[FullDataPointItem]
+        Any | HTTPValidationError
     """
 
     return sync_detailed(
+        integration_id=integration_id,
         client=client,
-        body=body,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
     api_key: str,
-) -> Response[ErrorResponse | list[FullDataPointItem]]:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> Response[Any | HTTPValidationError]:
+    """Delete Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[FullDataPointItem]]
+        Response[Any | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        integration_id=integration_id,
         api_key=api_key,
     )
 
@@ -187,34 +149,29 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
     api_key: str,
-) -> ErrorResponse | list[FullDataPointItem] | None:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> Any | HTTPValidationError | None:
+    """Delete Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[FullDataPointItem]
+        Any | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
+            integration_id=integration_id,
             client=client,
-            body=body,
             api_key=api_key,
         )
     ).parsed
