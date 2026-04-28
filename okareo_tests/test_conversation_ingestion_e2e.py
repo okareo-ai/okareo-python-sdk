@@ -101,37 +101,6 @@ def _has_content(value: object) -> bool:
     return bool(value)
 
 
-@pytest.fixture(scope="module")
-def test_monitor(okareo_client: Okareo, test_project: str) -> str:
-    """Create a test monitor with transcript_fidelity check."""
-    # TODO: This requires the monitor/filter group API which may need to be added
-    # For now, this is a placeholder showing the intended structure
-
-    # Create a check for transcript fidelity
-    check_name = f"test_transcript_fidelity_{random_string(8)}"
-
-    # Note: The actual API for creating monitors may differ
-    # This is the conceptual structure we want to test
-    monitor_config = {
-        "name": f"test_monitor_{random_string(8)}",
-        "project_id": test_project,
-        "filter": {
-            "tags": ["e2e-test"],
-        },
-        "checks": [
-            {
-                "type": "transcript_fidelity",
-                "name": check_name,
-                "threshold": 4.0,
-            }
-        ],
-    }
-
-    # Placeholder - actual implementation depends on monitor API
-    # return monitor_id
-    pytest.skip("Monitor creation API not yet implemented in SDK")
-
-
 class TestConversationIngestionE2E:
     """End-to-end tests for conversation ingestion and monitoring."""
 
