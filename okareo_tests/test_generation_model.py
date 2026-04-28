@@ -95,7 +95,7 @@ def test_claude3(
         rnd,
         okareo,
         article_scenario_set,
-        model_id="claude-3-haiku-20240307",
+        model_id="claude-haiku-4-5",
         api_key=os.environ["ANTHROPIC_API_KEY"],
         system_prompt="You are an AI assistant with a flair for dramatic storytelling and exaggeration.",
         user_prompt="Transform this mundane topic into a very brief dramatic story of heroic proportions: {scenario_input}",
