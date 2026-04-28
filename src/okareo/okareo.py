@@ -946,7 +946,7 @@ class Okareo:
     def get_check(
         self,
         check_id: Union[str, UUID],
-        version: Optional[int] = None,
+        version: Union[str, int, None] = None,
     ) -> EvaluatorDetailedResponse:
         """
         Fetch details for a specific check by UUID or by name.
@@ -955,8 +955,9 @@ class Okareo:
             check_id: A check UUID (str or UUID object) **or** a check name
                 (str).  When a name is given the method resolves it to a UUID
                 via the list endpoint.
-            version: Optional version number.  Only used when *check_id* is a
-                name.  ``None`` means "latest version".
+            version: Optional version number or the string ``"latest"``.
+                Only used when *check_id* is a name.  ``None`` and
+                ``"latest"`` both resolve to the most recent version.
 
         Returns:
             EvaluatorDetailedResponse: The detailed response for the specified check.
@@ -971,13 +972,17 @@ class Okareo:
 
         # By name (latest version)
         check = okareo_client.get_check("my_check")
+        check = okareo_client.get_check("my_check", version="latest")
 
         # By name + pinned version
         check = okareo_client.get_check("my_check", version=1)
         ```
         """
+        if isinstance(version, str) and version == "latest":
+            version = None
+
         # If an explicit version is requested, treat check_id as a name.
-        if version is not None:
+        if isinstance(version, int):
             return self._get_check_by_name(str(check_id), version)
 
         # Try to interpret as UUID first.
