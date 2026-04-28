@@ -284,7 +284,7 @@ class TestUuidCheckSelection:
                 elif hasattr(tdp, "additional_properties"):
                     cv_list = tdp.additional_properties.get("check_values")
 
-                if cv_list is not None:
+                if isinstance(cv_list, list):
                     for cv in cv_list:
                         cv_data = cv if isinstance(cv, dict) else cv.to_dict()
                         if cv_data.get("name") == check_name:
@@ -341,7 +341,7 @@ class TestUuidCheckSelection:
                 elif hasattr(tdp, "additional_properties"):
                     check_values = tdp.additional_properties.get("check_values")
 
-                if check_values is not None:
+                if isinstance(check_values, list):
                     for cv in check_values:
                         cv_data = cv if isinstance(cv, dict) else cv.to_dict()
                         if cv_data.get("name") == check_name:

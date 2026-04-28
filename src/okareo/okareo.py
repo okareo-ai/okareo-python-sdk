@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 import warnings
-from typing import Any, Dict, List, Optional, TypedDict, Union
+from typing import Any, Dict, List, Optional, TypedDict, Union, cast
 from uuid import UUID
 
 import httpx
@@ -91,7 +91,6 @@ from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.target_model_response import TargetModelResponse
-from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
 from okareo_api_client.models.voice_driver_model_response import (
@@ -671,7 +670,7 @@ class Okareo:
 
     def find_test_data_points(
         self, test_data_point_payload: FindTestDataPointPayload
-    ) -> Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
+    ) -> Union[List[FullDataPointItem], ErrorResponse]:
         """
         Fetch the test run data points associated as specified in the payload.
 
@@ -679,8 +678,8 @@ class Okareo:
             test_data_point_payload (FindTestDataPointPayload): The payload specifying the test data point search criteria.
 
         Returns:
-            Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
-                A list of test or full data point items, or an error response.
+            Union[List[FullDataPointItem], ErrorResponse]:
+                A list of full data point items, or an error response.
 
         Example:
         ```python
@@ -894,15 +893,12 @@ class Okareo:
         check_deprecation_warning()
         return self.get_all_checks()
 
-    def get_all_checks(
-        self, all_versions: bool = False
-    ) -> List[EvaluatorBriefResponse]:
+    def get_all_checks(self) -> List[EvaluatorBriefResponse]:
         """
         Fetch all available checks.
 
         Args:
-            all_versions: If True, return all versions of every check (full
-                version history).  Defaults to False (latest version only).
+            None
 
         Returns:
             List[EvaluatorBriefResponse]: A list of EvaluatorBriefResponse objects representing all available checks.
@@ -912,24 +908,8 @@ class Okareo:
         checks = okareo_client.get_all_checks()
         for check in checks:
             print(check.name, check.id)
-
-        # Include full version history
-        all_checks = okareo_client.get_all_checks(all_versions=True)
         ```
         """
-        if all_versions:
-            resp = self.client.get_httpx_client().request(
-                method="get",
-                url="/v0/checks",
-                params={"all-versions": "true"},
-                headers={"api-key": self.api_key},
-            )
-            if resp.status_code not in (200, 201):
-                raise ValueError(
-                    f"Failed to fetch checks: {resp.status_code} {resp.text}"
-                )
-            return [EvaluatorBriefResponse.from_dict(item) for item in resp.json()]
-
         response = get_all_checks_v0_checks_get.sync(
             client=self.client,
             api_key=self.api_key,
@@ -943,105 +923,32 @@ class Okareo:
         check_deprecation_warning()
         return self.get_check(evaluator_id)
 
-    def get_check(
-        self,
-        check_id: Union[str, UUID],
-        version: Optional[int] = None,
-    ) -> EvaluatorDetailedResponse:
+    def get_check(self, check_id: Union[str, UUID]) -> EvaluatorDetailedResponse:
         """
-        Fetch details for a specific check by UUID or by name.
+        Fetch details for a specific check.
 
         Args:
-            check_id: A check UUID (str or UUID object) **or** a check name
-                (str).  When a name is given the method resolves it to a UUID
-                via the list endpoint.
-            version: Optional version number.  Only used when *check_id* is a
-                name.  ``None`` means "latest version".
+            check_id (str): The ID of the check to fetch.
 
         Returns:
             EvaluatorDetailedResponse: The detailed response for the specified check.
 
-        Raises:
-            ValueError: If no check matches the given name/version.
-
         Example:
         ```python
-        # By UUID (existing behaviour)
-        check = okareo_client.get_check("your_check_uuid")
-
-        # By name (latest version)
-        check = okareo_client.get_check("my_check")
-
-        # By name + pinned version
-        check = okareo_client.get_check("my_check", version=1)
+        check_id = "your_check_id"
+        check_details = okareo_client.get_check(check_id)
+        print(check_details)
         ```
         """
-        # If an explicit version is requested, treat check_id as a name.
-        if version is not None:
-            return self._get_check_by_name(str(check_id), version)
+        response = get_check_v0_check_check_id_get.sync(
+            client=self.client,
+            api_key=self.api_key,
+            check_id=UUID(check_id) if isinstance(check_id, str) else check_id,
+        )
+        self.validate_response(response)
+        assert isinstance(response, EvaluatorDetailedResponse)
 
-        # Try to interpret as UUID first.
-        uuid_val: Optional[UUID] = None
-        if isinstance(check_id, UUID):
-            uuid_val = check_id
-        else:
-            try:
-                uuid_val = UUID(check_id)
-            except ValueError:
-                pass
-
-        if uuid_val is not None:
-            response = get_check_v0_check_check_id_get.sync(
-                client=self.client,
-                api_key=self.api_key,
-                check_id=uuid_val,
-            )
-            self.validate_response(response)
-            assert isinstance(response, EvaluatorDetailedResponse)
-            return response
-
-        # It's a name — resolve to the latest version.
-        return self._get_check_by_name(str(check_id))
-
-    def _get_check_by_name(
-        self, name: str, version: Optional[int] = None
-    ) -> EvaluatorDetailedResponse:
-        """Resolve a check name (+ optional version) to a detailed response."""
-
-        def _row_version(row: EvaluatorBriefResponse) -> int:
-            v = row.additional_properties.get("version")
-            return v if isinstance(v, int) else 0
-
-        all_checks = self.get_all_checks(all_versions=True)
-        matches = [c for c in all_checks if c.name == name]
-        if not matches:
-            raise ValueError(f"No check found with name '{name}'")
-
-        if version is not None:
-            exact = [
-                c for c in matches if c.additional_properties.get("version") == version
-            ]
-            if not exact:
-                version_nums: list[int] = []
-                for c in matches:
-                    v = c.additional_properties.get("version")
-                    if isinstance(v, int):
-                        version_nums.append(v)
-                available_versions = sorted(version_nums)
-                raise ValueError(
-                    f"No check found with name '{name}' and version {version}. "
-                    f"Available versions: {available_versions}"
-                )
-            brief = exact[0]
-        else:
-            brief = max(matches, key=_row_version)
-
-        brief_id = brief.id
-        if isinstance(brief_id, UUID):
-            return self.get_check(brief_id)
-        if isinstance(brief_id, str):
-            return self.get_check(brief_id)
-        raise ValueError(f"Check '{name}' has no id")
+        return response
 
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
         check_deprecation_warning()
@@ -1073,11 +980,7 @@ class Okareo:
         return "Check deletion was successful"
 
     def create_or_update_check(
-        self,
-        name: str,
-        description: str,
-        check: BaseCheck,
-        tags: Optional[List[str]] = None,
+        self, name: str, description: str, check: BaseCheck
     ) -> EvaluatorDetailedResponse:
         """
         Create or update an existing check. If the check with 'name' already exists, then this method will update the existing check. Otherwise, this method will create a new check.
@@ -1086,7 +989,6 @@ class Okareo:
             name (str): The unique name of the check to create or update.
             description (str): A human-readable description of the check.
             check (BaseCheck): An instance of BaseCheck containing the check configuration.
-            tags: Optional list of string tags to associate with the check.
 
         Returns:
             EvaluatorDetailedResponse: The detailed response from the evaluator after creating or updating the check.
@@ -1099,16 +1001,18 @@ class Okareo:
         ```python
         from okareo.checks import CheckOutputType, ModelBasedCheck
 
+        # Define your custom check; here we use a ModelBasedCheck as an example.
+        # Mustache template is used in the prompt to pipe scenario input and generated output
         my_check = ModelBasedCheck(
             prompt_template="Only output the number of words in the following text: {scenario_input} {generation}",
             check_type=CheckOutputType.PASS_FAIL,
         )
 
+        # Create or update the check
         response = okareo_client.create_or_update_check(
             name="my_word_count_check",
             description="Custom check for counting combined total number of words in input and output.",
-            check=my_check,
-            tags=["prod", "v1"],
+            check=my_check
         )
 
         print(response)
@@ -1117,15 +1021,12 @@ class Okareo:
         check_config = CheckCreateUpdateSchemaCheckConfigType0.from_dict(
             check.check_config()
         )
-        body = CheckCreateUpdateSchema(
-            name=name, description=description, check_config=check_config
-        )
-        if tags is not None:
-            body["tags"] = tags
         response = check_create_or_update_v0_check_create_or_update_post.sync(
             client=self.client,
             api_key=self.api_key,
-            body=body,
+            body=CheckCreateUpdateSchema(
+                name=name, description=description, check_config=check_config
+            ),
         )
         self.validate_response(response)
         assert isinstance(response, EvaluatorDetailedResponse)
@@ -1646,7 +1547,7 @@ class Okareo:
             ]
         )
         ```
-
+        
         Example (with MUT association):
         ```python
         okareo.ingest_conversations(
@@ -1670,7 +1571,7 @@ class Okareo:
             "project_id": str(project_id),
             "conversations": conversations,
         }
-
+        
         # Only include mut_id if provided
         if mut_id is not None:
             payload["mut_id"] = str(mut_id)
@@ -1683,4 +1584,8 @@ class Okareo:
         )
         response.raise_for_status()
 
-        return response.json()
+        json_response = response.json()
+        if not isinstance(json_response, dict):
+            raise TypeError("Expected JSON object response from conversations ingest")
+
+        return cast(Dict[str, Any], json_response)
