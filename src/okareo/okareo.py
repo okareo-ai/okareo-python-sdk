@@ -1488,3 +1488,101 @@ class Okareo:
             project_id=UUID(str(project_id)) if project_id else UNSET,
         )
         return self.create_scenario_set(create_request)
+
+    def ingest_conversations(
+        self,
+        project_id: Union[str, UUID],
+        conversations: List[Dict[str, Any]],
+        mut_id: Union[str, UUID, None] = None,
+    ) -> Dict[str, Any]:
+        """Ingest voice conversations for monitoring.
+
+        Accepts one or more conversations from voice platforms (Retell, Twilio, VAPI, etc.)
+        and enqueues them for async processing. Each conversation's turns will become
+        Datapoint rows, and configured monitors will automatically match and run checks.
+
+        This is the monitoring path, not the simulation path. No ScenarioSets are created.
+        The mut_id is optional - when omitted, datapoints are created without MUT association
+        and rely entirely on monitor/filter group matching.
+
+        Args:
+            project_id: Okareo project ID.
+            conversations: List of conversation dictionaries, each containing:
+                - source_platform (str): Platform source ('retell', 'twilio', 'vapi', 'elevenlabs', or 'custom')
+                - call_id (str): Platform-specific call identifier
+                - context_token (str, optional): Context token for correlation (defaults to call_id)
+                - audio (dict, optional): Preferred audio shape with one of:
+                    - {"type": "url", "url": "https://..."}
+                    - {"type": "voice_file_id", "voice_file_id": "uuid"}
+                    - {"type": "inline_b64", "inline_b64": "..."}
+                - recording_url (str, optional): Legacy compatibility alias for audio URL
+                - recording_bytes_b64 (str, optional): Legacy compatibility alias for inline base64 audio
+                - transcript (list, optional): Pre-parsed transcript as list of turns with 'role' and 'content'
+                - diarization (bool, optional): When transcript is absent, controls whether Okareo runs diarization + ASR. Defaults to True.
+                - metadata (dict, optional): Platform-specific metadata
+                - tags (list, optional): Tags for monitor matching
+                - first_turn (str, optional): For audio-only diarization ('user' or 'assistant' spoke first, defaults to 'assistant')
+            mut_id: Optional model under test ID. If not provided, datapoints are created without MUT association (monitoring path).
+
+        Returns:
+            Dict with 'status' and list of conversation identifiers.
+
+        Raises:
+            httpx.HTTPStatusError: If the API returns an error status.
+
+        Example (monitoring-only, no MUT):
+        ```python
+        okareo.ingest_conversations(
+            project_id="your-project-id",
+            conversations=[
+                {
+                    "source_platform": "retell",
+                    "call_id": "call-123",
+                    "audio": {
+                        "type": "url",
+                        "url": "https://retell.ai/recordings/call-123.mp3",
+                    },
+                    "tags": ["support", "billing"],
+                    "metadata": {"customer_id": "cust-456"}
+                }
+            ]
+        )
+        ```
+        
+        Example (with MUT association):
+        ```python
+        okareo.ingest_conversations(
+            project_id="your-project-id",
+            mut_id="your-mut-id",
+            conversations=[
+                {
+                    "source_platform": "custom",
+                    "call_id": "call-456",
+                    "transcript": [
+                        {"role": "user", "content": "Hello", "timestamp_ms": 0},
+                        {"role": "assistant", "content": "Hi, how can I help?", "timestamp_ms": 1000}
+                    ],
+                }
+            ]
+        )
+        ```
+        """
+        url = f"{BASE_URL}/v0/conversations/ingest"
+        payload = {
+            "project_id": str(project_id),
+            "conversations": conversations,
+        }
+        
+        # Only include mut_id if provided
+        if mut_id is not None:
+            payload["mut_id"] = str(mut_id)
+
+        response = httpx.post(
+            url,
+            headers={"api-key": self.api_key, "Content-Type": "application/json"},
+            json=payload,
+            timeout=120,
+        )
+        response.raise_for_status()
+
+        return response.json()
