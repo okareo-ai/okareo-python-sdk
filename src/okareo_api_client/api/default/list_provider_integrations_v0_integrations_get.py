@@ -1,32 +1,42 @@
 from http import HTTPStatus
 from typing import Any
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
-from ...models.find_test_data_point_payload import FindTestDataPointPayload
-from ...models.full_data_point_item import FullDataPointItem
-from ...types import Response
+from ...models.http_validation_error import HTTPValidationError
+from ...models.provider_integration_response import ProviderIntegrationResponse
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: FindTestDataPointPayload,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
+    params: dict[str, Any] = {}
+
+    json_project_id: None | str | Unset
+    if isinstance(project_id, Unset):
+        json_project_id = UNSET
+    elif isinstance(project_id, UUID):
+        json_project_id = str(project_id)
+    else:
+        json_project_id = project_id
+    params["project_id"] = json_project_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v0/find_test_data_points",
+        "method": "get",
+        "url": "/v0/integrations",
+        "params": params,
     }
-
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -34,34 +44,19 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | list[FullDataPointItem] | None:
-    if response.status_code == 201:
-        response_201 = []
-        _response_201 = response.json()
-        for response_201_item_data in _response_201:
-            response_201_item = FullDataPointItem.from_dict(response_201_item_data)
+) -> HTTPValidationError | list[ProviderIntegrationResponse] | None:
+    if response.status_code == 200:
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = ProviderIntegrationResponse.from_dict(response_200_item_data)
 
-            response_201.append(response_201_item)
+            response_200.append(response_200_item)
 
-        return response_201
-
-    if response.status_code == 400:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
-
-    if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
-
-        return response_401
-
-    if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
-
-        return response_404
+        return response_200
 
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
 
@@ -73,7 +68,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | list[FullDataPointItem]]:
+) -> Response[HTTPValidationError | list[ProviderIntegrationResponse]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -85,30 +80,25 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> Response[ErrorResponse | list[FullDataPointItem]]:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> Response[HTTPValidationError | list[ProviderIntegrationResponse]]:
+    """List Provider Integrations
 
     Args:
+        project_id (None | Unset | UUID): Filter by project id
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[FullDataPointItem]]
+        Response[HTTPValidationError | list[ProviderIntegrationResponse]]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -122,31 +112,26 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> ErrorResponse | list[FullDataPointItem] | None:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> HTTPValidationError | list[ProviderIntegrationResponse] | None:
+    """List Provider Integrations
 
     Args:
+        project_id (None | Unset | UUID): Filter by project id
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[FullDataPointItem]
+        HTTPValidationError | list[ProviderIntegrationResponse]
     """
 
     return sync_detailed(
         client=client,
-        body=body,
+        project_id=project_id,
         api_key=api_key,
     ).parsed
 
@@ -154,30 +139,25 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> Response[ErrorResponse | list[FullDataPointItem]]:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> Response[HTTPValidationError | list[ProviderIntegrationResponse]]:
+    """List Provider Integrations
 
     Args:
+        project_id (None | Unset | UUID): Filter by project id
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[FullDataPointItem]]
+        Response[HTTPValidationError | list[ProviderIntegrationResponse]]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -189,32 +169,27 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: FindTestDataPointPayload,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
-) -> ErrorResponse | list[FullDataPointItem] | None:
-    """Find Test Data Points
-
-     Find Test Data Points
-
-    Returns:
-        a list of Test Data Points with full datapoint details
+) -> HTTPValidationError | list[ProviderIntegrationResponse] | None:
+    """List Provider Integrations
 
     Args:
+        project_id (None | Unset | UUID): Filter by project id
         api_key (str):
-        body (FindTestDataPointPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[FullDataPointItem]
+        HTTPValidationError | list[ProviderIntegrationResponse]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            body=body,
+            project_id=project_id,
             api_key=api_key,
         )
     ).parsed

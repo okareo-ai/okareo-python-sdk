@@ -20,11 +20,12 @@ T = TypeVar("T", bound="CheckCreateUpdateSchema")
 class CheckCreateUpdateSchema:
     """
     Attributes:
-        check_id (None | Unset | UUID): When provided, update existing check by ID (allows name change)
+        check_id (None | Unset | UUID): When provided, update existing check by ID
         name (None | str | Unset):
         description (None | str | Unset):
         check_config (CheckCreateUpdateSchemaCheckConfigType0 | None | Unset):
         project_id (None | Unset | UUID): ID of the project
+        tags (list[str] | None | Unset):
     """
 
     check_id: None | Unset | UUID = UNSET
@@ -32,6 +33,7 @@ class CheckCreateUpdateSchema:
     description: None | str | Unset = UNSET
     check_config: CheckCreateUpdateSchemaCheckConfigType0 | None | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
+    tags: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -73,6 +75,15 @@ class CheckCreateUpdateSchema:
         else:
             project_id = self.project_id
 
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
+            tags = self.tags
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -86,6 +97,8 @@ class CheckCreateUpdateSchema:
             field_dict["check_config"] = check_config
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if tags is not UNSET:
+            field_dict["tags"] = tags
 
         return field_dict
 
@@ -164,12 +177,30 @@ class CheckCreateUpdateSchema:
 
         project_id = _parse_project_id(d.pop("project_id", UNSET))
 
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
+
         check_create_update_schema = cls(
             check_id=check_id,
             name=name,
             description=description,
             check_config=check_config,
             project_id=project_id,
+            tags=tags,
         )
 
         check_create_update_schema.additional_properties = d

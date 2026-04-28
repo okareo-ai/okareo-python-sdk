@@ -7,19 +7,27 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
 from ...models.evaluator_brief_response import EvaluatorBriefResponse
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
+    all_versions: bool | Unset = False,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
+    params: dict[str, Any] = {}
+
+    params["all-versions"] = all_versions
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v0/checks",
+        "params": params,
     }
 
     _kwargs["headers"] = headers
@@ -79,6 +87,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
+    all_versions: bool | Unset = False,
     api_key: str,
 ) -> Response[ErrorResponse | list[EvaluatorBriefResponse]]:
     """Get All Checks
@@ -89,6 +98,7 @@ def sync_detailed(
         a list of requested checks
 
     Args:
+        all_versions (bool | Unset):  Default: False.
         api_key (str):
 
     Raises:
@@ -100,6 +110,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
+        all_versions=all_versions,
         api_key=api_key,
     )
 
@@ -113,6 +124,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
+    all_versions: bool | Unset = False,
     api_key: str,
 ) -> ErrorResponse | list[EvaluatorBriefResponse] | None:
     """Get All Checks
@@ -123,6 +135,7 @@ def sync(
         a list of requested checks
 
     Args:
+        all_versions (bool | Unset):  Default: False.
         api_key (str):
 
     Raises:
@@ -135,6 +148,7 @@ def sync(
 
     return sync_detailed(
         client=client,
+        all_versions=all_versions,
         api_key=api_key,
     ).parsed
 
@@ -142,6 +156,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
+    all_versions: bool | Unset = False,
     api_key: str,
 ) -> Response[ErrorResponse | list[EvaluatorBriefResponse]]:
     """Get All Checks
@@ -152,6 +167,7 @@ async def asyncio_detailed(
         a list of requested checks
 
     Args:
+        all_versions (bool | Unset):  Default: False.
         api_key (str):
 
     Raises:
@@ -163,6 +179,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
+        all_versions=all_versions,
         api_key=api_key,
     )
 
@@ -174,6 +191,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
+    all_versions: bool | Unset = False,
     api_key: str,
 ) -> ErrorResponse | list[EvaluatorBriefResponse] | None:
     """Get All Checks
@@ -184,6 +202,7 @@ async def asyncio(
         a list of requested checks
 
     Args:
+        all_versions (bool | Unset):  Default: False.
         api_key (str):
 
     Raises:
@@ -197,6 +216,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
+            all_versions=all_versions,
             api_key=api_key,
         )
     ).parsed

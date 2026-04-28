@@ -12,6 +12,7 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.check_value_item import CheckValueItem
     from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
     from ..models.datapoint_list_item_checks_metadata_type_0 import DatapointListItemChecksMetadataType0
     from ..models.datapoint_list_item_checks_type_0 import DatapointListItemChecksType0
@@ -57,6 +58,7 @@ class DatapointListItem:
         result_tool_calls (list[DatapointListItemResultToolCallsType0Item] | None | Unset):
         result_embeddings (list[DatapointListItemResultEmbeddingsType0Item] | None | Unset):
         checks (DatapointListItemChecksType0 | None | Unset):
+        check_values (list[CheckValueItem] | None | Unset):
         checks_metadata (DatapointListItemChecksMetadataType0 | None | Unset):
         agent_metadata (Any | DatapointListItemAgentMetadataType0 | None | Unset):
         provider (None | str | Unset):
@@ -102,6 +104,7 @@ class DatapointListItem:
     result_tool_calls: list[DatapointListItemResultToolCallsType0Item] | None | Unset = UNSET
     result_embeddings: list[DatapointListItemResultEmbeddingsType0Item] | None | Unset = UNSET
     checks: DatapointListItemChecksType0 | None | Unset = UNSET
+    check_values: list[CheckValueItem] | None | Unset = UNSET
     checks_metadata: DatapointListItemChecksMetadataType0 | None | Unset = UNSET
     agent_metadata: Any | DatapointListItemAgentMetadataType0 | None | Unset = UNSET
     provider: None | str | Unset = UNSET
@@ -312,6 +315,18 @@ class DatapointListItem:
         else:
             checks = self.checks
 
+        check_values: list[dict[str, Any]] | None | Unset
+        if isinstance(self.check_values, Unset):
+            check_values = UNSET
+        elif isinstance(self.check_values, list):
+            check_values = []
+            for check_values_type_0_item_data in self.check_values:
+                check_values_type_0_item = check_values_type_0_item_data.to_dict()
+                check_values.append(check_values_type_0_item)
+
+        else:
+            check_values = self.check_values
+
         checks_metadata: dict[str, Any] | None | Unset
         if isinstance(self.checks_metadata, Unset):
             checks_metadata = UNSET
@@ -466,6 +481,8 @@ class DatapointListItem:
             field_dict["result_embeddings"] = result_embeddings
         if checks is not UNSET:
             field_dict["checks"] = checks
+        if check_values is not UNSET:
+            field_dict["check_values"] = check_values
         if checks_metadata is not UNSET:
             field_dict["checks_metadata"] = checks_metadata
         if agent_metadata is not UNSET:
@@ -499,6 +516,7 @@ class DatapointListItem:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.check_value_item import CheckValueItem
         from ..models.datapoint_list_item_agent_metadata_type_0 import DatapointListItemAgentMetadataType0
         from ..models.datapoint_list_item_checks_metadata_type_0 import DatapointListItemChecksMetadataType0
         from ..models.datapoint_list_item_checks_type_0 import DatapointListItemChecksType0
@@ -853,6 +871,28 @@ class DatapointListItem:
 
         checks = _parse_checks(d.pop("checks", UNSET))
 
+        def _parse_check_values(data: object) -> list[CheckValueItem] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                check_values_type_0 = []
+                _check_values_type_0 = data
+                for check_values_type_0_item_data in _check_values_type_0:
+                    check_values_type_0_item = CheckValueItem.from_dict(check_values_type_0_item_data)
+
+                    check_values_type_0.append(check_values_type_0_item)
+
+                return check_values_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[CheckValueItem] | None | Unset, data)
+
+        check_values = _parse_check_values(d.pop("check_values", UNSET))
+
         def _parse_checks_metadata(data: object) -> DatapointListItemChecksMetadataType0 | None | Unset:
             if data is None:
                 return data
@@ -1040,6 +1080,7 @@ class DatapointListItem:
             result_tool_calls=result_tool_calls,
             result_embeddings=result_embeddings,
             checks=checks,
+            check_values=check_values,
             checks_metadata=checks_metadata,
             agent_metadata=agent_metadata,
             provider=provider,

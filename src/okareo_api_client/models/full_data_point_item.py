@@ -10,6 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.check_value_item import CheckValueItem
     from ..models.full_data_point_item_baseline_metrics_type_0 import FullDataPointItemBaselineMetricsType0
     from ..models.full_data_point_item_checks_metadata_type_0 import FullDataPointItemChecksMetadataType0
     from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
@@ -46,6 +47,7 @@ class FullDataPointItem:
         error_code (None | str | Unset):
         error_type (None | str | Unset):
         context_token (None | str | Unset):
+        check_values (list[CheckValueItem] | None | Unset):
     """
 
     id: UUID
@@ -69,6 +71,7 @@ class FullDataPointItem:
     error_code: None | str | Unset = UNSET
     error_type: None | str | Unset = UNSET
     context_token: None | str | Unset = UNSET
+    check_values: list[CheckValueItem] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -205,6 +208,18 @@ class FullDataPointItem:
         else:
             context_token = self.context_token
 
+        check_values: list[dict[str, Any]] | None | Unset
+        if isinstance(self.check_values, Unset):
+            check_values = UNSET
+        elif isinstance(self.check_values, list):
+            check_values = []
+            for check_values_type_0_item_data in self.check_values:
+                check_values_type_0_item = check_values_type_0_item_data.to_dict()
+                check_values.append(check_values_type_0_item)
+
+        else:
+            check_values = self.check_values
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -249,11 +264,14 @@ class FullDataPointItem:
             field_dict["error_type"] = error_type
         if context_token is not UNSET:
             field_dict["context_token"] = context_token
+        if check_values is not UNSET:
+            field_dict["check_values"] = check_values
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.check_value_item import CheckValueItem
         from ..models.full_data_point_item_baseline_metrics_type_0 import FullDataPointItemBaselineMetricsType0
         from ..models.full_data_point_item_checks_metadata_type_0 import FullDataPointItemChecksMetadataType0
         from ..models.full_data_point_item_metric_value import FullDataPointItemMetricValue
@@ -490,6 +508,28 @@ class FullDataPointItem:
 
         context_token = _parse_context_token(d.pop("context_token", UNSET))
 
+        def _parse_check_values(data: object) -> list[CheckValueItem] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                check_values_type_0 = []
+                _check_values_type_0 = data
+                for check_values_type_0_item_data in _check_values_type_0:
+                    check_values_type_0_item = CheckValueItem.from_dict(check_values_type_0_item_data)
+
+                    check_values_type_0.append(check_values_type_0_item)
+
+                return check_values_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[CheckValueItem] | None | Unset, data)
+
+        check_values = _parse_check_values(d.pop("check_values", UNSET))
+
         full_data_point_item = cls(
             id=id,
             test_run_id=test_run_id,
@@ -512,6 +552,7 @@ class FullDataPointItem:
             error_code=error_code,
             error_type=error_type,
             context_token=context_token,
+            check_values=check_values,
         )
 
         full_data_point_item.additional_properties = d
