@@ -12,6 +12,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from tqdm import tqdm  # type: ignore
 
 from okareo.checks import BaseCheck
+from okareo.augmentations import Augmentation
 from okareo.model_under_test import Driver, Simulation, StopConfig, Target
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
@@ -1398,6 +1399,7 @@ class Okareo:
         checks_at_every_turn: Optional[bool] = False,
         concurrent_ask_probability: Optional[float] = 0.0,
         turn_transition_time: Optional[int] = 1000,
+        augmentation: Optional[Union[Augmentation, dict[str, Any]]] = None,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
         metrics_kwargs: Optional[dict] = None,
@@ -1447,6 +1449,7 @@ class Okareo:
             checks_at_every_turn=checks_at_every_turn,
             concurrent_ask_probability=concurrent_ask_probability,
             turn_transition_time=turn_transition_time,
+            augmentation=augmentation,
         )
 
         # create MUT object
