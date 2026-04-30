@@ -11,8 +11,8 @@ import pydantic
 from pydantic import BaseModel as PydanticBaseModel
 from tqdm import tqdm  # type: ignore
 
-from okareo.checks import BaseCheck
 from okareo.augmentations import Augmentation
+from okareo.checks import BaseCheck
 from okareo.model_under_test import Driver, Simulation, StopConfig, Target
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
@@ -311,9 +311,12 @@ class Okareo:
                     data["models"][params["type"]] = params
                 else:
                     data["models"][model.type] = model.params()
-            data, model_invoker, session_starter, session_ender = (
-                self._get_custom_model_invoker(data)
-            )
+            (
+                data,
+                model_invoker,
+                session_starter,
+                session_ender,
+            ) = self._get_custom_model_invoker(data)
         if project_id is not None:
             data["project_id"] = project_id
         request_body = ModelUnderTestSchema.from_dict(data)
@@ -1343,9 +1346,12 @@ class Okareo:
             target.target if isinstance(target.target, dict) else target.target.params()
         )
         data["models"][model["type"]] = model
-        data, model_invoker, session_starter, session_ender = (
-            self._get_custom_model_invoker(data)
-        )
+        (
+            data,
+            model_invoker,
+            session_starter,
+            session_ender,
+        ) = self._get_custom_model_invoker(data)
         if project_id is not None:
             data["project_id"] = project_id
         request_body = ModelUnderTestSchema.from_dict(data)
@@ -1409,7 +1415,6 @@ class Okareo:
         sensitive_fields: Union[List[str], None] = None,
         submit: Optional[bool] = False,
     ) -> TestRunItem:
-
         # create or update driver if needed
         if isinstance(driver, Driver):
             driver_model = self.create_or_update_driver(driver)

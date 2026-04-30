@@ -2135,7 +2135,7 @@ class Simulation:
             "turn_transition_time": self.turn_transition_time,
             "augmentation": (
                 self.augmentation.to_dict()
-                if hasattr(self.augmentation, "to_dict")
+                if isinstance(self.augmentation, Augmentation)
                 else self.augmentation
             ),
         }

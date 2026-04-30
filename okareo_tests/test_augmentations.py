@@ -3,6 +3,8 @@ from datetime import datetime
 from uuid import UUID
 
 import pytest
+from pytest_httpx import HTTPXMock
+
 from okareo.augmentations import (
     Augmentation,
     BackchannelAugmentation,
@@ -16,7 +18,6 @@ from okareo.model_under_test import OpenAIModel, Simulation, Target
 from okareo.okareo import Okareo
 from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
-from pytest_httpx import HTTPXMock
 
 MOCK_UUID = "0156f5d7-4ac4-4568-9d44-24750aa08d1a"
 
@@ -138,7 +139,7 @@ def test_run_simulation_serializes_augmentation_payload(
         scenario_id=UUID(MOCK_UUID),
         project_id=UUID(MOCK_UUID),
         name="scenario",
-        time_created=datetime.now().isoformat(),
+        time_created=datetime.now(),
         type_=ScenarioType.SEED,
     )
 

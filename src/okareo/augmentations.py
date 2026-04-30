@@ -6,7 +6,7 @@ Import these from ``okareo.augmentations`` and pass them into
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from attrs import asdict as _attrs_asdict
 from attrs import define as _attrs_define
@@ -45,8 +45,8 @@ class CAPAugmentation(AugmentationConfig):
             it to change runtime behavior.
     """
 
-    probability: Optional[float] = None
-    pause_ms: Optional[int] = None
+    probability: float | None = None
+    pause_ms: int | None = None
 
 
 @_attrs_define
@@ -61,9 +61,9 @@ class DirectedSpeechAugmentation(AugmentationConfig):
         gain_db: Gain reduction applied to off-mic speech.
     """
 
-    probability: Optional[float] = None
-    lpf_cutoff_hz: Optional[int] = None
-    gain_db: Optional[float] = None
+    probability: float | None = None
+    lpf_cutoff_hz: int | None = None
+    gain_db: float | None = None
 
 
 @_attrs_define
@@ -77,9 +77,9 @@ class NoiseAugmentation(AugmentationConfig):
         snr_db: Target signal-to-noise ratio in dB.
     """
 
-    probability: Optional[float] = None
-    profile: Optional[str] = None
-    snr_db: Optional[float] = None
+    probability: float | None = None
+    profile: str | None = None
+    snr_db: float | None = None
 
 
 @_attrs_define
@@ -93,8 +93,8 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
         voice: Voice identifier for the secondary speaker.
     """
 
-    probability: Optional[float] = None
-    voice: Optional[str] = None
+    probability: float | None = None
+    voice: str | None = None
 
 
 @_attrs_define
@@ -108,10 +108,10 @@ class BackchannelAugmentation(AugmentationConfig):
         max_offset_ms: Maximum delay before the injection fires.
     """
 
-    probability: Optional[float] = None
-    utterance: Optional[str] = None
-    min_offset_ms: Optional[int] = None
-    max_offset_ms: Optional[int] = None
+    probability: float | None = None
+    utterance: str | None = None
+    min_offset_ms: int | None = None
+    max_offset_ms: int | None = None
 
 
 @_attrs_define
@@ -127,11 +127,11 @@ class BargeInAugmentation(AugmentationConfig):
         max_offset_ms: Maximum delay before the injection fires.
     """
 
-    probability: Optional[float] = None
-    replacement_text: Optional[str] = None
-    utterance: Optional[str] = None
-    min_offset_ms: Optional[int] = None
-    max_offset_ms: Optional[int] = None
+    probability: float | None = None
+    replacement_text: str | None = None
+    utterance: str | None = None
+    min_offset_ms: int | None = None
+    max_offset_ms: int | None = None
 
 
 @_attrs_define
@@ -145,12 +145,12 @@ class Augmentation(_DictSerializable):
         ``Augmentation(noise=NoiseAugmentation(profile="cafeteria", snr_db=10))``
     """
 
-    cap: Optional[CAPAugmentation] = None
-    directed_speech: Optional[DirectedSpeechAugmentation] = None
-    noise: Optional[NoiseAugmentation] = None
-    secondary_speaker: Optional[SecondarySpeakerAugmentation] = None
-    backchannel: Optional[BackchannelAugmentation] = None
-    barge_in: Optional[BargeInAugmentation] = None
+    cap: CAPAugmentation | None = None
+    directed_speech: DirectedSpeechAugmentation | None = None
+    noise: NoiseAugmentation | None = None
+    secondary_speaker: SecondarySpeakerAugmentation | None = None
+    backchannel: BackchannelAugmentation | None = None
+    barge_in: BargeInAugmentation | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
