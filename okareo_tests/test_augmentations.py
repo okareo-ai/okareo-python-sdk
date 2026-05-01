@@ -67,6 +67,10 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
         secondary_speaker=SecondarySpeakerAugmentation(
             probability=0.2,
             voice="voice-id",
+            prompt="You are a nearby companion who occasionally adds a short interjection.",
+            lpf_cutoff_hz=800,
+            gain_db=-8.0,
+            inter_speaker_pause_ms=1000,
         ),
         backchannel=BackchannelAugmentation(probability=0.3),
         barge_in=BargeInAugmentation(probability=0.05, replacement_text="hold on"),
@@ -84,7 +88,14 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             "profile": "cafeteria",
             "snr_db": 10,
         },
-        "secondary_speaker": {"probability": 0.2, "voice": "voice-id"},
+        "secondary_speaker": {
+            "probability": 0.2,
+            "voice": "voice-id",
+            "prompt": "You are a nearby companion who occasionally adds a short interjection.",
+            "lpf_cutoff_hz": 800,
+            "gain_db": -8.0,
+            "inter_speaker_pause_ms": 1000,
+        },
         "backchannel": {"probability": 0.3},
         "barge_in": {"probability": 0.05, "replacement_text": "hold on"},
     }
