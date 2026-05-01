@@ -91,10 +91,21 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
             current server accepts it but does not yet use it to change runtime
             behavior.
         voice: Voice identifier for the secondary speaker.
+        prompt: Optional independent prompt for the secondary speaker.
+        lpf_cutoff_hz: Optional low-pass filter cutoff applied only to
+            the secondary speaker audio.
+        gain_db: Optional gain adjustment applied only to the
+            secondary speaker audio.
+        inter_speaker_pause_ms: Optional pause inserted between the primary
+            and secondary speaker audio segments.
     """
 
     probability: float | None = None
     voice: str | None = None
+    prompt: str | None = None
+    lpf_cutoff_hz: int | None = None
+    gain_db: float | None = None
+    inter_speaker_pause_ms: int | None = None
 
 
 @_attrs_define
