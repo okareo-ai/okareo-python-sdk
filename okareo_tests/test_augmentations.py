@@ -60,6 +60,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
         cap=CAPAugmentation(probability=0.3, pause_ms=1000),
         directed_speech=DirectedSpeechAugmentation(
             probability=0.3,
+            prompt="You are testing directed speech.",
             lpf_cutoff_hz=800,
             gain_db=-8.0,
         ),
@@ -80,6 +81,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
         "cap": {"probability": 0.3, "pause_ms": 1000},
         "directed_speech": {
             "probability": 0.3,
+            "prompt": "You are testing directed speech.",
             "lpf_cutoff_hz": 800,
             "gain_db": -8.0,
         },

@@ -57,11 +57,14 @@ class DirectedSpeechAugmentation(AugmentationConfig):
         probability: Optional illustrative field in the public SDK contract. The
             current server accepts it but does not yet use it to change runtime
             behavior.
+        prompt: System message injected into the driver's LLM call to steer
+            off-mic directed speech content.
         lpf_cutoff_hz: Low-pass filter cutoff used for off-mic speech.
         gain_db: Gain reduction applied to off-mic speech.
     """
 
     probability: float | None = None
+    prompt: str | None = None
     lpf_cutoff_hz: int | None = None
     gain_db: float | None = None
 
