@@ -184,20 +184,18 @@ def run_and_verify_augmentation(
         checks=["avg_turn_taking_latency"],
     )
 
-    assert isinstance(evaluation, TestRunItem), (
-        f"{aug_name}: expected TestRunItem, got {type(evaluation)}"
-    )
-    assert evaluation.id is not None, (
-        f"{aug_name}: test run should have an ID"
-    )
-    assert evaluation.status == "FINISHED", (
-        f"{aug_name}: expected FINISHED, got {evaluation.status}"
-    )
+    assert isinstance(
+        evaluation, TestRunItem
+    ), f"{aug_name}: expected TestRunItem, got {type(evaluation)}"
+    assert evaluation.id is not None, f"{aug_name}: test run should have an ID"
+    assert (
+        evaluation.status == "FINISHED"
+    ), f"{aug_name}: expected FINISHED, got {evaluation.status}"
 
     sim_params = extract_sim_params(evaluation)
-    assert "augmentation" in sim_params, (
-        f"{aug_name}: simulation_params should contain 'augmentation'"
-    )
+    assert (
+        "augmentation" in sim_params
+    ), f"{aug_name}: simulation_params should contain 'augmentation'"
     aug_payload = sim_params["augmentation"]
     assert aug_name in aug_payload, (
         f"{aug_name}: augmentation payload should contain key '{aug_name}', "
@@ -207,9 +205,9 @@ def run_and_verify_augmentation(
     expected = aug_config.to_dict()[aug_name]
     actual = aug_payload[aug_name]
     for param_key, param_value in expected.items():
-        assert param_key in actual, (
-            f"{aug_name}.{param_key}: missing from server response"
-        )
+        assert (
+            param_key in actual
+        ), f"{aug_name}.{param_key}: missing from server response"
         assert actual[param_key] == param_value, (
             f"{aug_name}.{param_key}: expected {param_value}, "
             f"got {actual[param_key]}"
