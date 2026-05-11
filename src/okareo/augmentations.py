@@ -57,8 +57,7 @@ class DirectedSpeechAugmentation(AugmentationConfig):
         probability: Optional illustrative field in the public SDK contract. The
             current server accepts it but does not yet use it to change runtime
             behavior.
-        prompt: System message injected into the driver's LLM call to steer
-            off-mic directed speech content.
+        prompt: Optional independent prompt for the directed speech content.
         lpf_cutoff_hz: Low-pass filter cutoff used for off-mic speech.
         gain_db: Gain reduction applied to off-mic speech.
     """
@@ -135,6 +134,7 @@ class BargeInAugmentation(AugmentationConfig):
     Arguments:
         probability: Chance of injecting a turn-consuming interruption.
         replacement_text: Public contract field for the replacement utterance.
+        prompt: Optional independent prompt for the barge-in content.
         utterance: Optional low-level override for the injected text. When both
             are provided, the server currently prefers ``utterance``.
         min_offset_ms: Minimum delay before the injection fires.
@@ -143,6 +143,7 @@ class BargeInAugmentation(AugmentationConfig):
 
     probability: float | None = None
     replacement_text: str | None = None
+    prompt: str | None = None
     utterance: str | None = None
     min_offset_ms: int | None = None
     max_offset_ms: int | None = None

@@ -60,7 +60,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
         cap=CAPAugmentation(probability=0.3, pause_ms=1000),
         directed_speech=DirectedSpeechAugmentation(
             probability=0.3,
-            prompt="You are testing directed speech.",
+            prompt="Your dog is eating your lunch. Tell him to stop.",
             lpf_cutoff_hz=800,
             gain_db=-8.0,
         ),
@@ -74,14 +74,18 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             inter_speaker_pause_ms=1000,
         ),
         backchannel=BackchannelAugmentation(probability=0.3),
-        barge_in=BargeInAugmentation(probability=0.05, replacement_text="hold on"),
+        barge_in=BargeInAugmentation(
+            probability=0.05,
+            replacement_text="hold on",
+            prompt="Interrupt the speaker and get them to pause.",
+        ),
     )
 
     assert augmentation.to_dict() == {
         "cap": {"probability": 0.3, "pause_ms": 1000},
         "directed_speech": {
             "probability": 0.3,
-            "prompt": "You are testing directed speech.",
+            "prompt": "Your dog is eating your lunch. Tell him to stop.",
             "lpf_cutoff_hz": 800,
             "gain_db": -8.0,
         },
@@ -99,7 +103,11 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             "inter_speaker_pause_ms": 1000,
         },
         "backchannel": {"probability": 0.3},
-        "barge_in": {"probability": 0.05, "replacement_text": "hold on"},
+        "barge_in": {
+            "probability": 0.05,
+            "replacement_text": "hold on",
+            "prompt": "Interrupt the speaker and get them to pause.",
+        },
     }
 
 
