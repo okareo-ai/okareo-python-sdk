@@ -895,12 +895,13 @@ class Okareo:
         check_deprecation_warning()
         return self.get_all_checks()
 
-    def get_all_checks(self) -> List[EvaluatorBriefResponse]:
+    def get_all_checks(self, all_versions: bool = False) -> List[EvaluatorBriefResponse]:
         """
         Fetch all available checks.
 
         Args:
-            None
+            all_versions: If True, return all versions of every check (full
+                version history). Defaults to False (latest version only).
 
         Returns:
             List[EvaluatorBriefResponse]: A list of EvaluatorBriefResponse objects representing all available checks.
@@ -910,10 +911,14 @@ class Okareo:
         checks = okareo_client.get_all_checks()
         for check in checks:
             print(check.name, check.id)
+
+        # Include full version history
+        all_checks = okareo_client.get_all_checks(all_versions=True)
         ```
         """
         response = get_all_checks_v0_checks_get.sync(
             client=self.client,
+            all_versions=all_versions,
             api_key=self.api_key,
         )
         self.validate_response(response)
@@ -986,6 +991,48 @@ class Okareo:
 
         # It's a name — resolve to the latest version.
         return self._get_check_by_name(str(check_id))
+
+    def _get_check_by_name(
+        self, name: str, version: Optional[int] = None
+    ) -> EvaluatorDetailedResponse:
+        """Resolve a check name (+ optional version) to a detailed response."""
+
+        def _row_version(row: EvaluatorBriefResponse) -> int:
+            value = row.additional_properties.get("version")
+            return value if isinstance(value, int) else 0
+
+        all_checks = self.get_all_checks(all_versions=True)
+        matches = [check for check in all_checks if check.name == name]
+        if not matches:
+            raise ValueError(f"No check found with name '{name}'")
+
+        if version is not None:
+            exact = [
+                check
+                for check in matches
+                if check.additional_properties.get("version") == version
+            ]
+            if not exact:
+                version_nums: list[int] = []
+                for check in matches:
+                    value = check.additional_properties.get("version")
+                    if isinstance(value, int):
+                        version_nums.append(value)
+                available_versions = sorted(version_nums)
+                raise ValueError(
+                    f"No check found with name '{name}' and version {version}. "
+                    f"Available versions: {available_versions}"
+                )
+            brief = exact[0]
+        else:
+            brief = max(matches, key=_row_version)
+
+        brief_id = brief.id
+        if isinstance(brief_id, UUID):
+            return self.get_check(brief_id)
+        if isinstance(brief_id, str):
+            return self.get_check(brief_id)
+        raise ValueError(f"Check '{name}' has no id")
 
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
         check_deprecation_warning()
