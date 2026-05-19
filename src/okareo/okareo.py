@@ -1019,45 +1019,54 @@ class Okareo:
     ) -> EvaluatorDetailedResponse:
         """Resolve a check name (+ optional version) to a detailed response."""
 
-        def _read_version(row: EvaluatorBriefResponse) -> Optional[int]:
-            if isinstance(row.version, int):
-                return row.version
-            legacy = row.additional_properties.get("version")
-            if isinstance(legacy, int):
-                return legacy
-            return None
-
-        def _row_version(row: EvaluatorBriefResponse) -> int:
-            value = _read_version(row)
-            return value if value is not None else 0
-
         all_checks = self.get_all_checks(all_versions=True)
         matches = [c for c in all_checks if c.name == name]
         if not matches:
             raise ValueError(f"No check found with name '{name}'")
+        brief = self._select_check_by_version(
+            name=name, matches=matches, version=version
+        )
+        return self.get_check(self._check_brief_id(brief, name))
 
-        if version is not None:
-            exact = [c for c in matches if _read_version(c) == version]
-            if not exact:
-                version_nums: list[int] = []
-                for c in matches:
-                    value = _read_version(c)
-                    if value is not None:
-                        version_nums.append(value)
-                available_versions = sorted(version_nums)
-                raise ValueError(
-                    f"No check found with name '{name}' and version {version}. "
-                    f"Available versions: {available_versions}"
-                )
-            brief = exact[0]
-        else:
-            brief = max(matches, key=_row_version)
+    def _read_check_version(self, row: EvaluatorBriefResponse) -> Optional[int]:
+        if isinstance(row.version, int):
+            return row.version
+        legacy = row.additional_properties.get("version")
+        if isinstance(legacy, int):
+            return legacy
+        return None
 
-        brief_id = brief.id
-        if isinstance(brief_id, UUID):
-            return self.get_check(brief_id)
-        if isinstance(brief_id, str):
-            return self.get_check(brief_id)
+    def _select_check_by_version(
+        self,
+        name: str,
+        matches: List[EvaluatorBriefResponse],
+        version: Optional[int],
+    ) -> EvaluatorBriefResponse:
+        if version is None:
+            return max(
+                matches,
+                key=lambda row: self._read_check_version(row) or 0,
+            )
+
+        exact = [c for c in matches if self._read_check_version(c) == version]
+        if exact:
+            return exact[0]
+
+        available_versions = sorted(
+            value
+            for value in (self._read_check_version(c) for c in matches)
+            if value is not None
+        )
+        raise ValueError(
+            f"No check found with name '{name}' and version {version}. "
+            f"Available versions: {available_versions}"
+        )
+
+    def _check_brief_id(
+        self, brief: EvaluatorBriefResponse, name: str
+    ) -> Union[str, UUID]:
+        if isinstance(brief.id, (UUID, str)):
+            return brief.id
         raise ValueError(f"Check '{name}' has no id")
 
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
