@@ -93,6 +93,7 @@ from okareo_api_client.models.scenario_set_response import ScenarioSetResponse
 from okareo_api_client.models.scenario_type import ScenarioType
 from okareo_api_client.models.seed_data import SeedData
 from okareo_api_client.models.target_model_response import TargetModelResponse
+from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.models.test_run_type import TestRunType
 from okareo_api_client.models.voice_driver_model_response import (
@@ -672,7 +673,7 @@ class Okareo:
 
     def find_test_data_points(
         self, test_data_point_payload: FindTestDataPointPayload
-    ) -> Union[List[FullDataPointItem], ErrorResponse]:
+    ) -> Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
         """
         Fetch the test run data points associated as specified in the payload.
 
@@ -680,8 +681,8 @@ class Okareo:
             test_data_point_payload (FindTestDataPointPayload): The payload specifying the test data point search criteria.
 
         Returns:
-            Union[List[FullDataPointItem], ErrorResponse]:
-                A list of full data point items, or an error response.
+            Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
+                A list of test or full data point items, or an error response.
 
         Example:
         ```python
@@ -895,13 +896,15 @@ class Okareo:
         check_deprecation_warning()
         return self.get_all_checks()
 
-    def get_all_checks(self, all_versions: bool = False) -> List[EvaluatorBriefResponse]:
+    def get_all_checks(
+        self, all_versions: bool = False
+    ) -> List[EvaluatorBriefResponse]:
         """
         Fetch all available checks.
 
         Args:
             all_versions: If True, return all versions of every check (full
-                version history). Defaults to False (latest version only).
+                version history).  Defaults to False (latest version only).
 
         Returns:
             List[EvaluatorBriefResponse]: A list of EvaluatorBriefResponse objects representing all available checks.
@@ -916,9 +919,21 @@ class Okareo:
         all_checks = okareo_client.get_all_checks(all_versions=True)
         ```
         """
+        if all_versions:
+            resp = self.client.get_httpx_client().request(
+                method="get",
+                url="/v0/checks",
+                params={"all-versions": "true"},
+                headers={"api-key": self.api_key},
+            )
+            if resp.status_code not in (200, 201):
+                raise ValueError(
+                    f"Failed to fetch checks: {resp.status_code} {resp.text}"
+                )
+            return [EvaluatorBriefResponse.from_dict(item) for item in resp.json()]
+
         response = get_all_checks_v0_checks_get.sync(
             client=self.client,
-            all_versions=all_versions,
             api_key=self.api_key,
         )
         self.validate_response(response)
@@ -936,7 +951,7 @@ class Okareo:
         version: Union[str, int, None] = None,
     ) -> EvaluatorDetailedResponse:
         """
-        Fetch details for a specific check.
+        Fetch details for a specific check by UUID or by name.
 
         Args:
             check_id: A check UUID (str or UUID object) **or** a check name
@@ -948,6 +963,9 @@ class Okareo:
 
         Returns:
             EvaluatorDetailedResponse: The detailed response for the specified check.
+
+        Raises:
+            ValueError: If no check matches the given name/version.
 
         Example:
         ```python
@@ -998,26 +1016,24 @@ class Okareo:
         """Resolve a check name (+ optional version) to a detailed response."""
 
         def _row_version(row: EvaluatorBriefResponse) -> int:
-            value = row.additional_properties.get("version")
-            return value if isinstance(value, int) else 0
+            v = row.additional_properties.get("version")
+            return v if isinstance(v, int) else 0
 
         all_checks = self.get_all_checks(all_versions=True)
-        matches = [check for check in all_checks if check.name == name]
+        matches = [c for c in all_checks if c.name == name]
         if not matches:
             raise ValueError(f"No check found with name '{name}'")
 
         if version is not None:
             exact = [
-                check
-                for check in matches
-                if check.additional_properties.get("version") == version
+                c for c in matches if c.additional_properties.get("version") == version
             ]
             if not exact:
                 version_nums: list[int] = []
-                for check in matches:
-                    value = check.additional_properties.get("version")
-                    if isinstance(value, int):
-                        version_nums.append(value)
+                for c in matches:
+                    v = c.additional_properties.get("version")
+                    if isinstance(v, int):
+                        version_nums.append(v)
                 available_versions = sorted(version_nums)
                 raise ValueError(
                     f"No check found with name '{name}' and version {version}. "
@@ -1064,7 +1080,11 @@ class Okareo:
         return "Check deletion was successful"
 
     def create_or_update_check(
-        self, name: str, description: str, check: BaseCheck
+        self,
+        name: str,
+        description: str,
+        check: BaseCheck,
+        tags: Optional[List[str]] = None,
     ) -> EvaluatorDetailedResponse:
         """
         Create or update an existing check. If the check with 'name' already exists, then this method will update the existing check. Otherwise, this method will create a new check.
@@ -1073,6 +1093,7 @@ class Okareo:
             name (str): The unique name of the check to create or update.
             description (str): A human-readable description of the check.
             check (BaseCheck): An instance of BaseCheck containing the check configuration.
+            tags: Optional list of string tags to associate with the check.
 
         Returns:
             EvaluatorDetailedResponse: The detailed response from the evaluator after creating or updating the check.
@@ -1085,18 +1106,16 @@ class Okareo:
         ```python
         from okareo.checks import CheckOutputType, ModelBasedCheck
 
-        # Define your custom check; here we use a ModelBasedCheck as an example.
-        # Mustache template is used in the prompt to pipe scenario input and generated output
         my_check = ModelBasedCheck(
             prompt_template="Only output the number of words in the following text: {scenario_input} {generation}",
             check_type=CheckOutputType.PASS_FAIL,
         )
 
-        # Create or update the check
         response = okareo_client.create_or_update_check(
             name="my_word_count_check",
             description="Custom check for counting combined total number of words in input and output.",
-            check=my_check
+            check=my_check,
+            tags=["prod", "v1"],
         )
 
         print(response)
@@ -1105,12 +1124,15 @@ class Okareo:
         check_config = CheckCreateUpdateSchemaCheckConfigType0.from_dict(
             check.check_config()
         )
+        body = CheckCreateUpdateSchema(
+            name=name, description=description, check_config=check_config
+        )
+        if tags is not None:
+            body["tags"] = tags
         response = check_create_or_update_v0_check_create_or_update_post.sync(
             client=self.client,
             api_key=self.api_key,
-            body=CheckCreateUpdateSchema(
-                name=name, description=description, check_config=check_config
-            ),
+            body=body,
         )
         self.validate_response(response)
         assert isinstance(response, EvaluatorDetailedResponse)
