@@ -1,27 +1,32 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.datapoint_filter_search_payload import DatapointFilterSearchPayload
-from ...models.datapoint_list_item import DatapointListItem
-from ...models.error_response import ErrorResponse
+from ...models.http_validation_error import HTTPValidationError
+from ...models.provider_integration_response import ProviderIntegrationResponse
+from ...models.update_provider_integration_request import UpdateProviderIntegrationRequest
 from ...types import Response
 
 
 def _get_kwargs(
+    integration_id: UUID,
     *,
-    body: DatapointFilterSearchPayload,
+    body: UpdateProviderIntegrationRequest,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v0/find_datapoints_filter",
+        "method": "patch",
+        "url": "/v0/voice/integration/{integration_id}".format(
+            integration_id=quote(str(integration_id), safe=""),
+        ),
     }
 
     _kwargs["json"] = body.to_dict()
@@ -34,34 +39,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | list[DatapointListItem] | None:
+) -> HTTPValidationError | ProviderIntegrationResponse | None:
     if response.status_code == 200:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = DatapointListItem.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
+        response_200 = ProviderIntegrationResponse.from_dict(response.json())
 
         return response_200
 
-    if response.status_code == 400:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
-
-    if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
-
-        return response_401
-
-    if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
-
-        return response_404
-
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
 
@@ -73,7 +58,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | list[DatapointListItem]]:
+) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -83,31 +68,29 @@ def _build_response(
 
 
 def sync_detailed(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: UpdateProviderIntegrationRequest,
     api_key: str,
-) -> Response[ErrorResponse | list[DatapointListItem]]:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
+    """Update Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (UpdateProviderIntegrationRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[DatapointListItem]]
+        Response[HTTPValidationError | ProviderIntegrationResponse]
     """
 
     kwargs = _get_kwargs(
+        integration_id=integration_id,
         body=body,
         api_key=api_key,
     )
@@ -120,31 +103,29 @@ def sync_detailed(
 
 
 def sync(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: UpdateProviderIntegrationRequest,
     api_key: str,
-) -> ErrorResponse | list[DatapointListItem] | None:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> HTTPValidationError | ProviderIntegrationResponse | None:
+    """Update Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (UpdateProviderIntegrationRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[DatapointListItem]
+        HTTPValidationError | ProviderIntegrationResponse
     """
 
     return sync_detailed(
+        integration_id=integration_id,
         client=client,
         body=body,
         api_key=api_key,
@@ -152,31 +133,29 @@ def sync(
 
 
 async def asyncio_detailed(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: UpdateProviderIntegrationRequest,
     api_key: str,
-) -> Response[ErrorResponse | list[DatapointListItem]]:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
+    """Update Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (UpdateProviderIntegrationRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[DatapointListItem]]
+        Response[HTTPValidationError | ProviderIntegrationResponse]
     """
 
     kwargs = _get_kwargs(
+        integration_id=integration_id,
         body=body,
         api_key=api_key,
     )
@@ -187,32 +166,30 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: UpdateProviderIntegrationRequest,
     api_key: str,
-) -> ErrorResponse | list[DatapointListItem] | None:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> HTTPValidationError | ProviderIntegrationResponse | None:
+    """Update Provider Integration
 
     Args:
+        integration_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (UpdateProviderIntegrationRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[DatapointListItem]
+        HTTPValidationError | ProviderIntegrationResponse
     """
 
     return (
         await asyncio_detailed(
+            integration_id=integration_id,
             client=client,
             body=body,
             api_key=api_key,

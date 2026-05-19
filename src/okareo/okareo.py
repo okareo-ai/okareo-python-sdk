@@ -985,7 +985,6 @@ class Okareo:
         # It's a name — resolve to the latest version.
         return self._get_check_by_name(str(check_id))
 
-
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
         check_deprecation_warning()
         return self.delete_check(evaluator_id, evaluator_name)
@@ -1583,7 +1582,7 @@ class Okareo:
             ]
         )
         ```
-        
+
         Example (with MUT association):
         ```python
         okareo.ingest_conversations(
@@ -1607,7 +1606,7 @@ class Okareo:
             "project_id": str(project_id),
             "conversations": conversations,
         }
-        
+
         # Only include mut_id if provided
         if mut_id is not None:
             payload["mut_id"] = str(mut_id)

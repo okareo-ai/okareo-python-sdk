@@ -1,32 +1,36 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.dashboard_create import DashboardCreate
 from ...models.http_validation_error import HTTPValidationError
-from ...models.provider_integration_response import ProviderIntegrationResponse
-from ...models.update_provider_integration_request import UpdateProviderIntegrationRequest
-from ...types import Response
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    integration_id: UUID,
     *,
-    body: UpdateProviderIntegrationRequest,
+    body: DashboardCreate,
+    project_id: UUID,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
+    params: dict[str, Any] = {}
+
+    json_project_id = str(project_id)
+    params["project_id"] = json_project_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
-        "method": "patch",
-        "url": "/v0/integration/{integration_id}".format(
-            integration_id=quote(str(integration_id), safe=""),
-        ),
+        "method": "post",
+        "url": "/v0/dashboards",
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -37,14 +41,7 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ProviderIntegrationResponse | None:
-    if response.status_code == 200:
-        response_200 = ProviderIntegrationResponse.from_dict(response.json())
-
-        return response_200
-
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> HTTPValidationError | None:
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -56,9 +53,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,30 +63,30 @@ def _build_response(
 
 
 def sync_detailed(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationRequest,
+    body: DashboardCreate,
+    project_id: UUID,
     api_key: str,
-) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
-    """Update Provider Integration
+) -> Response[HTTPValidationError]:
+    """Create Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (UpdateProviderIntegrationRequest):
+        body (DashboardCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ProviderIntegrationResponse]
+        Response[HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        integration_id=integration_id,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -103,60 +98,60 @@ def sync_detailed(
 
 
 def sync(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationRequest,
+    body: DashboardCreate,
+    project_id: UUID,
     api_key: str,
-) -> HTTPValidationError | ProviderIntegrationResponse | None:
-    """Update Provider Integration
+) -> HTTPValidationError | None:
+    """Create Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (UpdateProviderIntegrationRequest):
+        body (DashboardCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ProviderIntegrationResponse
+        HTTPValidationError
     """
 
     return sync_detailed(
-        integration_id=integration_id,
         client=client,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationRequest,
+    body: DashboardCreate,
+    project_id: UUID,
     api_key: str,
-) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
-    """Update Provider Integration
+) -> Response[HTTPValidationError]:
+    """Create Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (UpdateProviderIntegrationRequest):
+        body (DashboardCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ProviderIntegrationResponse]
+        Response[HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        integration_id=integration_id,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -166,32 +161,32 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationRequest,
+    body: DashboardCreate,
+    project_id: UUID,
     api_key: str,
-) -> HTTPValidationError | ProviderIntegrationResponse | None:
-    """Update Provider Integration
+) -> HTTPValidationError | None:
+    """Create Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (UpdateProviderIntegrationRequest):
+        body (DashboardCreate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ProviderIntegrationResponse
+        HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            integration_id=integration_id,
             client=client,
             body=body,
+            project_id=project_id,
             api_key=api_key,
         )
     ).parsed

@@ -1,21 +1,22 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.datapoint_filter_search_payload import DatapointFilterSearchPayload
 from ...models.error_response import ErrorResponse
-from ...models.get_datapoint_counts_v0_filter_counts_post_response_get_datapoint_counts_v0_filter_counts_post import (
-    GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost,
-)
+from ...models.re_evaluate_payload import ReEvaluatePayload
+from ...models.test_run_item import TestRunItem
 from ...types import Response
 
 
 def _get_kwargs(
+    test_run_id: UUID,
     *,
-    body: DatapointFilterSearchPayload,
+    body: ReEvaluatePayload,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -23,7 +24,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/filter_counts",
+        "url": "/v0/test_runs/{test_run_id}/re_evaluate".format(
+            test_run_id=quote(str(test_run_id), safe=""),
+        ),
     }
 
     _kwargs["json"] = body.to_dict()
@@ -36,13 +39,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost | None:
-    if response.status_code == 200:
-        response_200 = GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost.from_dict(
-            response.json()
-        )
+) -> ErrorResponse | TestRunItem | None:
+    if response.status_code == 201:
+        response_201 = TestRunItem.from_dict(response.json())
 
-        return response_200
+        return response_201
 
     if response.status_code == 400:
         response_400 = ErrorResponse.from_dict(response.json())
@@ -72,7 +73,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]:
+) -> Response[ErrorResponse | TestRunItem]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -82,32 +83,34 @@ def _build_response(
 
 
 def sync_detailed(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: ReEvaluatePayload,
     api_key: str,
-) -> Response[ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]:
-    """Get Datapoint Counts
+) -> Response[ErrorResponse | TestRunItem]:
+    """Re Evaluate
 
-     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
-    data.
+     Create a new test run by re-evaluating checks from a completed source run.
 
     Returns:
-        dict: Object containing filtered_count and total_count
+        The newly created re-evaluated test run item.
 
     Args:
+        test_run_id (UUID): ID of source test run
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (ReEvaluatePayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]
+        Response[ErrorResponse | TestRunItem]
     """
 
     kwargs = _get_kwargs(
+        test_run_id=test_run_id,
         body=body,
         api_key=api_key,
     )
@@ -120,32 +123,34 @@ def sync_detailed(
 
 
 def sync(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: ReEvaluatePayload,
     api_key: str,
-) -> ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost | None:
-    """Get Datapoint Counts
+) -> ErrorResponse | TestRunItem | None:
+    """Re Evaluate
 
-     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
-    data.
+     Create a new test run by re-evaluating checks from a completed source run.
 
     Returns:
-        dict: Object containing filtered_count and total_count
+        The newly created re-evaluated test run item.
 
     Args:
+        test_run_id (UUID): ID of source test run
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (ReEvaluatePayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost
+        ErrorResponse | TestRunItem
     """
 
     return sync_detailed(
+        test_run_id=test_run_id,
         client=client,
         body=body,
         api_key=api_key,
@@ -153,32 +158,34 @@ def sync(
 
 
 async def asyncio_detailed(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: ReEvaluatePayload,
     api_key: str,
-) -> Response[ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]:
-    """Get Datapoint Counts
+) -> Response[ErrorResponse | TestRunItem]:
+    """Re Evaluate
 
-     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
-    data.
+     Create a new test run by re-evaluating checks from a completed source run.
 
     Returns:
-        dict: Object containing filtered_count and total_count
+        The newly created re-evaluated test run item.
 
     Args:
+        test_run_id (UUID): ID of source test run
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (ReEvaluatePayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]
+        Response[ErrorResponse | TestRunItem]
     """
 
     kwargs = _get_kwargs(
+        test_run_id=test_run_id,
         body=body,
         api_key=api_key,
     )
@@ -189,33 +196,35 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    test_run_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    body: ReEvaluatePayload,
     api_key: str,
-) -> ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost | None:
-    """Get Datapoint Counts
+) -> ErrorResponse | TestRunItem | None:
+    """Re Evaluate
 
-     Gets only the counts for datapoints matching given filter criteria without retrieving the actual
-    data.
+     Create a new test run by re-evaluating checks from a completed source run.
 
     Returns:
-        dict: Object containing filtered_count and total_count
+        The newly created re-evaluated test run item.
 
     Args:
+        test_run_id (UUID): ID of source test run
         api_key (str):
-        body (DatapointFilterSearchPayload):
+        body (ReEvaluatePayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost
+        ErrorResponse | TestRunItem
     """
 
     return (
         await asyncio_detailed(
+            test_run_id=test_run_id,
             client=client,
             body=body,
             api_key=api_key,

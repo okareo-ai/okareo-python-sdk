@@ -1,32 +1,25 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
-from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.analytics_query_request import AnalyticsQueryRequest
+from ...models.analytics_query_response import AnalyticsQueryResponse
 from ...models.http_validation_error import HTTPValidationError
-from ...models.provider_integration_status_response import ProviderIntegrationStatusResponse
-from ...models.update_provider_integration_status_request import UpdateProviderIntegrationStatusRequest
 from ...types import Response
 
 
 def _get_kwargs(
-    integration_id: UUID,
     *,
-    body: UpdateProviderIntegrationStatusRequest,
-    api_key: str,
+    body: AnalyticsQueryRequest,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
-    headers["api-key"] = api_key
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/integration/{integration_id}/status".format(
-            integration_id=quote(str(integration_id), safe=""),
-        ),
+        "url": "/v0/analytics/query",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -39,9 +32,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ProviderIntegrationStatusResponse | None:
+) -> AnalyticsQueryResponse | HTTPValidationError | None:
     if response.status_code == 200:
-        response_200 = ProviderIntegrationStatusResponse.from_dict(response.json())
+        response_200 = AnalyticsQueryResponse.from_dict(response.json())
 
         return response_200
 
@@ -58,7 +51,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ProviderIntegrationStatusResponse]:
+) -> Response[AnalyticsQueryResponse | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,31 +61,25 @@ def _build_response(
 
 
 def sync_detailed(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationStatusRequest,
-    api_key: str,
-) -> Response[HTTPValidationError | ProviderIntegrationStatusResponse]:
-    """Update Provider Integration Status
+    body: AnalyticsQueryRequest,
+) -> Response[AnalyticsQueryResponse | HTTPValidationError]:
+    """Post Analytics Query
 
     Args:
-        integration_id (UUID):
-        api_key (str):
-        body (UpdateProviderIntegrationStatusRequest):
+        body (AnalyticsQueryRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ProviderIntegrationStatusResponse]
+        Response[AnalyticsQueryResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        integration_id=integration_id,
         body=body,
-        api_key=api_key,
     )
 
     response = client.get_httpx_client().request(
@@ -103,61 +90,49 @@ def sync_detailed(
 
 
 def sync(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationStatusRequest,
-    api_key: str,
-) -> HTTPValidationError | ProviderIntegrationStatusResponse | None:
-    """Update Provider Integration Status
+    body: AnalyticsQueryRequest,
+) -> AnalyticsQueryResponse | HTTPValidationError | None:
+    """Post Analytics Query
 
     Args:
-        integration_id (UUID):
-        api_key (str):
-        body (UpdateProviderIntegrationStatusRequest):
+        body (AnalyticsQueryRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ProviderIntegrationStatusResponse
+        AnalyticsQueryResponse | HTTPValidationError
     """
 
     return sync_detailed(
-        integration_id=integration_id,
         client=client,
         body=body,
-        api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationStatusRequest,
-    api_key: str,
-) -> Response[HTTPValidationError | ProviderIntegrationStatusResponse]:
-    """Update Provider Integration Status
+    body: AnalyticsQueryRequest,
+) -> Response[AnalyticsQueryResponse | HTTPValidationError]:
+    """Post Analytics Query
 
     Args:
-        integration_id (UUID):
-        api_key (str):
-        body (UpdateProviderIntegrationStatusRequest):
+        body (AnalyticsQueryRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ProviderIntegrationStatusResponse]
+        Response[AnalyticsQueryResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        integration_id=integration_id,
         body=body,
-        api_key=api_key,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -166,32 +141,26 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: UpdateProviderIntegrationStatusRequest,
-    api_key: str,
-) -> HTTPValidationError | ProviderIntegrationStatusResponse | None:
-    """Update Provider Integration Status
+    body: AnalyticsQueryRequest,
+) -> AnalyticsQueryResponse | HTTPValidationError | None:
+    """Post Analytics Query
 
     Args:
-        integration_id (UUID):
-        api_key (str):
-        body (UpdateProviderIntegrationStatusRequest):
+        body (AnalyticsQueryRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ProviderIntegrationStatusResponse
+        AnalyticsQueryResponse | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            integration_id=integration_id,
             client=client,
             body=body,
-            api_key=api_key,
         )
     ).parsed

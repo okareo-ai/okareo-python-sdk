@@ -1,32 +1,40 @@
 from http import HTTPStatus
 from typing import Any
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.datapoint_filter_search_payload import DatapointFilterSearchPayload
-from ...models.datapoint_list_item import DatapointListItem
-from ...models.error_response import ErrorResponse
-from ...types import Response
+from ...models.dashboard_scenario_trends_checks_response import DashboardScenarioTrendsChecksResponse
+from ...models.http_validation_error import HTTPValidationError
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
     *,
-    body: DatapointFilterSearchPayload,
+    project_id: UUID,
+    scenario_id: UUID,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
+    params: dict[str, Any] = {}
+
+    json_project_id = str(project_id)
+    params["project_id"] = json_project_id
+
+    json_scenario_id = str(scenario_id)
+    params["scenario_id"] = json_scenario_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v0/find_datapoints_filter",
+        "method": "get",
+        "url": "/v0/dashboards/workflows/scenario-trends/checks",
+        "params": params,
     }
-
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -34,34 +42,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | list[DatapointListItem] | None:
+) -> DashboardScenarioTrendsChecksResponse | HTTPValidationError | None:
     if response.status_code == 200:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = DatapointListItem.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
+        response_200 = DashboardScenarioTrendsChecksResponse.from_dict(response.json())
 
         return response_200
 
-    if response.status_code == 400:
-        response_400 = ErrorResponse.from_dict(response.json())
-
-        return response_400
-
-    if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
-
-        return response_401
-
-    if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
-
-        return response_404
-
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
 
@@ -73,7 +61,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | list[DatapointListItem]]:
+) -> Response[DashboardScenarioTrendsChecksResponse | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -85,30 +73,28 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    project_id: UUID,
+    scenario_id: UUID,
     api_key: str,
-) -> Response[ErrorResponse | list[DatapointListItem]]:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> Response[DashboardScenarioTrendsChecksResponse | HTTPValidationError]:
+    """List Scenario Trends Checks
 
     Args:
+        project_id (UUID):
+        scenario_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[DatapointListItem]]
+        Response[DashboardScenarioTrendsChecksResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        project_id=project_id,
+        scenario_id=scenario_id,
         api_key=api_key,
     )
 
@@ -122,31 +108,29 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    project_id: UUID,
+    scenario_id: UUID,
     api_key: str,
-) -> ErrorResponse | list[DatapointListItem] | None:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> DashboardScenarioTrendsChecksResponse | HTTPValidationError | None:
+    """List Scenario Trends Checks
 
     Args:
+        project_id (UUID):
+        scenario_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[DatapointListItem]
+        DashboardScenarioTrendsChecksResponse | HTTPValidationError
     """
 
     return sync_detailed(
         client=client,
-        body=body,
+        project_id=project_id,
+        scenario_id=scenario_id,
         api_key=api_key,
     ).parsed
 
@@ -154,30 +138,28 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    project_id: UUID,
+    scenario_id: UUID,
     api_key: str,
-) -> Response[ErrorResponse | list[DatapointListItem]]:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> Response[DashboardScenarioTrendsChecksResponse | HTTPValidationError]:
+    """List Scenario Trends Checks
 
     Args:
+        project_id (UUID):
+        scenario_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[DatapointListItem]]
+        Response[DashboardScenarioTrendsChecksResponse | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        project_id=project_id,
+        scenario_id=scenario_id,
         api_key=api_key,
     )
 
@@ -189,32 +171,30 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearchPayload,
+    project_id: UUID,
+    scenario_id: UUID,
     api_key: str,
-) -> ErrorResponse | list[DatapointListItem] | None:
-    """Get Datapoints Filter
-
-     Gets all the datapoints for given search criteria.
-
-    Returns:
-        list: An array of datapoint objects.
+) -> DashboardScenarioTrendsChecksResponse | HTTPValidationError | None:
+    """List Scenario Trends Checks
 
     Args:
+        project_id (UUID):
+        scenario_id (UUID):
         api_key (str):
-        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[DatapointListItem]
+        DashboardScenarioTrendsChecksResponse | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            body=body,
+            project_id=project_id,
+            scenario_id=scenario_id,
             api_key=api_key,
         )
     ).parsed

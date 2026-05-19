@@ -1,34 +1,48 @@
 from http import HTTPStatus
 from typing import Any
 from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
+from ...models.provider_integration_response import ProviderIntegrationResponse
+from ...models.rotate_provider_integration_secrets_request import RotateProviderIntegrationSecretsRequest
 from ...types import Response
 
 
 def _get_kwargs(
-    public_id: str,
+    integration_id: UUID,
+    *,
+    body: RotateProviderIntegrationSecretsRequest,
+    api_key: str,
 ) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
+    headers["api-key"] = api_key
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/voice/vapi/monitor/{public_id}".format(
-            public_id=quote(str(public_id), safe=""),
+        "url": "/v0/voice/integration/{integration_id}/rotate".format(
+            integration_id=quote(str(integration_id), safe=""),
         ),
     }
 
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
     return _kwargs
 
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | HTTPValidationError | None:
+) -> HTTPValidationError | ProviderIntegrationResponse | None:
     if response.status_code == 200:
-        response_200 = response.json()
+        response_200 = ProviderIntegrationResponse.from_dict(response.json())
+
         return response_200
 
     if response.status_code == 422:
@@ -44,7 +58,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | HTTPValidationError]:
+) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -54,27 +68,31 @@ def _build_response(
 
 
 def sync_detailed(
-    public_id: str,
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | HTTPValidationError]:
-    """Vapi Webhook
-
-     Webhook receiver for VAPI end-of-call-report events.
+    body: RotateProviderIntegrationSecretsRequest,
+    api_key: str,
+) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
+    """Rotate Provider Integration Secrets
 
     Args:
-        public_id (str):
+        integration_id (UUID):
+        api_key (str):
+        body (RotateProviderIntegrationSecretsRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | HTTPValidationError]
+        Response[HTTPValidationError | ProviderIntegrationResponse]
     """
 
     kwargs = _get_kwargs(
-        public_id=public_id,
+        integration_id=integration_id,
+        body=body,
+        api_key=api_key,
     )
 
     response = client.get_httpx_client().request(
@@ -85,53 +103,61 @@ def sync_detailed(
 
 
 def sync(
-    public_id: str,
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-) -> Any | HTTPValidationError | None:
-    """Vapi Webhook
-
-     Webhook receiver for VAPI end-of-call-report events.
+    body: RotateProviderIntegrationSecretsRequest,
+    api_key: str,
+) -> HTTPValidationError | ProviderIntegrationResponse | None:
+    """Rotate Provider Integration Secrets
 
     Args:
-        public_id (str):
+        integration_id (UUID):
+        api_key (str):
+        body (RotateProviderIntegrationSecretsRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | HTTPValidationError
+        HTTPValidationError | ProviderIntegrationResponse
     """
 
     return sync_detailed(
-        public_id=public_id,
+        integration_id=integration_id,
         client=client,
+        body=body,
+        api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    public_id: str,
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | HTTPValidationError]:
-    """Vapi Webhook
-
-     Webhook receiver for VAPI end-of-call-report events.
+    body: RotateProviderIntegrationSecretsRequest,
+    api_key: str,
+) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
+    """Rotate Provider Integration Secrets
 
     Args:
-        public_id (str):
+        integration_id (UUID):
+        api_key (str):
+        body (RotateProviderIntegrationSecretsRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | HTTPValidationError]
+        Response[HTTPValidationError | ProviderIntegrationResponse]
     """
 
     kwargs = _get_kwargs(
-        public_id=public_id,
+        integration_id=integration_id,
+        body=body,
+        api_key=api_key,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -140,28 +166,32 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    public_id: str,
+    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-) -> Any | HTTPValidationError | None:
-    """Vapi Webhook
-
-     Webhook receiver for VAPI end-of-call-report events.
+    body: RotateProviderIntegrationSecretsRequest,
+    api_key: str,
+) -> HTTPValidationError | ProviderIntegrationResponse | None:
+    """Rotate Provider Integration Secrets
 
     Args:
-        public_id (str):
+        integration_id (UUID):
+        api_key (str):
+        body (RotateProviderIntegrationSecretsRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | HTTPValidationError
+        HTTPValidationError | ProviderIntegrationResponse
     """
 
     return (
         await asyncio_detailed(
-            public_id=public_id,
+            integration_id=integration_id,
             client=client,
+            body=body,
+            api_key=api_key,
         )
     ).parsed

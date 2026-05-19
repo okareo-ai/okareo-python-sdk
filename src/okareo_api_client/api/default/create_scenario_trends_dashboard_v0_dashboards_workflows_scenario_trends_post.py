@@ -1,32 +1,36 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.dashboard_scenario_trends_create_request import DashboardScenarioTrendsCreateRequest
 from ...models.http_validation_error import HTTPValidationError
-from ...models.provider_integration_response import ProviderIntegrationResponse
-from ...models.rotate_provider_integration_secrets_request import RotateProviderIntegrationSecretsRequest
-from ...types import Response
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    integration_id: UUID,
     *,
-    body: RotateProviderIntegrationSecretsRequest,
+    body: DashboardScenarioTrendsCreateRequest,
+    project_id: UUID,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
 
+    params: dict[str, Any] = {}
+
+    json_project_id = str(project_id)
+    params["project_id"] = json_project_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/v0/integration/{integration_id}/rotate".format(
-            integration_id=quote(str(integration_id), safe=""),
-        ),
+        "url": "/v0/dashboards/workflows/scenario-trends",
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -37,14 +41,7 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ProviderIntegrationResponse | None:
-    if response.status_code == 200:
-        response_200 = ProviderIntegrationResponse.from_dict(response.json())
-
-        return response_200
-
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> HTTPValidationError | None:
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -56,9 +53,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,30 +63,30 @@ def _build_response(
 
 
 def sync_detailed(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: RotateProviderIntegrationSecretsRequest,
+    body: DashboardScenarioTrendsCreateRequest,
+    project_id: UUID,
     api_key: str,
-) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
-    """Rotate Provider Integration Secrets
+) -> Response[HTTPValidationError]:
+    """Create Scenario Trends Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (RotateProviderIntegrationSecretsRequest):
+        body (DashboardScenarioTrendsCreateRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ProviderIntegrationResponse]
+        Response[HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        integration_id=integration_id,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -103,60 +98,60 @@ def sync_detailed(
 
 
 def sync(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: RotateProviderIntegrationSecretsRequest,
+    body: DashboardScenarioTrendsCreateRequest,
+    project_id: UUID,
     api_key: str,
-) -> HTTPValidationError | ProviderIntegrationResponse | None:
-    """Rotate Provider Integration Secrets
+) -> HTTPValidationError | None:
+    """Create Scenario Trends Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (RotateProviderIntegrationSecretsRequest):
+        body (DashboardScenarioTrendsCreateRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ProviderIntegrationResponse
+        HTTPValidationError
     """
 
     return sync_detailed(
-        integration_id=integration_id,
         client=client,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     ).parsed
 
 
 async def asyncio_detailed(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: RotateProviderIntegrationSecretsRequest,
+    body: DashboardScenarioTrendsCreateRequest,
+    project_id: UUID,
     api_key: str,
-) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
-    """Rotate Provider Integration Secrets
+) -> Response[HTTPValidationError]:
+    """Create Scenario Trends Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (RotateProviderIntegrationSecretsRequest):
+        body (DashboardScenarioTrendsCreateRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | ProviderIntegrationResponse]
+        Response[HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        integration_id=integration_id,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -166,32 +161,32 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    integration_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: RotateProviderIntegrationSecretsRequest,
+    body: DashboardScenarioTrendsCreateRequest,
+    project_id: UUID,
     api_key: str,
-) -> HTTPValidationError | ProviderIntegrationResponse | None:
-    """Rotate Provider Integration Secrets
+) -> HTTPValidationError | None:
+    """Create Scenario Trends Dashboard
 
     Args:
-        integration_id (UUID):
+        project_id (UUID):
         api_key (str):
-        body (RotateProviderIntegrationSecretsRequest):
+        body (DashboardScenarioTrendsCreateRequest):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | ProviderIntegrationResponse
+        HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            integration_id=integration_id,
             client=client,
             body=body,
+            project_id=project_id,
             api_key=api_key,
         )
     ).parsed
