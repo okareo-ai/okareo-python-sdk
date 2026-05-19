@@ -296,8 +296,8 @@ class TestConversationIngestionE2E:
             dps = _require_datapoints(okareo_client.find_datapoints(search))
             all_datapoints.extend(dps)
 
-        # Should have 2 datapoints per conversation (1 user turn + 1 assistant turn)
-        assert len(all_datapoints) >= batch_size * 2
+        # Should have 1 per conversation
+        assert len(all_datapoints) == batch_size
 
         # Verify all call_ids are represented
         found_call_ids = {dp.context_token for dp in all_datapoints}
