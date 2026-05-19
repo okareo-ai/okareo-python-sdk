@@ -17,7 +17,9 @@ from okareo.model_under_test import (
 from okareo_api_client.models import ScenarioSetResponse
 from okareo_api_client.models.comparison_operator import ComparisonOperator
 from okareo_api_client.models.datapoint_field import DatapointField
-from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
+from okareo_api_client.models.datapoint_filter_search_payload import (
+    DatapointFilterSearchPayload,
+)
 from okareo_api_client.models.evaluator_spec_request import EvaluatorSpecRequest
 from okareo_api_client.models.filter_condition import FilterCondition
 from okareo_api_client.models.find_test_data_point_payload import (
@@ -428,7 +430,7 @@ def test_no_checks_on_every_turn(rnd: str, okareo: Okareo) -> None:
 
     # Get the data_points where the test data point ID
     dp = okareo.find_datapoints_filter(
-        DatapointFilterSearch(
+        DatapointFilterSearchPayload(
             filters=[
                 FilterCondition(
                     field=DatapointField.TEST_RUN_ID,
