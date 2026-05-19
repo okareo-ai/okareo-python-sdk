@@ -63,7 +63,7 @@ class TestVersionFieldsOnResponses:
         name = f"ver-create-v1-{rnd}"
         check = _sdk_check(okareo, name)
         try:
-            assert check.additional_properties.get("version") == 1
+            assert check.version == 1
         finally:
             okareo.delete_check(cast(UUID, check.id), name)
 
@@ -72,7 +72,7 @@ class TestVersionFieldsOnResponses:
         created = _sdk_check(okareo, name)
         try:
             fetched = okareo.get_check(str(created.id))
-            assert fetched.additional_properties.get("version") == 1
+            assert fetched.version == 1
         finally:
             okareo.delete_check(cast(UUID, created.id), name)
 
@@ -85,7 +85,7 @@ class TestVersionFieldsOnResponses:
             all_checks = okareo.get_all_checks()
             match = [c for c in all_checks if str(c.id) == str(created.id)]
             assert len(match) == 1, f"Custom check not found in list by id={created.id}"
-            assert match[0].additional_properties.get("version") is not None
+            assert match[0].version is not None
         finally:
             okareo.delete_check(cast(UUID, created.id), name)
 
@@ -104,7 +104,7 @@ class TestVersioningBehavior:
                 name,
                 prompt_template="Return True if model_output is valid JSON. Output: {model_output}",
             )
-            assert v2.additional_properties.get("version") == 2
+            assert v2.version == 2
             assert str(v2.id) != v1_id
         finally:
             okareo.delete_check(UUID(v1_id), name)
@@ -119,9 +119,7 @@ class TestVersioningBehavior:
                 okareo, name, prompt_template="Same prompt {model_output}"
             )
             assert str(v1_again.id) == str(v1.id)
-            assert v1_again.additional_properties.get(
-                "version"
-            ) == v1.additional_properties.get("version")
+            assert v1_again.version == v1.version
         finally:
             okareo.delete_check(cast(UUID, v1.id), name)
 
@@ -133,9 +131,7 @@ class TestVersioningBehavior:
         try:
             updated = _sdk_check(okareo, name, description="updated description")
             assert str(updated.id) == str(v1.id)
-            assert updated.additional_properties.get(
-                "version"
-            ) == v1.additional_properties.get("version")
+            assert updated.version == v1.version
         finally:
             okareo.delete_check(cast(UUID, v1.id), name)
 
@@ -182,7 +178,7 @@ class TestVersionHistory:
             assert (
                 len(matches) == 2
             ), f"Expected 2 entries for '{name}', got {len(matches)}"
-            versions = {c.additional_properties.get("version") for c in matches}
+            versions = {c.version for c in matches}
             assert versions == {1, 2}
         finally:
             okareo.delete_check(UUID(v1_id), name)
@@ -216,7 +212,7 @@ class TestDeleteArchivesAllVersions:
             okareo, name, prompt_template="Reused name check {model_output}"
         )
         try:
-            assert reused.additional_properties.get("version") == 1
+            assert reused.version == 1
             assert str(reused.id) != str(original.id)
         finally:
             okareo.delete_check(cast(UUID, reused.id), name)
@@ -378,7 +374,7 @@ class TestSDKGetCheckByName:
         try:
             fetched = okareo.get_check(name)
             assert str(fetched.id) == str(v2.id)
-            assert fetched.additional_properties.get("version") == 2
+            assert fetched.version == 2
         finally:
             okareo.delete_check(UUID(v1_id), name)
 
@@ -394,7 +390,7 @@ class TestSDKGetCheckByName:
         try:
             fetched = okareo.get_check(name, version=1)
             assert str(fetched.id) == v1_id
-            assert fetched.additional_properties.get("version") == 1
+            assert fetched.version == 1
         finally:
             okareo.delete_check(UUID(v1_id), name)
 
@@ -412,7 +408,7 @@ class TestSDKGetCheckByName:
         try:
             fetched = okareo.get_check(name, version="latest")
             assert str(fetched.id) == str(v2.id)
-            assert fetched.additional_properties.get("version") == 2
+            assert fetched.version == 2
         finally:
             okareo.delete_check(UUID(v1_id), name)
 
@@ -440,7 +436,7 @@ class TestSDKCheckTags:
         name = f"sdk-tags-create-{rnd}"
         check = _sdk_check(okareo, name, tags=["prod", "v1"])
         try:
-            assert check.additional_properties.get("tags") == ["prod", "v1"]
+            assert check.tags == ["prod", "v1"]
         finally:
             okareo.delete_check(cast(UUID, check.id), name)
 
@@ -449,7 +445,7 @@ class TestSDKCheckTags:
         created = _sdk_check(okareo, name, tags=["staging"])
         try:
             fetched = okareo.get_check(str(created.id))
-            assert fetched.additional_properties.get("tags") == ["staging"]
+            assert fetched.tags == ["staging"]
         finally:
             okareo.delete_check(cast(UUID, created.id), name)
 
@@ -460,7 +456,7 @@ class TestSDKCheckTags:
             checks = okareo.get_all_checks()
             match = [c for c in checks if c.name == name]
             assert len(match) == 1
-            assert match[0].additional_properties.get("tags") == ["release"]
+            assert match[0].tags == ["release"]
         finally:
             okareo.delete_check(cast(UUID, created.id), name)
 

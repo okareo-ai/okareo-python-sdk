@@ -1019,9 +1019,17 @@ class Okareo:
     ) -> EvaluatorDetailedResponse:
         """Resolve a check name (+ optional version) to a detailed response."""
 
+        def _read_version(row: EvaluatorBriefResponse) -> Optional[int]:
+            if isinstance(row.version, int):
+                return row.version
+            legacy = row.additional_properties.get("version")
+            if isinstance(legacy, int):
+                return legacy
+            return None
+
         def _row_version(row: EvaluatorBriefResponse) -> int:
-            v = row.additional_properties.get("version")
-            return v if isinstance(v, int) else 0
+            value = _read_version(row)
+            return value if value is not None else 0
 
         all_checks = self.get_all_checks(all_versions=True)
         matches = [c for c in all_checks if c.name == name]
@@ -1029,15 +1037,13 @@ class Okareo:
             raise ValueError(f"No check found with name '{name}'")
 
         if version is not None:
-            exact = [
-                c for c in matches if c.additional_properties.get("version") == version
-            ]
+            exact = [c for c in matches if _read_version(c) == version]
             if not exact:
                 version_nums: list[int] = []
                 for c in matches:
-                    v = c.additional_properties.get("version")
-                    if isinstance(v, int):
-                        version_nums.append(v)
+                    value = _read_version(c)
+                    if value is not None:
+                        version_nums.append(value)
                 available_versions = sorted(version_nums)
                 raise ValueError(
                     f"No check found with name '{name}' and version {version}. "
