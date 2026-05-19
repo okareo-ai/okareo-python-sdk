@@ -398,6 +398,24 @@ class TestSDKGetCheckByName:
         finally:
             okareo.delete_check(UUID(v1_id), name)
 
+    def test_get_check_by_name_with_latest_string(
+        self, okareo: Okareo, rnd: str
+    ) -> None:
+        name = f"sdk-getchk-latest-str-{rnd}"
+        v1 = _sdk_check(okareo, name)
+        v1_id = str(v1.id)
+        v2 = _sdk_check(
+            okareo,
+            name,
+            prompt_template="SDK get_check latest string v2 {model_output}",
+        )
+        try:
+            fetched = okareo.get_check(name, version="latest")
+            assert str(fetched.id) == str(v2.id)
+            assert fetched.additional_properties.get("version") == 2
+        finally:
+            okareo.delete_check(UUID(v1_id), name)
+
     def test_get_check_by_name_not_found(self, okareo: Okareo, rnd: str) -> None:
         with pytest.raises(ValueError, match="No check found"):
             okareo.get_check(f"nonexistent-check-{rnd}")

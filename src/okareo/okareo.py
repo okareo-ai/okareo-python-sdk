@@ -923,32 +923,68 @@ class Okareo:
         check_deprecation_warning()
         return self.get_check(evaluator_id)
 
-    def get_check(self, check_id: Union[str, UUID]) -> EvaluatorDetailedResponse:
+    def get_check(
+        self,
+        check_id: Union[str, UUID],
+        version: Union[str, int, None] = None,
+    ) -> EvaluatorDetailedResponse:
         """
         Fetch details for a specific check.
 
         Args:
-            check_id (str): The ID of the check to fetch.
+            check_id: A check UUID (str or UUID object) **or** a check name
+                (str).  When a name is given the method resolves it to a UUID
+                via the list endpoint.
+            version: Optional version number or the string ``"latest"``.
+                Only used when *check_id* is a name.  ``None`` and
+                ``"latest"`` both resolve to the most recent version.
 
         Returns:
             EvaluatorDetailedResponse: The detailed response for the specified check.
 
         Example:
         ```python
-        check_id = "your_check_id"
-        check_details = okareo_client.get_check(check_id)
-        print(check_details)
+        # By UUID (existing behaviour)
+        check = okareo_client.get_check("your_check_uuid")
+
+        # By name (latest version)
+        check = okareo_client.get_check("my_check")
+        check = okareo_client.get_check("my_check", version="latest")
+
+        # By name + pinned version
+        check = okareo_client.get_check("my_check", version=1)
         ```
         """
-        response = get_check_v0_check_check_id_get.sync(
-            client=self.client,
-            api_key=self.api_key,
-            check_id=UUID(check_id) if isinstance(check_id, str) else check_id,
-        )
-        self.validate_response(response)
-        assert isinstance(response, EvaluatorDetailedResponse)
+        if isinstance(version, str) and version == "latest":
+            version = None
 
-        return response
+        # If an explicit version is requested, treat check_id as a name.
+        if isinstance(version, int):
+            return self._get_check_by_name(str(check_id), version)
+
+        # Try to interpret as UUID first.
+        uuid_val: Optional[UUID] = None
+        if isinstance(check_id, UUID):
+            uuid_val = check_id
+        else:
+            try:
+                uuid_val = UUID(check_id)
+            except ValueError:
+                pass
+
+        if uuid_val is not None:
+            response = get_check_v0_check_check_id_get.sync(
+                client=self.client,
+                api_key=self.api_key,
+                check_id=uuid_val,
+            )
+            self.validate_response(response)
+            assert isinstance(response, EvaluatorDetailedResponse)
+            return response
+
+        # It's a name — resolve to the latest version.
+        return self._get_check_by_name(str(check_id))
+
 
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
         check_deprecation_warning()
