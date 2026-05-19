@@ -704,6 +704,10 @@ class Okareo:
         )
         if not data:
             return []
+        if isinstance(data, list):
+            # TODO: Narrow this method return type to List[FullDataPointItem]
+            # and update downstream annotations/tests that still expect TestDataPointItem.
+            return cast(List[Union[TestDataPointItem, FullDataPointItem]], data)
         return data
 
     def validate_response(self, response: Any) -> None:
