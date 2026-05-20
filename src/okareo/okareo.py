@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 import warnings
-from typing import Any, Dict, List, Optional, TypedDict, Union
+from typing import Any, Dict, List, Optional, TypedDict, Union, cast
 from uuid import UUID
 
 import httpx
@@ -53,7 +53,9 @@ from okareo_api_client.models.check_create_update_schema_check_config_type_0 imp
 from okareo_api_client.models.create_group_v0_groups_post_body_type_0 import (
     CreateGroupV0GroupsPostBodyType0,
 )
-from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
+from okareo_api_client.models.datapoint_filter_search_payload import (
+    DatapointFilterSearchPayload,
+)
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.driver_model_response import DriverModelResponse
@@ -702,6 +704,10 @@ class Okareo:
         )
         if not data:
             return []
+        if isinstance(data, list):
+            # TODO: Narrow this method return type to List[FullDataPointItem]
+            # and update downstream annotations/tests that still expect TestDataPointItem.
+            return cast(List[Union[TestDataPointItem, FullDataPointItem]], data)
         return data
 
     def validate_response(self, response: Any) -> None:
@@ -783,24 +789,24 @@ class Okareo:
         return data
 
     def find_datapoints_filter(
-        self, datapoint_search: DatapointFilterSearch
+        self, datapoint_search: DatapointFilterSearchPayload
     ) -> Union[List[DatapointListItem], ErrorResponse]:
         """
         Fetch the datapoints specified by a Datapoint Search.
 
         Args:
-            datapoint_search (DatapointSearch): The search criteria for fetching datapoints.
+            datapoint_search (DatapointFilterSearchPayload): The search criteria for fetching datapoints.
 
         Returns:
             Union[List[DatapointListItem], ErrorResponse]: A list of datapoint items matching the search, or an error response.
 
         Example:
         ```python
-        from okareo_api_client.models.datapoint_search import DatapointFilterSearch
+        from okareo_api_client.models.datapoint_filter_search_payload import DatapointFilterSearchPayload
 
         ### Search based on a test run ID
         test_run__id = "your_test_run_id"  # Replace with your actual test run ID
-        search = DatapointFilterSearch(
+        search = DatapointFilterSearchPayload(
             test_run_id=test_run__id,
         )
         datapoints = okareo_client.find_datapoints(search)
@@ -808,11 +814,11 @@ class Okareo:
             print(dp)
 
         ### Find datapoints based on filters on datapoints fields
-        from okareo_api_client.models.datapoint_filter_search import DatapointFilterSearch
+        from okareo_api_client.models.datapoint_filter_search_payload import DatapointFilterSearchPayload
         from okareo_api_client.models.filter_condition import FilterCondition
         from okareo_api_client.models.comparison_operator import ComparisonOperator
 
-        search = DatapointFilterSearch(
+        search = DatapointFilterSearchPayload(
             filters=[FilterCondition(
                 field=DatapointField.TEST_RUN_ID,
                 operator=ComparisonOperator.EQUAL,
@@ -1013,39 +1019,54 @@ class Okareo:
     ) -> EvaluatorDetailedResponse:
         """Resolve a check name (+ optional version) to a detailed response."""
 
-        def _row_version(row: EvaluatorBriefResponse) -> int:
-            v = row.additional_properties.get("version")
-            return v if isinstance(v, int) else 0
-
         all_checks = self.get_all_checks(all_versions=True)
         matches = [c for c in all_checks if c.name == name]
         if not matches:
             raise ValueError(f"No check found with name '{name}'")
+        brief = self._select_check_by_version(
+            name=name, matches=matches, version=version
+        )
+        return self.get_check(self._check_brief_id(brief, name))
 
-        if version is not None:
-            exact = [
-                c for c in matches if c.additional_properties.get("version") == version
-            ]
-            if not exact:
-                version_nums: list[int] = []
-                for c in matches:
-                    v = c.additional_properties.get("version")
-                    if isinstance(v, int):
-                        version_nums.append(v)
-                available_versions = sorted(version_nums)
-                raise ValueError(
-                    f"No check found with name '{name}' and version {version}. "
-                    f"Available versions: {available_versions}"
-                )
-            brief = exact[0]
-        else:
-            brief = max(matches, key=_row_version)
+    def _read_check_version(self, row: EvaluatorBriefResponse) -> Optional[int]:
+        if isinstance(row.version, int):
+            return row.version
+        legacy = row.additional_properties.get("version")
+        if isinstance(legacy, int):
+            return legacy
+        return None
 
-        brief_id = brief.id
-        if isinstance(brief_id, UUID):
-            return self.get_check(brief_id)
-        if isinstance(brief_id, str):
-            return self.get_check(brief_id)
+    def _select_check_by_version(
+        self,
+        name: str,
+        matches: List[EvaluatorBriefResponse],
+        version: Optional[int],
+    ) -> EvaluatorBriefResponse:
+        if version is None:
+            return max(
+                matches,
+                key=lambda row: self._read_check_version(row) or 0,
+            )
+
+        exact = [c for c in matches if self._read_check_version(c) == version]
+        if exact:
+            return exact[0]
+
+        available_versions = sorted(
+            value
+            for value in (self._read_check_version(c) for c in matches)
+            if value is not None
+        )
+        raise ValueError(
+            f"No check found with name '{name}' and version {version}. "
+            f"Available versions: {available_versions}"
+        )
+
+    def _check_brief_id(
+        self, brief: EvaluatorBriefResponse, name: str
+    ) -> Union[str, UUID]:
+        if isinstance(brief.id, (UUID, str)):
+            return brief.id
         raise ValueError(f"Check '{name}' has no id")
 
     def delete_evaluator(self, evaluator_id: str, evaluator_name: str) -> str:
@@ -1591,3 +1612,105 @@ class Okareo:
             project_id=UUID(str(project_id)) if project_id else UNSET,
         )
         return self.create_scenario_set(create_request)
+
+    def ingest_conversations(
+        self,
+        project_id: Union[str, UUID],
+        conversations: List[Dict[str, Any]],
+        mut_id: Union[str, UUID, None] = None,
+    ) -> Dict[str, Any]:
+        """Ingest voice conversations for monitoring.
+
+        Accepts one or more conversations from voice platforms (Retell, Twilio, VAPI, etc.)
+        and enqueues them for async processing. Each conversation's turns will become
+        Datapoint rows, and configured monitors will automatically match and run checks.
+
+        This is the monitoring path, not the simulation path. No ScenarioSets are created.
+        The mut_id is optional - when omitted, datapoints are created without MUT association
+        and rely entirely on monitor/filter group matching.
+
+        Args:
+            project_id: Okareo project ID.
+            conversations: List of conversation dictionaries, each containing:
+                - source_platform (str): Platform source ('retell', 'twilio', 'vapi', 'elevenlabs', or 'custom')
+                - call_id (str): Platform-specific call identifier
+                - context_token (str, optional): Context token for correlation (defaults to call_id)
+                - audio (dict, optional): Preferred audio shape with one of:
+                    - {"type": "url", "url": "https://..."}
+                    - {"type": "voice_file_id", "voice_file_id": "uuid"}
+                    - {"type": "inline_b64", "inline_b64": "..."}
+                - recording_url (str, optional): Legacy compatibility alias for audio URL
+                - recording_bytes_b64 (str, optional): Legacy compatibility alias for inline base64 audio
+                - transcript (list, optional): Pre-parsed transcript as list of turns with 'role' and 'content'
+                - diarization (bool, optional): When transcript is absent, controls whether Okareo runs diarization + ASR. Defaults to True.
+                - metadata (dict, optional): Platform-specific metadata
+                - tags (list, optional): Tags for monitor matching
+                - first_turn (str, optional): For audio-only diarization ('user' or 'assistant' spoke first, defaults to 'assistant')
+            mut_id: Optional model under test ID. If not provided, datapoints are created without MUT association (monitoring path).
+
+        Returns:
+            Dict with 'status' and list of conversation identifiers.
+
+        Raises:
+            httpx.HTTPStatusError: If the API returns an error status.
+
+        Example (monitoring-only, no MUT):
+        ```python
+        okareo.ingest_conversations(
+            project_id="your-project-id",
+            conversations=[
+                {
+                    "source_platform": "retell",
+                    "call_id": "call-123",
+                    "audio": {
+                        "type": "url",
+                        "url": "https://retell.ai/recordings/call-123.mp3",
+                    },
+                    "tags": ["support", "billing"],
+                    "metadata": {"customer_id": "cust-456"}
+                }
+            ]
+        )
+        ```
+
+        Example (with MUT association):
+        ```python
+        okareo.ingest_conversations(
+            project_id="your-project-id",
+            mut_id="your-mut-id",
+            conversations=[
+                {
+                    "source_platform": "custom",
+                    "call_id": "call-456",
+                    "transcript": [
+                        {"role": "user", "content": "Hello", "timestamp_ms": 0},
+                        {"role": "assistant", "content": "Hi, how can I help?", "timestamp_ms": 1000}
+                    ],
+                }
+            ]
+        )
+        ```
+        """
+        url = f"{BASE_URL}/v0/conversations/ingest"
+        payload = {
+            "project_id": str(project_id),
+            "conversations": conversations,
+        }
+
+        # Only include mut_id if provided
+        if mut_id is not None:
+            payload["mut_id"] = str(mut_id)
+
+        response = httpx.post(
+            url,
+            headers={"api-key": self.api_key, "Content-Type": "application/json"},
+            json=payload,
+            timeout=120,
+        )
+        response.raise_for_status()
+
+        json_response = response.json()
+        if not isinstance(json_response, dict):
+            raise TypeError("Expected JSON object response from conversations ingest")
+
+        return cast(Dict[str, Any], json_response)

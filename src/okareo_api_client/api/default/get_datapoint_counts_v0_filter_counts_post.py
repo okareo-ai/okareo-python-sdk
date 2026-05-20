@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.datapoint_filter_search import DatapointFilterSearch
+from ...models.datapoint_filter_search_payload import DatapointFilterSearchPayload
 from ...models.error_response import ErrorResponse
 from ...models.get_datapoint_counts_v0_filter_counts_post_response_get_datapoint_counts_v0_filter_counts_post import (
     GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost,
@@ -15,7 +15,7 @@ from ...types import Response
 
 def _get_kwargs(
     *,
-    body: DatapointFilterSearch,
+    body: DatapointFilterSearchPayload,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -84,7 +84,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearch,
+    body: DatapointFilterSearchPayload,
     api_key: str,
 ) -> Response[ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]:
     """Get Datapoint Counts
@@ -97,7 +97,7 @@ def sync_detailed(
 
     Args:
         api_key (str):
-        body (DatapointFilterSearch):
+        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -122,7 +122,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearch,
+    body: DatapointFilterSearchPayload,
     api_key: str,
 ) -> ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost | None:
     """Get Datapoint Counts
@@ -135,7 +135,7 @@ def sync(
 
     Args:
         api_key (str):
-        body (DatapointFilterSearch):
+        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -155,7 +155,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearch,
+    body: DatapointFilterSearchPayload,
     api_key: str,
 ) -> Response[ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost]:
     """Get Datapoint Counts
@@ -168,7 +168,7 @@ async def asyncio_detailed(
 
     Args:
         api_key (str):
-        body (DatapointFilterSearch):
+        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -191,7 +191,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: DatapointFilterSearch,
+    body: DatapointFilterSearchPayload,
     api_key: str,
 ) -> ErrorResponse | GetDatapointCountsV0FilterCountsPostResponseGetDatapointCountsV0FilterCountsPost | None:
     """Get Datapoint Counts
@@ -204,7 +204,7 @@ async def asyncio(
 
     Args:
         api_key (str):
-        body (DatapointFilterSearch):
+        body (DatapointFilterSearchPayload):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

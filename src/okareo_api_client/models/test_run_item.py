@@ -33,6 +33,7 @@ class TestRunItem:
         type_ (None | str | Unset):
         start_time (datetime.datetime | None | Unset):
         end_time (datetime.datetime | None | Unset):
+        time_created (datetime.datetime | None | Unset):
         test_data_point_count (int | None | Unset):
         model_metrics (None | TestRunItemModelMetricsType0 | Unset):
         error_matrix (list[Any] | None | Unset):
@@ -54,6 +55,7 @@ class TestRunItem:
     type_: None | str | Unset = UNSET
     start_time: datetime.datetime | None | Unset = UNSET
     end_time: datetime.datetime | None | Unset = UNSET
+    time_created: datetime.datetime | None | Unset = UNSET
     test_data_point_count: int | None | Unset = UNSET
     model_metrics: None | TestRunItemModelMetricsType0 | Unset = UNSET
     error_matrix: list[Any] | None | Unset = UNSET
@@ -133,6 +135,14 @@ class TestRunItem:
             end_time = self.end_time.isoformat()
         else:
             end_time = self.end_time
+
+        time_created: None | str | Unset
+        if isinstance(self.time_created, Unset):
+            time_created = UNSET
+        elif isinstance(self.time_created, datetime.datetime):
+            time_created = self.time_created.isoformat()
+        else:
+            time_created = self.time_created
 
         test_data_point_count: int | None | Unset
         if isinstance(self.test_data_point_count, Unset):
@@ -217,6 +227,8 @@ class TestRunItem:
             field_dict["start_time"] = start_time
         if end_time is not UNSET:
             field_dict["end_time"] = end_time
+        if time_created is not UNSET:
+            field_dict["time_created"] = time_created
         if test_data_point_count is not UNSET:
             field_dict["test_data_point_count"] = test_data_point_count
         if model_metrics is not UNSET:
@@ -368,6 +380,23 @@ class TestRunItem:
 
         end_time = _parse_end_time(d.pop("end_time", UNSET))
 
+        def _parse_time_created(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                time_created_type_0 = isoparse(data)
+
+                return time_created_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        time_created = _parse_time_created(d.pop("time_created", UNSET))
+
         def _parse_test_data_point_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
@@ -485,6 +514,7 @@ class TestRunItem:
             type_=type_,
             start_time=start_time,
             end_time=end_time,
+            time_created=time_created,
             test_data_point_count=test_data_point_count,
             model_metrics=model_metrics,
             error_matrix=error_matrix,

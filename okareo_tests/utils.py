@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Union
+from typing import List, Sequence, Union
 from uuid import UUID
 
 from litellm import token_counter
@@ -174,7 +174,7 @@ def _parse_baseline_metrics(
 
 
 def _parse_checks_and_baseline_metrics(
-    tdps: List[TestDataPointItem | FullDataPointItem],
+    tdps: Sequence[TestDataPointItem | FullDataPointItem],
     checks: List[str],
     cost: bool,
     turns: int | None,

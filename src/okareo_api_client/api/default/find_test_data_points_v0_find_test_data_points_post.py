@@ -8,7 +8,6 @@ from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
 from ...models.find_test_data_point_payload import FindTestDataPointPayload
 from ...models.full_data_point_item import FullDataPointItem
-from ...models.test_data_point_item import TestDataPointItem
 from ...types import Response
 
 
@@ -35,28 +34,12 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | list[FullDataPointItem | TestDataPointItem] | None:
+) -> ErrorResponse | list[FullDataPointItem] | None:
     if response.status_code == 201:
         response_201 = []
         _response_201 = response.json()
         for response_201_item_data in _response_201:
-
-            def _parse_response_201_item(data: object) -> FullDataPointItem | TestDataPointItem:
-                try:
-                    if not isinstance(data, dict):
-                        raise TypeError()
-                    response_201_item_type_0 = FullDataPointItem.from_dict(data)
-
-                    return response_201_item_type_0
-                except (TypeError, ValueError, AttributeError, KeyError):
-                    pass
-                if not isinstance(data, dict):
-                    raise TypeError()
-                response_201_item_type_1 = TestDataPointItem.from_dict(data)
-
-                return response_201_item_type_1
-
-            response_201_item = _parse_response_201_item(response_201_item_data)
+            response_201_item = FullDataPointItem.from_dict(response_201_item_data)
 
             response_201.append(response_201_item)
 
@@ -90,7 +73,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | list[FullDataPointItem | TestDataPointItem]]:
+) -> Response[ErrorResponse | list[FullDataPointItem]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -104,13 +87,13 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: FindTestDataPointPayload,
     api_key: str,
-) -> Response[ErrorResponse | list[FullDataPointItem | TestDataPointItem]]:
+) -> Response[ErrorResponse | list[FullDataPointItem]]:
     """Find Test Data Points
 
-     Find Test Data Point
+     Find Test Data Points
 
     Returns:
-        a list of Test Data Points
+        a list of Test Data Points with full datapoint details
 
     Args:
         api_key (str):
@@ -121,7 +104,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[FullDataPointItem | TestDataPointItem]]
+        Response[ErrorResponse | list[FullDataPointItem]]
     """
 
     kwargs = _get_kwargs(
@@ -141,13 +124,13 @@ def sync(
     client: AuthenticatedClient | Client,
     body: FindTestDataPointPayload,
     api_key: str,
-) -> ErrorResponse | list[FullDataPointItem | TestDataPointItem] | None:
+) -> ErrorResponse | list[FullDataPointItem] | None:
     """Find Test Data Points
 
-     Find Test Data Point
+     Find Test Data Points
 
     Returns:
-        a list of Test Data Points
+        a list of Test Data Points with full datapoint details
 
     Args:
         api_key (str):
@@ -158,7 +141,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[FullDataPointItem | TestDataPointItem]
+        ErrorResponse | list[FullDataPointItem]
     """
 
     return sync_detailed(
@@ -173,13 +156,13 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: FindTestDataPointPayload,
     api_key: str,
-) -> Response[ErrorResponse | list[FullDataPointItem | TestDataPointItem]]:
+) -> Response[ErrorResponse | list[FullDataPointItem]]:
     """Find Test Data Points
 
-     Find Test Data Point
+     Find Test Data Points
 
     Returns:
-        a list of Test Data Points
+        a list of Test Data Points with full datapoint details
 
     Args:
         api_key (str):
@@ -190,7 +173,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | list[FullDataPointItem | TestDataPointItem]]
+        Response[ErrorResponse | list[FullDataPointItem]]
     """
 
     kwargs = _get_kwargs(
@@ -208,13 +191,13 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: FindTestDataPointPayload,
     api_key: str,
-) -> ErrorResponse | list[FullDataPointItem | TestDataPointItem] | None:
+) -> ErrorResponse | list[FullDataPointItem] | None:
     """Find Test Data Points
 
-     Find Test Data Point
+     Find Test Data Points
 
     Returns:
-        a list of Test Data Points
+        a list of Test Data Points with full datapoint details
 
     Args:
         api_key (str):
@@ -225,7 +208,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | list[FullDataPointItem | TestDataPointItem]
+        ErrorResponse | list[FullDataPointItem]
     """
 
     return (

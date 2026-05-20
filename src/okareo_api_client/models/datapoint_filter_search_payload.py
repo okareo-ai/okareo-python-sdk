@@ -15,11 +15,11 @@ if TYPE_CHECKING:
     from ..models.filter_condition import FilterCondition
 
 
-T = TypeVar("T", bound="DatapointFilterSearch")
+T = TypeVar("T", bound="DatapointFilterSearchPayload")
 
 
 @_attrs_define
-class DatapointFilterSearch:
+class DatapointFilterSearchPayload:
     """
     Attributes:
         filters (list[FilterCondition]): List of filter conditions to apply
@@ -318,7 +318,7 @@ class DatapointFilterSearch:
 
         precision = _parse_precision(d.pop("precision", UNSET))
 
-        datapoint_filter_search = cls(
+        datapoint_filter_search_payload = cls(
             filters=filters,
             from_date=from_date,
             to_date=to_date,
@@ -333,8 +333,8 @@ class DatapointFilterSearch:
             precision=precision,
         )
 
-        datapoint_filter_search.additional_properties = d
-        return datapoint_filter_search
+        datapoint_filter_search_payload.additional_properties = d
+        return datapoint_filter_search_payload
 
     @property
     def additional_keys(self) -> list[str]:
