@@ -25,6 +25,8 @@ from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
     create_trace_eval_v0_groups_group_id_trace_eval_post,
     find_test_data_points_v0_find_test_data_points_post,
+    find_test_run_v0_find_test_runs_post,
+    generate_driver_prompt_v0_generate_driver_prompt_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
     get_all_projects_v0_projects_get,
@@ -35,6 +37,7 @@ from okareo_api_client.api.default import (
     get_model_under_test_by_name_and_version_v0_models_under_test_name_version_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_target_model_by_name_v0_target_target_model_name_get,
+    re_evaluate_v0_test_runs_test_run_id_re_evaluate_post,
     register_driver_model_v0_driver_post,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
@@ -61,6 +64,8 @@ from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.driver_model_response import DriverModelResponse
 from okareo_api_client.models.driver_model_schema import DriverModelSchema
+from okareo_api_client.models.driver_prompt_request import DriverPromptRequest
+from okareo_api_client.models.driver_prompt_response import DriverPromptResponse
 from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.evaluator_brief_response import EvaluatorBriefResponse
 from okareo_api_client.models.evaluator_detailed_response import (
@@ -74,6 +79,7 @@ from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
+from okareo_api_client.models.general_find_payload import GeneralFindPayload
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_response_models_type_0 import (
@@ -82,6 +88,7 @@ from okareo_api_client.models.model_under_test_response_models_type_0 import (
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.project_schema import ProjectSchema
+from okareo_api_client.models.re_evaluate_payload import ReEvaluatePayload
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
@@ -1518,6 +1525,137 @@ class Okareo:
             simulation_params=simulation_params,
             driver_id=str(driver_model.id) if driver_model.id else None,
         )
+
+    def generate_driver_prompt(
+        self,
+        user_input: str,
+        *,
+        prior_prompt: Optional[str] = None,
+        language: Optional[str] = None,
+        **driver_kwargs: Any,
+    ) -> Driver:
+        """Generate a structured driver prompt from a one-sentence description.
+
+        Args:
+            user_input: Natural language description of the caller persona.
+            prior_prompt: Optional existing prompt to refine.
+            language: BCP-47 language code (e.g. "en", "es", "fr-CA").
+            **driver_kwargs: Extra fields forwarded to the returned Driver
+                (e.g. voice_instructions, temperature, voice).
+
+        Returns:
+            A Driver with the AI-generated name and prompt_template.
+        """
+        payload: Dict[str, Any] = {"user_input": user_input}
+        if prior_prompt is not None:
+            payload["prior_prompt"] = prior_prompt
+        if language is not None:
+            payload["language"] = language
+        request_body = DriverPromptRequest.from_dict(payload)
+        response = generate_driver_prompt_v0_generate_driver_prompt_post.sync(
+            client=self.client,
+            body=request_body,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, DriverPromptResponse)
+        return Driver(
+            name=response.suggested_name,
+            prompt_template=response.driver_prompt,
+            **driver_kwargs,
+        )
+
+    def find_test_runs(
+        self,
+        *,
+        name: Optional[str] = None,
+        tags: Optional[list] = None,
+        project_id: Optional[str] = None,
+        return_model_metrics: bool = False,
+    ) -> list:
+        """Find test runs, optionally filtering by name or tags.
+
+        Args:
+            name: Filter results to runs with this exact name (client-side).
+            tags: Filter results to runs with these tags (server-side).
+            project_id: Scope to a specific project.
+            return_model_metrics: Include model_metrics in the response.
+
+        Returns:
+            List of test run dicts from the server.
+        """
+        payload = GeneralFindPayload(
+            tags=tags if tags else UNSET,
+            project_id=UUID(project_id) if project_id else UNSET,
+            return_model_metrics=return_model_metrics,
+        )
+        response = find_test_run_v0_find_test_runs_post.sync(
+            client=self.client,
+            body=payload,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, list)
+        if name:
+            response = [r for r in response if r.get("name") == name]
+        return response
+
+    def re_evaluate(
+        self,
+        test_run_id: str,
+        checks: list,
+        *,
+        name: Optional[str] = None,
+        tags: Optional[list] = None,
+    ) -> TestRunItem:
+        """Re-evaluate an existing test run with different checks.
+
+        No new simulation or phone call is made. The existing conversation
+        data is re-scored with the specified checks.
+
+        Args:
+            test_run_id: ID of the source test run to re-evaluate.
+            checks: List of check names or IDs to apply.
+            name: Optional name for the new re-evaluated run.
+            tags: Optional tags for the new run.
+
+        Returns:
+            The newly created TestRunItem with re-evaluated results.
+        """
+        payload = ReEvaluatePayload(
+            check_ids=checks,
+            name=name if name else UNSET,
+            tags=tags if tags else UNSET,
+        )
+        response = re_evaluate_v0_test_runs_test_run_id_re_evaluate_post.sync(
+            client=self.client,
+            test_run_id=UUID(test_run_id),
+            body=payload,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, TestRunItem)
+        return response
+
+    def download_call_recording(self, call_sid: str) -> bytes:
+        """Download a voice call recording by its Twilio CallSid.
+
+        Args:
+            call_sid: The Twilio CallSid from datapoint metadata
+                (e.g. dp.model_metadata.additional_properties["call_sid"]).
+
+        Returns:
+            Raw WAV audio bytes.
+        """
+        url = f"{BASE_URL}/v0/voice/call_sid/{call_sid}"
+        response = httpx.get(
+            url,
+            headers={"api-key": self.api_key},
+            follow_redirects=True,
+            timeout=120,
+        )
+        response.raise_for_status()
+        return response.content
 
     def upload_voice(
         self,
