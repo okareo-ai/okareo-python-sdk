@@ -65,6 +65,7 @@ from okareo_api_client.models.voice_driver_model_response import (
 from okareo_api_client.types import UNSET, Unset
 
 from .async_utils import AsyncProcessorMixin
+from .augmentations import Augmentation
 
 ## BEGIN Monkey Patch for nats to use proxy env vars (via aiohttp)
 #  Apply monkey patch at module level to allow aiohttp client session to pull proxy env vars
@@ -378,6 +379,13 @@ class ModelUnderTest(AsyncProcessorMixin):
         driver_id: Optional[str],
         nats_invoke_id: Optional[str],
     ) -> TestRunPayloadV2:
+        serialized_simulation_params: Any = UNSET
+        if simulation_params:
+            if hasattr(simulation_params, "to_dict"):
+                serialized_simulation_params = simulation_params.to_dict()
+            else:
+                serialized_simulation_params = simulation_params
+
         return TestRunPayloadV2(
             mut_id=self.mut_id,
             api_keys=(
@@ -400,9 +408,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             checks=checks if checks else UNSET,
             simulation_params=(
                 TestRunPayloadV2SimulationParamsType0.from_dict(
-                    simulation_params.to_dict()
+                    serialized_simulation_params
                 )
-                if simulation_params
+                if serialized_simulation_params is not UNSET
                 else UNSET
             ),
             driver_id=(
@@ -2106,6 +2114,7 @@ class Simulation:
     checks_at_every_turn: Optional[bool] = False
     concurrent_ask_probability: Optional[float] = 0.0
     turn_transition_time: Optional[int] = 1000
+    augmentation: Optional[Union[Augmentation, dict[str, Any]]] = None
 
     def __attrs_post_init__(self) -> None:
         if isinstance(self.stop_check, dict):
@@ -2124,6 +2133,11 @@ class Simulation:
             "checks_at_every_turn": self.checks_at_every_turn,
             "concurrent_ask_probability": self.concurrent_ask_probability,
             "turn_transition_time": self.turn_transition_time,
+            "augmentation": (
+                self.augmentation.to_dict()
+                if isinstance(self.augmentation, Augmentation)
+                else self.augmentation
+            ),
         }
 
 
