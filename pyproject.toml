@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "okareo"
-version = "0.0.131"
+version = "0.0.132"
 description = "Python SDK for interacting with Okareo Cloud APIs"
 authors = [
     "Okareo <info@okareo.com>",
@@ -91,7 +91,6 @@ pytest-xdist = "*"
 types-requests = "*"
 scipy-stubs = "*"
 pytest-rerunfailures = "*"
-pytest-dotenv = "^0.5.2"
 
 [tool.pydoc-markdown]
 loaders = [{ type = "python", search_path = ["src"], modules = ["okareo.model_under_test", "okareo.checks", "okareo.async_utils", "okareo.autogen_logger", "okareo.callbacks", "okareo.crewai_logger", "okareo.litellm_logger", "okareo.okareo", "okareo.reporter"] }]

@@ -86,6 +86,7 @@ AUGMENTATION_CONFIGS: Dict[str, Augmentation] = {
     "barge_in": Augmentation(
         barge_in=BargeInAugmentation(
             probability=0.3,
+            prompt="Interrupt and ask to be put on hold.",
             replacement_text="wait a second",
             min_offset_ms=500,
             max_offset_ms=2000,
