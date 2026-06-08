@@ -5,9 +5,9 @@ find_test_runs, re_evaluate, download_call_recording.
 
 Requires OKAREO_API_KEY in environment.
 """
+
 import os
 from typing import Union
-from uuid import UUID
 
 import pytest
 from okareo_tests.common import API_KEY, random_string
@@ -20,9 +20,6 @@ from okareo.model_under_test import (
     PhoneTarget,
     Simulation,
     Target,
-)
-from okareo_api_client.models.find_test_data_point_payload import (
-    FindTestDataPointPayload,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
