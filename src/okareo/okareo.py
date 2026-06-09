@@ -6,7 +6,6 @@ import warnings
 from typing import Any, Dict, List, Optional, TypedDict, Union, cast
 from uuid import UUID
 
-import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
 from tqdm import tqdm  # type: ignore
@@ -504,14 +503,13 @@ class Okareo:
             scenario_id = (
                 scenario if isinstance(scenario, str) else scenario.scenario_id
             )
-            url = f"{BASE_URL}/v0/scenario_sets_download/{scenario_id}"
-            headers = {
-                "accept": "application/json",
-                "api-key": self.api_key,
-            }
-            response = httpx.get(
-                url,
-                headers=headers,
+            response = self.client.get_httpx_client().request(
+                method="get",
+                url=f"/v0/scenario_sets_download/{scenario_id}",
+                headers={
+                    "accept": "application/json",
+                    "api-key": self.api_key,
+                },
             )
             filename = response.headers["content-disposition"].split('"')[1]
             if file_path != "":
@@ -682,7 +680,7 @@ class Okareo:
 
     def find_test_data_points(
         self, test_data_point_payload: FindTestDataPointPayload
-    ) -> Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
+    ) -> List[Union[TestDataPointItem, FullDataPointItem]]:
         """
         Fetch the test run data points associated as specified in the payload.
 
@@ -690,8 +688,11 @@ class Okareo:
             test_data_point_payload (FindTestDataPointPayload): The payload specifying the test data point search criteria.
 
         Returns:
-            Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
-                A list of test or full data point items, or an error response.
+            List[Union[TestDataPointItem, FullDataPointItem]]:
+                A list of test or full data point items.
+
+        Raises:
+            TypeError: If the API response is an error.
 
         Example:
         ```python
@@ -713,11 +714,11 @@ class Okareo:
         )
         if not data:
             return []
-        if isinstance(data, list):
-            # TODO: Narrow this method return type to List[FullDataPointItem]
-            # and update downstream annotations/tests that still expect TestDataPointItem.
-            return cast(List[Union[TestDataPointItem, FullDataPointItem]], data)
-        return data
+        self.validate_response(data)
+        assert isinstance(data, list)
+        # TODO: Narrow this method return type to List[FullDataPointItem]
+        # and update downstream annotations/tests that still expect TestDataPointItem.
+        return cast(List[Union[TestDataPointItem, FullDataPointItem]], data)
 
     def validate_response(self, response: Any) -> None:
         if isinstance(response, ErrorResponse):
@@ -747,7 +748,7 @@ class Okareo:
 
     def find_datapoints(
         self, datapoint_search: DatapointSearch
-    ) -> Union[List[DatapointListItem], ErrorResponse]:
+    ) -> List[DatapointListItem]:
         """
         Fetch the datapoints specified by a Datapoint Search.
 
@@ -755,7 +756,10 @@ class Okareo:
             datapoint_search (DatapointSearch): The search criteria for fetching datapoints.
 
         Returns:
-            Union[List[DatapointListItem], ErrorResponse]: A list of datapoint items matching the search, or an error response.
+            List[DatapointListItem]: A list of datapoint items matching the search.
+
+        Raises:
+            TypeError: If the API response is an error.
 
         Example:
         ```python
@@ -795,11 +799,13 @@ class Okareo:
         )
         if not data:
             return []
+        self.validate_response(data)
+        assert isinstance(data, list)
         return data
 
     def find_datapoints_filter(
         self, datapoint_search: DatapointFilterSearchPayload
-    ) -> Union[List[DatapointListItem], ErrorResponse]:
+    ) -> List[DatapointListItem]:
         """
         Fetch the datapoints specified by a Datapoint Search.
 
@@ -807,7 +813,10 @@ class Okareo:
             datapoint_search (DatapointFilterSearchPayload): The search criteria for fetching datapoints.
 
         Returns:
-            Union[List[DatapointListItem], ErrorResponse]: A list of datapoint items matching the search, or an error response.
+            List[DatapointListItem]: A list of datapoint items matching the search.
+
+        Raises:
+            TypeError: If the API response is an error.
 
         Example:
         ```python
@@ -846,6 +855,8 @@ class Okareo:
         )
         if not data:
             return []
+        self.validate_response(data)
+        assert isinstance(data, list)
         return data
 
     def generate_evaluator(
@@ -1646,9 +1657,9 @@ class Okareo:
         Returns:
             Raw WAV audio bytes.
         """
-        url = f"{BASE_URL}/v0/voice/call_sid/{call_sid}"
-        response = httpx.get(
-            url,
+        response = self.client.get_httpx_client().request(
+            method="get",
+            url=f"/v0/voice/call_sid/{call_sid}",
             headers={"api-key": self.api_key},
             follow_redirects=True,
             timeout=120,
@@ -1704,9 +1715,9 @@ class Okareo:
         file_id = parts[-1]
         project_id = parts[-2]
 
-        url = f"{BASE_URL}/v0/voice/file/{project_id}/{file_id}"
-        response = httpx.get(
-            url,
+        response = self.client.get_httpx_client().request(
+            method="get",
+            url=f"/v0/voice/file/{project_id}/{file_id}",
             headers={"api-key": self.api_key},
             timeout=120,
         )
@@ -1836,7 +1847,6 @@ class Okareo:
         )
         ```
         """
-        url = f"{BASE_URL}/v0/conversations/ingest"
         payload = {
             "project_id": str(project_id),
             "conversations": conversations,
@@ -1846,8 +1856,9 @@ class Okareo:
         if mut_id is not None:
             payload["mut_id"] = str(mut_id)
 
-        response = httpx.post(
-            url,
+        response = self.client.get_httpx_client().request(
+            method="post",
+            url="/v0/conversations/ingest",
             headers={"api-key": self.api_key, "Content-Type": "application/json"},
             json=payload,
             timeout=120,
