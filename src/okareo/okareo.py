@@ -25,7 +25,6 @@ from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
     create_trace_eval_v0_groups_group_id_trace_eval_post,
     find_test_data_points_v0_find_test_data_points_post,
-    find_test_run_v0_find_test_runs_post,
     generate_driver_prompt_v0_generate_driver_prompt_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
@@ -79,7 +78,6 @@ from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
 from okareo_api_client.models.full_data_point_item import FullDataPointItem
-from okareo_api_client.models.general_find_payload import GeneralFindPayload
 from okareo_api_client.models.http_validation_error import HTTPValidationError
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.model_under_test_response_models_type_0 import (
@@ -1584,17 +1582,21 @@ class Okareo:
         Returns:
             List of test run dicts from the server.
         """
-        payload = GeneralFindPayload(
-            tags=tags if tags else UNSET,
-            project_id=UUID(project_id) if project_id else UNSET,
-            return_model_metrics=return_model_metrics,
+        body: Dict[str, Any] = {"return_model_metrics": return_model_metrics}
+        if tags:
+            body["tags"] = tags
+        if project_id:
+            body["project_id"] = project_id
+
+        resp = self.client.get_httpx_client().request(
+            method="post",
+            url="/v0/find_test_runs",
+            json=body,
+            headers={"api-key": self.api_key, "Content-Type": "application/json"},
         )
-        response = find_test_run_v0_find_test_runs_post.sync(
-            client=self.client,
-            body=payload,
-            api_key=self.api_key,
-        )
-        self.validate_response(response)
+        if resp.status_code not in (200, 201):
+            raise ValueError(f"find_test_runs failed: {resp.status_code} {resp.text}")
+        response = resp.json()
         assert isinstance(response, list)
         if name:
             response = [r for r in response if r.get("name") == name]
