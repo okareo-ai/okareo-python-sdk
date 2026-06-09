@@ -176,6 +176,28 @@ def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
     )
 
 
+def test_generate_driver_prompt_returns_driver(okareo: Okareo) -> None:
+    driver = okareo.generate_driver_prompt(
+        "confused customer calling about a charge",
+        voice_instructions="Speak with frustration and urgency.",
+    )
+    assert isinstance(driver, Driver)
+    assert driver.name
+    assert driver.prompt_template
+    assert len(driver.prompt_template) > 50
+    assert driver.voice_instructions == "Speak with frustration and urgency."
+
+
+def test_generate_driver_prompt_with_language(okareo: Okareo) -> None:
+    driver = okareo.generate_driver_prompt(
+        "cliente confundido llamando sobre un cargo",
+        language="es",
+    )
+    assert isinstance(driver, Driver)
+    assert driver.name
+    assert driver.prompt_template
+
+
 @pytest.mark.parametrize("first_turn", ["driver", "target"])
 def test_run_multiturn_with_driver_model_id(
     rnd: str, okareo: Okareo, first_turn: str

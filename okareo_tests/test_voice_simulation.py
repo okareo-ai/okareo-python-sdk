@@ -349,6 +349,25 @@ def validate_test_run_sanity(
         )
 
 
+def download_recording_when_ready(
+    okareo: Okareo, call_sid: str, timeout_s: int = 120
+) -> bytes:
+    """Download a recording via the SDK, polling while the Twilio
+    recording callback hasn't uploaded the file yet (404)."""
+    import time
+
+    import httpx
+
+    deadline = time.time() + timeout_s
+    while True:
+        try:
+            return okareo.download_call_recording(call_sid)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code != 404 or time.time() > deadline:
+                raise
+            time.sleep(10)
+
+
 def validate_call_recording(okareo: Okareo, datapoint: Any, conv_idx: int) -> None:
     """
     Validate that the call recording exists and has duration > 0.
@@ -378,6 +397,13 @@ def validate_call_recording(okareo: Okareo, datapoint: Any, conv_idx: int) -> No
     assert (
         call_recording_url or call_sid
     ), f"Conversation {conv_idx}: Missing call_recording_url or call_sid"
+
+    # Exercise the SDK download helper when a call_sid is present.
+    if call_sid:
+        audio = download_recording_when_ready(okareo, call_sid)
+        assert (
+            len(audio) > 0
+        ), f"Conversation {conv_idx}: Empty recording for call_sid={call_sid}"
 
     # Fetch the recording using the call_recording_url
     if call_recording_url:
