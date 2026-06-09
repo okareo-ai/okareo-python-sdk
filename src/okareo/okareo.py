@@ -1527,7 +1527,6 @@ class Okareo:
     def generate_driver_prompt(
         self,
         user_input: str,
-        *,
         prior_prompt: Optional[str] = None,
         language: Optional[str] = None,
         **driver_kwargs: Any,
@@ -1565,7 +1564,6 @@ class Okareo:
 
     def find_test_runs(
         self,
-        *,
         name: Optional[str] = None,
         tags: Optional[list] = None,
         project_id: Optional[str] = None,
@@ -1606,7 +1604,6 @@ class Okareo:
         self,
         test_run_id: str,
         checks: list,
-        *,
         name: Optional[str] = None,
         tags: Optional[list] = None,
     ) -> TestRunItem:
