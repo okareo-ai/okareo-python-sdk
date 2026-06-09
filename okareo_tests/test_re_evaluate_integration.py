@@ -105,19 +105,7 @@ def _post_re_evaluate(
 
 
 def _find_runs_by_tag(okareo: Okareo, tag: str) -> list[dict]:
-    response = okareo.client.get_httpx_client().request(
-        method="post",
-        url="/v0/find_test_runs",
-        json={"tags": [tag]},
-        headers={"api-key": okareo.api_key, "Content-Type": "application/json"},
-    )
-    assert response.status_code in (
-        200,
-        201,
-    ), f"find_test_runs returned {response.status_code}: {response.text}"
-    data = response.json()
-    assert isinstance(data, list)
-    return data
+    return okareo.find_test_runs(tags=[tag])
 
 
 def _extract_check_value_records(tdp: Any) -> list[dict]:
@@ -156,29 +144,28 @@ def test_re_evaluate_happy_path_executes_checks_and_keeps_source_immutable(
     assert isinstance(source_tdps_before, list)
     marker_tag = f"reeval-happy-{rnd}-{random_string(6)}"
 
-    response = _post_re_evaluate(
-        okareo=okareo,
-        source_run_id=source_run.id,
-        check_ids=[check_id],
+    new_run = okareo.re_evaluate(
+        test_run_id=str(source_run.id),
+        checks=[check_id],
         tags=[marker_tag],
         name=f"reeval-happy-dest-{rnd}",
     )
-    assert response.status_code in (
-        200,
-        201,
-    ), f"re_evaluate returned {response.status_code}: {response.text}"
-    body = response.json()
-    assert "id" in body
-    reeval_run_id = body["id"]
-    assert str(reeval_run_id) != str(source_run.id)
+    assert new_run.id is not None
+    reeval_run_id = str(new_run.id)
+    assert reeval_run_id != str(source_run.id)
 
     reeval_run = mut.get_test_run(reeval_run_id)
     assert str(reeval_run.id) == str(reeval_run_id)
     assert reeval_run.status == "FINISHED"
     assert marker_tag in (reeval_run.tags or [])
 
+    # find_test_runs: tag filter is server-side, name filter is client-side.
+    found = okareo.find_test_runs(tags=[marker_tag], name=f"reeval-happy-dest-{rnd}")
+    assert len(found) == 1
+    assert str(found[0]["id"]) == reeval_run_id
+
     reeval_tdps = okareo.find_test_data_points(
-        FindTestDataPointPayload(test_run_id=reeval_run_id, full_data_point=True)
+        FindTestDataPointPayload(test_run_id=UUID(reeval_run_id), full_data_point=True)
     )
     assert isinstance(reeval_tdps, list)
     assert len(reeval_tdps) > 0

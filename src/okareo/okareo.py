@@ -6,7 +6,6 @@ import warnings
 from typing import Any, Dict, List, Optional, TypedDict, Union, cast
 from uuid import UUID
 
-import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
 from tqdm import tqdm  # type: ignore
@@ -25,6 +24,7 @@ from okareo_api_client.api.default import (
     create_scenario_set_v0_scenario_sets_post,
     create_trace_eval_v0_groups_group_id_trace_eval_post,
     find_test_data_points_v0_find_test_data_points_post,
+    generate_driver_prompt_v0_generate_driver_prompt_post,
     generate_scenario_set_v0_scenario_sets_generate_post,
     get_all_checks_v0_checks_get,
     get_all_projects_v0_projects_get,
@@ -35,6 +35,7 @@ from okareo_api_client.api.default import (
     get_model_under_test_by_name_and_version_v0_models_under_test_name_version_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_target_model_by_name_v0_target_target_model_name_get,
+    re_evaluate_v0_test_runs_test_run_id_re_evaluate_post,
     register_driver_model_v0_driver_post,
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
@@ -61,6 +62,8 @@ from okareo_api_client.models.datapoint_list_item import DatapointListItem
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.driver_model_response import DriverModelResponse
 from okareo_api_client.models.driver_model_schema import DriverModelSchema
+from okareo_api_client.models.driver_prompt_request import DriverPromptRequest
+from okareo_api_client.models.driver_prompt_response import DriverPromptResponse
 from okareo_api_client.models.error_response import ErrorResponse
 from okareo_api_client.models.evaluator_brief_response import EvaluatorBriefResponse
 from okareo_api_client.models.evaluator_detailed_response import (
@@ -82,6 +85,7 @@ from okareo_api_client.models.model_under_test_response_models_type_0 import (
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
 from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.project_schema import ProjectSchema
+from okareo_api_client.models.re_evaluate_payload import ReEvaluatePayload
 from okareo_api_client.models.scenario_data_poin_response import (
     ScenarioDataPoinResponse,
 )
@@ -499,14 +503,13 @@ class Okareo:
             scenario_id = (
                 scenario if isinstance(scenario, str) else scenario.scenario_id
             )
-            url = f"{BASE_URL}/v0/scenario_sets_download/{scenario_id}"
-            headers = {
-                "accept": "application/json",
-                "api-key": self.api_key,
-            }
-            response = httpx.get(
-                url,
-                headers=headers,
+            response = self.client.get_httpx_client().request(
+                method="get",
+                url=f"/v0/scenario_sets_download/{scenario_id}",
+                headers={
+                    "accept": "application/json",
+                    "api-key": self.api_key,
+                },
             )
             filename = response.headers["content-disposition"].split('"')[1]
             if file_path != "":
@@ -677,7 +680,7 @@ class Okareo:
 
     def find_test_data_points(
         self, test_data_point_payload: FindTestDataPointPayload
-    ) -> Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
+    ) -> List[Union[TestDataPointItem, FullDataPointItem]]:
         """
         Fetch the test run data points associated as specified in the payload.
 
@@ -685,8 +688,11 @@ class Okareo:
             test_data_point_payload (FindTestDataPointPayload): The payload specifying the test data point search criteria.
 
         Returns:
-            Union[List[Union[TestDataPointItem, FullDataPointItem]], ErrorResponse]:
-                A list of test or full data point items, or an error response.
+            List[Union[TestDataPointItem, FullDataPointItem]]:
+                A list of test or full data point items.
+
+        Raises:
+            TypeError: If the API response is an error.
 
         Example:
         ```python
@@ -708,11 +714,11 @@ class Okareo:
         )
         if not data:
             return []
-        if isinstance(data, list):
-            # TODO: Narrow this method return type to List[FullDataPointItem]
-            # and update downstream annotations/tests that still expect TestDataPointItem.
-            return cast(List[Union[TestDataPointItem, FullDataPointItem]], data)
-        return data
+        self.validate_response(data)
+        assert isinstance(data, list)
+        # TODO: Narrow this method return type to List[FullDataPointItem]
+        # and update downstream annotations/tests that still expect TestDataPointItem.
+        return cast(List[Union[TestDataPointItem, FullDataPointItem]], data)
 
     def validate_response(self, response: Any) -> None:
         if isinstance(response, ErrorResponse):
@@ -742,7 +748,7 @@ class Okareo:
 
     def find_datapoints(
         self, datapoint_search: DatapointSearch
-    ) -> Union[List[DatapointListItem], ErrorResponse]:
+    ) -> List[DatapointListItem]:
         """
         Fetch the datapoints specified by a Datapoint Search.
 
@@ -750,7 +756,10 @@ class Okareo:
             datapoint_search (DatapointSearch): The search criteria for fetching datapoints.
 
         Returns:
-            Union[List[DatapointListItem], ErrorResponse]: A list of datapoint items matching the search, or an error response.
+            List[DatapointListItem]: A list of datapoint items matching the search.
+
+        Raises:
+            TypeError: If the API response is an error.
 
         Example:
         ```python
@@ -790,11 +799,13 @@ class Okareo:
         )
         if not data:
             return []
+        self.validate_response(data)
+        assert isinstance(data, list)
         return data
 
     def find_datapoints_filter(
         self, datapoint_search: DatapointFilterSearchPayload
-    ) -> Union[List[DatapointListItem], ErrorResponse]:
+    ) -> List[DatapointListItem]:
         """
         Fetch the datapoints specified by a Datapoint Search.
 
@@ -802,7 +813,10 @@ class Okareo:
             datapoint_search (DatapointFilterSearchPayload): The search criteria for fetching datapoints.
 
         Returns:
-            Union[List[DatapointListItem], ErrorResponse]: A list of datapoint items matching the search, or an error response.
+            List[DatapointListItem]: A list of datapoint items matching the search.
+
+        Raises:
+            TypeError: If the API response is an error.
 
         Example:
         ```python
@@ -841,6 +855,8 @@ class Okareo:
         )
         if not data:
             return []
+        self.validate_response(data)
+        assert isinstance(data, list)
         return data
 
     def generate_evaluator(
@@ -1519,6 +1535,138 @@ class Okareo:
             driver_id=str(driver_model.id) if driver_model.id else None,
         )
 
+    def generate_driver_prompt(
+        self,
+        user_input: str,
+        prior_prompt: Optional[str] = None,
+        language: Optional[str] = None,
+        **driver_kwargs: Any,
+    ) -> Driver:
+        """Generate a structured driver prompt from a one-sentence description.
+
+        Args:
+            user_input: Natural language description of the caller persona.
+            prior_prompt: Optional existing prompt to refine.
+            language: BCP-47 language code (e.g. "en", "es", "fr-CA").
+            **driver_kwargs: Extra fields forwarded to the returned Driver
+                (e.g. voice_instructions, temperature, voice).
+
+        Returns:
+            A Driver with the AI-generated name and prompt_template.
+        """
+        payload: Dict[str, Any] = {"user_input": user_input}
+        if prior_prompt is not None:
+            payload["prior_prompt"] = prior_prompt
+        if language is not None:
+            payload["language"] = language
+        request_body = DriverPromptRequest.from_dict(payload)
+        response = generate_driver_prompt_v0_generate_driver_prompt_post.sync(
+            client=self.client,
+            body=request_body,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, DriverPromptResponse)
+        return Driver(
+            name=response.suggested_name,
+            prompt_template=response.driver_prompt,
+            **driver_kwargs,
+        )
+
+    def find_test_runs(
+        self,
+        name: Optional[str] = None,
+        tags: Optional[list] = None,
+        project_id: Optional[str] = None,
+        return_model_metrics: bool = False,
+    ) -> list:
+        """Find test runs, optionally filtering by name or tags.
+
+        Args:
+            name: Filter results to runs with this exact name (client-side).
+            tags: Filter results to runs with these tags (server-side).
+            project_id: Scope to a specific project.
+            return_model_metrics: Include model_metrics in the response.
+
+        Returns:
+            List of test run dicts from the server.
+        """
+        body: Dict[str, Any] = {"return_model_metrics": return_model_metrics}
+        if tags:
+            body["tags"] = tags
+        if project_id:
+            body["project_id"] = project_id
+
+        resp = self.client.get_httpx_client().request(
+            method="post",
+            url="/v0/find_test_runs",
+            json=body,
+            headers={"api-key": self.api_key, "Content-Type": "application/json"},
+        )
+        if resp.status_code not in (200, 201):
+            raise ValueError(f"find_test_runs failed: {resp.status_code} {resp.text}")
+        response = resp.json()
+        assert isinstance(response, list)
+        if name:
+            response = [r for r in response if r.get("name") == name]
+        return response
+
+    def re_evaluate(
+        self,
+        test_run_id: str,
+        checks: list,
+        name: Optional[str] = None,
+        tags: Optional[list] = None,
+    ) -> TestRunItem:
+        """Re-evaluate an existing test run with different checks.
+
+        No new simulation or phone call is made. The existing conversation
+        data is re-scored with the specified checks.
+
+        Args:
+            test_run_id: ID of the source test run to re-evaluate.
+            checks: List of check names or IDs to apply.
+            name: Optional name for the new re-evaluated run.
+            tags: Optional tags for the new run.
+
+        Returns:
+            The newly created TestRunItem with re-evaluated results.
+        """
+        payload = ReEvaluatePayload(
+            check_ids=checks,
+            name=name if name else UNSET,
+            tags=tags if tags else UNSET,
+        )
+        response = re_evaluate_v0_test_runs_test_run_id_re_evaluate_post.sync(
+            client=self.client,
+            test_run_id=UUID(test_run_id),
+            body=payload,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, TestRunItem)
+        return response
+
+    def download_call_recording(self, call_sid: str) -> bytes:
+        """Download a voice call recording by its Twilio CallSid.
+
+        Args:
+            call_sid: The Twilio CallSid from datapoint metadata
+                (e.g. dp.model_metadata.additional_properties["call_sid"]).
+
+        Returns:
+            Raw WAV audio bytes.
+        """
+        response = self.client.get_httpx_client().request(
+            method="get",
+            url=f"/v0/voice/call_sid/{call_sid}",
+            headers={"api-key": self.api_key},
+            follow_redirects=True,
+            timeout=120,
+        )
+        response.raise_for_status()
+        return response.content
+
     def upload_voice(
         self,
         file_path: Optional[str] = None,
@@ -1567,9 +1715,9 @@ class Okareo:
         file_id = parts[-1]
         project_id = parts[-2]
 
-        url = f"{BASE_URL}/v0/voice/file/{project_id}/{file_id}"
-        response = httpx.get(
-            url,
+        response = self.client.get_httpx_client().request(
+            method="get",
+            url=f"/v0/voice/file/{project_id}/{file_id}",
             headers={"api-key": self.api_key},
             timeout=120,
         )
@@ -1699,7 +1847,6 @@ class Okareo:
         )
         ```
         """
-        url = f"{BASE_URL}/v0/conversations/ingest"
         payload = {
             "project_id": str(project_id),
             "conversations": conversations,
@@ -1709,8 +1856,9 @@ class Okareo:
         if mut_id is not None:
             payload["mut_id"] = str(mut_id)
 
-        response = httpx.post(
-            url,
+        response = self.client.get_httpx_client().request(
+            method="post",
+            url="/v0/conversations/ingest",
             headers={"api-key": self.api_key, "Content-Type": "application/json"},
             json=payload,
             timeout=120,

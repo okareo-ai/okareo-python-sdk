@@ -1656,6 +1656,33 @@ class TwilioVoiceTarget(VoiceTarget):
         return ["auth_token"] if self.auth_token else []
 
 
+@_attrs_define
+class PhoneTarget(VoiceTarget):
+    """Voice target identified by phone number only.
+
+    Okareo handles the telephony provider. You just supply the number to call.
+
+    Arguments:
+        phone_number: Destination phone number (E.164 format, e.g. "+15551234567").
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "twilio"
+    phone_number: str = field()
+    max_parallel_requests: Optional[int] = None
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "account_sid": "",
+            "auth_token": "",
+            "from_phone_number": None,
+            "to_phone_number": self.phone_number,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+
 @define
 class StopConfig:
     """
@@ -2067,6 +2094,7 @@ class Target:
         OpenAIVoiceTarget,
         DeepgramVoiceTarget,
         TwilioVoiceTarget,
+        PhoneTarget,
         dict,
     ]
     id: Optional[str] = None
@@ -2121,7 +2149,7 @@ class Simulation:
             self.stop_check = StopConfig(**self.stop_check)
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "repeats": self.repeats,
             "max_turns": self.max_turns,
             "first_turn": self.first_turn,
@@ -2133,12 +2161,14 @@ class Simulation:
             "checks_at_every_turn": self.checks_at_every_turn,
             "concurrent_ask_probability": self.concurrent_ask_probability,
             "turn_transition_time": self.turn_transition_time,
-            "augmentation": (
+        }
+        if self.augmentation:
+            d["augmentation"] = (
                 self.augmentation.to_dict()
                 if isinstance(self.augmentation, Augmentation)
                 else self.augmentation
-            ),
-        }
+            )
+        return d
 
 
 @_attrs_define
