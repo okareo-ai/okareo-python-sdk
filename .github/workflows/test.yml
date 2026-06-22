@@ -60,4 +60,11 @@ jobs:
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_FROM_PHONE: ${{ secrets.TWILIO_FROM_PHONE }}
           TWILIO_TO_PHONE: ${{ secrets.TWILIO_TO_PHONE }}
+          # SIP test target — a Twilio SIP Domain pointing at the same TwiML
+          # webhook as TWILIO_TO_PHONE. Skips test_voice_sip_simulation.py when
+          # unset. See release-fastapi.yml for the blue/prod mapping in
+          # deploy-validation runs.
+          TWILIO_TO_SIP_URI: ${{ secrets.TWILIO_TO_SIP_URI }}
+          TWILIO_SIP_USERNAME: ${{ secrets.TWILIO_SIP_USERNAME }}
+          TWILIO_SIP_PASSWORD: ${{ secrets.TWILIO_SIP_PASSWORD }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
