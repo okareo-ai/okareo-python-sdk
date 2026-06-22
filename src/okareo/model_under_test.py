@@ -1683,6 +1683,52 @@ class PhoneTarget(VoiceTarget):
         }
 
 
+@_attrs_define
+class SipTarget(VoiceTarget):
+    """Voice target reached over SIP.
+
+    Okareo originates a call to ``sip_uri`` and runs a full-duplex voice
+    simulation against the agent that answers. Use this to test voice agents
+    behind a SIP URI — e.g. a Pipecat bot on a Daily room's ``sip_uri``, a Vapi
+    assistant (``<number>@<credential_id>.sip.vapi.ai``), a Twilio Elastic SIP
+    Trunk, or LiveKit.
+
+    For the initial implementation this rides the Twilio egress path
+    (``edge_type="twilio"``): Twilio dials the SIP URI and streams call media
+    back to Okareo. The target authenticates Okareo by Twilio's signaling IPs or
+    by the optional SIP digest credentials below.
+
+    Arguments:
+        sip_uri: Destination SIP URI, e.g. "sip:agent@your-room.sip.daily.co".
+        sip_username: Optional SIP digest auth username for the target.
+        sip_password: Optional SIP digest auth password for the target.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "twilio"
+    sip_uri: str = field()
+    sip_username: Optional[str] = None
+    sip_password: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "account_sid": "",
+            "auth_token": "",
+            "from_phone_number": None,
+            "to_phone_number": self.sip_uri,
+            "sip_uri": self.sip_uri,
+            "sip_username": self.sip_username,
+            "sip_password": self.sip_password,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        return ["sip_password"] if self.sip_password else []
+
+
 @define
 class StopConfig:
     """
@@ -2095,6 +2141,7 @@ class Target:
         DeepgramVoiceTarget,
         TwilioVoiceTarget,
         PhoneTarget,
+        SipTarget,
         dict,
     ]
     id: Optional[str] = None
