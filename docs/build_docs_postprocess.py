@@ -6,11 +6,6 @@ DIR = f"{BASE_DIR}/okareo"
 
 # Drop files that are not ready for documentation
 DROP_FILES = [
-    f"{DIR}/crewai_logger",
-    f"{DIR}/litellm_logger",
-    f"{DIR}/autogen_logger",
-    f"{DIR}/reporter",
-    f"{DIR}/callbacks",
     f"{DIR}/async_utils",
 ]
 
@@ -19,11 +14,7 @@ DESIRED_ORDER = [
     f"{DIR}/okareo",
     f"{DIR}/model_under_test",
     f"{DIR}/checks",
-    f"{DIR}/autogen_logger",
-    f"{DIR}/crewai_logger",
-    f"{DIR}/litellm_logger",
-    f"{DIR}/reporter",
-    f"{DIR}/callbacks",
+    f"{DIR}/augmentations",
     f"{DIR}/async_utils",
 ]
 CATEGORY_PATH = f"docs/{DIR}/_category_.json"
@@ -46,12 +37,33 @@ def _clean_md_file(content: list[str], sidebar_position: int) -> list[str]:
             new_content.append("###" + line[4:])  # Convert H4 to H2
         elif line.startswith("title: okareo.okareo"):
             line = line.replace("okareo.okareo", "okareo")  # Fix title for okareo.md
+        elif _is_json_like_list_item(line):
+            new_content.append(_quote_json_like_list_item(line))
         else:
             new_content.append(line)
             if line.startswith("---") and not added_order:
                 new_content.append(f"sidebar_position: {sidebar_position}\n")
                 added_order = True
     return new_content
+
+
+def _is_json_like_list_item(line: str) -> bool:
+    stripped = line.lstrip()
+    if stripped.startswith("- `{"):
+        return False
+    return (
+        stripped.startswith("- {")
+        and stripped.rstrip().endswith("}")
+        and ":" in stripped
+    )
+
+
+def _quote_json_like_list_item(line: str) -> str:
+    stripped = line.lstrip()
+    indent = line[: len(line) - len(stripped)]
+    payload = stripped[2:].strip()
+    newline = "\n" if line.endswith("\n") else ""
+    return f"{indent}- `{payload}`{newline}"
 
 
 def _create_category_json() -> None:
