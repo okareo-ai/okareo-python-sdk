@@ -6,16 +6,15 @@ The target is a Twilio SIP Domain pointed at the same TwiML/webhook as the
 existing PSTN voice agent — so the agent code is identical; only the transport
 is SIP. This validates the SIP target end-to-end against a real agent.
 
-Env (set the runtime var per environment via CI):
-  TWILIO_TO_SIP_URI  ←  secrets.TWILIO_BLUE_TARGET_SIP_URI (blue)
-                         secrets.TWILIO_PROD_TARGET_SIP_URI (prod)
+Env (each field is target-scoped — CI maps the blue/prod variant per job):
+  TWILIO_TO_SIP_URI       ←  secrets.TWILIO_{BLUE,PROD}_TARGET_SIP_URI
+  TWILIO_TO_SIP_USERNAME  ←  secrets.TWILIO_{BLUE,PROD}_TARGET_SIP_USERNAME
+  TWILIO_TO_SIP_PASSWORD  ←  secrets.TWILIO_{BLUE,PROD}_TARGET_SIP_PASSWORD
 
-Each secret is the full SIP URI for that environment's target, with any digest
-credentials embedded as userinfo (``sip:user:pass@host``). Credentials are a
-property of the SIP target, not a global, so they live with the URI in a single
-per-target secret — same way SipTarget carries its own auth in the SDK.
-
-If TWILIO_TO_SIP_URI is unset the tests skip cleanly.
+Auth fields are kept separate from the URI so the same shape extends to
+non-digest auth modes (certs, bearer tokens, IP-ACL-only) without re-encoding
+the URI. Each field is independently optional; only TWILIO_TO_SIP_URI is
+required to enable the suite.
 """
 
 import os
@@ -36,6 +35,8 @@ from okareo_tests.test_voice_simulation import (
 )
 
 TWILIO_TO_SIP_URI = os.getenv("TWILIO_TO_SIP_URI")
+TWILIO_TO_SIP_USERNAME = os.getenv("TWILIO_TO_SIP_USERNAME")
+TWILIO_TO_SIP_PASSWORD = os.getenv("TWILIO_TO_SIP_PASSWORD")
 
 pytestmark = pytest.mark.skipif(
     not TWILIO_TO_SIP_URI,
@@ -68,11 +69,12 @@ def sip_target() -> SipTarget:
     transport against an unchanged agent.
     """
     assert TWILIO_TO_SIP_URI is not None  # pytestmark already gated
-    # Credentials, if any, live in the URI userinfo (sip:user:pass@host) —
-    # build_sip_to_target leaves existing userinfo untouched, so the discrete
-    # sip_username / sip_password fields are only set by SDK / UI callers who
-    # prefer to keep them separate.
-    return SipTarget(sip_uri=TWILIO_TO_SIP_URI, max_parallel_requests=5)
+    return SipTarget(
+        sip_uri=TWILIO_TO_SIP_URI,
+        sip_username=TWILIO_TO_SIP_USERNAME,
+        sip_password=TWILIO_TO_SIP_PASSWORD,
+        max_parallel_requests=5,
+    )
 
 
 # ============================================================================

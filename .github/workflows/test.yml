@@ -60,9 +60,12 @@ jobs:
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_FROM_PHONE: ${{ secrets.TWILIO_FROM_PHONE }}
           TWILIO_TO_PHONE: ${{ secrets.TWILIO_TO_PHONE }}
-          # SIP test target — full URI for this environment's Twilio SIP Domain,
-          # with any digest credentials embedded as userinfo (sip:user:pass@host).
-          # Skips test_voice_sip_simulation.py when unset. See release-fastapi.yml
-          # for the blue/prod mapping in deploy-validation runs.
+          # SIP test target. Each field is target-scoped — keep them separate so
+          # we can extend to non-digest auth (certs, bearer tokens) without
+          # re-encoding the URI. Skips test_voice_sip_simulation.py when URI unset.
+          # See server's release-fastapi.yml for the blue/prod mapping during
+          # deploy-validation.
           TWILIO_TO_SIP_URI: ${{ secrets.TWILIO_TO_SIP_URI }}
+          TWILIO_TO_SIP_USERNAME: ${{ secrets.TWILIO_TO_SIP_USERNAME }}
+          TWILIO_TO_SIP_PASSWORD: ${{ secrets.TWILIO_TO_SIP_PASSWORD }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
