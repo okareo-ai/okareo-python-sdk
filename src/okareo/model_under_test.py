@@ -1759,12 +1759,19 @@ class StreamingConfig:
     When attached to TurnConfig or SessionConfig, the server can consume SSE
     or NDJSON streams and reassemble the final response text.
 
+    The text extraction path is configured on the parent TurnConfig or
+    SessionConfig via `response_message_path`. For streaming responses, set it
+    to your chunk shape (for example:
+    `response.choices[0].delta.content`).
+
     Arguments:
         stop: List of StreamingStopCondition rules. The stream ends when any
-            stop rule matches.
+            stop rule matches (OR semantics). A stop rule without a `path`
+            matches as a raw string against each SSE `data:` payload, such as
+            `[DONE]`.
         select: List of StreamingSelectCondition rules. All select rules must
-            match before chunk content is extracted. If empty, all chunks are
-            considered.
+            match before chunk content is extracted (AND semantics). If empty,
+            content is extracted from every chunk.
     """
 
     def __init__(
@@ -1833,22 +1840,24 @@ class SessionConfig:
 
 
 class TurnConfig:
-    """Config for a custom API endpoint that continues a conversation by one turn.
+    """Config for a custom API endpoint that continues a session by one turn.
 
     Arguments:
-        url: URL of the endpoint to call.
+        url: URL of the endpoint to call for each next turn.
         method: HTTP method to use. Defaults to POST.
         headers: Headers to include in the request. Supports mustache
-            substitution for latest_message, message_history, and session_id.
-            Defaults to an empty JSON object.
+            substitution using latest_message, message_history, and session_id
+            variables. Defaults to an empty JSON object.
         body: Request body. Supports mustache substitution for
-            latest_message, message_history, and session_id.
+            latest_message, message_history, and session_id variables.
             Defaults to an empty JSON object.
         status_code: Expected HTTP status code of the response.
         response_message_path: Path to extract the model message from the
-            response. Example: response.completion.message.content.
+            response JSON (for example,
+            response.completion.message.content).
         response_session_id_path: Path to extract session ID from the
-            response. Example: response.result.contextId.
+            response JSON (for example, response.result.contextId) so the same
+            conversation session can continue across turns.
         response_tool_calls_path: Path to extract tool calls from the
             response.
     """
