@@ -22,9 +22,6 @@ import os
 import pytest
 from okareo_tests.common import random_string
 
-from okareo import Okareo
-from okareo.model_under_test import Driver, SipTarget, Target
-
 # Reuse the platform-agnostic validators + helpers from the PSTN suite.
 from okareo_tests.test_voice_simulation import (
     DRIVER_PROMPT,
@@ -33,6 +30,9 @@ from okareo_tests.test_voice_simulation import (
     get_messages,
     validate_test_run_sanity,
 )
+
+from okareo import Okareo
+from okareo.model_under_test import Driver, SipTarget, Target
 
 TWILIO_TO_SIP_URI = os.getenv("TWILIO_TO_SIP_URI")
 TWILIO_TO_SIP_USERNAME = os.getenv("TWILIO_TO_SIP_USERNAME")

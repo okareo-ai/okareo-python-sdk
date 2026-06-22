@@ -1,8 +1,7 @@
 """SDK unit tests for SipTarget. Authored TDD — failing before implementation."""
-import pytest
 
 
-def test_a1_sip_target_params_shape():
+def test_a1_sip_target_params_shape() -> None:
     """A1: SipTarget(sip_uri=...) round-trips with edge_type=twilio + sip_uri exposed."""
     from okareo.model_under_test import SipTarget
 
@@ -17,7 +16,7 @@ def test_a1_sip_target_params_shape():
     assert params["sip_password"] is None
 
 
-def test_a2_sip_target_credentials_in_params():
+def test_a2_sip_target_credentials_in_params() -> None:
     """A2: optional SIP digest creds appear in params verbatim."""
     from okareo.model_under_test import SipTarget
 
@@ -31,7 +30,7 @@ def test_a2_sip_target_credentials_in_params():
     assert params["sip_password"] == "secret"
 
 
-def test_a3_sip_password_is_sensitive():
+def test_a3_sip_password_is_sensitive() -> None:
     """A3: sip_password is reported as sensitive when set, not when absent."""
     from okareo.model_under_test import SipTarget
 
@@ -41,7 +40,7 @@ def test_a3_sip_password_is_sensitive():
     assert no_pw.get_sensitive_fields() == []
 
 
-def test_a4_target_union_accepts_sip_and_promotes_sensitive():
+def test_a4_target_union_accepts_sip_and_promotes_sensitive() -> None:
     """A4: Target(name, target=SipTarget) renders correctly and lifts sensitive fields."""
     from okareo.model_under_test import SipTarget, Target
 
