@@ -1631,6 +1631,7 @@ class TwilioVoiceTarget(VoiceTarget):
         auth_token: Twilio authentication token.
         from_phone_number: Phone number to call from (Twilio number).
         to_phone_number: Phone number to call to (destination number).
+        send_digits: DTMF digits to dial after answer (e.g. "wwww1008").
         max_parallel_requests: Maximum number of parallel requests the target can handle.
     """
 
@@ -1639,6 +1640,7 @@ class TwilioVoiceTarget(VoiceTarget):
     auth_token: str = field(default="")
     from_phone_number: Optional[str] = None
     to_phone_number: Optional[str] = None
+    send_digits: Optional[str] = None
     max_parallel_requests: Optional[int] = None
 
     def params(self) -> dict:
@@ -1649,6 +1651,7 @@ class TwilioVoiceTarget(VoiceTarget):
             "auth_token": self.auth_token,
             "from_phone_number": self.from_phone_number,
             "to_phone_number": self.to_phone_number,
+            "send_digits": self.send_digits,
             "max_parallel_requests": self.max_parallel_requests,
         }
 

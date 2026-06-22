@@ -349,6 +349,48 @@ def test_target_to_dict_twilio_marks_auth_token_sensitive() -> None:
     assert payload["target"]["auth_token"] == "super-secret"
 
 
+def test_target_to_dict_twilio_includes_send_digits_and_keeps_sensitive_contract() -> (
+    None
+):
+    tgt = Target(
+        name="Voice Sim Target (Twilio)",
+        target=TwilioVoiceTarget(
+            account_sid="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            auth_token="super-secret",
+            from_phone_number="+15105551234",
+            to_phone_number="+14155559876",
+            send_digits="wwww1008",
+        ),
+    )
+    payload = tgt.to_dict()
+
+    assert payload["target"]["send_digits"] == "wwww1008"
+    assert payload["sensitive_fields"] == ["auth_token"]
+
+
+def test_twilio_voice_target_params_includes_send_digits() -> None:
+    target = TwilioVoiceTarget(
+        account_sid="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        auth_token="super-secret",
+        from_phone_number="+15105551234",
+        to_phone_number="+14155559876",
+        send_digits="wwww1008",
+    )
+    payload = target.params()
+    assert payload["send_digits"] == "wwww1008"
+
+
+def test_twilio_voice_target_params_send_digits_defaults_none() -> None:
+    target = TwilioVoiceTarget(
+        account_sid="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        auth_token="super-secret",
+        from_phone_number="+15105551234",
+        to_phone_number="+14155559876",
+    )
+    payload = target.params()
+    assert payload["send_digits"] is None
+
+
 def test_target_to_dict_twilio_omits_sensitive_when_token_missing() -> None:
     tgt = Target(
         name="Voice Sim Target (Twilio)",
