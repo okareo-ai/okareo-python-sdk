@@ -2,18 +2,20 @@
 
 
 def test_a1_sip_target_params_shape() -> None:
-    """A1: SipTarget(sip_uri=...) round-trips with edge_type=twilio + sip_uri exposed."""
+    """A1: SipTarget(sip_uri=...) serializes as a clean first-class edge_type=sip."""
     from okareo.model_under_test import SipTarget
 
     t = SipTarget(sip_uri="sip:agent@room.sip.daily.co")
     params = t.params()
     assert params["type"] == "voice"
-    assert params["edge_type"] == "twilio"  # MVP rides Twilio egress
+    assert params["edge_type"] == "sip"
     assert params["sip_uri"] == "sip:agent@room.sip.daily.co"
-    # SIP URI surfaced via the existing dial slot so the Twilio edge picks it up
-    assert params["to_phone_number"] == "sip:agent@room.sip.daily.co"
     assert params["sip_username"] is None
     assert params["sip_password"] is None
+    # No PSTN/Twilio cruft in a SIP payload.
+    assert "to_phone_number" not in params
+    assert "account_sid" not in params
+    assert "auth_token" not in params
 
 
 def test_a2_sip_target_credentials_in_params() -> None:
