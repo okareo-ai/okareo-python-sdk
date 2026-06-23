@@ -22,8 +22,7 @@ class AugmentationConfig(_DictSerializable):
     """Base helper for simulation augmentation payload wrappers.
 
     Subclasses are thin JSON shapers for ``simulation_params["augmentation"]``.
-    They do not perform server-side validation locally; they only serialize the
-    fields you set.
+    They serialize only the fields you set.
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,9 +39,8 @@ class CAPAugmentation(AugmentationConfig):
 
     Arguments:
         probability: Probability that the driver emits an extra follow-up message.
-        pause_ms: Optional illustrative pause hint included in the public SDK
-            contract. The current server accepts this field but does not yet use
-            it to change runtime behavior.
+        pause_ms: Pause duration in milliseconds before emitting the
+            follow-up message.
     """
 
     probability: float | None = None
@@ -54,9 +52,8 @@ class DirectedSpeechAugmentation(AugmentationConfig):
     """Directed-speech augmentation config.
 
     Arguments:
-        probability: Optional illustrative field in the public SDK contract. The
-            current server accepts it but does not yet use it to change runtime
-            behavior.
+        probability: Probability that directed speech is injected for a given
+            opportunity.
         prompt: Optional independent prompt for the directed speech content.
         lpf_cutoff_hz: Low-pass filter cutoff used for off-mic speech.
         gain_db: Gain reduction applied to off-mic speech.
@@ -73,8 +70,7 @@ class NoiseAugmentation(AugmentationConfig):
     """Background noise augmentation config.
 
     Arguments:
-        probability: Optional illustrative field included in the public SDK
-            contract.
+        probability: Probability that background noise is applied during a run.
         profile: Noise profile name, e.g. ``"cafeteria"`` or ``"traffic"``.
         snr_db: Target signal-to-noise ratio in dB.
     """
@@ -89,9 +85,8 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
     """Secondary-speaker augmentation config.
 
     Arguments:
-        probability: Optional illustrative field in the public SDK contract. The
-            current server accepts it but does not yet use it to change runtime
-            behavior.
+        probability: Probability that a secondary-speaker segment is injected
+            for a given opportunity.
         voice: Voice identifier for the secondary speaker.
         prompt: Optional independent prompt for the secondary speaker.
         lpf_cutoff_hz: Optional low-pass filter cutoff applied only to
@@ -115,7 +110,7 @@ class BackchannelAugmentation(AugmentationConfig):
     """Backchannel injection augmentation config.
 
     Arguments:
-        probability: Chance of injecting a short non-turn-consuming backchannel.
+        probability: Probability that a short backchannel is injected.
         utterance: Optional backchannel text override, e.g. ``"mm-hmm"``.
         min_offset_ms: Minimum delay before the injection fires.
         max_offset_ms: Maximum delay before the injection fires.
@@ -132,11 +127,10 @@ class BargeInAugmentation(AugmentationConfig):
     """Barge-in injection augmentation config.
 
     Arguments:
-        probability: Chance of injecting a turn-consuming interruption.
-        replacement_text: Public contract field for the replacement utterance.
+        probability: Probability that a barge-in interruption is injected.
+        replacement_text: Text to use for the interruption utterance.
         prompt: Optional independent prompt for the barge-in content.
-        utterance: Optional low-level override for the injected text. When both
-            are provided, the server currently prefers ``utterance``.
+        utterance: Optional direct text override for the injected content.
         min_offset_ms: Minimum delay before the injection fires.
         max_offset_ms: Maximum delay before the injection fires.
     """
@@ -153,8 +147,8 @@ class BargeInAugmentation(AugmentationConfig):
 class Augmentation(_DictSerializable):
     """Container for voice simulation augmentation strategy config.
 
-    Pass exactly one strategy at a time to match the current server-side
-    single-strategy limitation.
+    Configure one primary strategy at a time. ``noise`` may be combined with
+    one additional strategy.
 
     Example:
         ``Augmentation(noise=NoiseAugmentation(profile="cafeteria", snr_db=10))``

@@ -33,6 +33,9 @@ def _clean_md_file(content: list[str], sidebar_position: int) -> list[str]:
     added_order = False
     new_content = []
     for line in content:
+        # Replace HTML-escaped double quotes so inline code examples render
+        # with literal quotes in Markdown output.
+        line = line.replace("&quot;", '"')
         if line.startswith("#### "):
             new_content.append("###" + line[4:])  # Convert H4 to H2
         elif line.startswith("title: okareo.okareo"):
