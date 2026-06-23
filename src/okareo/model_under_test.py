@@ -1686,6 +1686,42 @@ class PhoneTarget(VoiceTarget):
         }
 
 
+@_attrs_define
+class SipTarget(VoiceTarget):
+    """Voice target reached over SIP.
+
+    Okareo places a call to ``sip_uri`` and runs a full-duplex voice simulation
+    against the agent that answers. Use this to test any voice agent reachable at
+    a SIP URI — for example an agent fronted by Daily, Vapi, LiveKit, or a SIP
+    trunk.
+
+    Arguments:
+        sip_uri: Destination SIP URI, e.g. "sip:agent@your-domain.example.com".
+        sip_username: Optional SIP authentication username for the target.
+        sip_password: Optional SIP authentication password for the target.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "sip"
+    sip_uri: str = field()
+    sip_username: Optional[str] = None
+    sip_password: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "sip_uri": self.sip_uri,
+            "sip_username": self.sip_username,
+            "sip_password": self.sip_password,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        return ["sip_password"] if self.sip_password else []
+
+
 @define
 class StopConfig:
     """
@@ -2110,6 +2146,7 @@ class Target:
         DeepgramVoiceTarget,
         TwilioVoiceTarget,
         PhoneTarget,
+        SipTarget,
         dict,
     ]
     id: Optional[str] = None
