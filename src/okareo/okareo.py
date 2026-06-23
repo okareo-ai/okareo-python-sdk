@@ -1284,13 +1284,14 @@ class Okareo:
         )
 
     def create_or_update_driver(self, driver: Driver) -> Driver:
-        """Create or update a driver.
+        """Create or update a simulation driver by name.
 
         Args:
-            driver: The driver to create or update.
+            driver: Driver definition to register. If a driver with the same
+                name already exists, it is updated.
 
         Returns:
-            The created or updated driver.
+            Driver: The created or updated driver.
         """
         try:
             if driver.temperature is not None:
@@ -1323,13 +1324,13 @@ class Okareo:
         return Driver.from_response(response)
 
     def get_driver_by_name(self, driver_name: str) -> Driver:
-        """Get a driver by its name.
+        """Retrieve a simulation driver by name.
 
         Args:
             driver_name: The name of the driver to retrieve.
 
         Returns:
-            The driver with the specified name.
+            Driver: The driver with the specified name.
         """
         response = get_driver_v0_driver_identifier_get.sync(
             client=self.client,
@@ -1360,13 +1361,14 @@ class Okareo:
         project_id: Optional[str] = None,
         sensitive_fields: Union[List[str], None] = None,
     ) -> Target:
-        """Create or update a target.
+        """Create or update a simulation target by name.
 
         Args:
-            target: The target to create or update.
+            target: Target definition to register. If a target with the same
+                name already exists, it is updated.
 
         Returns:
-            The created or updated target.
+            Target: The created or updated target.
         """
         model_invoker = None
         session_starter = None
@@ -1415,6 +1417,14 @@ class Okareo:
         return Target.from_response(response, target_data)
 
     def get_target_by_name(self, target_name: str) -> Target:
+        """Retrieve a simulation target by name.
+
+        Args:
+            target_name: The name of the target to retrieve.
+
+        Returns:
+            Target: The target with the specified name.
+        """
         response = get_target_model_by_name_v0_target_target_model_name_get.sync(
             client=self.client,
             api_key=self.api_key,
@@ -1452,6 +1462,33 @@ class Okareo:
         sensitive_fields: Union[List[str], None] = None,
         submit: Optional[bool] = False,
     ) -> TestRunItem:
+        """Run a multiturn simulation against a target.
+
+        This method resolves or creates the referenced driver and target,
+        builds Simulation parameters (including optional augmentation), and
+        executes either ModelUnderTest.run_test (blocking) or
+        ModelUnderTest.submit_test (async server-side) using
+        TestRunType.MULTI_TURN.
+
+        Parameter summary:
+        - ``name``: Name of the resulting test run.
+        - ``scenario``: Scenario set object or scenario set ID.
+        - ``target`` / ``driver``: Registered names or object definitions.
+        - ``checks``: Optional checks to execute.
+        - ``stop_check``, ``repeats``, ``max_turns``, ``first_turn``:
+          Turn-flow controls.
+        - ``checks_at_every_turn``, ``concurrent_ask_probability``,
+          ``turn_transition_time``: Runtime simulation controls.
+        - ``augmentation``: Optional augmentation settings.
+        - ``api_key`` / ``api_keys``: Provider credentials for target calls.
+        - ``metrics_kwargs`` / ``calculate_metrics``: Metrics configuration.
+        - ``project_id`` / ``tags`` / ``sensitive_fields``: Registration and
+          metadata controls.
+        - ``submit``: If True, submit asynchronously via
+          ModelUnderTest.submit_test.
+
+        Returns a TestRunItem representing the created simulation test run.
+        """
         # create or update driver if needed
         if isinstance(driver, Driver):
             driver_model = self.create_or_update_driver(driver)
@@ -1580,7 +1617,7 @@ class Okareo:
         project_id: Optional[str] = None,
         return_model_metrics: bool = False,
     ) -> list:
-        """Find test runs, optionally filtering by name or tags.
+        """Find existing test runs for simulation/evaluation workflows.
 
         Args:
             name: Filter results to runs with this exact name (client-side).
@@ -1673,6 +1710,21 @@ class Okareo:
         file_bytes: Optional[bytes] = None,
         project_id: Optional[str] = None,
     ) -> VoiceUploadResponse:
+        """Upload a voice file for use in voice scenarios/simulations.
+
+        Provide either a local `file_path` or in-memory `file_bytes`.
+
+        Args:
+            file_path: Path to a local audio file.
+            file_bytes: Raw audio bytes.
+            project_id: Optional project ID to associate with the uploaded file.
+
+        Returns:
+            VoiceUploadResponse: Metadata including a downloadable `file_url`.
+
+        Raises:
+            ValueError: If neither `file_path` nor `file_bytes` is provided.
+        """
         audio_data = None
         if file_bytes:
             audio_data = file_bytes

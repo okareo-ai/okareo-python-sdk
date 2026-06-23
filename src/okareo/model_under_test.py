@@ -1551,11 +1551,13 @@ class CustomMultiturnTargetAsync(BaseModel):
 
 class VoiceTarget(BaseModel):
     """
-    Base class for realtime voice targets in Okareo multiturn evaluation.
+    Base class for realtime voice targets in Okareo multiturn simulation.
 
-    This target runs server-side during multiturn evaluations and follows the
-    same API key pattern as other targets: API keys are passed via the
-    `api_keys` parameter in `run_simulation()`.
+    Voice targets are used as `Target.target` when calling
+    `Okareo.run_simulation(...)`. They execute server-side and follow the same
+    API key pattern as other targets (pass keys via `api_keys`).
+
+    Subclasses define provider-specific fields and implement `params()`.
     """
 
     type = "voice"
@@ -1624,14 +1626,14 @@ class DeepgramVoiceTarget(VoiceTarget):
 @_attrs_define
 class TwilioVoiceTarget(VoiceTarget):
     """
-    Twilio voice target for Okareo multiturn evaluation.
+    Twilio-backed voice target for Okareo multiturn simulation.
 
     Arguments:
-        account_sid: Twilio account SID for authentication.
-        auth_token: Twilio authentication token.
-        from_phone_number: Phone number to call from (Twilio number).
-        to_phone_number: Phone number to call to (destination number).
-        max_parallel_requests: Maximum number of parallel requests the target can handle.
+        account_sid: Twilio Account SID.
+        auth_token: Twilio auth token (treated as sensitive).
+        from_phone_number: Outbound Twilio phone number.
+        to_phone_number: Destination number to dial.
+        max_parallel_requests: Optional cap on concurrent calls.
     """
 
     edge_type = "twilio"
@@ -1658,9 +1660,10 @@ class TwilioVoiceTarget(VoiceTarget):
 
 @_attrs_define
 class PhoneTarget(VoiceTarget):
-    """Voice target identified by phone number only.
+    """Phone-number-only voice target for multiturn simulation.
 
-    Okareo handles the telephony provider. You just supply the number to call.
+    Use this when Okareo should manage telephony details. You provide only the
+    destination phone number.
 
     Arguments:
         phone_number: Destination phone number (E.164 format, e.g. "+15551234567").
@@ -1753,22 +1756,22 @@ class StreamingSelectCondition:
 class StreamingConfig:
     """Configuration for streaming responses from a custom API endpoint.
 
-    When provided on a TurnConfig or SessionConfig, the server will consume the
-    endpoint's response as a Server-Sent Events (SSE) or NDJSON stream and
-    reassemble the tokens into the final response.
+    When attached to TurnConfig or SessionConfig, the server can consume SSE
+    or NDJSON streams and reassemble the final response text.
 
-    The text extraction path is specified via ``response_message_path`` on the
-    parent TurnConfig/SessionConfig — set it to the chunk shape when streaming
-    (e.g., ``response.choices[0].delta.content``).
+    The text extraction path is configured on the parent TurnConfig or
+    SessionConfig via `response_message_path`. For streaming responses, set it
+    to your chunk shape (for example:
+    `response.choices[0].delta.content`).
 
     Arguments:
-        stop: List of :class:`StreamingStopCondition` objects. The stream terminates
-            when **any** condition matches (OR semantics). A stop condition
-            without a ``path`` matches as a raw string against the SSE
-            ``data:`` payload before JSON parsing (e.g., ``[DONE]``).
-        select: List of :class:`StreamingSelectCondition` objects. **All** conditions
-            must match for a chunk's content to be extracted (AND semantics).
-            When omitted or empty, content is extracted from every chunk.
+        stop: List of StreamingStopCondition rules. The stream ends when any
+            stop rule matches (OR semantics). A stop rule without a `path`
+            matches as a raw string against each SSE `data:` payload, such as
+            `[DONE]`.
+        select: List of StreamingSelectCondition rules. All select rules must
+            match before chunk content is extracted (AND semantics). If empty,
+            content is extracted from every chunk.
     """
 
     def __init__(
@@ -1837,26 +1840,26 @@ class SessionConfig:
 
 
 class TurnConfig:
-    """
-    Configuration for a custom API endpoint that continues a session/conversation by one turn.
+    """Config for a custom API endpoint that continues a session by one turn.
 
     Arguments:
-        url: URL of the endpoint to start the session.
-        method: HTTP method to use for the request. Defaults to `POST`.
-        headers: Headers to include in the request.
-            Supports mustache syntax for variable substitution for `{latest_message}`, `{message_history}`, `{session_id}`.
-            Defaults to an empty JSON object.
-        body: Body to include in the request.
-            Supports mustache syntax for variable substitution for `{latest_message}`, `{message_history}`, `{session_id}`.
+        url: URL of the endpoint to call for each next turn.
+        method: HTTP method to use. Defaults to POST.
+        headers: Headers to include in the request. Supports mustache
+            substitution using latest_message, message_history, and session_id
+            variables. Defaults to an empty JSON object.
+        body: Request body. Supports mustache substitution for
+            latest_message, message_history, and session_id variables.
             Defaults to an empty JSON object.
         status_code: Expected HTTP status code of the response.
-        response_message_path: Path to extract the model's generated message from the response.
-            E.g., `response.completion.message.content` will parse out the corresponding field of
-            the response JSON object as the model's generated response.
-        response_session_id_path: Path to extract the session ID from the response.
-            E.g., `response.result.contextId` will use the `contextId` field of the response
-            JSON object to set the `session_id` for subsequent turns.
-        response_tool_calls_path: Path to extract tool calls from the response.
+        response_message_path: Path to extract the model message from the
+            response JSON (for example,
+            response.completion.message.content).
+        response_session_id_path: Path to extract session ID from the
+            response JSON (for example, response.result.contextId) so the same
+            conversation session can continue across turns.
+        response_tool_calls_path: Path to extract tool calls from the
+            response.
     """
 
     def __init__(
@@ -2024,6 +2027,12 @@ class CustomEndpointTarget(BaseModel):
 
 @_attrs_define
 class Driver:
+    """Driver configuration used to simulate the caller side of a conversation.
+
+    Registered via `Okareo.create_or_update_driver(...)` and used by
+    `Okareo.run_simulation(...)`.
+    """
+
     name: str
     prompt_template: str = "{scenario_input}"
     model_id: Optional[str] = None
@@ -2084,6 +2093,12 @@ class Driver:
 
 @_attrs_define
 class Target:
+    """Named simulation target wrapper.
+
+    Wraps one target implementation (text or voice) so it can be created,
+    retrieved, and referenced by name in `Okareo.run_simulation(...)`.
+    """
+
     name: str
     target: Union[
         OpenAIModel,
@@ -2135,6 +2150,12 @@ class Target:
 
 @_attrs_define
 class Simulation:
+    """Simulation runtime parameters for multiturn test runs.
+
+    Includes turn controls, stop conditions, and optional augmentation settings
+    used by `Okareo.run_simulation(...)`.
+    """
+
     stop_check: Union[StopConfig, dict, None] = None
     repeats: Optional[int] = 1
     max_turns: Optional[int] = 5
