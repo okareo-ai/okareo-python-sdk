@@ -1687,25 +1687,19 @@ class PhoneTarget(VoiceTarget):
 class SipTarget(VoiceTarget):
     """Voice target reached over SIP.
 
-    Okareo originates a call to ``sip_uri`` and runs a full-duplex voice
-    simulation against the agent that answers. Use this to test voice agents
-    behind a SIP URI — e.g. a Pipecat bot on a Daily room's ``sip_uri``, a Vapi
-    assistant (``<number>@<credential_id>.sip.vapi.ai``), a Twilio Elastic SIP
-    Trunk, or LiveKit.
-
-    For the initial implementation this rides the Twilio egress path
-    (``edge_type="twilio"``): Twilio dials the SIP URI and streams call media
-    back to Okareo. The target authenticates Okareo by Twilio's signaling IPs or
-    by the optional SIP digest credentials below.
+    Okareo places a call to ``sip_uri`` and runs a full-duplex voice simulation
+    against the agent that answers. Use this to test any voice agent reachable at
+    a SIP URI — for example an agent fronted by Daily, Vapi, LiveKit, or a SIP
+    trunk.
 
     Arguments:
-        sip_uri: Destination SIP URI, e.g. "sip:agent@your-room.sip.daily.co".
-        sip_username: Optional SIP digest auth username for the target.
-        sip_password: Optional SIP digest auth password for the target.
+        sip_uri: Destination SIP URI, e.g. "sip:agent@your-domain.example.com".
+        sip_username: Optional SIP authentication username for the target.
+        sip_password: Optional SIP authentication password for the target.
         max_parallel_requests: Cap on concurrent calls hitting the target.
     """
 
-    edge_type = "twilio"
+    edge_type = "sip"
     sip_uri: str = field()
     sip_username: Optional[str] = None
     sip_password: Optional[str] = None
@@ -1715,10 +1709,6 @@ class SipTarget(VoiceTarget):
         return {
             "type": self.type,
             "edge_type": self.edge_type,
-            "account_sid": "",
-            "auth_token": "",
-            "from_phone_number": None,
-            "to_phone_number": self.sip_uri,
             "sip_uri": self.sip_uri,
             "sip_username": self.sip_username,
             "sip_password": self.sip_password,
