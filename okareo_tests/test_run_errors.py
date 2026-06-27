@@ -666,7 +666,11 @@ class TestMultiturnErrors:
             )
 
     def test_multiturn_error_checks(self, rnd: str, okareo: Okareo) -> None:
-        """Test failure when invalid checks are provided for MULTI_TURN test run"""
+        """Test that a crashing check is isolated and does not fail the run.
+
+        Per-check crashes are now non-fatal: the simulation completes and the
+        error is recorded in the check results rather than raising an exception.
+        """
         # Create a custom check that raises an error
         okareo.create_or_update_check(
             name="error_check",
@@ -696,18 +700,18 @@ class TestMultiturnErrors:
         )
         scenario = okareo.create_scenario_set(scenario_set_create)
 
-        # Run test with invalid check and expect error
-        with pytest.raises(Exception, match="An error occurred while running checks"):
-            okareo.run_simulation(
-                target=target,
-                scenario=scenario,
-                name="Test Run",
-                max_turns=3,
-                repeats=1,
-                stop_check={"check_name": "model_refusal", "stop_on": False},
-                api_keys={"openai": OPENAI_API_KEY},
-                checks=["error_check"],
-            )
+        # Run test with crashing check — should complete without raising
+        result = okareo.run_simulation(
+            target=target,
+            scenario=scenario,
+            name="Test Run",
+            max_turns=3,
+            repeats=1,
+            stop_check={"check_name": "model_refusal", "stop_on": False},
+            api_keys={"openai": OPENAI_API_KEY},
+            checks=["error_check"],
+        )
+        assert result is not None
 
     def test_openai_authentication_error(
         self, rnd: str, basic_scenario: Any, okareo: Any
