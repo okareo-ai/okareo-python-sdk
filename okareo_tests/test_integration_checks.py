@@ -121,8 +121,6 @@ def test_run_code_based_predefined_checks(
         "levenshtein_distance",
         "levenshtein_distance_input",
         "compression_ratio",
-        "does_code_compile",
-        "contains_all_imports",
         "corpus_BLEU",
         "latency",
         "is_json",

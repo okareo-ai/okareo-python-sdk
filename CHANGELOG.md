@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Removed
+
+- References to retired predefined checks (`is_best_option`, `is_code_functional`,
+  `does_code_compile`, `contains_all_imports`), which are no longer available in
+  the Okareo platform.
+
 ## [0.0.133] - 2026-06-09
 
 ### Added
