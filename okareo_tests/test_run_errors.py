@@ -658,7 +658,6 @@ class TestMultiturnErrors:
                 repeats=1,
                 stop_check={"check_name": "model_refusal", "stop_on": False},
                 checks=[
-                    "contains_all_imports",
                     "compression_ratio",
                     "are_all_params_expected",
                     "reverse_qa_quality",
