@@ -1,9 +1,11 @@
 import requests
 
-from okareo.checks import CheckResponse, CodeBasedCheck
+from okareo.checks import CheckOutputType, CheckResponse, CodeBasedCheck
 
 
 class Check(CodeBasedCheck):
+    check_type = CheckOutputType.PASS_FAIL
+
     @staticmethod
     def evaluate(model_output: str) -> CheckResponse:  # type: ignore[override]
         """Malicious check that makes network requests and file system access."""

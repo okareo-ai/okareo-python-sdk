@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `does_code_compile`, `contains_all_imports`), which are no longer available in
   the Okareo platform.
 
+### Fixed
+
+- Example code-based check fixtures now declare `check_type` explicitly, matching the
+  output-type requirement for code-based checks (a check returning `CheckResponse`
+  otherwise fails output-type inference).
+
 ## [0.0.133] - 2026-06-09
 
 ### Added
