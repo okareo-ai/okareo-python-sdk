@@ -182,7 +182,7 @@ def run_and_verify_augmentation(
         first_turn="target",
         calculate_metrics=True,
         augmentation=aug_config,
-        checks=["avg_turn_taking_latency"],
+        checks=["time_to_first_audio"],
     )
 
     assert isinstance(
