@@ -271,7 +271,7 @@ def run_voice_multiturn_test_audio_check(
         repeats=1,
         first_turn="driver",
         checks=[
-            "avg_turn_taking_latency",
+            "time_to_first_audio",
             "avg_words_per_minute",
             "total_turn_count",
             "empathy_score",
@@ -381,7 +381,7 @@ def test_voice_multiturn_voice_profile(
         repeats=1,
         first_turn="driver",
         checks=[
-            "avg_turn_taking_latency",
+            "time_to_first_audio",
             "avg_words_per_minute",
             "total_turn_count",
         ],

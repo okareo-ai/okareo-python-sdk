@@ -304,17 +304,20 @@ def validate_test_run_sanity(
         mean_scores = metrics.get("mean_scores", {})
         baseline = metrics.get("aggregate_baseline_metrics", {})
 
-        # Driver turn taking latency check
+        # Driver turn taking latency. aggregate_baseline_metrics is keyed by the
+        # internal metric key, which the check rename does not change.
         turn_taking_latency = baseline.get("avg_turn_taking_latency")
         assert (
             turn_taking_latency is not None
         ), "avg_turn_taking_latency should exist in baseline"
 
-        # Target turn taking latency exists
-        target_latency = mean_scores.get("avg_turn_taking_latency")
+        # Target turn taking latency exists. The check was renamed
+        # avg_turn_taking_latency -> time_to_first_audio, so mean_scores (keyed by
+        # check name) now reports it under the canonical name.
+        target_latency = mean_scores.get("time_to_first_audio")
         assert (
             target_latency is not None
-        ), "avg_turn_taking_latency should exist in mean_scores"
+        ), "time_to_first_audio should exist in mean_scores"
 
     # Get datapoints and messages
     all_datapoints = get_datapoints(okareo, evaluation.id)
@@ -481,7 +484,7 @@ class TestVoiceSanity:
             first_turn="driver",
             calculate_metrics=True,
             checks=[
-                "avg_turn_taking_latency",
+                "time_to_first_audio",
                 "avg_words_per_minute",
                 "total_turn_count",
             ],
@@ -531,7 +534,7 @@ class TestVoiceFirstTurn:
             first_turn="driver",
             calculate_metrics=True,
             checks=[
-                "avg_turn_taking_latency",
+                "time_to_first_audio",
                 "avg_words_per_minute",
                 "total_turn_count",
             ],
@@ -581,7 +584,7 @@ class TestVoiceFirstTurn:
             first_turn="target",
             calculate_metrics=True,
             checks=[
-                "avg_turn_taking_latency",
+                "time_to_first_audio",
                 "avg_words_per_minute",
                 "total_turn_count",
             ],
