@@ -113,24 +113,15 @@ class CodeBasedCheck(BaseCheck):
     3. Implement the `evaluate` method in your Check class.
     4. Include any additional code used by your check in the same file.
 
-    Declare the output type with the `check_type` class attribute, using the same
-    `CheckOutputType` values as `ModelBasedCheck`:
-    - `CheckOutputType.PASS_FAIL` -> the check produces a boolean pass/fail result.
-    - `CheckOutputType.SCORE` -> the check produces a numeric score.
-
-    `check_type` is required whenever `evaluate` returns a `CheckResponse` or a tuple
-    (the return annotation alone cannot convey pass/fail vs. score intent). If `evaluate`
-    is annotated to return a bare `bool`, `int`, or `float`, the output type is inferred
-    from that annotation and `check_type` may be omitted.
+    The output type (pass/fail vs. score) is inferred by the server from the value
+    your `evaluate` method returns, so you do not need to declare it.
 
     Example:
     ```python
     # In my_custom_check.py
-    from okareo.checks import CheckOutputType, CodeBasedCheck, CheckResponse
+    from okareo.checks import CodeBasedCheck, CheckResponse
 
     class Check(CodeBasedCheck):
-        check_type = CheckOutputType.PASS_FAIL
-
         @staticmethod
         def evaluate(
             model_output: str, scenario_input: str, scenario_result: str, metadata: dict, model_input: str
@@ -149,8 +140,6 @@ class CodeBasedCheck(BaseCheck):
     ```
     """
 
-    check_type: Optional[CheckOutputType] = None
-
     def check_config(self) -> dict:
         module = inspect.getmodule(self)
         if module is None:
@@ -161,24 +150,4 @@ class CodeBasedCheck(BaseCheck):
             raise ValueError(
                 "Unable to read source code for check class. Please place the check class in a separate file."
             ) from e
-        return {"code_contents": source, "type": self._resolve_output_type()}
-
-    def _resolve_output_type(self) -> str:
-        """Resolve the check's output type for check_config().
-
-        Prefers the explicit `check_type` class attribute. Falls back to inferring a
-        primitive output type from the `evaluate` return annotation for backward
-        compatibility. Raises when neither is available (e.g. a `CheckResponse` or
-        tuple return with no `check_type` declared).
-        """
-        if isinstance(self.check_type, CheckOutputType):
-            return self.check_type.value
-        annotation = inspect.signature(self.evaluate).return_annotation
-        name = getattr(annotation, "__name__", None)
-        if name in ("bool", "int", "float"):
-            return str(name)
-        raise ValueError(
-            "CodeBasedCheck could not determine its output type. Set "
-            "`check_type = CheckOutputType.PASS_FAIL` (boolean pass/fail) or "
-            "`check_type = CheckOutputType.SCORE` (numeric score) on your Check class."
-        )
+        return {"code_contents": source}
