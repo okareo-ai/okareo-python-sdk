@@ -1,9 +1,7 @@
-from okareo.checks import CheckOutputType, CheckResponse, CodeBasedCheck
+from okareo.checks import CheckResponse, CodeBasedCheck
 
 
 class Check(CodeBasedCheck):
-    check_type = CheckOutputType.PASS_FAIL
-
     @staticmethod
     def evaluate(model_output: str, scenario_input: str, scenario_result: str, metadata: dict, model_input: str) -> CheckResponse:  # fmt: skip
         return (
