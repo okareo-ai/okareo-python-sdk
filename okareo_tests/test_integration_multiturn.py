@@ -34,7 +34,6 @@ from okareo.model_under_test import (
 from okareo_api_client.models.find_test_data_point_payload import (
     FindTestDataPointPayload,
 )
-from okareo_api_client.models.full_data_point_item import FullDataPointItem
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.seed_data import SeedData
 
@@ -1205,34 +1204,27 @@ def test_multiturn_driver_with_custom_endpoint_exception(
     )
     scenario = okareo.create_scenario_set(scenario_set_create)
 
-    # Run the test; errors are now captured per-row in error_message
+    # Every row's custom-endpoint call fails auth (bad "foobar" key), so the
+    # whole run is a total-wipeout: the server marks it FAILED and the sync
+    # submit raises, surfacing the redacted representative error to the caller.
     redacted_str = "*" * 16
 
-    test_run = okareo.run_simulation(
-        target=target,
-        driver=driver,
-        name=f"Custom Endpoint Test Exception - {unique_suffix}",
-        api_key=API_KEY,
-        scenario=scenario,
-        stop_check=StopConfig(check_name="task_completed"),
-        max_turns=2,
-        first_turn="driver",
-        checks=["task_completed"],
-    )
+    with pytest.raises(Exception) as exc_info:
+        okareo.run_simulation(
+            target=target,
+            driver=driver,
+            name=f"Custom Endpoint Test Exception - {unique_suffix}",
+            api_key=API_KEY,
+            scenario=scenario,
+            stop_check=StopConfig(check_name="task_completed"),
+            max_turns=2,
+            first_turn="driver",
+            checks=["task_completed"],
+        )
 
-    # Fetch the test data points and verify error_message on each row
-    tdps = okareo.find_test_data_points(
-        FindTestDataPointPayload(test_run_id=test_run.id, full_data_point=True)
-    )
-    assert isinstance(tdps, list)
-    assert len(tdps) > 0
-
-    for tdp in tdps:
-        assert isinstance(tdp, FullDataPointItem)
-        assert tdp.error_message is not None, "error_message should be populated"
-        assert isinstance(tdp.error_message, str), "error_message should be a string"
-        assert "Invalid Okareo API Token" in tdp.error_message
-        assert redacted_str in tdp.error_message
+    error_str = str(exc_info.value)
+    assert "Invalid Okareo API Token" in error_str
+    assert redacted_str in error_str
 
 
 @pytest.mark.skip(reason="Skipping submit test for multiturn error")
