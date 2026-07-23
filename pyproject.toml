@@ -73,10 +73,6 @@ mypy = "*"
 pep8-naming = "*"
 pre-commit = "*"
 pymdown-extensions = "*"
-# Docs generation only -- never imported at runtime. Kept out of the
-# runtime deps because pydoc-markdown 4.8.2 (its newest release) hard-pins
-# docstring-parser <0.12, which collides with modern packages in any
-# project that installs okareo.
 pydoc-markdown = "^4.8.2"
 pytest = "*"
 pytest-httpx = {version = "0.30.0"}
