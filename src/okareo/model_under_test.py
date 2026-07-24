@@ -1151,7 +1151,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _scenario_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(scenario_id, Unset)
-            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+            else UUID(scenario_id)
+            if isinstance(scenario_id, str)
+            else scenario_id
         )
         _datapoint_ids: Union[Unset, list[UUID], None] = (
             UNSET
@@ -1170,7 +1172,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _test_run_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(test_run_id, Unset)
-            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+            else UUID(test_run_id)
+            if isinstance(test_run_id, str)
+            else test_run_id
         )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
@@ -1722,6 +1726,132 @@ class SipTarget(VoiceTarget):
         return ["sip_password"] if self.sip_password else []
 
 
+# Platforms reachable through Okareo's native WebRTC edge.
+WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "vapi", "pipecat")
+# Platforms currently implemented end-to-end. The others validate but their
+# server-side connectors are not wired yet, so gate them here to fail fast in
+# the SDK rather than deep in a running simulation.
+WEBRTC_SUPPORTED_PLATFORMS = ("livekit", "retell")
+# Required fields per platform (beyond the shared api_keys["voice"] secret for
+# the hosted providers, which the server validates).
+_WEBRTC_REQUIRED_FIELDS = {
+    "livekit": (
+        "livekit_url",
+        "livekit_api_key",
+        "livekit_api_secret",
+        "room_name",
+    ),
+    "retell": ("agent_id",),
+    "daily": ("room_url",),
+    "vapi": ("assistant_id",),
+    "pipecat": ("offer_url",),
+}
+
+
+@_attrs_define
+class WebRTCVoiceTarget(VoiceTarget):
+    """Voice target reached natively over WebRTC.
+
+    Unlike ``SipTarget`` (8 kHz telephony), Okareo joins the agent's own WebRTC
+    room and runs the simulation at full Opus fidelity — the way the agent's web
+    users actually hear it. One integration reaches multiple platforms:
+
+    - ``retell`` — Retell web calls (LiveKit Cloud under the hood). Its secret
+      rides ``api_keys["voice"]``; pass ``agent_id``.
+    - ``livekit`` — a LiveKit room you control; pass ``livekit_url`` +
+      ``livekit_api_key`` + ``livekit_api_secret`` + ``room_name``.
+
+    Whole-call recordings reach the same ``call_recording_url`` datapoint field
+    as the Twilio edge (vendor recording when the platform provides one, an
+    Okareo-mixed dual-channel WAV otherwise).
+
+    Arguments:
+        platform: Which platform to reach. Currently supported end-to-end:
+            "retell", "livekit". ("daily", "vapi", "pipecat" are accepted but
+            not yet wired server-side.)
+        agent_id: Retell agent id (``platform="retell"``).
+        livekit_url / livekit_api_key / livekit_api_secret / room_name:
+            LiveKit direct connection (``platform="livekit"``).
+        assistant_id: Vapi assistant id (``platform="vapi"``, not yet wired).
+        room_url / meeting_token: Daily room (``platform="daily"``, not wired).
+        offer_url: Pipecat SmallWebRTC offer endpoint (``platform="pipecat"``).
+        agent_track_hint: Override which remote audio track is treated as the
+            agent (default: platform-specific, then first remote audio track).
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "webrtc"
+    platform: str = field()
+    agent_id: Optional[str] = None
+    livekit_url: Optional[str] = None
+    livekit_api_key: Optional[str] = None
+    livekit_api_secret: Optional[str] = None
+    room_name: Optional[str] = None
+    assistant_id: Optional[str] = None
+    room_url: Optional[str] = None
+    meeting_token: Optional[str] = None
+    offer_url: Optional[str] = None
+    agent_track_hint: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
+
+    def __attrs_post_init__(self) -> None:
+        """Fail fast on misconfiguration, client-side.
+
+        Without this, a bad platform or a missing LiveKit credential only
+        surfaces ~30s into a running simulation as a server-side 500.
+        """
+        if self.platform not in WEBRTC_PLATFORMS:
+            raise ValueError(
+                f"Unknown platform {self.platform!r}. "
+                f"Expected one of {list(WEBRTC_PLATFORMS)}."
+            )
+        if self.platform not in WEBRTC_SUPPORTED_PLATFORMS:
+            raise ValueError(
+                f"platform {self.platform!r} is not yet supported end-to-end. "
+                f"Supported: {list(WEBRTC_SUPPORTED_PLATFORMS)}. "
+                "Use edge_type='sip' (SipTarget) as a fallback."
+            )
+        missing = [
+            name
+            for name in _WEBRTC_REQUIRED_FIELDS[self.platform]
+            if not getattr(self, name)
+        ]
+        if missing:
+            raise ValueError(
+                f"platform {self.platform!r} requires: {', '.join(missing)}."
+            )
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "platform": self.platform,
+            "agent_id": self.agent_id,
+            "livekit_url": self.livekit_url,
+            "livekit_api_key": self.livekit_api_key,
+            "livekit_api_secret": self.livekit_api_secret,
+            "room_name": self.room_name,
+            "assistant_id": self.assistant_id,
+            "room_url": self.room_url,
+            "meeting_token": self.meeting_token,
+            "offer_url": self.offer_url,
+            "agent_track_hint": self.agent_track_hint,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        # Retell/Vapi secrets ride api_keys["voice"], not the target. LiveKit
+        # creds live on the target and must be redacted.
+        sensitive = []
+        if self.livekit_api_secret:
+            sensitive.append("livekit_api_secret")
+        if self.livekit_api_key:
+            sensitive.append("livekit_api_key")
+        if self.meeting_token:
+            sensitive.append("meeting_token")
+        return sensitive
+
+
 @define
 class StopConfig:
     """
@@ -2147,6 +2277,7 @@ class Target:
         TwilioVoiceTarget,
         PhoneTarget,
         SipTarget,
+        WebRTCVoiceTarget,
         dict,
     ]
     id: Optional[str] = None
