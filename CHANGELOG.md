@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `Okareo(timeout=...)` and the `HTTPX_TIME_OUT` environment variable are now applied to
+  the underlying HTTP client. Both were accepted and then discarded, so every request ran
+  with no timeout. When neither is set, requests stay untimed as before.
 - Example code-based check fixtures now declare `check_type` explicitly, matching the
   output-type requirement for code-based checks (a check returning `CheckResponse`
   otherwise fails output-type inference).

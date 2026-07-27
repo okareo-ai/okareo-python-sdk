@@ -6,6 +6,7 @@ import warnings
 from typing import Any, Dict, List, Optional, TypedDict, Union, cast
 from uuid import UUID
 
+import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
 from tqdm import tqdm  # type: ignore
@@ -108,7 +109,7 @@ from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
 from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
 from okareo_api_client.types import UNSET, File, Unset
 
-from .common import BASE_URL, HTTPX_TIME_OUT
+from .common import BASE_URL, get_httpx_time_out
 from .model_under_test import BaseModel, ModelUnderTest
 
 CHECK_DEPRECATION_WARNING = (
@@ -149,12 +150,28 @@ class Okareo:
     """A class for interacting with Okareo API and for formatting request data."""
 
     def __init__(
-        self, api_key: str, base_path: str = BASE_URL, timeout: float = HTTPX_TIME_OUT  # type: ignore
+        self,
+        api_key: str,
+        base_path: str = BASE_URL,  # type: ignore
+        timeout: Optional[float] = None,
     ):
+        """
+        Args:
+            api_key (str): Okareo API key.
+            base_path (str): Base URL of the Okareo API.
+            timeout (Optional[float]): Request timeout in seconds applied to every
+                API call made through this instance. Falls back to the
+                HTTPX_TIME_OUT environment variable. When neither is set,
+                requests are not timed out.
+        """
         self.api_key = api_key
+        if timeout is None:
+            timeout = get_httpx_time_out()
         self.client = Client(
-            base_url=base_path, raise_on_unexpected_status=True
-        )  # otherwise everything except 201 and 422 is swallowed
+            base_url=base_path,
+            raise_on_unexpected_status=True,  # otherwise everything except 201 and 422 is swallowed
+            timeout=httpx.Timeout(timeout) if timeout is not None else None,
+        )
         response = get_all_projects_v0_projects_get.sync(
             client=self.client,
             api_key=self.api_key,
