@@ -1151,9 +1151,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         _scenario_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(scenario_id, Unset)
-            else UUID(scenario_id)
-            if isinstance(scenario_id, str)
-            else scenario_id
+            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
         )
         _datapoint_ids: Union[Unset, list[UUID], None] = (
             UNSET
@@ -1172,9 +1170,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         _test_run_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(test_run_id, Unset)
-            else UUID(test_run_id)
-            if isinstance(test_run_id, str)
-            else test_run_id
+            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
         )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
@@ -1727,20 +1723,20 @@ class SipTarget(VoiceTarget):
 
 
 # Platforms reachable through Okareo's native WebRTC edge.
-WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "vapi", "generic_webrtc", "pipecat")
+WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "vapi", "smallwebrtc", "pipecat")
 # Platforms supported end-to-end over WebRTC. Others parse (for a clear error)
 # but are gated here to fail fast in the SDK rather than deep in a simulation.
 # "vapi" is intentionally absent: Vapi web calls require Vapi's own Web SDK
-# "audio handshake" (docs.vapi.ai/calls/customer-join-timeout) that a raw Daily
-# join cannot perform, so the assistant never receives customer audio. Reach
-# Vapi agents via edge_type="sip" instead. "generic_webrtc" is the generic
-# offerer-side WebRTC path (see GenericWebRTCTarget); "pipecat" is a
-# deprecated alias for it.
+# "audio handshake" that a native Daily join cannot reproduce (the assistant
+# never ingests our customer audio -- extensively verified, see the plan doc).
+# Reach Vapi agents via edge_type="sip" instead. "smallwebrtc" is the generic
+# offerer-side WebRTC path (see SmallWebRTCTarget); "pipecat" is a deprecated
+# alias for it.
 WEBRTC_SUPPORTED_PLATFORMS = (
     "livekit",
     "retell",
     "daily",
-    "generic_webrtc",
+    "smallwebrtc",
     "pipecat",
 )
 # Required fields per platform (beyond the shared api_keys["voice"] secret for
@@ -1754,8 +1750,7 @@ _WEBRTC_REQUIRED_FIELDS = {
     ),
     "retell": ("agent_id",),
     "daily": ("room_url",),
-    "vapi": ("assistant_id", "vapi_public_key"),
-    "generic_webrtc": ("offer_url",),
+    "smallwebrtc": ("offer_url",),
     "pipecat": ("offer_url",),  # deprecated alias
 }
 
@@ -1779,9 +1774,10 @@ class WebRTCVoiceTarget(VoiceTarget):
 
     Arguments:
         platform: Which platform to reach. Supported end-to-end: "retell",
-            "livekit", "daily". "vapi" is NOT supported over WebRTC (it needs
-            Vapi's own Web SDK handshake) — use ``edge_type="sip"`` for Vapi.
-            "pipecat" is accepted but not yet wired server-side.
+            "livekit", "daily". "vapi" is NOT supported over WebRTC (its assistant
+            only ingests customer audio from Vapi's own Web SDK handshake) --
+            use ``edge_type="sip"`` for Vapi. "pipecat" is a deprecated alias
+            for "smallwebrtc".
         agent_id: Retell agent id (``platform="retell"``).
         retell_api_key: Retell private API key (``platform="retell"``). Stored on
             the target and redacted as sensitive. If omitted, it may instead be
@@ -1789,8 +1785,6 @@ class WebRTCVoiceTarget(VoiceTarget):
         livekit_url / livekit_api_key / livekit_api_secret / room_name:
             LiveKit direct connection (``platform="livekit"``).
         room_url / meeting_token: Daily room (``platform="daily"``).
-        assistant_id / vapi_public_key: Vapi fields — retained for a future
-            re-enable, but ``platform="vapi"`` is currently rejected (use SIP).
         offer_url: Pipecat SmallWebRTC offer endpoint (``platform="pipecat"``).
         agent_track_hint: Override which remote audio track is treated as the
             agent (default: platform-specific, then first remote audio track).
@@ -1805,8 +1799,6 @@ class WebRTCVoiceTarget(VoiceTarget):
     livekit_api_key: Optional[str] = None
     livekit_api_secret: Optional[str] = None
     room_name: Optional[str] = None
-    assistant_id: Optional[str] = None
-    vapi_public_key: Optional[str] = None
     room_url: Optional[str] = None
     meeting_token: Optional[str] = None
     offer_url: Optional[str] = None
@@ -1851,8 +1843,6 @@ class WebRTCVoiceTarget(VoiceTarget):
             "livekit_api_key": self.livekit_api_key,
             "livekit_api_secret": self.livekit_api_secret,
             "room_name": self.room_name,
-            "assistant_id": self.assistant_id,
-            "vapi_public_key": self.vapi_public_key,
             "room_url": self.room_url,
             "meeting_token": self.meeting_token,
             "offer_url": self.offer_url,
@@ -1863,7 +1853,7 @@ class WebRTCVoiceTarget(VoiceTarget):
     def get_sensitive_fields(self) -> list[str]:
         # Target-stored secrets must be redacted. Retell's private key lives on
         # the target (``retell_api_key``); LiveKit creds and Daily's meeting
-        # token likewise. (Vapi's public key is not secret.)
+        # token likewise.
         sensitive = []
         if self.retell_api_key:
             sensitive.append("retell_api_key")
@@ -1877,8 +1867,8 @@ class WebRTCVoiceTarget(VoiceTarget):
 
 
 @_attrs_define
-class GenericWebRTCTarget(VoiceTarget):
-    """Generic peer-to-peer WebRTC voice target — Okareo is the offerer.
+class SmallWebRTCTarget(VoiceTarget):
+    """SmallWebRTC peer-to-peer voice target — Okareo is the offerer.
 
     Use this to simulate against a **self-hosted** WebRTC voice agent (e.g. a
     Pipecat OSS agent) that answers an SDP offer at an HTTP endpoint. Unlike the
@@ -1904,7 +1894,7 @@ class GenericWebRTCTarget(VoiceTarget):
     """
 
     edge_type = "webrtc"
-    platform = "generic_webrtc"  # internal transport id for the generic offerer
+    platform = "smallwebrtc"  # internal transport id for the generic offerer
     offer_url: str = field()
     offer_headers: Optional[dict] = None
     request_data: Optional[dict] = None
@@ -1913,7 +1903,7 @@ class GenericWebRTCTarget(VoiceTarget):
 
     def __attrs_post_init__(self) -> None:
         if not self.offer_url:
-            raise ValueError("GenericWebRTCTarget requires 'offer_url'.")
+            raise ValueError("SmallWebRTCTarget requires 'offer_url'.")
 
     def params(self) -> dict:
         return {
@@ -2358,7 +2348,7 @@ class Target:
         PhoneTarget,
         SipTarget,
         WebRTCVoiceTarget,
-        GenericWebRTCTarget,
+        SmallWebRTCTarget,
         dict,
     ]
     id: Optional[str] = None
