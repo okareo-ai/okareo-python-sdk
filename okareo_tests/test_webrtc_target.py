@@ -11,15 +11,30 @@ from okareo.model_under_test import (
 
 def test_retell_params_shape() -> None:
     """Retell target serializes as edge_type=webrtc, platform=retell."""
-    t = WebRTCVoiceTarget(platform="retell", agent_id="agent_x")
+    t = WebRTCVoiceTarget(
+        platform="retell", agent_id="agent_x", retell_api_key="sk_retell_123"
+    )
     params = t.params()
     assert params["type"] == "voice"
     assert params["edge_type"] == "webrtc"
     assert params["platform"] == "retell"
     assert params["agent_id"] == "agent_x"
+    assert params["retell_api_key"] == "sk_retell_123"
     # No SIP/PSTN cruft.
     assert "sip_uri" not in params
     assert "to_phone_number" not in params
+
+
+def test_retell_api_key_is_sensitive() -> None:
+    """Retell's private key lives on the target and must be redacted."""
+    t = WebRTCVoiceTarget(
+        platform="retell", agent_id="a", retell_api_key="sk_retell_123"
+    )
+    assert "retell_api_key" in t.get_sensitive_fields()
+    # Omitting it is still valid (it may ride api_keys["voice"] at run time).
+    assert (
+        WebRTCVoiceTarget(platform="retell", agent_id="a").get_sensitive_fields() == []
+    )
 
 
 def test_livekit_direct_params_shape() -> None:
@@ -37,7 +52,7 @@ def test_livekit_direct_params_shape() -> None:
 
 
 def test_livekit_secrets_are_sensitive() -> None:
-    """LiveKit creds live on the target and must be redacted; Retell rides api_keys."""
+    """LiveKit creds live on the target and must be redacted."""
     lk = WebRTCVoiceTarget(
         platform="livekit",
         livekit_url="wss://x",
@@ -47,9 +62,6 @@ def test_livekit_secrets_are_sensitive() -> None:
     )
     assert "livekit_api_secret" in lk.get_sensitive_fields()
     assert "livekit_api_key" in lk.get_sensitive_fields()
-    assert (
-        WebRTCVoiceTarget(platform="retell", agent_id="a").get_sensitive_fields() == []
-    )
 
 
 def test_target_union_accepts_webrtc_and_promotes_sensitive() -> None:

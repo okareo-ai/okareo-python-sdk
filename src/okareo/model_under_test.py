@@ -1783,6 +1783,9 @@ class WebRTCVoiceTarget(VoiceTarget):
             Vapi's own Web SDK handshake) — use ``edge_type="sip"`` for Vapi.
             "pipecat" is accepted but not yet wired server-side.
         agent_id: Retell agent id (``platform="retell"``).
+        retell_api_key: Retell private API key (``platform="retell"``). Stored on
+            the target and redacted as sensitive. If omitted, it may instead be
+            supplied at run time via ``api_keys["voice"]``.
         livekit_url / livekit_api_key / livekit_api_secret / room_name:
             LiveKit direct connection (``platform="livekit"``).
         room_url / meeting_token: Daily room (``platform="daily"``).
@@ -1797,6 +1800,7 @@ class WebRTCVoiceTarget(VoiceTarget):
     edge_type = "webrtc"
     platform: str = field()
     agent_id: Optional[str] = None
+    retell_api_key: Optional[str] = None
     livekit_url: Optional[str] = None
     livekit_api_key: Optional[str] = None
     livekit_api_secret: Optional[str] = None
@@ -1842,6 +1846,7 @@ class WebRTCVoiceTarget(VoiceTarget):
             "edge_type": self.edge_type,
             "platform": self.platform,
             "agent_id": self.agent_id,
+            "retell_api_key": self.retell_api_key,
             "livekit_url": self.livekit_url,
             "livekit_api_key": self.livekit_api_key,
             "livekit_api_secret": self.livekit_api_secret,
@@ -1856,9 +1861,12 @@ class WebRTCVoiceTarget(VoiceTarget):
         }
 
     def get_sensitive_fields(self) -> list[str]:
-        # Retell/Vapi secrets ride api_keys["voice"], not the target. LiveKit
-        # creds live on the target and must be redacted.
+        # Target-stored secrets must be redacted. Retell's private key lives on
+        # the target (``retell_api_key``); LiveKit creds and Daily's meeting
+        # token likewise. (Vapi's public key is not secret.)
         sensitive = []
+        if self.retell_api_key:
+            sensitive.append("retell_api_key")
         if self.livekit_api_secret:
             sensitive.append("livekit_api_secret")
         if self.livekit_api_key:
