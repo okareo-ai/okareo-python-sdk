@@ -1151,9 +1151,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         _scenario_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(scenario_id, Unset)
-            else UUID(scenario_id)
-            if isinstance(scenario_id, str)
-            else scenario_id
+            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
         )
         _datapoint_ids: Union[Unset, list[UUID], None] = (
             UNSET
@@ -1172,9 +1170,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         _test_run_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(test_run_id, Unset)
-            else UUID(test_run_id)
-            if isinstance(test_run_id, str)
-            else test_run_id
+            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
         )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
@@ -1727,11 +1723,22 @@ class SipTarget(VoiceTarget):
 
 
 # Platforms reachable through Okareo's native WebRTC edge.
-WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "vapi", "pipecat")
-# Platforms currently implemented end-to-end. The others validate but their
-# server-side connectors are not wired yet, so gate them here to fail fast in
-# the SDK rather than deep in a running simulation.
-WEBRTC_SUPPORTED_PLATFORMS = ("livekit", "retell")
+WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "vapi", "generic_webrtc", "pipecat")
+# Platforms supported end-to-end over WebRTC. Others parse (for a clear error)
+# but are gated here to fail fast in the SDK rather than deep in a simulation.
+# "vapi" is intentionally absent: Vapi web calls require Vapi's own Web SDK
+# "audio handshake" (docs.vapi.ai/calls/customer-join-timeout) that a raw Daily
+# join cannot perform, so the assistant never receives customer audio. Reach
+# Vapi agents via edge_type="sip" instead. "generic_webrtc" is the generic
+# offerer-side WebRTC path (see GenericWebRTCTarget); "pipecat" is a
+# deprecated alias for it.
+WEBRTC_SUPPORTED_PLATFORMS = (
+    "livekit",
+    "retell",
+    "daily",
+    "generic_webrtc",
+    "pipecat",
+)
 # Required fields per platform (beyond the shared api_keys["voice"] secret for
 # the hosted providers, which the server validates).
 _WEBRTC_REQUIRED_FIELDS = {
@@ -1743,8 +1750,9 @@ _WEBRTC_REQUIRED_FIELDS = {
     ),
     "retell": ("agent_id",),
     "daily": ("room_url",),
-    "vapi": ("assistant_id",),
-    "pipecat": ("offer_url",),
+    "vapi": ("assistant_id", "vapi_public_key"),
+    "generic_webrtc": ("offer_url",),
+    "pipecat": ("offer_url",),  # deprecated alias
 }
 
 
@@ -1766,14 +1774,16 @@ class WebRTCVoiceTarget(VoiceTarget):
     Okareo-mixed dual-channel WAV otherwise).
 
     Arguments:
-        platform: Which platform to reach. Currently supported end-to-end:
-            "retell", "livekit". ("daily", "vapi", "pipecat" are accepted but
-            not yet wired server-side.)
+        platform: Which platform to reach. Supported end-to-end: "retell",
+            "livekit", "daily". "vapi" is NOT supported over WebRTC (it needs
+            Vapi's own Web SDK handshake) — use ``edge_type="sip"`` for Vapi.
+            "pipecat" is accepted but not yet wired server-side.
         agent_id: Retell agent id (``platform="retell"``).
         livekit_url / livekit_api_key / livekit_api_secret / room_name:
             LiveKit direct connection (``platform="livekit"``).
-        assistant_id: Vapi assistant id (``platform="vapi"``, not yet wired).
-        room_url / meeting_token: Daily room (``platform="daily"``, not wired).
+        room_url / meeting_token: Daily room (``platform="daily"``).
+        assistant_id / vapi_public_key: Vapi fields — retained for a future
+            re-enable, but ``platform="vapi"`` is currently rejected (use SIP).
         offer_url: Pipecat SmallWebRTC offer endpoint (``platform="pipecat"``).
         agent_track_hint: Override which remote audio track is treated as the
             agent (default: platform-specific, then first remote audio track).
@@ -1788,6 +1798,7 @@ class WebRTCVoiceTarget(VoiceTarget):
     livekit_api_secret: Optional[str] = None
     room_name: Optional[str] = None
     assistant_id: Optional[str] = None
+    vapi_public_key: Optional[str] = None
     room_url: Optional[str] = None
     meeting_token: Optional[str] = None
     offer_url: Optional[str] = None
@@ -1832,6 +1843,7 @@ class WebRTCVoiceTarget(VoiceTarget):
             "livekit_api_secret": self.livekit_api_secret,
             "room_name": self.room_name,
             "assistant_id": self.assistant_id,
+            "vapi_public_key": self.vapi_public_key,
             "room_url": self.room_url,
             "meeting_token": self.meeting_token,
             "offer_url": self.offer_url,
@@ -1850,6 +1862,62 @@ class WebRTCVoiceTarget(VoiceTarget):
         if self.meeting_token:
             sensitive.append("meeting_token")
         return sensitive
+
+
+@_attrs_define
+class GenericWebRTCTarget(VoiceTarget):
+    """Generic peer-to-peer WebRTC voice target — Okareo is the offerer.
+
+    Use this to simulate against a **self-hosted** WebRTC voice agent (e.g. a
+    Pipecat OSS agent) that answers an SDP offer at an HTTP endpoint. Unlike the
+    hosted platforms, there is no vendor SFU: Okareo POSTs an SDP offer to your
+    agent's ``offer_url`` and connects peer-to-peer at full Opus fidelity.
+
+    The **only required parameter is ``offer_url``** — the HTTPS endpoint your
+    agent serves (pipecat's ``/api/offer`` shape:
+    ``{sdp, type:"offer", request_data?}`` -> ``{sdp, type:"answer", pc_id?}``).
+
+    Arguments:
+        offer_url: HTTPS endpoint that accepts our SDP offer and returns an
+            answer. Required.
+        offer_headers: Optional auth headers for that endpoint (e.g.
+            ``{"Authorization": "Bearer ..."}``). Redacted as sensitive.
+        request_data: Optional arbitrary JSON your agent's offer handler accepts
+            (e.g. to select an assistant/config).
+        ice_servers: Optional STUN/TURN servers, aiortc/RTCIceServer dicts (e.g.
+            ``[{"urls": "turn:...", "username": "u", "credential": "p"}]``).
+            Defaults to a public STUN; supply a TURN server if your agent is
+            behind NAT with no direct public route.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "webrtc"
+    platform = "generic_webrtc"  # internal transport id for the generic offerer
+    offer_url: str = field()
+    offer_headers: Optional[dict] = None
+    request_data: Optional[dict] = None
+    ice_servers: Optional[list] = None
+    max_parallel_requests: Optional[int] = None
+
+    def __attrs_post_init__(self) -> None:
+        if not self.offer_url:
+            raise ValueError("GenericWebRTCTarget requires 'offer_url'.")
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "platform": self.platform,
+            "offer_url": self.offer_url,
+            "offer_headers": self.offer_headers,
+            "request_data": self.request_data,
+            "ice_servers": self.ice_servers,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        # Auth headers, if any, carry the secret for the offer endpoint.
+        return ["offer_headers"] if self.offer_headers else []
 
 
 @define
@@ -2278,6 +2346,7 @@ class Target:
         PhoneTarget,
         SipTarget,
         WebRTCVoiceTarget,
+        GenericWebRTCTarget,
         dict,
     ]
     id: Optional[str] = None

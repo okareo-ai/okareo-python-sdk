@@ -2,7 +2,11 @@
 
 import pytest
 
-from okareo.model_under_test import Target, WebRTCVoiceTarget
+from okareo.model_under_test import (
+    GenericWebRTCTarget,
+    Target,
+    WebRTCVoiceTarget,
+)
 
 
 def test_retell_params_shape() -> None:
@@ -70,16 +74,67 @@ def test_unknown_platform_rejected() -> None:
         WebRTCVoiceTarget(platform="not-a-platform")
 
 
-def test_unsupported_platform_rejected_with_fallback_hint() -> None:
-    """daily/vapi/pipecat are known but not wired end-to-end yet."""
-    for platform in ("daily", "vapi", "pipecat"):
-        with pytest.raises(ValueError, match="not yet supported"):
-            WebRTCVoiceTarget(platform=platform)
+def test_pipecat_platform_requires_offer_url() -> None:
+    """pipecat (generic SmallWebRTC) is now supported; it needs offer_url.
+
+    GenericWebRTCTarget is the ergonomic interface, but the raw platform still
+    validates its required field rather than reporting "unsupported".
+    """
+    with pytest.raises(ValueError, match="offer_url"):
+        WebRTCVoiceTarget(platform="pipecat")
+
+
+def test_daily_params_shape() -> None:
+    daily = WebRTCVoiceTarget(
+        platform="daily", room_url="https://x.daily.co/r"
+    ).params()
+    assert daily["platform"] == "daily" and daily["room_url"] == "https://x.daily.co/r"
+
+
+def test_vapi_over_webrtc_rejected() -> None:
+    # Vapi needs its own Web SDK handshake; WebRTC join isn't supported. The
+    # target must fail fast and point to SIP rather than silently no-op.
+    with pytest.raises(ValueError, match="not yet supported|sip"):
+        WebRTCVoiceTarget(
+            platform="vapi", assistant_id="asst_1", vapi_public_key="pk_1"
+        )
 
 
 def test_missing_retell_agent_id_rejected() -> None:
     with pytest.raises(ValueError, match="agent_id"):
         WebRTCVoiceTarget(platform="retell")
+
+
+def test_generic_webrtc_params_shape() -> None:
+    """GenericWebRTCTarget serializes as edge_type=webrtc, platform=generic_webrtc."""
+    t = GenericWebRTCTarget(
+        offer_url="https://agent.example.com/api/offer",
+        offer_headers={"Authorization": "Bearer x"},
+        request_data={"assistant": "s"},
+        ice_servers=[{"urls": "stun:stun.l.google.com:19302"}],
+    )
+    p = t.params()
+    assert p["type"] == "voice"
+    assert p["edge_type"] == "webrtc"
+    assert p["platform"] == "generic_webrtc"
+    assert p["offer_url"] == "https://agent.example.com/api/offer"
+    assert p["request_data"] == {"assistant": "s"}
+    # Auth header is the secret and must be redacted.
+    assert t.get_sensitive_fields() == ["offer_headers"]
+
+
+def test_generic_webrtc_requires_offer_url() -> None:
+    with pytest.raises(ValueError, match="offer_url"):
+        GenericWebRTCTarget(offer_url="")
+
+
+def test_generic_webrtc_minimal_only_offer_url() -> None:
+    # The only required parameter is offer_url; everything else defaults.
+    t = GenericWebRTCTarget(offer_url="https://a/api/offer")
+    p = t.params()
+    assert p["offer_url"] == "https://a/api/offer"
+    assert p["offer_headers"] is None and p["ice_servers"] is None
+    assert t.get_sensitive_fields() == []
 
 
 def test_missing_livekit_credentials_rejected() -> None:
