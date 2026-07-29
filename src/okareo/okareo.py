@@ -1476,7 +1476,13 @@ class Okareo:
         - ``target`` / ``driver``: Registered names or object definitions.
         - ``checks``: Optional checks to execute.
         - ``stop_check``, ``repeats``, ``max_turns``, ``first_turn``:
-          Turn-flow controls.
+          Turn-flow controls. **``stop_check`` is deprecated and no longer
+          terminates a simulation early** — it is still accepted and serialized,
+          but the backend now ignores the value. To end a conversation early,
+          instruct the Driver in its persona prompt to use the ``end_conversation``
+          action. A malformed ``stop_check`` dict (missing ``check_name``) still
+          raises ``TypeError`` client-side; that is a caller bug, distinct from a
+          valid legacy stop_check.
         - ``checks_at_every_turn``, ``concurrent_ask_probability``,
           ``turn_transition_time``: Runtime simulation controls.
         - ``augmentation``: Optional augmentation settings.

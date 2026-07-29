@@ -1727,6 +1727,16 @@ class StopConfig:
     """
     Configuration for stopping a multiturn conversation based on a specific check.
 
+    .. deprecated::
+        ``stop_check`` is deprecated and no longer terminates a simulation early.
+        The value is still accepted and serialized for backward compatibility, but
+        the backend now ignores it. To end a conversation early, instruct the Driver
+        in its persona prompt to use the ``end_conversation`` action.
+
+        Note: passing a *malformed* stop_check dict (e.g., missing ``check_name``)
+        still raises ``TypeError`` client-side. That is a caller bug and is distinct
+        from a valid, but now-inert, legacy stop_check.
+
     Arguments:
         check_name: Name of the check to use for stopping the conversation.
         stop_on: The check condition to stop the conversation.
@@ -2191,6 +2201,14 @@ class Simulation:
 
     Includes turn controls, stop conditions, and optional augmentation settings
     used by `Okareo.run_simulation(...)`.
+
+    .. deprecated::
+        ``stop_check`` is deprecated and no longer terminates a simulation early.
+        It is still accepted and serialized (backend now ignores the value). To end
+        a conversation early, instruct the Driver in its persona prompt to use the
+        ``end_conversation`` action. A malformed ``stop_check`` dict (missing
+        ``check_name``) still raises ``TypeError`` client-side — that is a caller
+        bug, distinct from a valid legacy stop_check.
     """
 
     stop_check: Union[StopConfig, dict, None] = None
@@ -2234,9 +2252,19 @@ class MultiTurnDriver(BaseModel):
     """
     A driver model for Okareo multiturn evaluation.
 
+    .. deprecated::
+        ``stop_check`` is deprecated and no longer terminates a simulation early.
+        It is still accepted and serialized (backend now ignores the value). To end
+        a conversation early, instruct the Driver in its persona prompt to use the
+        ``end_conversation`` action. A malformed ``stop_check`` dict (missing
+        ``check_name``) still raises ``TypeError`` client-side — that is a caller
+        bug, distinct from a valid legacy stop_check.
+
     Arguments:
         target: Target model under test to use in the multiturn evaluation.
-        stop_check: A valid StopConfig or a dict that can be converted to StopConfig.
+        stop_check: Deprecated and inert. A valid StopConfig or a dict that can be
+            converted to StopConfig. Accepted and serialized, but no longer stops a
+            conversation early (see the deprecation note above).
         driver_model_id: Model ID to use for the driver model (e.g., "gpt-4.1").
         driver_temperature: Parameter for controlling the randomness of the driver model's output.
         repeats: Number of times to run a conversation per scenario row. Defaults to 1.

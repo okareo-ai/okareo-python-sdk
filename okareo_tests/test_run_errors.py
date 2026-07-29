@@ -133,6 +133,44 @@ class TestMultiturnErrors:
                 target_mut = okareo.create_or_update_target(target)
                 driver_mut = okareo.create_or_update_driver(driver) if driver else None
 
+    def _register_and_expect_success(
+        self,
+        okareo: Any,
+        target_config: Any,
+        driver_config: Any = None,
+        run_config: Any = None,
+        run_test: bool = False,
+        basic_scenario: Any = None,
+        api_keys: Any = None,
+        checks: Any = None,
+        sensitive_fields: Optional[list[str]] = None,
+    ) -> Any:
+        """Register a model and run a simulation, expecting it to be accepted.
+
+        Mirror of ``_register_and_expect_error`` for the tolerant-backend cases
+        where a payload that used to be rejected is now accepted. Returns the
+        created test run item. LIVE — needs OKAREO_API_KEY and a server.
+        """
+        target = Target(**target_config)
+        driver = Driver(**driver_config) if driver_config else None
+        target_mut = okareo.create_or_update_target(target)
+        driver_mut = okareo.create_or_update_driver(driver) if driver else None
+
+        extra_run_config = {
+            "target": target_mut,
+            "driver": driver_mut,
+            "scenario": basic_scenario,
+            "api_keys": api_keys or self._create_basic_api_keys(),
+            "name": "Test Run",
+            "checks": checks or ["model_refusal"],
+            "sensitive_fields": sensitive_fields,
+        }
+        all_config = {**extra_run_config, **(run_config or {})}
+
+        result = okareo.run_simulation(**all_config)
+        assert result is not None
+        return result
+
     def test_missing_target(self, rnd: str, okareo: Any) -> None:
         """Test failure when target is missing"""
         target_config = {
@@ -204,7 +242,18 @@ class TestMultiturnErrors:
         )
 
     def test_empty_stop_check(self, rnd: str, okareo: Any, basic_scenario: Any) -> None:
-        """Test failure when no checks are provided"""
+        """stop_check is deprecated and inert: an empty stop_check config is now
+        accepted (not rejected) by the tolerant backend.
+
+        Requires tolerant backend; runs in CI. LIVE test — needs OKAREO_API_KEY
+        and a server, cannot run locally.
+
+        Previously this asserted the backend error "Invalid 'stop_check'
+        configuration". The backend no longer terminates on stop_check nor
+        validates it, so a well-formed-but-empty stop_check payload is accepted.
+        A well-formed (has check_name) stop_check dict does not raise client-side,
+        so the run is submitted and should succeed rather than error.
+        """
         run_config = {
             "max_turns": 2,
             "repeats": 1,
@@ -216,18 +265,26 @@ class TestMultiturnErrors:
             "name": f"Missing Checks {rnd}",
         }
 
-        self._register_and_expect_error(
+        # Tolerant backend: the stop_check payload is accepted, not rejected.
+        # Assert the run is created rather than expecting a validation error.
+        self._register_and_expect_success(
             okareo=okareo,
             target_config=target_config,
             run_config=run_config,
-            expected_error="Invalid 'stop_check' configuration",
             run_test=True,
             basic_scenario=basic_scenario,
             checks=[],  # Empty list of checks
         )
 
     def test_invalid_stop_check(self, rnd: str, okareo: Any) -> None:
-        """Test failure when stop_check is invalid"""
+        """A malformed stop_check dict is a caller bug and still raises a
+        client-side TypeError, even though stop_check is deprecated/inert.
+
+        Requires tolerant backend; runs in CI. LIVE test — needs OKAREO_API_KEY
+        and a server. This expectation is unchanged by the deprecation: a dict
+        missing ``check_name`` fails at ``StopConfig(**stop_check)`` in the SDK,
+        distinct from a valid-but-inert legacy stop_check.
+        """
         run_config = {
             "max_turns": 2,
             "repeats": 1,
