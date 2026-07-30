@@ -1722,6 +1722,199 @@ class SipTarget(VoiceTarget):
         return ["sip_password"] if self.sip_password else []
 
 
+# Platforms reachable through Okareo's native WebRTC edge. "smallwebrtc" is the
+# generic offerer-side WebRTC path (see SmallWebRTCTarget); "pipecat" is a
+# deprecated alias for it.
+#
+# "vapi" is intentionally NOT a WebRTC platform: Vapi web calls require Vapi's
+# own Web SDK "audio handshake" that a native Daily join cannot reproduce (the
+# assistant never ingests our customer audio -- extensively verified, see the
+# plan doc). Reach Vapi agents via edge_type="sip" instead; passing
+# platform="vapi" fails fast with that guidance (see __attrs_post_init__).
+WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "smallwebrtc", "pipecat")
+# Required fields per platform (beyond the shared api_keys["voice"] secret for
+# the hosted providers, which the server validates).
+_WEBRTC_REQUIRED_FIELDS = {
+    "livekit": (
+        "livekit_url",
+        "livekit_api_key",
+        "livekit_api_secret",
+        "room_name",
+    ),
+    "retell": ("agent_id",),
+    "daily": ("room_url",),
+    "smallwebrtc": ("offer_url",),
+    "pipecat": ("offer_url",),  # deprecated alias
+}
+
+
+@_attrs_define
+class WebRTCVoiceTarget(VoiceTarget):
+    """Voice target reached natively over WebRTC.
+
+    Unlike ``SipTarget`` (8 kHz telephony), Okareo joins the agent's own WebRTC
+    room and runs the simulation at full Opus fidelity — the way the agent's web
+    users actually hear it. One integration reaches multiple platforms:
+
+    - ``retell`` — Retell web calls (LiveKit Cloud under the hood). Its secret
+      rides ``api_keys["voice"]``; pass ``agent_id``.
+    - ``livekit`` — a LiveKit room you control; pass ``livekit_url`` +
+      ``livekit_api_key`` + ``livekit_api_secret`` + ``room_name``.
+
+    Whole-call recordings reach the same ``call_recording_url`` datapoint field
+    as the Twilio edge (vendor recording when the platform provides one, an
+    Okareo-mixed dual-channel WAV otherwise).
+
+    Arguments:
+        platform: Which platform to reach. Supported end-to-end: "retell",
+            "livekit", "daily". "vapi" is NOT supported over WebRTC (its assistant
+            only ingests customer audio from Vapi's own Web SDK handshake) --
+            use ``edge_type="sip"`` for Vapi. "pipecat" is a deprecated alias
+            for "smallwebrtc".
+        agent_id: Retell agent id (``platform="retell"``).
+        retell_api_key: Retell private API key (``platform="retell"``). Stored on
+            the target and redacted as sensitive. If omitted, it may instead be
+            supplied at run time via ``api_keys["voice"]``.
+        livekit_url / livekit_api_key / livekit_api_secret / room_name:
+            LiveKit direct connection (``platform="livekit"``).
+        room_url / meeting_token: Daily room (``platform="daily"``).
+        offer_url: Pipecat SmallWebRTC offer endpoint (``platform="pipecat"``).
+        agent_track_hint: Override which remote audio track is treated as the
+            agent (default: platform-specific, then first remote audio track).
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "webrtc"
+    platform: str = field()
+    agent_id: Optional[str] = None
+    retell_api_key: Optional[str] = None
+    livekit_url: Optional[str] = None
+    livekit_api_key: Optional[str] = None
+    livekit_api_secret: Optional[str] = None
+    room_name: Optional[str] = None
+    room_url: Optional[str] = None
+    meeting_token: Optional[str] = None
+    offer_url: Optional[str] = None
+    agent_track_hint: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
+
+    def __attrs_post_init__(self) -> None:
+        """Fail fast on misconfiguration, client-side.
+
+        Without this, a bad platform or a missing LiveKit credential only
+        surfaces ~30s into a running simulation as a server-side 500.
+        """
+        if self.platform == "vapi":
+            raise ValueError(
+                "platform 'vapi' is not supported over WebRTC -- Vapi web calls "
+                "require Vapi's own Web SDK handshake. Use edge_type='sip' "
+                "(SipTarget) to reach a Vapi agent."
+            )
+        if self.platform not in WEBRTC_PLATFORMS:
+            raise ValueError(
+                f"Unknown platform {self.platform!r}. "
+                f"Expected one of {list(WEBRTC_PLATFORMS)}."
+            )
+        missing = [
+            name
+            for name in _WEBRTC_REQUIRED_FIELDS[self.platform]
+            if not getattr(self, name)
+        ]
+        if missing:
+            raise ValueError(
+                f"platform {self.platform!r} requires: {', '.join(missing)}."
+            )
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "platform": self.platform,
+            "agent_id": self.agent_id,
+            "retell_api_key": self.retell_api_key,
+            "livekit_url": self.livekit_url,
+            "livekit_api_key": self.livekit_api_key,
+            "livekit_api_secret": self.livekit_api_secret,
+            "room_name": self.room_name,
+            "room_url": self.room_url,
+            "meeting_token": self.meeting_token,
+            "offer_url": self.offer_url,
+            "agent_track_hint": self.agent_track_hint,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        # Target-stored secrets must be redacted. Retell's private key lives on
+        # the target (``retell_api_key``); LiveKit creds and Daily's meeting
+        # token likewise.
+        sensitive = []
+        if self.retell_api_key:
+            sensitive.append("retell_api_key")
+        if self.livekit_api_secret:
+            sensitive.append("livekit_api_secret")
+        if self.livekit_api_key:
+            sensitive.append("livekit_api_key")
+        if self.meeting_token:
+            sensitive.append("meeting_token")
+        return sensitive
+
+
+@_attrs_define
+class SmallWebRTCTarget(VoiceTarget):
+    """SmallWebRTC peer-to-peer voice target — Okareo is the offerer.
+
+    Use this to simulate against a **self-hosted** WebRTC voice agent (e.g. a
+    Pipecat OSS agent) that answers an SDP offer at an HTTP endpoint. Unlike the
+    hosted platforms, there is no vendor SFU: Okareo POSTs an SDP offer to your
+    agent's ``offer_url`` and connects peer-to-peer at full Opus fidelity.
+
+    The **only required parameter is ``offer_url``** — the HTTPS endpoint your
+    agent serves (pipecat's ``/api/offer`` shape:
+    ``{sdp, type:"offer", request_data?}`` -> ``{sdp, type:"answer", pc_id?}``).
+
+    Arguments:
+        offer_url: HTTPS endpoint that accepts our SDP offer and returns an
+            answer. Required.
+        offer_headers: Optional auth headers for that endpoint (e.g.
+            ``{"Authorization": "Bearer ..."}``). Redacted as sensitive.
+        request_data: Optional arbitrary JSON your agent's offer handler accepts
+            (e.g. to select an assistant/config).
+        ice_servers: Optional STUN/TURN servers, aiortc/RTCIceServer dicts (e.g.
+            ``[{"urls": "turn:...", "username": "u", "credential": "p"}]``).
+            Defaults to a public STUN; supply a TURN server if your agent is
+            behind NAT with no direct public route.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "webrtc"
+    platform = "smallwebrtc"  # internal transport id for the generic offerer
+    offer_url: str = field()
+    offer_headers: Optional[dict] = None
+    request_data: Optional[dict] = None
+    ice_servers: Optional[list] = None
+    max_parallel_requests: Optional[int] = None
+
+    def __attrs_post_init__(self) -> None:
+        if not self.offer_url:
+            raise ValueError("SmallWebRTCTarget requires 'offer_url'.")
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "platform": self.platform,
+            "offer_url": self.offer_url,
+            "offer_headers": self.offer_headers,
+            "request_data": self.request_data,
+            "ice_servers": self.ice_servers,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        # Auth headers, if any, carry the secret for the offer endpoint.
+        return ["offer_headers"] if self.offer_headers else []
+
+
 @define
 class StopConfig:
     """
@@ -2147,6 +2340,8 @@ class Target:
         TwilioVoiceTarget,
         PhoneTarget,
         SipTarget,
+        WebRTCVoiceTarget,
+        SmallWebRTCTarget,
         dict,
     ]
     id: Optional[str] = None
