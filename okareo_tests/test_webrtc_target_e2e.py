@@ -44,6 +44,16 @@ RETELL_API_KEY = os.environ.get("RETELL_API_KEY")
 RETELL_AGENT_ID = os.environ.get("RETELL_AGENT_ID")
 BASE_URL = os.environ.get("BASE_URL", "https://api.okareo.com")
 
+# Unconditionally skipped in the build: each WebRTC e2e simulation needs live
+# provider credentials AND a reachable agent, which are not yet provisioned in
+# CI. This is applied INSTEAD of the per-class ``requires_*_creds`` skipif (which
+# would otherwise report a misleading "missing env var" reason in CI). To
+# re-enable once creds + an agent exist, swap ``@_NEEDS_LIVE_SETUP`` back to the
+# per-class ``@requires_*_creds`` marker defined below.
+_NEEDS_LIVE_SETUP = pytest.mark.skip(
+    reason="Credentials and a live agent must be set up before enabling in the build."
+)
+
 requires_webrtc_creds = pytest.mark.skipif(
     not (OKAREO_API_KEY and RETELL_API_KEY and RETELL_AGENT_ID),
     reason="needs OKAREO_API_KEY + RETELL_API_KEY + RETELL_AGENT_ID",
@@ -86,7 +96,7 @@ def _assistant_turns(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 # --------------------------------------------------------------------------
 
 
-@requires_webrtc_creds
+@_NEEDS_LIVE_SETUP
 class TestWebRTCSimulationE2E:
     """Full simulation against a live Retell agent over native WebRTC."""
 
@@ -251,7 +261,7 @@ requires_livekit_creds = pytest.mark.skipif(
 )
 
 
-@requires_livekit_creds
+@_NEEDS_LIVE_SETUP
 class TestLiveKitDirectSimulationE2E:
     """LiveKit direct exercises the LOCAL-MIX recording path.
 
@@ -349,8 +359,8 @@ requires_daily_creds = pytest.mark.skipif(
 )
 
 
-def _assistant_transcripts(datapoints):
-    out = []
+def _assistant_transcripts(datapoints: List[Any]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
     for dp in datapoints:
         for m in _assistant_turns(_messages(dp)):
             if (m.get("content") or "").strip():
@@ -358,8 +368,8 @@ def _assistant_transcripts(datapoints):
     return out
 
 
-def _recording_props(datapoints):
-    recs = []
+def _recording_props(datapoints: List[Any]) -> List[Dict[str, Any]]:
+    recs: List[Dict[str, Any]] = []
     for dp in datapoints:
         props = (
             getattr(getattr(dp, "model_metadata", None), "additional_properties", {})
@@ -370,7 +380,7 @@ def _recording_props(datapoints):
     return recs
 
 
-@requires_daily_creds
+@_NEEDS_LIVE_SETUP
 class TestDailyDirectSimulationE2E:
     """Daily direct: like LiveKit, no vendor recording -> LOCAL-MIX path."""
 
@@ -445,7 +455,7 @@ requires_generic_creds = pytest.mark.skipif(
 )
 
 
-@requires_generic_creds
+@_NEEDS_LIVE_SETUP
 class TestSmallWebRTCSimulationE2E:
     """Full simulation against a self-hosted generic WebRTC agent (Okareo is the
     offerer). No vendor SFU/secret: we POST an SDP offer to ``offer_url`` and
