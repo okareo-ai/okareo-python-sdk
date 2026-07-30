@@ -1722,23 +1722,16 @@ class SipTarget(VoiceTarget):
         return ["sip_password"] if self.sip_password else []
 
 
-# Platforms reachable through Okareo's native WebRTC edge.
-WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "vapi", "smallwebrtc", "pipecat")
-# Platforms supported end-to-end over WebRTC. Others parse (for a clear error)
-# but are gated here to fail fast in the SDK rather than deep in a simulation.
-# "vapi" is intentionally absent: Vapi web calls require Vapi's own Web SDK
-# "audio handshake" that a native Daily join cannot reproduce (the assistant
-# never ingests our customer audio -- extensively verified, see the plan doc).
-# Reach Vapi agents via edge_type="sip" instead. "smallwebrtc" is the generic
-# offerer-side WebRTC path (see SmallWebRTCTarget); "pipecat" is a deprecated
-# alias for it.
-WEBRTC_SUPPORTED_PLATFORMS = (
-    "livekit",
-    "retell",
-    "daily",
-    "smallwebrtc",
-    "pipecat",
-)
+# Platforms reachable through Okareo's native WebRTC edge. "smallwebrtc" is the
+# generic offerer-side WebRTC path (see SmallWebRTCTarget); "pipecat" is a
+# deprecated alias for it.
+#
+# "vapi" is intentionally NOT a WebRTC platform: Vapi web calls require Vapi's
+# own Web SDK "audio handshake" that a native Daily join cannot reproduce (the
+# assistant never ingests our customer audio -- extensively verified, see the
+# plan doc). Reach Vapi agents via edge_type="sip" instead; passing
+# platform="vapi" fails fast with that guidance (see __attrs_post_init__).
+WEBRTC_PLATFORMS = ("livekit", "retell", "daily", "smallwebrtc", "pipecat")
 # Required fields per platform (beyond the shared api_keys["voice"] secret for
 # the hosted providers, which the server validates).
 _WEBRTC_REQUIRED_FIELDS = {
@@ -1811,16 +1804,16 @@ class WebRTCVoiceTarget(VoiceTarget):
         Without this, a bad platform or a missing LiveKit credential only
         surfaces ~30s into a running simulation as a server-side 500.
         """
+        if self.platform == "vapi":
+            raise ValueError(
+                "platform 'vapi' is not supported over WebRTC -- Vapi web calls "
+                "require Vapi's own Web SDK handshake. Use edge_type='sip' "
+                "(SipTarget) to reach a Vapi agent."
+            )
         if self.platform not in WEBRTC_PLATFORMS:
             raise ValueError(
                 f"Unknown platform {self.platform!r}. "
                 f"Expected one of {list(WEBRTC_PLATFORMS)}."
-            )
-        if self.platform not in WEBRTC_SUPPORTED_PLATFORMS:
-            raise ValueError(
-                f"platform {self.platform!r} is not yet supported end-to-end. "
-                f"Supported: {list(WEBRTC_SUPPORTED_PLATFORMS)}. "
-                "Use edge_type='sip' (SipTarget) as a fallback."
             )
         missing = [
             name
