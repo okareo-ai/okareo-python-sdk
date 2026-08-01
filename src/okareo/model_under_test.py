@@ -378,6 +378,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         simulation_params: Optional[Any],
         driver_id: Optional[str],
         nats_invoke_id: Optional[str],
+        tags: Optional[List[str]] = None,
     ) -> TestRunPayloadV2:
         serialized_simulation_params: Any = UNSET
         if simulation_params:
@@ -419,6 +420,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 else (driver_id if driver_id else UNSET)
             ),
             nats_invoke_id=nats_invoke_id if nats_invoke_id else UNSET,
+            tags=tags if tags else UNSET,
         )
 
     async def connect_nats(self, user_jwt: str, seed: str, local_nats: str) -> Any:
@@ -718,6 +720,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         run_test_method: Any = None,
         simulation_params: Optional[Any] = None,
         driver_id: Optional[str] = None,
+        tags: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
         self.custom_model_thread: Any = None
@@ -780,6 +783,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                         simulation_params,
                         driver_id,
                         None,
+                        tags,
                     )
                     assert isinstance(submit_response, TestRunItem)
                     test_run_id = submit_response.id
@@ -824,6 +828,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 simulation_params,
                 driver_id,
                 nats_invoke_id,
+                tags,
             )
 
             return response
@@ -851,6 +856,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         simulation_params: Optional[Any],
         driver_id: Optional[str],
         nats_invoke_id: Optional[str],
+        tags: Optional[List[str]] = None,
     ) -> TestRunItem:
         response: TestRunItem = run_test_method(
             client=self.client,
@@ -869,6 +875,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 simulation_params,
                 driver_id,
                 nats_invoke_id,
+                tags,
             ),
         )
         if isinstance(response, ErrorResponse):
@@ -934,6 +941,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         checks: Optional[List[str]] = None,
         simulation_params: Optional[Any] = None,
         driver_id: Optional[str] = None,
+        tags: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Asynchronous server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side in a background thread then evaluated server-side asynchronously.
@@ -948,6 +956,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             test_run_type (TestRunType): The type of test run to execute. Defaults to MULTI_CLASS_CLASSIFICATION.
             calculate_metrics (bool): Whether to calculate metrics after the test run. Defaults to True.
             checks (Optional[List[str]]): Optional list of checks to perform during the test run.
+            tags (Optional[List[str]]): Optional tags to set on the created test run. These are
+                persisted on the test run itself and can be used with `Okareo.find_test_runs(tags=...)`.
 
         Returns:
             TestRunItem: The resulting test run item for the submitted test run. The `id` field can be used to retrieve the test run.
@@ -971,6 +981,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             endpoint,
             simulation_params,
             driver_id,
+            tags,
         )
 
     def run_test(
@@ -985,6 +996,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         checks: Optional[List[str]] = None,
         simulation_params: Optional[Any] = None,
         driver_id: Optional[str] = None,
+        tags: Optional[List[str]] = None,
     ) -> TestRunItem:
         """Server-based version of test-run execution. For CustomModels, model
         invocations are handled client-side then evaluated server-side. For other models,
@@ -999,6 +1011,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             test_run_type (TestRunType): The type of test run to execute. Defaults to MULTI_CLASS_CLASSIFICATION.
             calculate_metrics (bool): Whether to calculate metrics after the test run. Defaults to True.
             checks (Optional[List[str]]): Optional list of checks to perform during the test run.
+            tags (Optional[List[str]]): Optional tags to set on the created test run. These are
+                persisted on the test run itself and can be used with `Okareo.find_test_runs(tags=...)`.
 
         Returns:
             TestRunItem: The resulting test run item for the completed test run.
@@ -1016,6 +1030,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 run_test_v0_test_run_post.sync,
                 simulation_params,
                 driver_id,
+                tags,
             )
         except Exception as e:
             raise TestRunError(str(e)) from e
