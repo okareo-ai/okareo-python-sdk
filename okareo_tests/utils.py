@@ -23,6 +23,67 @@ from okareo_api_client.models.test_data_point_item import TestDataPointItem
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
 
+# ---------------------------------------------------------------- termination
+#
+# Why a conversation stopped, as written to
+# ``datapoint.model_metadata["termination_reason"]``.
+#
+# These are NOT an enum server-side. When the Driver ends a conversation itself
+# the value is the Driver's own prose, so there is no closed set to assert
+# membership in -- a "must be one of N" check would break the first time a model
+# phrased a goodbye differently. What CAN be asserted is that the field exists,
+# respects its write cap, and does not name a failure.
+
+# The backend writes these two only when something actually went wrong.
+FAILURE_REASONS = {
+    "Ended early after an error",
+    "Target disconnected before the conversation started",
+}
+
+# Every reason the backend writes for itself. Anything else is Driver-authored.
+# ``The Driver ended the conversation`` belongs here, not with the Driver's own
+# prose: it is the fallback written when the Driver ended the call but supplied
+# no usable reason, so there is no closing line to hold anyone to.
+HARNESS_WRITTEN_REASONS = FAILURE_REASONS | {
+    "Reached the turn limit",
+    "Target ended the call",
+    "The Driver ended the conversation",
+}
+
+# Hard cap applied server-side at write.
+MAX_TERMINATION_REASON_LENGTH = 200
+
+
+def driver_authored(reason: Union[str, None]) -> bool:
+    """True when the Driver wrote this termination reason itself.
+
+    Lets a test tell "the Driver ended it" from "something else did" WITHOUT
+    asserting that it must have. A Driver may legitimately not end a conversation
+    -- a tight turn budget, a Target that stalls -- and asserting otherwise puts a
+    coin flip on the deploy gate.
+
+    Stop-check reasons are matched by prefix because the backend interpolates the
+    Check's name into them.
+    """
+    if not reason or reason in HARNESS_WRITTEN_REASONS:
+        return False
+    return not reason.startswith("Stop condition met")
+
+
+def assert_valid_termination_reason(reason: Union[str, None]) -> None:
+    """Assert the conversation recorded a usable reason and did not die.
+
+    Passes for every legitimate ending: the turn limit, a stop check firing, the
+    Target hanging up, and any Driver-authored goodbye. Fails only on a genuine
+    failure, a missing reason, or one that broke its own cap.
+    """
+    assert reason, "termination_reason must be present on every conversation"
+    assert len(reason) <= MAX_TERMINATION_REASON_LENGTH, (
+        f"termination_reason exceeds the {MAX_TERMINATION_REASON_LENGTH}-char "
+        f"write cap: {len(reason)} chars"
+    )
+    assert reason not in FAILURE_REASONS, f"conversation ended in failure: {reason!r}"
+
 
 def assert_scores_geval(scores: dict) -> None:
     dimension_keys = [

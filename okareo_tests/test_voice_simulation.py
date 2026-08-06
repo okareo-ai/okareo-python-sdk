@@ -13,6 +13,7 @@ from uuid import UUID
 
 import pytest
 from okareo_tests.common import random_string
+from okareo_tests.utils import assert_valid_termination_reason, driver_authored
 
 from okareo import Okareo
 from okareo.model_under_test import Driver, Target, TwilioVoiceTarget
@@ -47,6 +48,7 @@ TARGET_WAITS_PROMPT = """
 ## Rules
 - Wait for the agent to greet you first.
 - Respond naturally to their greeting.
+- After the agent responds once, end the conversation.
 """.strip()
 
 
@@ -132,6 +134,31 @@ def get_messages(
                 messages_list.append(messages)
 
     return messages_list
+
+
+def get_termination_reasons(
+    okareo: Okareo, test_run_id: Union[str, UUID]
+) -> List[Union[str, None]]:
+    """Fetch why each conversation in a test run ended.
+
+    Same shape and ordering as ``get_messages`` -- one entry per datapoint -- so
+    the two can be read side by side.
+    """
+    from okareo_api_client.models.full_data_point_item import FullDataPointItem
+    from okareo_api_client.types import Unset
+
+    reasons: List[Union[str, None]] = []
+    for dp in get_datapoints(okareo, test_run_id):
+        if isinstance(dp, FullDataPointItem):
+            if (
+                not isinstance(dp.model_metadata, Unset)
+                and dp.model_metadata is not None
+            ):
+                reasons.append(
+                    dp.model_metadata.additional_properties.get("termination_reason")
+                )
+
+    return reasons
 
 
 def validate_message_timing(msg: Dict[str, Any], msg_idx: int) -> None:
@@ -579,7 +606,11 @@ class TestVoiceFirstTurn:
             target=Target(name=f"Twilio Target - {rnd}", target=twilio_target),
             name=f"Target Starts Test - {rnd}",
             scenario=scenario,
-            max_turns=2,
+            # 3, not 2: the Driver is told to end the call after one exchange, and
+            # two turns leaves no room to greet, exchange, and then end. Without
+            # the headroom the ending turn is never generated -- and that turn is
+            # the one the driver-latency assertions need to see.
+            max_turns=3,
             repeats=1,
             first_turn="target",
             calculate_metrics=True,
@@ -604,6 +635,22 @@ class TestVoiceFirstTurn:
         assert (
             first_msg.get("role") == "assistant"
         ), "First speaker should be target (assistant)"
+
+        # The Driver is prompted to end the call, which is what generates the
+        # ending turn and exposes it to the driver-latency ceiling above. That
+        # ending is deliberately NOT asserted: whether a live phone agent gives
+        # the Driver enough to finish on is not a property of our code, and
+        # requiring it would put a coin flip on the deploy gate.
+        reason = get_termination_reasons(okareo, evaluation.id)[0]
+        assert_valid_termination_reason(reason)
+
+        if driver_authored(reason):
+            # The Driver's goodbye is not the end of the conversation -- the reply
+            # to it is. Checked only when the Driver actually ended the call,
+            # since nobody owes a reply to a turn limit.
+            assert (
+                messages[-1].get("role") == "assistant"
+            ), f"Target should answer the Driver's closing line, got {messages[-1].get('role')!r}"
 
 
 class TestVoiceConcurrent:
