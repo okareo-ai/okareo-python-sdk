@@ -95,17 +95,15 @@ def _build_target(provider: str) -> object:
             to_phone_number=IVR_TO_NUMBER,
         )
     if provider == "vonage":
+        # DTMF (both OOB rfc4733 + in-band), recording, and 16 kHz are fixed
+        # server-side defaults — not configurable on the target. The testtarget
+        # captures the keypress via whichever path reaches it (dtmf event or
+        # in-band audio).
         return VonagePhoneTarget(
             to_phone_number=IVR_TO_NUMBER,
             from_phone_number=VONAGE_FROM_NUMBER,
             application_id=VONAGE_APPLICATION_ID,
             private_key=Path(VONAGE_PRIVATE_KEY_PATH).read_text(),
-            # Inert at dispatch (the edge sends both OOB + in-band regardless);
-            # "both" is explicit that we want the DTMF to reach the far end by any
-            # path the testtarget can capture (dtmf event or in-band audio).
-            dtmf_mechanism="both",
-            sr=16000,
-            record=True,
         )
     raise ValueError(f"unknown provider: {provider}")
 

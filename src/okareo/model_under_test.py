@@ -1734,46 +1734,42 @@ class VonagePhoneTarget(VoiceTarget):
     delivers mid-call DTMF out-of-band via RFC 4733 with no media-stream
     teardown (see the Vonage voice-edge plan, ``vonage-edge-with-dtmf-nav.plan.md``).
 
+    Security note — create a **dedicated Vonage Application** for Okareo and
+    pass only that application's private key. A Vonage keypair is scoped to a
+    single Application (not your whole account), is generated locally so Vonage
+    never sees it, and is revocable independently: regenerate the application's
+    keypair or delete the application to cut access without touching the rest of
+    your account.
+
     Server contract — ``params()`` emits exactly these keys, consumed by the
     server's Vonage edge factory. **This is a cross-repo contract** —
     changing these keys requires a matching change server-side:
         ``type``, ``edge_type``, ``to_phone_number``, ``from_phone_number``,
-        ``sip_uri``, ``application_id``, ``private_key``, ``private_key_path``,
-        ``dtmf_mechanism``, ``record``, ``sr``, ``max_parallel_requests``.
+        ``application_id``, ``private_key``, ``max_parallel_requests``.
+
+    Recording (on), DTMF delivery (both out-of-band rfc4733 + in-band), and the
+    16 kHz media sample rate are fixed server-side defaults — not configurable
+    from this target.
 
     Arguments:
         phone_number: Destination phone number (E.164, e.g. "+15551234567").
             Emitted as ``to_phone_number`` in ``params()``, mirroring
             `PhoneTarget`. Alias for `to_phone_number` — provide either.
-            Provide this (or `to_phone_number`) or `sip_uri`.
         to_phone_number: Same as `phone_number`; takes precedence if both are set.
-        sip_uri: Destination SIP URI, alternative to `phone_number` — Vonage
-            owns the RTP leg so RFC 4733 DTMF works on SIP targets too.
         from_phone_number: Outbound Vonage phone number.
         application_id: Vonage application ID used to mint the call JWT.
         private_key: Vonage application private key, PEM contents (treated as
-            sensitive). Provide this or `private_key_path`, not both.
-        private_key_path: Path to the PEM private key file, alternative to
-            `private_key` (treated as sensitive).
-        dtmf_mechanism: DTMF delivery mechanism. Default "rfc4733"
-            (teardown-free, out-of-band digits via ``PUT /v1/calls/{id}/dtmf``).
-        record: Enable server-side stitched dual-channel recording. Default True
-            (voice datapoints always expose an audio player; set False to opt out).
-        sr: Audio sample rate in Hz for the media websocket. Default 16000.
+            sensitive). Read it from your key file, e.g.
+            ``private_key=Path("private.key").read_text()``.
         max_parallel_requests: Cap on concurrent calls hitting the target.
     """
 
     edge_type = "vonage"
     phone_number: Optional[str] = None
     to_phone_number: Optional[str] = None
-    sip_uri: Optional[str] = None
     from_phone_number: Optional[str] = None
     application_id: Optional[str] = None
     private_key: Optional[str] = None
-    private_key_path: Optional[str] = None
-    dtmf_mechanism: str = field(default="rfc4733")
-    record: bool = field(default=True)
-    sr: int = field(default=16000)
     max_parallel_requests: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
@@ -1786,13 +1782,8 @@ class VonagePhoneTarget(VoiceTarget):
             "edge_type": self.edge_type,
             "to_phone_number": self.to_phone_number,
             "from_phone_number": self.from_phone_number,
-            "sip_uri": self.sip_uri,
             "application_id": self.application_id,
             "private_key": self.private_key,
-            "private_key_path": self.private_key_path,
-            "dtmf_mechanism": self.dtmf_mechanism,
-            "record": self.record,
-            "sr": self.sr,
             "max_parallel_requests": self.max_parallel_requests,
         }
 
@@ -1800,8 +1791,6 @@ class VonagePhoneTarget(VoiceTarget):
         sensitive = []
         if self.private_key:
             sensitive.append("private_key")
-        if self.private_key_path:
-            sensitive.append("private_key_path")
         return sensitive
 
 
