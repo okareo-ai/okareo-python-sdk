@@ -27,9 +27,11 @@ import os
 import random
 import time
 from pathlib import Path
+from typing import Union
 
 import pytest
 import requests  # type: ignore
+from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
 from okareo.model_under_test import (
@@ -39,7 +41,6 @@ from okareo.model_under_test import (
     VonagePhoneTarget,
 )
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
-from okareo_tests.common import API_KEY, random_string
 
 OKAREO_BASE_PATH = os.environ.get("OKAREO_BASE_PATH", "http://localhost:8000")
 IVR_TO_NUMBER = os.environ.get("IVR_TO_NUMBER", "")
@@ -86,7 +87,7 @@ def _driver_prompt(code: str) -> str:
     )
 
 
-def _build_target(provider: str) -> object:
+def _build_target(provider: str) -> Union[TwilioVoiceTarget, VonagePhoneTarget]:
     if provider == "twilio":
         return TwilioVoiceTarget(
             account_sid=TWILIO_ACCOUNT_SID,
@@ -170,7 +171,12 @@ def test_ivr_dtmf_sent_and_received(provider: str) -> None:
         ScenarioSetCreate(
             name=f"IVR DTMF e2e ({provider}) {random_string(4)}",
             seed_data=Okareo.seed_data_from_list(
-                [{"input": {"name": "ivr caller", "voice": "oscar"}, "result": _RESULT_RUBRIC}]
+                [
+                    {
+                        "input": {"name": "ivr caller", "voice": "oscar"},
+                        "result": _RESULT_RUBRIC,
+                    }
+                ]
             ),
         )
     )
@@ -178,7 +184,9 @@ def test_ivr_dtmf_sent_and_received(provider: str) -> None:
     evaluation = okareo.run_simulation(
         name=f"IVR DTMF e2e ({provider})",
         scenario=scenario,
-        target=Target(name=f"IVR DTMF {provider} target", target=_build_target(provider)),
+        target=Target(
+            name=f"IVR DTMF {provider} target", target=_build_target(provider)
+        ),
         driver=Driver(
             name=f"IVR DTMF {provider} driver",
             temperature=0.2,
