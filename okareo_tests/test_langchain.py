@@ -2,7 +2,6 @@ import random
 import string
 import uuid
 from datetime import datetime
-from unittest import mock
 
 from langchain.chains import LLMChain
 from langchain.llms.fake import FakeListLLM
@@ -51,10 +50,11 @@ def test_llm_generates_datapoints(
         )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
-    with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
-        handler = CallbackHandler(
-            mut_name="langchain_test", context_token=context_token
-        )
+    handler = CallbackHandler(
+        mut_name="langchain_test",
+        context_token=context_token,
+        base_path=okareo_api.path,
+    )
 
     llm = FakeListLLM(responses=["4"])
     llm.predict("what is 2+2?", callbacks=[handler])
@@ -85,8 +85,7 @@ def test_llm_auto_generate_model(
         )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
-    with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
-        handler = CallbackHandler(context_token=context_token)
+    handler = CallbackHandler(context_token=context_token, base_path=okareo_api.path)
 
     llm = FakeListLLM(responses=["4"])
     llm.predict("what is 2+2?", callbacks=[handler])
@@ -117,8 +116,7 @@ def test_chain_generates_datapoints(
         )
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
-    with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
-        handler = CallbackHandler(context_token=context_token)
+    handler = CallbackHandler(context_token=context_token, base_path=okareo_api.path)
 
     llm = FakeListLLM(responses=["4"])
     prompt = PromptTemplate.from_template("what is 2+{number}?")
