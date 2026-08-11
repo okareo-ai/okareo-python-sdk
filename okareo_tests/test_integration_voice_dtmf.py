@@ -116,11 +116,14 @@ def _poll_readback(expected: str, timeout_s: float = 30.0) -> str:
     a prior provider's run: only this call's digits will equal ``expected``.
     """
     url = f"{OKAREO_BASE_PATH.rstrip('/')}/v0/voice/twilio/testtarget/ivr/dtmf/latest"
+    # The read-back route is api-key-gated (unlike the Twilio-facing webhook/ws),
+    # so the poll must authenticate.
+    headers = {"api-key": API_KEY}
     deadline = time.time() + timeout_s
     seen = ""
     while time.time() < deadline:
         try:
-            r = requests.get(url, timeout=5.0)
+            r = requests.get(url, headers=headers, timeout=5.0)
             if r.status_code == 200:
                 seen = (r.json() or {}).get("digits", "") or ""
                 if seen == expected:

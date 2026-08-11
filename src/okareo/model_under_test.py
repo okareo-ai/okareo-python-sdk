@@ -1775,6 +1775,16 @@ class VonagePhoneTarget(VoiceTarget):
     def __attrs_post_init__(self) -> None:
         if self.to_phone_number is None and self.phone_number is not None:
             self.to_phone_number = self.phone_number
+        # Fail fast at construction, like the siblings (PhoneTarget.phone_number,
+        # SipTarget.sip_uri). Without a destination the server never validates
+        # to_number either, so None would surface late as an opaque Vonage
+        # provider error at dial time. Template strings are non-None -> still OK.
+        if self.to_phone_number is None:
+            raise ValueError(
+                "VonagePhoneTarget requires a destination: set phone_number or "
+                "to_phone_number (an E.164 number like '+15551234567' or a "
+                "template string such as '{scenario_input.phone}')."
+            )
 
     def params(self) -> dict:
         return {
