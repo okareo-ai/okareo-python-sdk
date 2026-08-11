@@ -24,10 +24,18 @@ class TestVonagePhoneTarget:
             == "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----"
         )
         assert params["max_parallel_requests"] is None
-        # DTMF mechanism, recording, and sample rate are fixed server-side
-        # defaults, not target params — they must not appear in the payload.
-        for dropped in ("private_key_path", "sip_uri", "dtmf_mechanism", "record", "sr"):
-            assert dropped not in params
+        # Closed contract: params() emits exactly these keys. Pins the cross-repo
+        # payload (server factory + FE schema read it) and catches a stray/re-added
+        # key without naming any specific field.
+        assert set(params) == {
+            "type",
+            "edge_type",
+            "to_phone_number",
+            "from_phone_number",
+            "application_id",
+            "private_key",
+            "max_parallel_requests",
+        }
 
     def test_phone_number_alias_maps_to_to_phone_number(self) -> None:
         vt = VonagePhoneTarget(phone_number="+15551234567")
