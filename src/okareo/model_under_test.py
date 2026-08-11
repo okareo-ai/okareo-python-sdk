@@ -1732,7 +1732,7 @@ class VonagePhoneTarget(VoiceTarget):
     target also threads through `application_id`/`private_key` similar to how
     `TwilioVoiceTarget` threads through `account_sid`/`auth_token`. Vonage
     delivers mid-call DTMF out-of-band via RFC 4733 with no media-stream
-    teardown (see the Vonage voice-edge plan, ``vonage-edge-with-dtmf-nav.plan.md``).
+    teardown.
 
     Security note — create a **dedicated Vonage Application** for Okareo and
     pass only that application's private key. A Vonage keypair is scoped to a
