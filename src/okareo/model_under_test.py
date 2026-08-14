@@ -1722,6 +1722,88 @@ class SipTarget(VoiceTarget):
         return ["sip_password"] if self.sip_password else []
 
 
+@_attrs_define
+class VonagePhoneTarget(VoiceTarget):
+    """Vonage-backed voice target for Okareo multiturn simulation.
+
+    Sibling of `PhoneTarget` (Twilio) for Okareo's Vonage voice edge
+    (``edge_type="vonage"``). Unlike `PhoneTarget`, Vonage credentials are
+    caller-supplied (Vonage has no Okareo-managed-telephony mode yet), so this
+    target also threads through `application_id`/`private_key` similar to how
+    `TwilioVoiceTarget` threads through `account_sid`/`auth_token`. Vonage
+    delivers mid-call DTMF out-of-band via RFC 4733 with no media-stream
+    teardown.
+
+    Security note — create a **dedicated Vonage Application** for Okareo and
+    pass only that application's private key. A Vonage keypair is scoped to a
+    single Application (not your whole account), is generated locally so Vonage
+    never sees it, and is revocable independently: regenerate the application's
+    keypair or delete the application to cut access without touching the rest of
+    your account.
+
+    Server contract — ``params()`` emits exactly these keys, consumed by the
+    server's Vonage edge factory. **This is a cross-repo contract** —
+    changing these keys requires a matching change server-side:
+        ``type``, ``edge_type``, ``to_phone_number``, ``from_phone_number``,
+        ``application_id``, ``private_key``, ``max_parallel_requests``.
+
+    Recording (on), DTMF delivery (both out-of-band rfc4733 + in-band), and the
+    16 kHz media sample rate are fixed server-side defaults — not configurable
+    from this target.
+
+    Arguments:
+        phone_number: Destination phone number (E.164, e.g. "+15551234567").
+            Emitted as ``to_phone_number`` in ``params()``, mirroring
+            `PhoneTarget`. Alias for `to_phone_number` — provide either.
+        to_phone_number: Same as `phone_number`; takes precedence if both are set.
+        from_phone_number: Outbound Vonage phone number.
+        application_id: Vonage application ID used to mint the call JWT.
+        private_key: Vonage application private key, PEM contents (treated as
+            sensitive). Read it from your key file, e.g.
+            ``private_key=Path("private.key").read_text()``.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "vonage"
+    phone_number: Optional[str] = None
+    to_phone_number: Optional[str] = None
+    from_phone_number: Optional[str] = None
+    application_id: Optional[str] = None
+    private_key: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.to_phone_number is None and self.phone_number is not None:
+            self.to_phone_number = self.phone_number
+        # Fail fast at construction, like the siblings (PhoneTarget.phone_number,
+        # SipTarget.sip_uri). Without a destination the server never validates
+        # to_number either, so None would surface late as an opaque Vonage
+        # provider error at dial time. Template strings are non-None -> still OK.
+        if self.to_phone_number is None:
+            raise ValueError(
+                "VonagePhoneTarget requires a destination: set phone_number or "
+                "to_phone_number (an E.164 number like '+15551234567' or a "
+                "template string such as '{scenario_input.phone}')."
+            )
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "to_phone_number": self.to_phone_number,
+            "from_phone_number": self.from_phone_number,
+            "application_id": self.application_id,
+            "private_key": self.private_key,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        sensitive = []
+        if self.private_key:
+            sensitive.append("private_key")
+        return sensitive
+
+
 @define
 class StopConfig:
     """
@@ -2147,6 +2229,7 @@ class Target:
         TwilioVoiceTarget,
         PhoneTarget,
         SipTarget,
+        VonagePhoneTarget,
         dict,
     ]
     id: Optional[str] = None
