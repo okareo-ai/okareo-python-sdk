@@ -1824,7 +1824,7 @@ class TelnyxPhoneTarget(VoiceTarget):
     server's Telnyx edge factory. **This is a cross-repo contract** — changing
     these keys requires a matching change server-side:
         ``type``, ``edge_type``, ``to_phone_number``, ``from_phone_number``,
-        ``api_key``, ``connection_id``, ``max_parallel_requests``.
+        ``telnyx_api_key``, ``connection_id``, ``max_parallel_requests``.
 
     Recording (on, dual-channel), DTMF delivery (both out-of-band rfc2833 +
     in-band), and the 8 kHz PCMU media format are fixed server-side defaults —
@@ -1836,7 +1836,9 @@ class TelnyxPhoneTarget(VoiceTarget):
             `VonagePhoneTarget`. Alias for `to_phone_number` — provide either.
         to_phone_number: Same as `phone_number`; takes precedence if both are set.
         from_phone_number: Outbound Telnyx phone number.
-        api_key: Telnyx API v2 key (Bearer; treated as sensitive).
+        telnyx_api_key: Telnyx API v2 key (Bearer; treated as sensitive). Named
+            ``telnyx_api_key`` (not ``api_key``) because the server reserves the
+            ``api_key`` param for the voice/TTS model key.
         connection_id: Telnyx Call Control Application id the call is placed from.
         max_parallel_requests: Cap on concurrent calls hitting the target.
     """
@@ -1845,7 +1847,7 @@ class TelnyxPhoneTarget(VoiceTarget):
     phone_number: Optional[str] = None
     to_phone_number: Optional[str] = None
     from_phone_number: Optional[str] = None
-    api_key: Optional[str] = None
+    telnyx_api_key: Optional[str] = None
     connection_id: Optional[str] = None
     max_parallel_requests: Optional[int] = None
 
@@ -1870,15 +1872,15 @@ class TelnyxPhoneTarget(VoiceTarget):
             "edge_type": self.edge_type,
             "to_phone_number": self.to_phone_number,
             "from_phone_number": self.from_phone_number,
-            "api_key": self.api_key,
+            "telnyx_api_key": self.telnyx_api_key,
             "connection_id": self.connection_id,
             "max_parallel_requests": self.max_parallel_requests,
         }
 
     def get_sensitive_fields(self) -> list[str]:
         sensitive = []
-        if self.api_key:
-            sensitive.append("api_key")
+        if self.telnyx_api_key:
+            sensitive.append("telnyx_api_key")
         return sensitive
 
 

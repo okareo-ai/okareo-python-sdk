@@ -121,7 +121,7 @@ def _build_target(
         return TelnyxPhoneTarget(
             to_phone_number=IVR_TO_NUMBER,
             from_phone_number=TELNYX_FROM_NUMBER,
-            api_key=TELNYX_API_KEY,
+            telnyx_api_key=TELNYX_API_KEY,
             connection_id=TELNYX_CONNECTION_ID,
         )
     raise ValueError(f"unknown provider: {provider}")

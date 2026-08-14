@@ -10,7 +10,7 @@ class TestTelnyxPhoneTarget:
         vt = TelnyxPhoneTarget(
             phone_number="+15551234567",
             from_phone_number="+15557654321",
-            api_key="KEY0123abc",
+            telnyx_api_key="KEY0123abc",
             connection_id="conn-123",
         )
         params = vt.params()
@@ -18,18 +18,20 @@ class TestTelnyxPhoneTarget:
         assert params["edge_type"] == "telnyx"
         assert params["to_phone_number"] == "+15551234567"
         assert params["from_phone_number"] == "+15557654321"
-        assert params["api_key"] == "KEY0123abc"
+        assert params["telnyx_api_key"] == "KEY0123abc"
         assert params["connection_id"] == "conn-123"
         assert params["max_parallel_requests"] is None
         # Closed contract: params() emits exactly these keys. Pins the cross-repo
         # payload (server factory + FE schema read it) and catches a stray/re-added
-        # key without naming any specific field.
+        # key without naming any specific field. Note: the secret is
+        # `telnyx_api_key`, NOT `api_key` — the server reserves `api_key` for the
+        # voice/TTS model key.
         assert set(params) == {
             "type",
             "edge_type",
             "to_phone_number",
             "from_phone_number",
-            "api_key",
+            "telnyx_api_key",
             "connection_id",
             "max_parallel_requests",
         }
@@ -48,14 +50,14 @@ class TestTelnyxPhoneTarget:
         vt = TelnyxPhoneTarget(phone_number="+15551234567", max_parallel_requests=5)
         assert vt.params()["max_parallel_requests"] == 5
 
-    def test_get_sensitive_fields_marks_api_key(self) -> None:
+    def test_get_sensitive_fields_marks_telnyx_api_key(self) -> None:
         vt = TelnyxPhoneTarget(
             phone_number="+15551234567",
-            api_key="KEY0123abc",
+            telnyx_api_key="KEY0123abc",
             connection_id="conn-123",
         )
         sensitive = vt.get_sensitive_fields()
-        assert "api_key" in sensitive
+        assert "telnyx_api_key" in sensitive
         # connection_id is not sensitive, mirroring how account_sid/application_id
         # are not sensitive on the Twilio/Vonage siblings.
         assert "connection_id" not in sensitive
@@ -68,7 +70,7 @@ class TestTelnyxPhoneTarget:
         # No destination fails fast at construction (like the siblings) rather
         # than surfacing late as an opaque Telnyx dial error mid-run.
         with pytest.raises(ValueError):
-            TelnyxPhoneTarget(api_key="KEY0123abc", connection_id="conn-123")
+            TelnyxPhoneTarget(telnyx_api_key="KEY0123abc", connection_id="conn-123")
 
     def test_template_destination_is_accepted(self) -> None:
         vt = TelnyxPhoneTarget(phone_number="{scenario_input.phone}")
@@ -79,7 +81,7 @@ class TestTelnyxPhoneTarget:
             name="Test Agent",
             target=TelnyxPhoneTarget(
                 phone_number="+15551234567",
-                api_key="KEY0123abc",
+                telnyx_api_key="KEY0123abc",
                 connection_id="conn-123",
             ),
         )
@@ -89,4 +91,4 @@ class TestTelnyxPhoneTarget:
         assert d["target"]["type"] == "voice"
         assert d["target"]["edge_type"] == "telnyx"
         assert d["target"]["connection_id"] == "conn-123"
-        assert d["sensitive_fields"] == ["api_key"]
+        assert d["sensitive_fields"] == ["telnyx_api_key"]
