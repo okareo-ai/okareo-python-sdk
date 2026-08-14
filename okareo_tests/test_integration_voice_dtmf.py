@@ -20,6 +20,7 @@ Env:
   OKAREO_API_KEY, OKAREO_BASE_PATH (default http://localhost:8000), IVR_TO_NUMBER
   Twilio: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_PHONE
   Vonage: VONAGE_APPLICATION_ID, VONAGE_FROM_NUMBER, VONAGE_PRIVATE_KEY_PATH
+  Telnyx: TELNYX_API_KEY, TELNYX_CONNECTION_ID, TELNYX_FROM_NUMBER
   Optional driver voice: DEEPGRAM_API_KEY or OPENAI_API_KEY
 """
 
@@ -37,6 +38,7 @@ from okareo import Okareo
 from okareo.model_under_test import (
     Driver,
     Target,
+    TelnyxPhoneTarget,
     TwilioVoiceTarget,
     VonagePhoneTarget,
 )
@@ -53,6 +55,10 @@ VONAGE_APPLICATION_ID = os.environ.get("VONAGE_APPLICATION_ID", "")
 VONAGE_FROM_NUMBER = os.environ.get("VONAGE_FROM_NUMBER", "")
 VONAGE_PRIVATE_KEY_PATH = os.environ.get("VONAGE_PRIVATE_KEY_PATH", "")
 
+TELNYX_API_KEY = os.environ.get("TELNYX_API_KEY", "")
+TELNYX_CONNECTION_ID = os.environ.get("TELNYX_CONNECTION_ID", "")
+TELNYX_FROM_NUMBER = os.environ.get("TELNYX_FROM_NUMBER", "")
+
 # result_completed grades the target's utterances against this rubric. It is a
 # model-graded companion to the deterministic readback assertion below (which
 # already validates the full sequence, terminator included) — so it grades the
@@ -68,6 +74,7 @@ _HAVE_TWILIO = bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_PHO
 _HAVE_VONAGE = bool(
     VONAGE_APPLICATION_ID and VONAGE_FROM_NUMBER and VONAGE_PRIVATE_KEY_PATH
 )
+_HAVE_TELNYX = bool(TELNYX_API_KEY and TELNYX_CONNECTION_ID and TELNYX_FROM_NUMBER)
 
 
 def _driver_prompt(code: str) -> str:
@@ -87,7 +94,9 @@ def _driver_prompt(code: str) -> str:
     )
 
 
-def _build_target(provider: str) -> Union[TwilioVoiceTarget, VonagePhoneTarget]:
+def _build_target(
+    provider: str,
+) -> Union[TwilioVoiceTarget, VonagePhoneTarget, TelnyxPhoneTarget]:
     if provider == "twilio":
         return TwilioVoiceTarget(
             account_sid=TWILIO_ACCOUNT_SID,
@@ -105,6 +114,15 @@ def _build_target(provider: str) -> Union[TwilioVoiceTarget, VonagePhoneTarget]:
             from_phone_number=VONAGE_FROM_NUMBER,
             application_id=VONAGE_APPLICATION_ID,
             private_key=Path(VONAGE_PRIVATE_KEY_PATH).read_text(),
+        )
+    if provider == "telnyx":
+        # DTMF (both OOB rfc2833 + in-band), recording, and 8 kHz PCMU are fixed
+        # server-side defaults — not configurable on the target.
+        return TelnyxPhoneTarget(
+            to_phone_number=IVR_TO_NUMBER,
+            from_phone_number=TELNYX_FROM_NUMBER,
+            api_key=TELNYX_API_KEY,
+            connection_id=TELNYX_CONNECTION_ID,
         )
     raise ValueError(f"unknown provider: {provider}")
 
@@ -149,6 +167,13 @@ def _poll_readback(expected: str, timeout_s: float = 30.0) -> str:
             marks=pytest.mark.skipif(
                 not (_HAVE_COMMON and _HAVE_VONAGE),
                 reason="Vonage DTMF rig not configured (IVR_TO_NUMBER + VONAGE_*).",
+            ),
+        ),
+        pytest.param(
+            "telnyx",
+            marks=pytest.mark.skipif(
+                not (_HAVE_COMMON and _HAVE_TELNYX),
+                reason="Telnyx DTMF rig not configured (IVR_TO_NUMBER + TELNYX_*).",
             ),
         ),
     ],
