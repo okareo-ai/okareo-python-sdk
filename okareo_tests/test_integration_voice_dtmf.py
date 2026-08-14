@@ -18,7 +18,7 @@ configured. To run it you need:
 
 Env:
   OKAREO_API_KEY, OKAREO_BASE_PATH (default http://localhost:8000), IVR_TO_NUMBER
-  Twilio: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
+  Twilio: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_PHONE
   Vonage: VONAGE_APPLICATION_ID, VONAGE_FROM_NUMBER, VONAGE_PRIVATE_KEY_PATH
   Optional driver voice: DEEPGRAM_API_KEY or OPENAI_API_KEY
 """
@@ -47,7 +47,7 @@ IVR_TO_NUMBER = os.environ.get("IVR_TO_NUMBER", "")
 
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
-TWILIO_FROM_NUMBER = os.environ.get("TWILIO_FROM_NUMBER", "")
+TWILIO_FROM_PHONE = os.environ.get("TWILIO_FROM_PHONE", "")
 
 VONAGE_APPLICATION_ID = os.environ.get("VONAGE_APPLICATION_ID", "")
 VONAGE_FROM_NUMBER = os.environ.get("VONAGE_FROM_NUMBER", "")
@@ -64,7 +64,7 @@ _RESULT_RUBRIC = (
 )
 
 _HAVE_COMMON = bool(IVR_TO_NUMBER and os.environ.get("OKAREO_API_KEY"))
-_HAVE_TWILIO = bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER)
+_HAVE_TWILIO = bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_PHONE)
 _HAVE_VONAGE = bool(
     VONAGE_APPLICATION_ID and VONAGE_FROM_NUMBER and VONAGE_PRIVATE_KEY_PATH
 )
@@ -92,7 +92,7 @@ def _build_target(provider: str) -> Union[TwilioVoiceTarget, VonagePhoneTarget]:
         return TwilioVoiceTarget(
             account_sid=TWILIO_ACCOUNT_SID,
             auth_token=TWILIO_AUTH_TOKEN,
-            from_phone_number=TWILIO_FROM_NUMBER,
+            from_phone_number=TWILIO_FROM_PHONE,
             to_phone_number=IVR_TO_NUMBER,
         )
     if provider == "vonage":
