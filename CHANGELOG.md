@@ -43,6 +43,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `run_simulation(..., tags=[...])` now applies the tags to the test run it creates.
+  They were previously accepted and silently discarded, so the run came back with
+  `tags: []` and was not findable via `find_test_runs(tags=[...])`.
+  `ModelUnderTest.run_test` / `submit_test` also accept `tags` now.
 - Example code-based check fixtures now declare `check_type` explicitly, matching the
   output-type requirement for code-based checks (a check returning `CheckResponse`
   otherwise fails output-type inference).
