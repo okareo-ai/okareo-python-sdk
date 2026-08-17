@@ -1,7 +1,6 @@
 import time
 import uuid
 from datetime import datetime
-from unittest import mock
 
 import litellm  # type: ignore
 from litellm import completion
@@ -32,12 +31,12 @@ def dtest_litellm_baselogger(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -
     if okareo_api.is_mock:
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
-    with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
-        handler = LiteLLMLogger(
-            api_key=API_KEY,
-            mut_name="test_litellm_baselogger-" + context_token,
-            context_token=context_token,
-        )
+    handler = LiteLLMLogger(
+        api_key=API_KEY,
+        mut_name="test_litellm_baselogger-" + context_token,
+        context_token=context_token,
+        host_address=okareo_api.path,
+    )
 
     litellm.callbacks = [handler]  # type: ignore
     model = "gpt-3.5-turbo"
@@ -68,12 +67,12 @@ def dtest_litellm_openailogger(
     if okareo_api.is_mock:
         httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
-    with mock.patch.object(Okareo.__init__, "__defaults__", (okareo_api.path, 100)):
-        handler = LiteLLMProxyLogger(
-            api_key=API_KEY,
-            mut_name="test_litellm_openailogger-" + context_token,
-            context_token=context_token,
-        )
+    handler = LiteLLMProxyLogger(
+        api_key=API_KEY,
+        mut_name="test_litellm_openailogger-" + context_token,
+        context_token=context_token,
+        host_address=okareo_api.path,
+    )
 
     litellm.callbacks = [handler]  # type: ignore
     model = "gpt-3.5-turbo"

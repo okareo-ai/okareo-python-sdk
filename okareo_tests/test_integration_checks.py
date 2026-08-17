@@ -1,8 +1,9 @@
 import os
 from typing import Any, Union
+from uuid import UUID
 
 import pytest
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY, default_project_id, random_string
 from okareo_tests.utils import assert_baseline_metrics, assert_metrics
 
 from okareo import Okareo
@@ -93,7 +94,7 @@ def test_generate_check(
     ]
     for check_dict in checks_to_generate:
         generate_request = EvaluatorSpecRequest(
-            project_id=okareo.get_projects()[0].id,
+            project_id=UUID(default_project_id(okareo)),
             description=str(check_dict["description"]),
             requires_scenario_input=bool(check_dict["requires_scenario_input"]),
             requires_scenario_result=bool(check_dict["requires_scenario_result"]),

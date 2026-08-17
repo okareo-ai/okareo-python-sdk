@@ -116,9 +116,10 @@ def find_datapoints(
     headers = {"Content-Type": "application/json", "api-key": api_key}
 
     with timed("GET /v0/projects"):
-        project_id = requests.get(f"{base_url}/v0/projects", headers=headers).json()[0][
-            "id"
-        ]
+        # Select the default Project by name — list order is arbitrary, and the
+        # ingestion this verifies lands in the default Project.
+        projects = requests.get(f"{base_url}/v0/projects", headers=headers).json()
+        project_id = next(p["id"] for p in projects if p["name"] == "Global")
 
     for attempt in range(3):
         with timed("POST /v0/find_datapoints_filter"):

@@ -1,6 +1,8 @@
+from uuid import UUID
+
 import pytest
 from okareo_tests.checks.sample_check import Check
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY, default_project_id, random_string
 
 from okareo import Okareo
 from okareo_api_client.models import EvaluatorSpecRequest
@@ -26,7 +28,7 @@ def test_get_all_checks(okareo_client: Okareo) -> None:
 
 def test_generate_and_create_check(okareo_client: Okareo) -> None:
     generate_request = EvaluatorSpecRequest(
-        project_id=okareo_client.get_projects()[0].id,
+        project_id=UUID(default_project_id(okareo_client)),
         description="""
         Return True if the model_output is at least 20 characters long, otherwise return False.""",
         requires_scenario_input=False,
