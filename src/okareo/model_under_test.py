@@ -1804,6 +1804,86 @@ class VonagePhoneTarget(VoiceTarget):
         return sensitive
 
 
+@_attrs_define
+class TelnyxPhoneTarget(VoiceTarget):
+    """Telnyx-backed voice target for Okareo multiturn simulation.
+
+    Sibling of `VonagePhoneTarget` for Okareo's Telnyx voice edge
+    (``edge_type="telnyx"``). Like Vonage, Telnyx credentials are caller-supplied
+    (no Okareo-managed-telephony mode), but Telnyx authenticates with a single
+    static Bearer API key rather than a JWT keypair, plus a ``connection_id``
+    (the Call Control Application the outbound call is placed from). Telnyx
+    delivers mid-call DTMF out-of-band via RFC 2833 with no media-stream
+    teardown.
+
+    Security note — create a **dedicated Telnyx API key** for Okareo (Telnyx
+    supports multiple keys per account) so it can be rotated or revoked
+    independently without touching the rest of your account.
+
+    Server contract — ``params()`` emits exactly these keys, consumed by the
+    server's Telnyx edge factory. **This is a cross-repo contract** — changing
+    these keys requires a matching change server-side:
+        ``type``, ``edge_type``, ``to_phone_number``, ``from_phone_number``,
+        ``telnyx_api_key``, ``connection_id``, ``max_parallel_requests``.
+
+    Recording (on, dual-channel), DTMF delivery (both out-of-band rfc2833 +
+    in-band), and the 8 kHz PCMU media format are fixed server-side defaults —
+    not configurable from this target.
+
+    Arguments:
+        phone_number: Destination phone number (E.164, e.g. "+15551234567").
+            Emitted as ``to_phone_number`` in ``params()``, mirroring
+            `VonagePhoneTarget`. Alias for `to_phone_number` — provide either.
+        to_phone_number: Same as `phone_number`; takes precedence if both are set.
+        from_phone_number: Outbound Telnyx phone number.
+        telnyx_api_key: Telnyx API v2 key (Bearer; treated as sensitive). Named
+            ``telnyx_api_key`` (not ``api_key``) because the server reserves the
+            ``api_key`` param for the voice/TTS model key.
+        connection_id: Telnyx Call Control Application id the call is placed from.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "telnyx"
+    phone_number: Optional[str] = None
+    to_phone_number: Optional[str] = None
+    from_phone_number: Optional[str] = None
+    telnyx_api_key: Optional[str] = None
+    connection_id: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.to_phone_number is None and self.phone_number is not None:
+            self.to_phone_number = self.phone_number
+        # Fail fast at construction, like the siblings (VonagePhoneTarget,
+        # PhoneTarget.phone_number, SipTarget.sip_uri). Without a destination the
+        # server never validates to_number either, so None would surface late as
+        # an opaque Telnyx provider error at dial time. Template strings are
+        # non-None -> still OK.
+        if self.to_phone_number is None:
+            raise ValueError(
+                "TelnyxPhoneTarget requires a destination: set phone_number or "
+                "to_phone_number (an E.164 number like '+15551234567' or a "
+                "template string such as '{scenario_input.phone}')."
+            )
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "to_phone_number": self.to_phone_number,
+            "from_phone_number": self.from_phone_number,
+            "telnyx_api_key": self.telnyx_api_key,
+            "connection_id": self.connection_id,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        sensitive = []
+        if self.telnyx_api_key:
+            sensitive.append("telnyx_api_key")
+        return sensitive
+
+
 @define
 class StopConfig:
     """
@@ -2230,6 +2310,7 @@ class Target:
         PhoneTarget,
         SipTarget,
         VonagePhoneTarget,
+        TelnyxPhoneTarget,
         dict,
     ]
     id: Optional[str] = None
