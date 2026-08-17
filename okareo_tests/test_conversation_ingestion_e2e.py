@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 import pytest
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import API_KEY, default_project_id, random_string
 
 from okareo import Okareo
 from okareo_api_client.models.datapoint_list_item import DatapointListItem
@@ -36,8 +36,11 @@ def okareo_client() -> Okareo:
 @pytest.fixture(scope="module")
 def test_project(okareo_client: Okareo) -> str:
     """Get a test project for conversation ingestion tests."""
-    # For monitoring path, we just need a project - no MUT required
-    return str(okareo_client.get_projects()[0].id)
+    # For monitoring path, we just need a project - no MUT required. Select the
+    # default Project BY NAME: the read-back side of these tests queries without a
+    # project and resolves to the default, so ingesting into an arbitrary [0] puts
+    # the two sides of the assertion in different Projects.
+    return default_project_id(okareo_client)
 
 
 @pytest.fixture(scope="module")

@@ -22,9 +22,18 @@ class CallbackHandler(BaseCallbackHandler):
         api_key: Optional[str] = None,
         mut_name: Optional[str] = None,
         context_token: Optional[str] = None,
+        base_path: Optional[str] = None,
     ) -> None:
-        """Initialize callback handler."""
-        self.okareo = Okareo(api_key or os.environ["OKAREO_API_KEY"])
+        """Initialize callback handler.
+
+        Args:
+            api_key: Okareo API key. Defaults to ``$OKAREO_API_KEY``.
+            mut_name: Name of the model to register datapoints against.
+            context_token: Token that ties the datapoints of one run together.
+            base_path: Okareo API base URL. Defaults to the SDK's own default.
+        """
+        key = api_key or os.environ["OKAREO_API_KEY"]
+        self.okareo = Okareo(key, base_path) if base_path else Okareo(key)
         self.inputs: List[Dict[str, Any]] = []
         self.context_token = context_token or "".join(
             random.choices(string.ascii_letters, k=10)

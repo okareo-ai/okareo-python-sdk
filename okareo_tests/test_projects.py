@@ -7,7 +7,11 @@ import pytest
 from okareo_tests.common import API_KEY, random_string
 
 from okareo import Okareo
+from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import CustomModel, ModelInvocation
+from okareo_api_client.api.default import (
+    get_all_models_under_test_v0_models_under_test_get,
+)
 from okareo_api_client.models import SeedData
 from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
@@ -26,6 +30,45 @@ def okareo_client() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
+def scratch_project(okareo_client: Okareo, name: str) -> ProjectResponse:
+    """A fixed scratch Project, created only the first time it is needed.
+
+    Projects cannot be deleted and their names are unique per organization, so a
+    test that mints a new Project every run both piles them up in the gate
+    account (the condition `common.default_project_id` exists to work around)
+    and, with a fixed name, fails with a 400 on its second run.
+    """
+    existing = next(
+        (item for item in okareo_client.get_projects() if item.name == name), None
+    )
+    if existing:
+        return existing
+    return okareo_client.create_project(name=name)
+
+
+@pytest.fixture(scope="module")
+def project_a(okareo_client: Okareo) -> ProjectResponse:
+    return scratch_project(okareo_client, "CI - cross-project A")
+
+
+@pytest.fixture(scope="module")
+def project_b(okareo_client: Okareo) -> ProjectResponse:
+    return scratch_project(okareo_client, "CI - cross-project B")
+
+
+def target_names_in_project(
+    okareo_client: Okareo, project_id: Union[str, UUID]
+) -> List[str]:
+    """The names of the Targets (models under test) visible in one Project."""
+    response = get_all_models_under_test_v0_models_under_test_get.sync(
+        client=okareo_client.client,
+        api_key=API_KEY,
+        project_id=UUID(str(project_id)),
+    )
+    assert isinstance(response, list)
+    return [str(target.name) for target in response]
+
+
 def test_get_projects(okareo_client: Okareo) -> None:
     projects = okareo_client.get_projects()
     assert projects
@@ -35,15 +78,19 @@ def test_get_projects(okareo_client: Okareo) -> None:
     assert projects[0].name
 
 
-def test_create_project(okareo_client: Okareo) -> None:
-    project = okareo_client.create_project(
-        name="CI - Test P_Name", tags=["testT1", "testT2"]
-    )
+def test_create_project(rnd: str, okareo_client: Okareo) -> None:
+    # A fresh name every run: Project names are unique per organization and a
+    # Project cannot be deleted, so a fixed name is a 400 on the second run.
+    name = f"CI - Test P_Name {rnd}"
+    project = okareo_client.create_project(name=name, tags=["testT1", "testT2"])
     assert project
     assert isinstance(project, ProjectResponse)
     assert project.id
-    assert project.name == "CI - Test P_Name"
+    assert project.name == name
     assert project.tags == ["testT1", "testT2"]
+
+    # keep the picker clean — archiving is the only cleanup a Project has
+    okareo_client.archive_project(project.id)
 
 
 def test_full_eval_cycle_in_new_project(rnd: str, okareo_client: Okareo) -> None:
@@ -122,3 +169,104 @@ def assert_valid_test_run(
     assert test_run_item.model_metrics
     assert test_run_item.model_metrics.additional_properties.get("scores_by_label")
     assert test_run_item.project_id == project_id
+
+
+# --- Cross-Project semantics (project separation, Phase 7) -------------------
+#
+# These run against a live backend and assert the isolation guarantees, so they
+# are meaningful exactly where they run against the project-separation backend:
+# the backend's post-deploy `sdk-test-latest` job. They reuse fixed scratch
+# Projects (see `scratch_project`) rather than minting new ones per run.
+
+
+def test_isolated_type_not_visible_across_projects(
+    rnd: str,
+    okareo_client: Okareo,
+    project_a: ProjectResponse,
+    project_b: ProjectResponse,
+) -> None:
+    # G7: an isolated type — a Target — belongs to exactly one Project.
+    target_name = f"CI iso target {rnd}"
+    okareo_client.register_model(name=target_name, project_id=str(project_a.id))
+
+    # the control: the same listing DOES show it from its own Project, so the
+    # absence below is isolation and not an empty result
+    assert target_name in target_names_in_project(okareo_client, project_a.id)
+    assert target_name not in target_names_in_project(okareo_client, project_b.id)
+
+
+def test_shared_types_visible_from_any_project(
+    rnd: str, okareo_client: Okareo, project_a: ProjectResponse
+) -> None:
+    check_name = f"ci_shared_check_{rnd}".lower()
+    okareo_client.set_project(str(project_a.id))
+    try:
+        okareo_client.create_or_update_check(
+            name=check_name,
+            description="shared-type visibility check",
+            check=ModelBasedCheck(
+                prompt_template="Only output True",
+                check_type=CheckOutputType.PASS_FAIL,
+            ),
+        )
+    finally:
+        okareo_client.set_project(None)
+
+    # visible with no Project context (default) — shared org-wide
+    names = [c.name for c in okareo_client.get_all_checks()]
+    assert check_name in names
+
+
+@pytest.mark.skip(
+    reason="find_test_runs() has no LIMIT, so listing the default Project returns "
+    "every run the account has ever made. In the gate account that takes ~55s and "
+    "then exceeds Cloud Run's 32 MB response cap, which surfaces as a bare 500. This "
+    "assertion needs the unfiltered list — narrowing it would remove the thing under "
+    "test — so re-enable once find_test_runs is bounded (limit or time window)."
+)
+def test_omitted_project_resolves_to_default(okareo_client: Okareo) -> None:
+    # The compatibility guarantee: no client-level Project, no per-call value —
+    # results are the DEFAULT Project's, not org-wide.
+    default_id = next(
+        str(p.id) for p in okareo_client.get_projects() if p.name == "Global"
+    )
+    runs = okareo_client.find_test_runs()
+    assert all(r.get("project_id") == default_id for r in runs if r.get("project_id"))
+
+
+def test_client_level_project_applies_and_per_call_overrides(
+    okareo_client: Okareo, project_a: ProjectResponse, project_b: ProjectResponse
+) -> None:
+    # Both Projects are scratch Projects, deliberately: the per-call override only
+    # needs *a different* Project than the client-level one, and reaching for the
+    # default Project here would list every run the account has ever made.
+    okareo_client.set_project(str(project_a.id))
+    try:
+        runs_client_level = okareo_client.find_test_runs()
+        assert all(
+            r.get("project_id") == str(project_a.id)
+            for r in runs_client_level
+            if r.get("project_id")
+        )
+        runs_override = okareo_client.find_test_runs(project_id=str(project_b.id))
+        assert all(
+            r.get("project_id") == str(project_b.id)
+            for r in runs_override
+            if r.get("project_id")
+        )
+    finally:
+        okareo_client.set_project(None)
+
+
+def test_archive_round_trip(okareo_client: Okareo) -> None:
+    # Works against any backend with Phase 4 deployed; independent of scoping.
+    # Its own scratch Project, since it leaves the Project archived.
+    project = scratch_project(okareo_client, "CI - archive round trip")
+
+    archived = okareo_client.archive_project(project.id)
+    assert archived.additional_properties.get("is_archived") is True
+
+    unarchived = okareo_client.unarchive_project(project.id)
+    assert unarchived.additional_properties.get("is_archived") is False
+
+    okareo_client.archive_project(project.id)  # leave the scratch project archived

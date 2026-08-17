@@ -1,9 +1,10 @@
 import base64
+import copy
 import datetime
 import json
 import os
 import warnings
-from typing import Any, Dict, List, Optional, TypedDict, Union, cast
+from typing import Any, Dict, List, Optional, Protocol, TypedDict, TypeVar, Union, cast
 from uuid import UUID
 
 import httpx
@@ -34,8 +35,10 @@ from okareo_api_client.api.default import (
     get_datapoints_v0_find_datapoints_post,
     get_driver_v0_driver_identifier_get,
     get_model_under_test_by_name_and_version_v0_models_under_test_name_version_get,
+    get_project_v0_projects_project_id_get,
     get_scenario_set_data_points_v0_scenario_data_points_scenario_id_get,
     get_target_model_by_name_v0_target_target_model_name_get,
+    patch_project_v0_projects_project_id_patch,
     re_evaluate_v0_test_runs_test_run_id_re_evaluate_post,
     register_driver_model_v0_driver_post,
     register_model_v0_register_model_post,
@@ -84,6 +87,7 @@ from okareo_api_client.models.model_under_test_response_models_type_0 import (
     ModelUnderTestResponseModelsType0,
 )
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
+from okareo_api_client.models.project_patch_schema import ProjectPatchSchema
 from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.project_schema import ProjectSchema
 from okareo_api_client.models.re_evaluate_payload import ReEvaluatePayload
@@ -124,6 +128,19 @@ _EMPTY_GENERATION_MESSAGE = "No scenario rows generated for scenario_id"
 CUSTOM_MODEL_STRS = ["custom", "custom_batch"]
 
 
+class ProjectScopedPayload(Protocol):
+    """Any generated request body that carries a ``project_id`` field."""
+
+    project_id: Any
+
+
+# The two Project helpers are type-preserving: what a caller hands in is the shape
+# it gets back. Typing them with these instead of `Any` keeps mypy checking every
+# call site that reassigns a typed variable from them.
+PayloadT = TypeVar("PayloadT", bound=ProjectScopedPayload)
+ProjectIdT = TypeVar("ProjectIdT", bound=Union[str, UUID, Unset, None])
+
+
 def check_deprecation_warning() -> None:
     warnings.warn(CHECK_DEPRECATION_WARNING, DeprecationWarning, stacklevel=2)
 
@@ -154,15 +171,19 @@ class Okareo:
         api_key: str,
         base_path: str = BASE_URL,  # type: ignore
         timeout: Optional[float] = None,
+        project: Union[str, UUID, None] = None,
     ):
         """
         Args:
-            api_key (str): Okareo API key.
-            base_path (str): Base URL of the Okareo API.
-            timeout (Optional[float]): Request timeout in seconds applied to every
-                API call made through this instance. Falls back to the
-                HTTPX_TIME_OUT environment variable. When neither is set,
-                requests are not timed out.
+            api_key: Your Okareo API key.
+            base_path: Okareo API base URL.
+            timeout: Request timeout in seconds, applied to every API call made
+                through this instance. Falls back to the HTTPX_TIME_OUT
+                environment variable. When neither is set, requests are not timed
+                out, which is the behaviour callers have had until now.
+            project: The Project this client works in, its **name** or its id.
+                Omit to keep the server's default Project (the pre-Projects
+                behavior). Resolved and validated here, at construction.
         """
         self.api_key = api_key
         if timeout is None:
@@ -177,6 +198,97 @@ class Okareo:
             api_key=self.api_key,
         )
         self.validate_response(response)
+        # Client-level Project (G5): applied wherever a per-call value is not given.
+        # Precedence everywhere: per-call / explicitly-set field > client-level >
+        # server default. Resolved against the projects list the connectivity
+        # check just fetched, so a bad name or id fails HERE with a clear message
+        # instead of silently scattering data — and a name costs no extra call.
+        # Archived Projects resolve on purpose — they stay fully usable.
+        self.project_id: Optional[str] = None
+        if project is not None:
+            assert isinstance(response, list)
+            self.project_id = self._resolve_project(project, response)
+
+    def set_project(self, project: Union[str, UUID, None]) -> None:
+        """Switch the client-level Project mid-script by name or id (None clears it).
+
+        Fetches a fresh Project list to resolve against — freshness over the cost
+        of one extra call on an infrequent operation.
+        """
+        if project is None:
+            self.project_id = None
+            return
+        self.project_id = self._resolve_project(project, self.get_projects())
+
+    @staticmethod
+    def _resolve_project(
+        project: Union[str, UUID], projects: List[ProjectResponse]
+    ) -> str:
+        """Resolve a Project name or id to its id.
+
+        A value that parses as a UUID is matched as an id and never falls back to
+        a name lookup — so a wrong id fails rather than quietly matching something
+        else. Anything else is matched as a name, case-insensitively and ignoring
+        surrounding whitespace; Project names are unique per organization, so a
+        name identifies exactly one Project.
+        """
+        value = str(project).strip()
+        try:
+            wanted_id: Optional[UUID] = UUID(value)
+        except ValueError:
+            wanted_id = None
+
+        for candidate in projects:
+            if wanted_id is not None:
+                if UUID(str(candidate.id)) == wanted_id:
+                    return str(wanted_id)
+            elif str(candidate.name).strip().casefold() == value.casefold():
+                return str(UUID(str(candidate.id)))
+
+        names = ", ".join(f"{p.name} ({p.id})" for p in projects)
+        raise ValueError(f"Unknown project {value!r}. Available Projects: {names}")
+
+    @staticmethod
+    def _validate_project_name(name: str) -> None:
+        """Reject a Project name the server would reject, before the round trip.
+
+        Leading or trailing whitespace is not part of a name — it makes two
+        Projects look identical in the picker while being distinct rows, so the
+        server refuses it. Catch it here so the caller gets a local error.
+        """
+        if name != name.strip():
+            raise ValueError(
+                f"Project name {name!r} has leading or trailing whitespace. "
+                f"Use {name.strip()!r} instead."
+            )
+
+    def _resolved_project_id(self, per_call: ProjectIdT) -> Union[ProjectIdT, str]:
+        """Per-call value when given; else the client-level Project; else the
+        caller's own unset sentinel (None or UNSET), which the server resolves to
+        the default Project.
+
+        The return type is the caller's own type widened only by ``str`` (the
+        client-level id), so each call site stays type-checked.
+        """
+        if per_call is not None and not isinstance(per_call, Unset):
+            return per_call
+        if self.project_id is not None:
+            return self.project_id
+        return per_call
+
+    def _with_client_project(
+        self, payload: PayloadT, as_uuid: bool = False
+    ) -> PayloadT:
+        """Return ``payload``, or a copy with ``project_id`` filled from the
+        client level when the field is UNSET (an explicitly-set field — including
+        an explicit None — wins). The caller's object is never mutated."""
+        if self.project_id is None:
+            return payload
+        if not isinstance(payload.project_id, Unset):
+            return payload
+        filled = copy.copy(payload)
+        filled.project_id = UUID(self.project_id) if as_uuid else self.project_id
+        return filled
 
     @staticmethod
     def seed_data_from_list(data_list: List[SeedDataRow]) -> List[SeedData]:
@@ -236,8 +348,10 @@ class Okareo:
 
         Raises:
             TypeError: If the API response is an error.
-            ValueError: If no response is received from the API.
+            ValueError: If the name has leading or trailing whitespace, or if no
+                response is received from the API.
         """
+        self._validate_project_name(name)
         response = create_project_v0_projects_post.sync(
             client=self.client,
             api_key=self.api_key,
@@ -246,6 +360,100 @@ class Okareo:
         self.validate_response(response)
         assert isinstance(response, ProjectResponse)
 
+        return response
+
+    def get_project(self, project_id: Union[str, UUID]) -> ProjectResponse:
+        """
+        Get a single project by id.
+
+        Args:
+            project_id (Union[str, UUID]): The ID of the project to fetch.
+
+        Returns:
+            ProjectResponse: The requested project.
+
+        Raises:
+            TypeError: If the API response is an error.
+            ValueError: If no response is received from the API.
+        """
+        response = get_project_v0_projects_project_id_get.sync(
+            project_id=UUID(str(project_id)),
+            client=self.client,
+            api_key=self.api_key,
+        )
+        self.validate_response(response)
+        assert isinstance(response, ProjectResponse)
+
+        return response
+
+    def update_project(
+        self,
+        project_id: Union[str, UUID],
+        name: Union[Unset, str] = UNSET,
+        tags: Union[Unset, List[str]] = UNSET,
+    ) -> ProjectResponse:
+        """
+        Update a project's name and/or tags. Only the fields you pass are changed.
+
+        Args:
+            project_id (Union[str, UUID]): The ID of the project to update.
+            name (Union[Unset, str], optional): New name for the project.
+            tags (Union[Unset, List[str]], optional): Replacement tag list.
+
+        Returns:
+            ProjectResponse: The updated project.
+
+        Raises:
+            ValueError: If the name has leading or trailing whitespace.
+        """
+        if not isinstance(name, Unset):
+            self._validate_project_name(name)
+        response = patch_project_v0_projects_project_id_patch.sync(
+            project_id=UUID(str(project_id)),
+            client=self.client,
+            api_key=self.api_key,
+            body=ProjectPatchSchema(name=name, tags=tags),
+        )
+        self.validate_response(response)
+        assert isinstance(response, ProjectResponse)
+        return response
+
+    def archive_project(self, project_id: Union[str, UUID]) -> ProjectResponse:
+        """
+        Archive a project. Archiving is reversible and restricts nothing — an
+        archived project stays fully usable; it is only hidden from the project
+        picker. The default ("Global") project cannot be archived.
+
+        Note: until the generated client is regenerated, the returned
+        ProjectResponse carries the archive state in
+        ``additional_properties["is_archived"]``.
+        """
+        response = patch_project_v0_projects_project_id_patch.sync(
+            project_id=UUID(str(project_id)),
+            client=self.client,
+            api_key=self.api_key,
+            body=ProjectPatchSchema(is_archived=True),
+        )
+        self.validate_response(response)
+        assert isinstance(response, ProjectResponse)
+        return response
+
+    def unarchive_project(self, project_id: Union[str, UUID]) -> ProjectResponse:
+        """
+        Unarchive a project, restoring it to the project picker.
+
+        Note: until the generated client is regenerated, the returned
+        ProjectResponse carries the archive state in
+        ``additional_properties["is_archived"]``.
+        """
+        response = patch_project_v0_projects_project_id_patch.sync(
+            project_id=UUID(str(project_id)),
+            client=self.client,
+            api_key=self.api_key,
+            body=ProjectPatchSchema(is_archived=False),
+        )
+        self.validate_response(response)
+        assert isinstance(response, ProjectResponse)
         return response
 
     def _get_custom_model_invoker(
@@ -311,6 +519,7 @@ class Okareo:
             TypeError: If the API response is an error.
             ValueError: If no response is received from the API.
         """
+        project_id = self._resolved_project_id(project_id)
         if tags is None:
             tags = []
         data: Dict[str, Any] = {
@@ -422,6 +631,7 @@ class Okareo:
         if create_request.seed_data == [] or create_request.seed_data is None:
             raise ValueError("Non-empty seed data is required to create a scenario set")
 
+        create_request = self._with_client_project(create_request, as_uuid=True)
         response = create_scenario_set_v0_scenario_sets_post.sync(
             client=self.client, api_key=self.api_key, body=create_request
         )
@@ -464,6 +674,7 @@ class Okareo:
         )
         ```
         """
+        project_id = self._resolved_project_id(project_id)
         try:
             file_name = os.path.basename(file_path)
 
@@ -577,6 +788,7 @@ class Okareo:
         print(generated_set.app_link) # Prints the link to the generated scenario set
         ```
         """
+        project_id = self._resolved_project_id(project_id)
         scenario_id = (
             source_scenario.scenario_id
             if isinstance(source_scenario, ScenarioSetResponse)
@@ -633,6 +845,7 @@ class Okareo:
                 )
             )
 
+        create_request = self._with_client_project(create_request, as_uuid=True)
         response = generate_scenario_set_v0_scenario_sets_generate_post.sync(
             client=self.client, api_key=self.api_key, body=create_request
         )
@@ -809,6 +1022,7 @@ class Okareo:
             print(dp)
         ```
         """
+        datapoint_search = self._with_client_project(datapoint_search)
         data = get_datapoints_v0_find_datapoints_post.sync(
             client=self.client,
             api_key=self.api_key,
@@ -865,6 +1079,7 @@ class Okareo:
             print(dp)
         ```
         """
+        datapoint_search = self._with_client_project(datapoint_search, as_uuid=True)
         data = get_datapoints_filter_v0_find_datapoints_filter_post.sync(
             client=self.client,
             api_key=self.api_key,
@@ -1183,6 +1398,9 @@ class Okareo:
         body = CheckCreateUpdateSchema(
             name=name, description=description, check_config=check_config
         )
+        # Provenance: Checks are shared org-wide, but the column records where the
+        # Check was authored — fill it from the client-level Project when set.
+        body = self._with_client_project(body, as_uuid=True)
         if tags is not None:
             body["tags"] = tags
         response = check_create_or_update_v0_check_create_or_update_post.sync(
@@ -1318,6 +1536,9 @@ class Okareo:
                 f"Invalid driver_temperature value: {driver.temperature}. Must be a number."
             ) from e
         request_body = DriverModelSchema.from_dict(driver.to_dict())
+        # Provenance: Drivers are shared org-wide; the column records authorship.
+        # Fill the wire schema, not the Driver — Driver.to_dict() drops project_id.
+        request_body = self._with_client_project(request_body, as_uuid=True)
         response = register_driver_model_v0_driver_post.sync(
             client=self.client,
             body=request_body,
@@ -1408,6 +1629,7 @@ class Okareo:
             session_starter,
             session_ender,
         ) = self._get_custom_model_invoker(data)
+        project_id = self._resolved_project_id(project_id)
         if project_id is not None:
             data["project_id"] = project_id
         request_body = ModelUnderTestSchema.from_dict(data)
@@ -1506,6 +1728,7 @@ class Okareo:
 
         Returns a TestRunItem representing the created simulation test run.
         """
+        project_id = self._resolved_project_id(project_id)
         # create or update driver if needed
         if isinstance(driver, Driver):
             driver_model = self.create_or_update_driver(driver)
@@ -1645,6 +1868,7 @@ class Okareo:
         Returns:
             List of test run dicts from the server.
         """
+        project_id = self._resolved_project_id(project_id)
         body: Dict[str, Any] = {"return_model_metrics": return_model_metrics}
         if tags:
             body["tags"] = tags
@@ -1752,6 +1976,7 @@ class Okareo:
             raise ValueError("Either file_path or file_bytes must be provided.")
         audio_b64 = base64.b64encode(audio_data).decode("utf-8")
 
+        project_id = self._resolved_project_id(project_id)
         payload = {"audio": audio_b64}
         if project_id:
             payload["project_id"] = project_id
@@ -1817,6 +2042,7 @@ class Okareo:
         """
 
         uploaded_data: List[SeedDataRow] = []
+        project_id = self._resolved_project_id(project_id)
         pid = str(project_id) if project_id else None
         for item in tqdm(data_list, desc="Uploading audio files"):
             upload_response = self.upload_voice(
@@ -1840,8 +2066,8 @@ class Okareo:
 
     def ingest_conversations(
         self,
-        project_id: Union[str, UUID],
-        conversations: List[Dict[str, Any]],
+        project_id: Union[str, UUID, None] = None,
+        conversations: Optional[List[Dict[str, Any]]] = None,
         mut_id: Union[str, UUID, None] = None,
     ) -> Dict[str, Any]:
         """Ingest voice conversations for monitoring.
@@ -1916,6 +2142,14 @@ class Okareo:
         )
         ```
         """
+        project_id = self._resolved_project_id(project_id)
+        if project_id is None:
+            raise ValueError(
+                "ingest_conversations requires a project_id — pass one per call or "
+                "set a client-level Project (Okareo(..., project=...) or set_project)."
+            )
+        if conversations is None:
+            raise ValueError("ingest_conversations requires conversations.")
         payload = {
             "project_id": str(project_id),
             "conversations": conversations,
