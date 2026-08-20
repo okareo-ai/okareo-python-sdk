@@ -7,6 +7,7 @@ import warnings
 from typing import Any, Dict, List, Optional, Protocol, TypedDict, TypeVar, Union, cast
 from uuid import UUID
 
+import httpx
 import pydantic
 from pydantic import BaseModel as PydanticBaseModel
 from tqdm import tqdm  # type: ignore
@@ -112,7 +113,7 @@ from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
 from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
 from okareo_api_client.types import UNSET, File, Unset
 
-from .common import BASE_URL, HTTPX_TIME_OUT
+from .common import BASE_URL, get_httpx_time_out
 from .model_under_test import BaseModel, ModelUnderTest
 
 CHECK_DEPRECATION_WARNING = (
@@ -169,22 +170,29 @@ class Okareo:
         self,
         api_key: str,
         base_path: str = BASE_URL,  # type: ignore
-        timeout: float = HTTPX_TIME_OUT,
+        timeout: Optional[float] = None,
         project: Union[str, UUID, None] = None,
     ):
         """
         Args:
             api_key: Your Okareo API key.
             base_path: Okareo API base URL.
-            timeout: HTTP timeout in seconds.
-            project: The Project this client works in — its **name** or its id.
+            timeout: Request timeout in seconds, applied to every API call made
+                through this instance. Falls back to the HTTPX_TIME_OUT
+                environment variable. When neither is set, requests are not timed
+                out, which is the behaviour callers have had until now.
+            project: The Project this client works in, its **name** or its id.
                 Omit to keep the server's default Project (the pre-Projects
                 behavior). Resolved and validated here, at construction.
         """
         self.api_key = api_key
+        if timeout is None:
+            timeout = get_httpx_time_out()
         self.client = Client(
-            base_url=base_path, raise_on_unexpected_status=True
-        )  # otherwise everything except 201 and 422 is swallowed
+            base_url=base_path,
+            raise_on_unexpected_status=True,  # otherwise everything except 201 and 422 is swallowed
+            timeout=httpx.Timeout(timeout) if timeout is not None else None,
+        )
         response = get_all_projects_v0_projects_get.sync(
             client=self.client,
             api_key=self.api_key,

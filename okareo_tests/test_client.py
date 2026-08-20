@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 from uuid import UUID
 
+import httpx
 import pytest
 from okareo_tests.common import API_KEY, OkareoAPIhost, integration
 from pytest_httpx import HTTPXMock
@@ -20,8 +21,8 @@ def test_can_instantiate() -> None:
     Okareo(API_KEY)
 
 
-@pytest.fixture
-def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
+def mock_projects_response(httpx_mock: HTTPXMock) -> None:
+    """Register the response Okareo.__init__ makes on instantiation."""
     httpx_mock.add_response(
         json=[
             {
@@ -34,6 +35,11 @@ def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
         ],
         status_code=201,
     )
+
+
+@pytest.fixture
+def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
+    mock_projects_response(httpx_mock)
     return Okareo("foo", "http://mocked.com")
 
 
@@ -160,3 +166,37 @@ def test_get_scenario_data_points(okareo_client: Okareo, httpx_mock: HTTPXMock) 
 def test_get_all_checks(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(json={}, status_code=201)
     okareo_client.get_all_checks()
+
+
+def test_timeout_argument_reaches_the_httpx_client(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("HTTPX_TIME_OUT", raising=False)
+    mock_projects_response(httpx_mock)
+
+    okareo = Okareo("foo", "http://mocked.com", timeout=7)
+
+    assert okareo.client.get_httpx_client().timeout == httpx.Timeout(7)
+
+
+def test_httpx_time_out_env_var_reaches_the_httpx_client(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HTTPX_TIME_OUT", "12")
+    mock_projects_response(httpx_mock)
+
+    okareo = Okareo("foo", "http://mocked.com")
+
+    assert okareo.client.get_httpx_client().timeout == httpx.Timeout(12)
+
+
+def test_unconfigured_timeout_leaves_requests_untimed(
+    httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """No timeout is imposed on callers who did not ask for one."""
+    monkeypatch.delenv("HTTPX_TIME_OUT", raising=False)
+    mock_projects_response(httpx_mock)
+
+    okareo = Okareo("foo", "http://mocked.com")
+
+    assert okareo.client.get_httpx_client().timeout == httpx.Timeout(None)
