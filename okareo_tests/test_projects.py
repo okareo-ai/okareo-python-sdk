@@ -179,20 +179,22 @@ def assert_valid_test_run(
 # Projects (see `scratch_project`) rather than minting new ones per run.
 
 
-def test_isolated_type_not_visible_across_projects(
+def test_targets_visible_across_projects(
     rnd: str,
     okareo_client: Okareo,
     project_a: ProjectResponse,
     project_b: ProjectResponse,
 ) -> None:
-    # G7: an isolated type — a Target — belongs to exactly one Project.
+    # Targets are org-shared, like Checks and Drivers: a Target registered in
+    # one Project is visible from every Project. The Project named at
+    # registration remains the family's home (it stamps where scenario-less
+    # live traffic files), not a visibility boundary. This replaces the old
+    # G7 isolation assertion, which pinned the pre-org-shared model.
     target_name = f"CI iso target {rnd}"
     okareo_client.register_model(name=target_name, project_id=str(project_a.id))
 
-    # the control: the same listing DOES show it from its own Project, so the
-    # absence below is isolation and not an empty result
     assert target_name in target_names_in_project(okareo_client, project_a.id)
-    assert target_name not in target_names_in_project(okareo_client, project_b.id)
+    assert target_name in target_names_in_project(okareo_client, project_b.id)
 
 
 def test_shared_types_visible_from_any_project(
