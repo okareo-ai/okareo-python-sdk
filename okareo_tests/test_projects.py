@@ -10,9 +10,10 @@ from okareo import Okareo
 from okareo.checks import CheckOutputType, ModelBasedCheck
 from okareo.model_under_test import CustomModel, ModelInvocation
 from okareo_api_client.api.default import (
-    get_all_models_under_test_v0_models_under_test_get,
+    get_model_under_test_by_name_and_version_v0_models_under_test_name_version_get,
 )
 from okareo_api_client.models import SeedData
+from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item import TestRunItem
@@ -54,19 +55,6 @@ def project_a(okareo_client: Okareo) -> ProjectResponse:
 @pytest.fixture(scope="module")
 def project_b(okareo_client: Okareo) -> ProjectResponse:
     return scratch_project(okareo_client, "CI - cross-project B")
-
-
-def target_names_in_project(
-    okareo_client: Okareo, project_id: Union[str, UUID]
-) -> List[str]:
-    """The names of the Targets (models under test) visible in one Project."""
-    response = get_all_models_under_test_v0_models_under_test_get.sync(
-        client=okareo_client.client,
-        api_key=API_KEY,
-        project_id=UUID(str(project_id)),
-    )
-    assert isinstance(response, list)
-    return [str(target.name) for target in response]
 
 
 def test_get_projects(okareo_client: Okareo) -> None:
@@ -183,18 +171,42 @@ def test_targets_visible_across_projects(
     rnd: str,
     okareo_client: Okareo,
     project_a: ProjectResponse,
-    project_b: ProjectResponse,
 ) -> None:
     # Targets are org-shared, like Checks and Drivers: a Target registered in
-    # one Project is visible from every Project. The Project named at
-    # registration remains the family's home (it stamps where scenario-less
-    # live traffic files), not a visibility boundary. This replaces the old
-    # G7 isolation assertion, which pinned the pre-org-shared model.
+    # one Project resolves by name from any other Project context. The Project
+    # named at registration remains the family's home (it stamps where
+    # scenario-less live traffic files), not a visibility boundary. This
+    # replaces the old G7 isolation assertion, which pinned the pre-org-shared
+    # model. Asserted via by-name resolution rather than the org list: the
+    # gate account's Target corpus makes the unbounded list exceed Cloud Run's
+    # 32 MB response cap (same failure mode the skipped
+    # test_omitted_project_resolves_to_default documents for find_test_runs),
+    # and by-name resolution is the flow SDK users actually exercise.
     target_name = f"CI iso target {rnd}"
-    okareo_client.register_model(name=target_name, project_id=str(project_a.id))
 
-    assert target_name in target_names_in_project(okareo_client, project_a.id)
-    assert target_name in target_names_in_project(okareo_client, project_b.id)
+    class EchoModel(CustomModel):
+        def invoke(self, input_value: Union[dict, list, str]) -> ModelInvocation:
+            return ModelInvocation(model_prediction=str(input_value))
+
+    okareo_client.register_model(
+        name=target_name,
+        project_id=str(project_a.id),
+        model=EchoModel(name=target_name),
+    )
+
+    # No Project context on the lookup: the server resolves from the default
+    # Project — a different Project than the Target's home. A project-scoped
+    # server 404s here; an org-shared one finds the family.
+    response = get_model_under_test_by_name_and_version_v0_models_under_test_name_version_get.sync(
+        name=target_name,
+        version="latest",
+        client=okareo_client.client,
+        api_key=API_KEY,
+    )
+    assert isinstance(response, ModelUnderTestResponse)
+    assert str(response.name) == target_name
+    # The home stays where it was registered — resolution found it, not moved it.
+    assert str(response.project_id) == str(project_a.id)
 
 
 def test_shared_types_visible_from_any_project(
