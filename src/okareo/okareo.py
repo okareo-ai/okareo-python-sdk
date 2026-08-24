@@ -2,6 +2,7 @@ import base64
 import copy
 import datetime
 import json
+import math
 import os
 import warnings
 from typing import Any, Dict, List, Optional, Protocol, TypedDict, TypeVar, Union, cast
@@ -1802,6 +1803,102 @@ class Okareo:
             checks=checks,
             simulation_params=simulation_params,
             driver_id=str(driver_model.id) if driver_model.id else None,
+        )
+
+    def run_load_test(
+        self,
+        name: str,
+        target: Union[str, Target],
+        load_concurrent: int,
+        load_duration_s: float,
+        seed_data: Optional[List[dict]] = None,
+        driver: Optional[Union[str, Driver]] = None,
+        checks: Optional[List[str]] = None,
+        call_turns: Optional[int] = None,
+        cps: float = 5.0,
+        cadence_s: float = 11.0,
+        drop_margin: float = 0.2,
+        call_cap_s: int = 2400,
+        first_turn: Optional[str] = "driver",
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        project_id: Optional[str] = None,
+        calculate_metrics: bool = True,
+    ) -> TestRunItem:
+        """Run a closed-loop VOICE LOAD TEST: hold ``load_concurrent`` conversations for
+        ``load_duration_s`` seconds, ending them via a manager stop-signal rather than
+        tacking to max_turns.
+
+        Distinct from ``run_simulation`` (which evaluates a scenario set once): here you
+        specify LOAD (concurrent + duration). ``seed_data`` rows are **round-robin sampled
+        with replacement** to fill the sustained load, and ``checks`` score every call's
+        datapoint (quality-under-load). Internally this sizes the run, builds a
+        round-robin-tiled scenario, sets the target's ``max_parallel_requests`` to
+        ``load_concurrent``, and submits a MULTI_TURN run.
+
+        Sizing (hold-and-signal model):
+
+        - ``ramp = load_concurrent / cps``; the earliest-dialed call must survive to the
+          stop-signal, so ``ramp + load_duration_s <= call_cap_s`` (else ``ValueError``).
+        - ``N_rows = ceil(load_concurrent * (1 + drop_margin))`` — the initial fill plus a
+          small backfill pool for dropped calls (each held call is one datapoint).
+        - ``max_turns`` is sized to comfortably outlast ramp+hold so calls never self-end
+          before the signal (pair with a never-end driver prompt).
+
+        Notes:
+
+        - Precise duration + clean teardown require the server-side stop-signal
+          (``loadtest:stop:{run_id}``); the manual killswitch
+          (``redis-cli SET loadtest:kill:<run_id> 1``) is always available.
+        - ``cps`` is the provider call-creation cap (e.g. Twilio account CPS) — a property
+          of the provider, not a user knob; it bounds the ramp, not a per-call rate.
+
+        Returns a ``TestRunItem`` for the load-test run.
+        """
+        if load_concurrent < 1 or load_duration_s <= 0:
+            raise ValueError("load_concurrent >= 1 and load_duration_s > 0 are required")
+        ramp = load_concurrent / cps
+        if ramp + load_duration_s > call_cap_s:
+            min_cps = math.ceil(load_concurrent / max(1.0, call_cap_s - load_duration_s))
+            raise ValueError(
+                f"load-test CAP CHECK failed: ramp({ramp:.0f}s) + load_duration"
+                f"({load_duration_s:.0f}s) exceeds the per-call cap {call_cap_s}s. "
+                f"Raise cps to >= {min_cps} (shorter ramp), raise the cap, or shorten "
+                f"load_duration."
+            )
+        hold_turns = math.ceil((ramp + load_duration_s) / cadence_s)
+        turns = int(call_turns) if call_turns else int(hold_turns * 1.5) + 5
+        n_rows = math.ceil(load_concurrent * (1 + drop_margin))
+
+        # Round-robin tile the seed rows to N_rows. `repeats` is NOT usable here: the
+        # server expands it row-major (A,A,..,B,B,..), which would run the plateau all-A
+        # then all-B; tiling the seed makes the in-flight set cycle evenly through the rows.
+        rows = seed_data or [{"load_test": "conversation"}]
+        k = len(rows)
+        seed = [SeedData(input_=rows[i % k], result="n/a") for i in range(n_rows)]
+        scenario = self.create_scenario_set(
+            ScenarioSetCreate(name=f"{name}-scenario", seed_data=seed)
+        )
+
+        # Concurrency governor: the executor holds `load_concurrent` calls in flight and
+        # dials a replacement on completion, up to N_rows.
+        if isinstance(target, Target) and hasattr(target.target, "max_parallel_requests"):
+            target.target.max_parallel_requests = load_concurrent  # type: ignore[union-attr]
+
+        return self.run_simulation(
+            name=name,
+            scenario=scenario,
+            target=target,
+            driver=driver,
+            checks=checks,
+            max_turns=turns,
+            repeats=1,  # round-robin lives in the seed; never use repeats (row-major)
+            first_turn=first_turn,
+            api_key=api_key,
+            api_keys=api_keys,
+            calculate_metrics=calculate_metrics,
+            project_id=project_id,
+            submit=True,
         )
 
     def generate_driver_prompt(
