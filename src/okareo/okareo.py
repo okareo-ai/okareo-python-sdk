@@ -1693,6 +1693,7 @@ class Okareo:
         tags: Optional[list[str]] = None,
         sensitive_fields: Union[List[str], None] = None,
         submit: Optional[bool] = False,
+        loadtest: Optional[dict] = None,
     ) -> TestRunItem:
         """Run a multiturn simulation against a target.
 
@@ -1762,6 +1763,7 @@ class Okareo:
             concurrent_ask_probability=concurrent_ask_probability,
             turn_transition_time=turn_transition_time,
             augmentation=augmentation,
+            loadtest=loadtest,
         )
 
         # create MUT object
@@ -1805,6 +1807,17 @@ class Okareo:
             driver_id=str(driver_model.id) if driver_model.id else None,
         )
 
+    # Internal, NON-user-facing safety constants. The user specifies only load (concurrent
+    # + duration); everything that protects the SYSTEM from a runaway (ramp deadline,
+    # plateau fraction, backstops) is derived SERVER-SIDE from those two values, so it can
+    # never be mistuned by a caller. Here we keep only the two client-side derivations:
+    _LOADTEST_DROP_MARGIN = 0.2       # N_rows = target × (1 + this): backfill for dropped calls
+    # Catastrophic max_turns backstop (never the terminator — the auto-stop + wall-clock cap
+    # end calls far sooner). MUST stay < 999: the server's ConversationOrchestrator rejects
+    # max_turns >= 999 with a 400. 998 is unreachable in practice (a 2400s wall-clock cap ends
+    # a ~11s/turn call near turn ~200), so it's a safe ceiling.
+    _LOADTEST_TURN_BACKSTOP = 998
+
     def run_load_test(
         self,
         name: str,
@@ -1814,61 +1827,41 @@ class Okareo:
         seed_data: Optional[List[dict]] = None,
         driver: Optional[Union[str, Driver]] = None,
         checks: Optional[List[str]] = None,
-        call_turns: Optional[int] = None,
-        cps: float = 5.0,
-        cadence_s: float = 11.0,
-        drop_margin: float = 0.2,
-        call_cap_s: int = 2400,
-        first_turn: Optional[str] = "driver",
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
         project_id: Optional[str] = None,
         calculate_metrics: bool = True,
     ) -> TestRunItem:
         """Run a closed-loop VOICE LOAD TEST: hold ``load_concurrent`` conversations for
-        ``load_duration_s`` seconds, ending them via a manager stop-signal rather than
-        tacking to max_turns.
+        ``load_duration_s`` seconds.
+
+        The **only** load knobs are ``load_concurrent`` (# calls to hold) and
+        ``load_duration_s`` (plateau seconds). Everything that paces the ramp and protects
+        the system from a runaway — the provider call-creation rate, the ramp deadline, the
+        plateau-detection fraction, and the stop backstops — is an INTERNAL SAFETY mechanism
+        derived server-side; it is deliberately not exposed here so a caller can't mistune it.
 
         Distinct from ``run_simulation`` (which evaluates a scenario set once): here you
-        specify LOAD (concurrent + duration). ``seed_data`` rows are **round-robin sampled
-        with replacement** to fill the sustained load, and ``checks`` score every call's
-        datapoint (quality-under-load). Internally this sizes the run, builds a
-        round-robin-tiled scenario, sets the target's ``max_parallel_requests`` to
-        ``load_concurrent``, and submits a MULTI_TURN run.
-
-        Sizing (hold-and-signal model):
-
-        - ``ramp = load_concurrent / cps``; the earliest-dialed call must survive to the
-          stop-signal, so ``ramp + load_duration_s <= call_cap_s`` (else ``ValueError``).
-        - ``N_rows = ceil(load_concurrent * (1 + drop_margin))`` — the initial fill plus a
-          small backfill pool for dropped calls (each held call is one datapoint).
-        - ``max_turns`` is sized to comfortably outlast ramp+hold so calls never self-end
-          before the signal (pair with a never-end driver prompt).
-
-        Notes:
-
-        - Precise duration + clean teardown require the server-side stop-signal
-          (``loadtest:stop:{run_id}``); the manual killswitch
-          (``redis-cli SET loadtest:kill:<run_id> 1``) is always available.
-        - ``cps`` is the provider call-creation cap (e.g. Twilio account CPS) — a property
-          of the provider, not a user knob; it bounds the ramp, not a per-call rate.
+        specify LOAD. ``seed_data`` rows are **round-robin sampled with replacement** to fill
+        the sustained load, and ``checks`` score every call's datapoint (quality-under-load).
+        Internally this builds a round-robin-tiled scenario, sets the target's
+        ``max_parallel_requests`` to ``load_concurrent``, and submits a MULTI_TURN run whose
+        server-side manager holds the plateau and ends it gracefully (measured from the ACTUAL
+        plateau, and aborting a doomed ramp). Pair with a never-end driver prompt.
 
         Returns a ``TestRunItem`` for the load-test run.
         """
         if load_concurrent < 1 or load_duration_s <= 0:
             raise ValueError("load_concurrent >= 1 and load_duration_s > 0 are required")
-        ramp = load_concurrent / cps
-        if ramp + load_duration_s > call_cap_s:
-            min_cps = math.ceil(load_concurrent / max(1.0, call_cap_s - load_duration_s))
-            raise ValueError(
-                f"load-test CAP CHECK failed: ramp({ramp:.0f}s) + load_duration"
-                f"({load_duration_s:.0f}s) exceeds the per-call cap {call_cap_s}s. "
-                f"Raise cps to >= {min_cps} (shorter ramp), raise the cap, or shorten "
-                f"load_duration."
-            )
-        hold_turns = math.ceil((ramp + load_duration_s) / cadence_s)
-        turns = int(call_turns) if call_turns else int(hold_turns * 1.5) + 5
-        n_rows = math.ceil(load_concurrent * (1 + drop_margin))
+        # Ship ONLY the two user-specified load values. The server manager derives the ramp
+        # deadline, plateau fraction, and backstops internally (from the provider it actually
+        # dials with) — see distributed_executor._loadtest_ramp_decision.
+        loadtest_cfg = {
+            "loadtest_load_duration_s": float(load_duration_s),
+            "loadtest_target_concurrent": int(load_concurrent),
+        }
+        turns = self._LOADTEST_TURN_BACKSTOP
+        n_rows = math.ceil(load_concurrent * (1 + self._LOADTEST_DROP_MARGIN))
 
         # Round-robin tile the seed rows to N_rows. `repeats` is NOT usable here: the
         # server expands it row-major (A,A,..,B,B,..), which would run the plateau all-A
@@ -1893,12 +1886,13 @@ class Okareo:
             checks=checks,
             max_turns=turns,
             repeats=1,  # round-robin lives in the seed; never use repeats (row-major)
-            first_turn=first_turn,
+            first_turn="driver",  # internal: SIP echo sink is silent until the driver speaks
             api_key=api_key,
             api_keys=api_keys,
             calculate_metrics=calculate_metrics,
             project_id=project_id,
             submit=True,
+            loadtest=loadtest_cfg,
         )
 
     def generate_driver_prompt(
