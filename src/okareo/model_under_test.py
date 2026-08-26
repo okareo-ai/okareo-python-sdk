@@ -1296,33 +1296,6 @@ class GenerationModel(BaseModel):
 
 
 @_attrs_define
-class OpenAIAssistantModel(BaseModel):
-    """An OpenAI Assistant definition with prompt template and relevant parameters for an Okareo evaluation.
-
-    Arguments:
-        model_id: Assistant ID to request to run a thread against.
-        assistant_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
-        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
-        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
-    """
-
-    type = "openai_assistant"
-    model_id: str
-    assistant_prompt_template: Optional[str] = None
-    user_prompt_template: Optional[str] = None
-    dialog_template: Optional[str] = None
-
-    def params(self) -> dict:
-        return {
-            "model_id": self.model_id,
-            "assistant_prompt_template": self.assistant_prompt_template,
-            "user_prompt_template": self.user_prompt_template,
-            "dialog_template": self.dialog_template,
-            "type": self.type,
-        }
-
-
-@_attrs_define
 class CohereModel(BaseModel):
     """
     A Cohere model definition with prompt template and relevant parameters for an Okareo evaluation.

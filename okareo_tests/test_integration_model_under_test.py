@@ -1,11 +1,10 @@
 import json
 import os
-from typing import Any, Generator, Union
+from typing import Any, Union
 
 import pytest
 from okareo_tests.common import API_KEY, OPENAI_MODEL, random_string
 from okareo_tests.utils import assert_baseline_metrics, assert_metrics
-from openai import OpenAI
 
 from okareo import Okareo
 from okareo.model_under_test import (
@@ -17,7 +16,6 @@ from okareo.model_under_test import (
     GenerationModel,
     ModelInvocation,
     ModelUnderTest,
-    OpenAIAssistantModel,
     PineconeDb,
     QdrantDB,
     SessionConfig,
@@ -51,11 +49,6 @@ def okareo() -> Okareo:
     return Okareo(api_key=API_KEY)
 
 
-@pytest.fixture(scope="module")
-def openai_client() -> OpenAI:
-    return OpenAI()
-
-
 TEST_SUMMARIZE_TEMPLATE = """
 Provide a brief summary of the following paragraph of text:
 
@@ -63,12 +56,6 @@ Provide a brief summary of the following paragraph of text:
 
 Summary:
 
-"""
-
-TEST_ASSISTANT_TEMPLATE = """
-How does the following text relate to WebBizz's corporate partnership opportunities?
-
-{scenario_input}
 """
 
 
@@ -92,25 +79,6 @@ def article_clf_scenario_set(rnd: str, okareo: Okareo) -> ScenarioSetResponse:
     )
 
     return articles
-
-
-@pytest.fixture(scope="module")
-def openai_assistant_id(openai_client: OpenAI) -> Generator[str, None, None]:
-    assistant = openai_client.beta.assistants.create(
-        name="WebBizz B2B Lead Generation",
-        instructions=(
-            "You are a B2B sales associate for WebBizz, an online retail platform. You are responsible for generating leads for new corporate partnerships. Keep the following instructions in mind when answering questions:\n\n"
-            + "Instructions:\n\n"
-            "- Be friendly and helpful.\n"
-            "- Be brief. Keep all your responses to 100 words or less.\n"
-            "- Do not talk about topics that are outside of your context. If the user asks you to discuss irrelevant topics, then nudge them towards discussing corporate partnerships with WebBizz.\n"
-            "- Highlight the advantages for prospective partners of choosing WebBizz as their preferred sales or distribution platform.\n"
-            "- Do not under any circumstances mention direct competitors, especially not Amazine, Demu, or Olli Bobo.\n"
-        ),
-        model=OPENAI_MODEL,
-    )
-    yield assistant.id
-    openai_client.beta.assistants.delete(assistant.id)
 
 
 def test_okareo_client_integration() -> None:
@@ -222,33 +190,6 @@ def test_run_test_openai_with_tool_calls(
     assert run_resp.name == f"openai-tool-calls-run-{rnd}"
     assert run_resp.status == "FINISHED"
     assert_metrics(run_resp, ["tool_call_check"], num_rows=1)
-
-
-def test_run_test_openai_assistant(
-    rnd: str,
-    okareo: Okareo,
-    single_line_scenario_set: ScenarioSetResponse,
-    openai_assistant_id: str,
-) -> None:
-    mut = okareo.register_model(
-        name=f"openai-assistant-ci-run-{rnd}",
-        model=OpenAIAssistantModel(
-            model_id=openai_assistant_id,
-            user_prompt_template=TEST_ASSISTANT_TEMPLATE,
-        ),
-    )
-
-    run_resp = mut.run_test(
-        name=f"openai-assistant-run-{rnd}",
-        scenario=single_line_scenario_set,
-        api_key=os.environ["OPENAI_API_KEY"],
-        test_run_type=TestRunType.NL_GENERATION,
-        calculate_metrics=True,
-        checks=["latency"],
-    )
-    assert run_resp.name == f"openai-assistant-run-{rnd}"
-    assert run_resp.status == "FINISHED"
-    assert_metrics(run_resp, num_rows=1, custom_dimensions=["latency"])
 
 
 @pytest.fixture(scope="module")
