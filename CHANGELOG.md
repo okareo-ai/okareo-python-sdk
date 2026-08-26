@@ -37,6 +37,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
+- `OpenAIAssistantModel` and the `openai_assistant` Target type. OpenAI shut down the
+  Assistants API on 2026-08-26 — `/v1/assistants`, `/v1/threads`, and `/v1/threads/runs`
+  now return errors, with no grace period — so this Target type can no longer run.
+  Use `GenerationModel` for a prompt-driven OpenAI Target, or `CustomEndpointTarget`
+  to point at a hosted agent.
 - References to retired predefined checks (`is_best_option`, `is_code_functional`,
   `does_code_compile`, `contains_all_imports`), which are no longer available in
   the Okareo platform.
