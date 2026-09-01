@@ -1151,7 +1151,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _scenario_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(scenario_id, Unset)
-            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+            else UUID(scenario_id)
+            if isinstance(scenario_id, str)
+            else scenario_id
         )
         _datapoint_ids: Union[Unset, list[UUID], None] = (
             UNSET
@@ -1170,7 +1172,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _test_run_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(test_run_id, Unset)
-            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+            else UUID(test_run_id)
+            if isinstance(test_run_id, str)
+            else test_run_id
         )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
@@ -1742,7 +1746,12 @@ _WEBRTC_REQUIRED_FIELDS = {
         "room_name",
     ),
     "retell": ("agent_id",),
-    "daily": ("room_url",),
+    # Daily has three server-side modes: direct (room_url), REST (the Daily
+    # API key rides api_keys["voice"] at run time, no room_url -- Okareo
+    # creates a room per conversation), and customer-brokered. The client
+    # cannot see api_keys at target-validation time, so the server's
+    # validate_required_fields is the authority; require nothing here.
+    "daily": (),
     "smallwebrtc": ("offer_url",),
     "pipecat": ("offer_url",),  # deprecated alias
 }

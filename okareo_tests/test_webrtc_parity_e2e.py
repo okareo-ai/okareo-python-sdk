@@ -228,9 +228,7 @@ class TestSmallWebRTCConcurrency:
 class TestSmallWebRTCAugmentations:
     """P0: supported augmentations run; unsupported ones degrade gracefully."""
 
-    def _simulate(
-        self, okareo: Okareo, augmentation: Augmentation, label: str
-    ) -> list:
+    def _simulate(self, okareo: Okareo, augmentation: Augmentation, label: str) -> list:
         offer_url = GENERIC_OFFER_URL
         assert offer_url  # narrowed by the class-level skipif
         rnd = random_string(5)
@@ -353,3 +351,181 @@ class TestRetellConcurrency:
         assert sources == {
             "retell"
         }, f"expected vendor ('retell') recordings, got sources={sources}"
+
+
+# --------------------------------------------------------------------------
+# Daily REST mode (Tier 3 -> automated: needs the bot-per-room watcher)
+# --------------------------------------------------------------------------
+
+DAILY_API_KEY = os.environ.get("DAILY_API_KEY")
+
+requires_daily_rest = pytest.mark.skipif(
+    not (OKAREO_API_KEY and DAILY_API_KEY),
+    reason=(
+        "needs OKAREO_API_KEY + DAILY_API_KEY -- and the bot-per-room watcher "
+        "running: python okareo_server/scripts/daily/room_watcher.py"
+    ),
+)
+
+
+def _daily_okareo_rooms(api_key: str) -> List[str]:
+    """Names of okareo-sim-* rooms currently existing on the Daily account."""
+    import httpx
+
+    response = httpx.get(
+        "https://api.daily.co/v1/rooms?limit=100",
+        headers={"Authorization": f"Bearer {api_key}"},
+        timeout=10,
+    )
+    response.raise_for_status()
+    data = response.json().get("data", [])
+    return [
+        room["name"]
+        for room in data
+        if isinstance(room, dict)
+        and str(room.get("name", "")).startswith("okareo-sim-")
+    ]
+
+
+@requires_daily_rest
+class TestDailyRestConcurrency:
+    """P1 REST mode + P2 concurrency against real Daily infrastructure.
+
+    PREREQUISITE: ``scripts/daily/room_watcher.py`` must be running with the
+    same DAILY_API_KEY -- Okareo creates a fresh ``okareo-sim-*`` room per
+    conversation (no ``room_url`` on the target selects REST mode) and the
+    watcher spawns an echo agent into each one. Proves: per-conversation room
+    creation, concurrent isolation, and room cleanup at release.
+    """
+
+    def test_two_concurrent_rest_rooms_are_isolated_and_cleaned_up(self) -> None:
+        assert OKAREO_API_KEY and DAILY_API_KEY
+        okareo = Okareo(api_key=OKAREO_API_KEY, base_path=BASE_URL)
+        rnd = random_string(5)
+        scenario = okareo.create_scenario_set(
+            ScenarioSetCreate(
+                name=f"Daily REST Conc Scenario - {rnd}",
+                seed_data=_seed(CONCURRENT_TOPICS[:2]),
+            )
+        )
+        evaluation = okareo.run_simulation(
+            driver=Driver(
+                name=f"Daily REST Conc Driver - {rnd}",
+                temperature=0.6,
+                prompt_template=DRIVER_PROMPT,
+            ),
+            target=Target(
+                name=f"Daily REST Conc Target - {rnd}",
+                # No room_url: REST mode -- Okareo creates a room per
+                # conversation with the key below; the watcher answers them.
+                target=WebRTCVoiceTarget(platform="daily", max_parallel_requests=2),
+            ),
+            name=f"Daily REST Conc E2E - {rnd}",
+            scenario=scenario,
+            max_turns=2,
+            repeats=1,
+            first_turn="driver",  # the echo agent does not greet
+            calculate_metrics=True,
+            checks=["latency"],
+            api_keys={"voice": DAILY_API_KEY},
+        )
+        assert getattr(evaluation, "id", None), "no test run id"
+        datapoints = _get_datapoints(okareo, evaluation.id)
+
+        _assert_per_conversation_isolation(datapoints, expected=2)
+        _assert_no_fabricated_dtmf(datapoints)
+
+        # Daily direct/REST has no vendor recording -> Okareo's local mix.
+        sources = {_props(dp).get("call_recording_source") for dp in datapoints}
+        assert sources == {"okareo_local_mix"}, f"unexpected sources: {sources}"
+
+        # release() deletes each REST-created room (exp is only the backstop
+        # for crashed workers). Poll briefly: deletion is per-conversation
+        # teardown and can trail the run's finalize by a moment.
+        leftovers = _daily_okareo_rooms(DAILY_API_KEY)
+        for _ in range(4):
+            if not leftovers:
+                break
+            time.sleep(2)
+            leftovers = _daily_okareo_rooms(DAILY_API_KEY)
+        assert not leftovers, (
+            f"okareo-sim rooms not deleted at release: {leftovers} "
+            "(their exp will reap them, but eager cleanup is the contract)"
+        )
+
+
+# --------------------------------------------------------------------------
+# LiveKit direct (Tier 3 -> automated: needs creds + the agent worker)
+# --------------------------------------------------------------------------
+
+LIVEKIT_URL = os.environ.get("LIVEKIT_URL")
+LIVEKIT_API_KEY = os.environ.get("LIVEKIT_API_KEY")
+LIVEKIT_API_SECRET = os.environ.get("LIVEKIT_API_SECRET")
+
+requires_livekit = pytest.mark.skipif(
+    not (OKAREO_API_KEY and LIVEKIT_URL and LIVEKIT_API_KEY and LIVEKIT_API_SECRET),
+    reason=(
+        "needs OKAREO_API_KEY + LIVEKIT_URL/LIVEKIT_API_KEY/LIVEKIT_API_SECRET "
+        "-- and the agent worker running: python scripts/livekit/agent.py dev "
+        "(auto-dispatches into every new room; needs OPENAI_API_KEY)"
+    ),
+)
+
+
+@requires_livekit
+class TestLiveKitDirectConcurrency:
+    """#1026's templated room name at concurrency 3, against a live agent.
+
+    PREREQUISITE: ``scripts/livekit/agent.py dev`` -- a livekit-agents worker
+    with automatic dispatch, so it joins every ``okareo-sim-*`` room the
+    template mints. LiveKit creates rooms on first join, so unlike Daily no
+    broker/watcher is needed: the template IS the per-conversation isolation.
+    """
+
+    def test_three_concurrent_templated_rooms_are_isolated(self) -> None:
+        assert OKAREO_API_KEY and LIVEKIT_URL
+        assert LIVEKIT_API_KEY and LIVEKIT_API_SECRET
+        okareo = Okareo(api_key=OKAREO_API_KEY, base_path=BASE_URL)
+        rnd = random_string(5)
+        scenario = okareo.create_scenario_set(
+            ScenarioSetCreate(
+                name=f"LiveKit Conc Scenario - {rnd}",
+                seed_data=_seed(CONCURRENT_TOPICS),
+            )
+        )
+        evaluation = okareo.run_simulation(
+            driver=Driver(
+                name=f"LiveKit Conc Driver - {rnd}",
+                temperature=0.6,
+                prompt_template=DRIVER_PROMPT,
+            ),
+            target=Target(
+                name=f"LiveKit Conc Target - {rnd}",
+                target=WebRTCVoiceTarget(
+                    platform="livekit",
+                    livekit_url=LIVEKIT_URL,
+                    livekit_api_key=LIVEKIT_API_KEY,
+                    livekit_api_secret=LIVEKIT_API_SECRET,
+                    # The load-bearing part: a STATIC name here would put all
+                    # three conversations in ONE room (the pre-#1026 bug).
+                    room_name="okareo-sim-{scenario_row_run_guid}",
+                    max_parallel_requests=3,
+                ),
+            ),
+            name=f"LiveKit Conc E2E - {rnd}",
+            scenario=scenario,
+            max_turns=2,
+            repeats=1,
+            first_turn="target",  # the livekit agent greets first
+            calculate_metrics=True,
+            checks=["latency"],
+        )
+        assert getattr(evaluation, "id", None), "no test run id"
+        datapoints = _get_datapoints(okareo, evaluation.id)
+
+        _assert_per_conversation_isolation(datapoints, expected=3)
+        _assert_no_fabricated_dtmf(datapoints)
+
+        # Local mix (LiveKit direct produces no vendor recording).
+        sources = {_props(dp).get("call_recording_source") for dp in datapoints}
+        assert sources == {"okareo_local_mix"}, f"unexpected sources: {sources}"
