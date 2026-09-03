@@ -22,8 +22,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `create_project()` and `update_project()` reject a Project name with leading or
   trailing whitespace locally, before the request — the same rule the server
   applies, without the round trip.
+- `calibrate_check()`: try a draft Check against a finished Test Run without saving
+  anything. Returns, per Test Datapoint, what the Check would have returned and the
+  arguments that went into it — so you can see whether a variable was even populated
+  before trusting a verdict. Accepts a `ModelBasedCheck` / `CodeBasedCheck` instance or
+  a raw `check_config` dict, which is sent and echoed back verbatim. `inspect_only=True`
+  returns the arguments alone and makes no judge calls.
+- `CheckOutputType.ANALYSIS`, the third model-check output type the platform supports
+  (free-form text rather than a score). Analysis Checks were previously not
+  constructible from the SDK.
 
 ### Changed
+
+- Model-based Check prompts may only use the current template variables. Okareo now
+  rejects any other placeholder when a Check is saved, including the legacy aliases.
+  Replace `{generation}` with `{model_output}`, `{input}` with `{scenario_input}`, and
+  `{result}` with `{scenario_result}`. `{audio_messages}` and `{audio_output}` have no
+  replacement — remove them, since audio is injected as multimodal content rather than
+  through a placeholder. Docstrings and example notebooks now use the current names, and
+  `ModelBasedCheck`'s docstring lists the full set. Stored Checks keep evaluating
+  exactly as before; the strictness is felt on save, not on run.
 
 - Once the project-separation backend is deployed, search endpoints that
   previously returned organization-wide results when `project_id` was omitted

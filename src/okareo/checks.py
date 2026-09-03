@@ -53,6 +53,7 @@ class CheckOutputType(Enum):
 
     SCORE = "score"
     PASS_FAIL = "pass_fail"
+    ANALYSIS = "analysis"
 
 
 class ModelBasedCheck(BaseCheck):
@@ -61,16 +62,29 @@ class ModelBasedCheck(BaseCheck):
 
     The prompt template should be a string that includes at least one of
     the following placeholders, which will be replaced with the actual values:
-    - `{model_input}` -> corresponds to the model's input
-    - `{generation}` -> corresponds to the model's output
-    - `{scenario_input}` -> corresponds to the scenario input
-    - `{scenario_result}` -> corresponds to the scenario result
+    - `{model_input}` -> what was sent to the model (prompt or messages)
+    - `{model_output}` -> the raw model output
+    - `{scenario_input}` -> the input from your Scenario
+    - `{scenario_result}` -> the expected result from your Scenario
+    - `{message_history}` -> the row's full conversation, ending with the model's response
+    - `{tool_calls}` -> the model's tool/function calls
+    - `{tools}` -> the tool/function definitions available to the model
+    - `{model_output_metadata}` -> extra output metadata (latency, tokens, cost, etc.)
+    - `{simulation_message_history}` -> the dialog from the linked Okareo Simulation
+    - `{user_only_audio}` -> user-only audio payload for speaker-scoped checks
 
-    Example of how a template could be used: "Count the words in the following: `{generation}`"
+    Okareo rejects any placeholder not in the list above, including the legacy aliases.
+    Replace `{generation}` with `{model_output}`, `{input}` with `{scenario_input}`, and
+    `{result}` with `{scenario_result}`. `{audio_messages}` and `{audio_output}` have no
+    replacement — remove them: audio is injected as multimodal content, not through a
+    placeholder. A rejected prompt fails on save; it is not accepted and quietly ignored.
+
+    Example of how a template could be used: "Count the words in the following: `{model_output}`"
 
     The check output type should be one of the following:
     - CheckOutputType.SCORE -> this template should ask prompt the model a score (single number)
     - CheckOutputType.PASS_FAIL -> this template should prompt the model for a boolean value (True/False)
+    - CheckOutputType.ANALYSIS -> this template should prompt the model for free-form text rather than a score
 
     The 'is_audio' flag indicates whether the check is meant to evaluate audio data. If True, the system will handle
     the audio data before passing it to the check, meaning you do not need to add any audio-specific prompt template
