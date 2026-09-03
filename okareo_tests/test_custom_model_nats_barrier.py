@@ -15,41 +15,44 @@ import asyncio
 import contextlib
 import threading
 import types
+from typing import Any, Dict, List, Tuple
 
 from okareo.model_under_test import ModelUnderTest
 
 
 class _FakeConn:
     def __init__(self) -> None:
-        self.subscribed: list = []
+        self.subscribed: List[str] = []
         self.flushed = False
         self.closed = False
 
-    async def subscribe(self, subject, cb=None):
+    async def subscribe(self, subject: str, cb: Any = None) -> None:
         self.subscribed.append(subject)
 
-    async def flush(self, timeout=10):
+    async def flush(self, timeout: int = 10) -> None:
         self.flushed = True
 
-    async def close(self):
+    async def close(self) -> None:
         self.closed = True
 
 
-def _fake_self(connect_impl):
+def _fake_self(connect_impl: Any) -> Any:
     s = types.SimpleNamespace()
     s.connect_nats = connect_impl
 
-    async def _process_single_message(*args, **kwargs):
+    async def _process_single_message(*args: Any, **kwargs: Any) -> None:
         return None
 
     s.process_single_message = _process_single_message
     return s
 
 
-async def _run_listener(connect_impl, invoke_id="inv-1", ready_wait_s=2.0):
+async def _run_listener(
+    connect_impl: Any, invoke_id: str = "inv-1", ready_wait_s: float = 2.0
+) -> Tuple[threading.Event, Dict[str, Any]]:
     stop = threading.Event()
     ready = threading.Event()
-    err: dict = {}
+    err: Dict[str, Any] = {}
     task = asyncio.ensure_future(
         ModelUnderTest._internal_run_custom_model_listener(
             _fake_self(connect_impl),
@@ -73,10 +76,10 @@ async def _run_listener(connect_impl, invoke_id="inv-1", ready_wait_s=2.0):
     return ready, err
 
 
-def test_ready_signaled_only_after_subscribe_and_flush():
+def test_ready_signaled_only_after_subscribe_and_flush() -> None:
     conn = _FakeConn()
 
-    async def connect(*_a):
+    async def connect(*_a: Any) -> _FakeConn:
         return conn
 
     ready, err = asyncio.run(_run_listener(connect))
@@ -88,8 +91,8 @@ def test_ready_signaled_only_after_subscribe_and_flush():
     assert conn.closed is True  # finally still closes the connection
 
 
-def test_connect_failure_captured_and_waiter_released():
-    async def connect(*_a):
+def test_connect_failure_captured_and_waiter_released() -> None:
+    async def connect(*_a: Any) -> _FakeConn:
         raise RuntimeError("connect boom")
 
     ready, err = asyncio.run(_run_listener(connect))
@@ -102,14 +105,14 @@ def test_connect_failure_captured_and_waiter_released():
     assert "connect boom" in str(err["error"])
 
 
-def test_flush_failure_captured_not_false_ready():
+def test_flush_failure_captured_not_false_ready() -> None:
     class _FlushFails(_FakeConn):
-        async def flush(self, timeout=10):
+        async def flush(self, timeout: int = 10) -> None:
             raise RuntimeError("flush boom")
 
     conn = _FlushFails()
 
-    async def connect(*_a):
+    async def connect(*_a: Any) -> _FakeConn:
         return conn
 
     ready, err = asyncio.run(_run_listener(connect))
@@ -120,15 +123,15 @@ def test_flush_failure_captured_not_false_ready():
     assert "flush boom" in str(err["error"])
 
 
-def test_ready_not_signaled_while_connect_hangs():
-    async def connect(*_a):
+def test_ready_not_signaled_while_connect_hangs() -> None:
+    async def connect(*_a: Any) -> _FakeConn:
         await asyncio.sleep(5)  # hang
         return _FakeConn()
 
-    async def probe():
+    async def probe() -> bool:
         stop = threading.Event()
         ready = threading.Event()
-        err: dict = {}
+        err: Dict[str, Any] = {}
         task = asyncio.ensure_future(
             ModelUnderTest._internal_run_custom_model_listener(
                 _fake_self(connect), stop, "jwt", "seed", "local", "inv", ready, err
