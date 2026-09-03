@@ -219,7 +219,7 @@ def test_shared_types_visible_from_any_project(
             name=check_name,
             description="shared-type visibility check",
             check=ModelBasedCheck(
-                prompt_template="Only output True",
+                prompt_template="Only output True, whatever {model_output} says.",
                 check_type=CheckOutputType.PASS_FAIL,
             ),
         )

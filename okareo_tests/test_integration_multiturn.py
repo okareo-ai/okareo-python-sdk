@@ -857,7 +857,7 @@ def test_run_multiturn_with_tools_and_mock(rnd: str, okareo: Okareo) -> None:
         name=f"MultiTurn Driver with Tools Test {rnd} Driver",
         temperature=0,
     )
-    simple_prompt = "task completion is travel itenerary generation with an hour by hour itenerary, output True if task completion is done otherwise false. Check this output: {generation}"
+    simple_prompt = "task completion is travel itenerary generation with an hour by hour itenerary, output True if task completion is done otherwise false. Check this output: {model_output}"
 
     okareo.create_or_update_check(
         name="task_completion_travel_short_prompt",

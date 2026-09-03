@@ -12,7 +12,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from tqdm import tqdm  # type: ignore
 
 from okareo.augmentations import Augmentation
-from okareo.checks import BaseCheck
+from okareo.checks import BaseCheck, CodeBasedCheck
 from okareo.model_under_test import Driver, Simulation, StopConfig, Target
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
@@ -112,7 +112,7 @@ from okareo_api_client.models.voice_upload_request import VoiceUploadRequest
 from okareo_api_client.models.voice_upload_response import VoiceUploadResponse
 from okareo_api_client.types import UNSET, File, Unset
 
-from .common import BASE_URL, HTTPX_TIME_OUT
+from .common import BASE_URL, CALIBRATE_TIME_OUT, HTTPX_TIME_OUT
 from .model_under_test import BaseModel, ModelUnderTest
 
 CHECK_DEPRECATION_WARNING = (
@@ -1358,6 +1358,13 @@ class Okareo:
             check (BaseCheck): An instance of BaseCheck containing the check configuration.
             tags: Optional list of string tags to associate with the check.
 
+        A model-based check's `prompt_template` may only use the current template
+        variables (see `ModelBasedCheck`). Okareo rejects any other placeholder on save,
+        including the legacy aliases: replace `{generation}` with `{model_output}`,
+        `{input}` with `{scenario_input}`, and `{result}` with `{scenario_result}`.
+        `{audio_messages}` and `{audio_output}` have no replacement — remove them, since
+        audio is injected as multimodal content rather than through a placeholder.
+
         Returns:
             EvaluatorDetailedResponse: The detailed response from the evaluator after creating or updating the check.
 
@@ -1370,7 +1377,7 @@ class Okareo:
         from okareo.checks import CheckOutputType, ModelBasedCheck
 
         my_check = ModelBasedCheck(
-            prompt_template="Only output the number of words in the following text: {scenario_input} {generation}",
+            prompt_template="Only output the number of words in the following text: {scenario_input} {model_output}",
             check_type=CheckOutputType.PASS_FAIL,
         )
 
@@ -1916,6 +1923,75 @@ class Okareo:
         self.validate_response(response)
         assert isinstance(response, TestRunItem)
         return response
+
+    def calibrate_check(
+        self,
+        test_run_id: str,
+        check: Union[BaseCheck, Dict[str, Any]],
+        name: str = "draft_check",
+        inspect_only: bool = False,
+        timeout: float = CALIBRATE_TIME_OUT,
+    ) -> Dict[str, Any]:
+        """Try out a draft check against a finished test run without saving anything.
+
+        Nothing is persisted — no check, no test run, no datapoints, no scores. Each
+        returned row carries the check's verdict for that row plus the arguments that
+        went into it, so you can see whether a variable was even populated before
+        trusting the verdict.
+
+        The draft is validated first, under the same rules a check must satisfy to be
+        saved. A prompt using an unrecognized or legacy placeholder is refused with a
+        message naming it, and no judge call is made.
+
+        Args:
+            test_run_id: ID of a completed test run whose rows to calibrate against.
+            check: A `ModelBasedCheck` / `CodeBasedCheck` instance, or a raw
+                `check_config` dict. The config is sent verbatim and echoed back
+                verbatim, so a saved response says which draft produced which verdicts.
+            name: Name for the draft. Never saved; it only labels the result column.
+            inspect_only: Return the arguments for every row and skip execution
+                entirely — no judge calls, no cost.
+            timeout: HTTP timeout in seconds. Defaults to `CALIBRATE_TIME_OUT`, which
+                sits just above the server's own wall clock; `Okareo.__init__` does not
+                forward its own timeout to the HTTP client, so this is the only one.
+
+        Returns:
+            The parsed calibration response: the echoed `check_config`, which argument
+            surface was used (`check_flow`), row counts with a `truncated` flag when the
+            server's row cap was applied, and one entry per test datapoint.
+
+        Raises:
+            ValueError: On any non-2xx response, carrying the status code and the
+                response body — a 422's `detail` names the placeholder to fix, and a
+                504 means the calibration exceeded the server's wall clock.
+        """
+        check_config = check.check_config() if isinstance(check, BaseCheck) else check
+        body: Dict[str, Any] = {
+            "name": name,
+            "check_config": check_config,
+            "inspect_only": inspect_only,
+        }
+        if isinstance(check, BaseCheck):
+            # Derived from the instance, never guessed: the server rejects a declared
+            # type that disagrees with the config's keys, so a raw dict sends none.
+            body["check_type"] = (
+                "code" if isinstance(check, CodeBasedCheck) else "model"
+            )
+
+        response = self.client.get_httpx_client().request(
+            method="post",
+            url=f"/v0/test_runs/{test_run_id}/calibrate_check",
+            json=body,
+            headers={"api-key": self.api_key, "Content-Type": "application/json"},
+            timeout=timeout,
+        )
+        if response.status_code not in (200, 201):
+            raise ValueError(
+                f"calibrate_check failed: {response.status_code} {response.text}"
+            )
+        result = response.json()
+        assert isinstance(result, dict)
+        return result
 
     def download_call_recording(self, call_sid: str) -> bytes:
         """Download a voice call recording by its Twilio CallSid.
