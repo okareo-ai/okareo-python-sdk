@@ -1713,8 +1713,14 @@ class Okareo:
         - ``augmentation``: Optional augmentation settings.
         - ``api_key`` / ``api_keys``: Provider credentials for target calls.
         - ``metrics_kwargs`` / ``calculate_metrics``: Metrics configuration.
-        - ``project_id`` / ``tags`` / ``sensitive_fields``: Registration and
-          metadata controls.
+        - ``project_id`` / ``sensitive_fields``: Registration controls.
+        - ``tags``: Tags applied to the **test run** this call creates — always,
+          regardless of how ``target`` is supplied. They are persisted on the run
+          and can be filtered on with ``Okareo.find_test_runs(tags=[...])``.
+          Additionally, when ``target`` is a ``Target`` **object** (which this call
+          registers or updates), the same tags are applied to that Target. When
+          ``target`` is a **string name**, the existing Target is looked up and its
+          tags are left untouched — only the test run is tagged.
         - ``submit``: If True, submit asynchronously via
           ModelUnderTest.submit_test.
 
@@ -1802,6 +1808,7 @@ class Okareo:
             checks=checks,
             simulation_params=simulation_params,
             driver_id=str(driver_model.id) if driver_model.id else None,
+            tags=tags,
         )
 
     def generate_driver_prompt(
