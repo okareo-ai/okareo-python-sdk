@@ -183,7 +183,7 @@ def test_run_model_based_custom_checks(
         name=f"check_sample_pass_fail {rnd}",
         description="check_sample_pass_fail",
         check=ModelBasedCheck(  # type: ignore
-            prompt_template="Only output True if the model_output is at least 20 characters long, otherwise return False.",
+            prompt_template="Only output True if {model_output} is at least 20 characters long, otherwise return False.",
             check_type=CheckOutputType.PASS_FAIL,
         ),
     )
@@ -191,7 +191,7 @@ def test_run_model_based_custom_checks(
         name=f"check_sample_score {rnd}",
         description="check_sample_score",
         check=ModelBasedCheck(  # type: ignore
-            prompt_template="Only output the number of words in the following text: {scenario_input} {output} {generation}",
+            prompt_template="Only output the number of words in the following text: {scenario_input} {model_output}",
             check_type=CheckOutputType.SCORE,
         ),
     )
