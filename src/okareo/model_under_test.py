@@ -2158,7 +2158,7 @@ class Driver:
             self.prompt_template = response.prompt_template
         if response.model_id:
             self.model_id = response.model_id
-        if response.temperature:
+        if response.temperature is not None:
             self.temperature = response.temperature
         if response.time_created:
             self.time_created = response.time_created

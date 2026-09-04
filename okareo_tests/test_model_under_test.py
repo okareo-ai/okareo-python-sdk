@@ -20,6 +20,7 @@ from okareo.model_under_test import (
     AuthConfig,
     CohereModel,
     CustomEndpointTarget,
+    Driver,
     EndSessionConfig,
     OpenAIModel,
     OpenAIVoiceTarget,
@@ -30,6 +31,7 @@ from okareo.model_under_test import (
     TwilioVoiceTarget,
 )
 from okareo_api_client.models import SeedData
+from okareo_api_client.models.driver_model_response import DriverModelResponse
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
 
@@ -444,3 +446,33 @@ class TestCustomEndpointTargetParams:
     def test_type_is_custom_endpoint(self) -> None:
         target = CustomEndpointTarget(None, MINIMAL_TURN)
         assert target.params()["type"] == "custom_endpoint"
+
+
+# ---------------------------------------------------------------------------
+# Driver.from_response
+# ---------------------------------------------------------------------------
+def driver_model_response(temperature: float) -> DriverModelResponse:
+    return DriverModelResponse.from_dict(
+        {
+            "id": MOCK_UUID,
+            "name": "deterministic-driver",
+            "temperature": temperature,
+            "prompt_template": "{scenario_input}",
+            "time_created": datetime.now().isoformat(),
+        }
+    )
+
+
+def test_driver_from_response_keeps_zero_temperature() -> None:
+    """temperature=0 is a valid setting and must survive the round trip."""
+    driver = Driver.from_response(driver_model_response(0))
+
+    assert driver.temperature == 0
+    # to_dict() is what create_or_update_driver posts back to the API
+    assert driver.to_dict()["temperature"] == 0
+
+
+def test_driver_from_response_keeps_nonzero_temperature() -> None:
+    driver = Driver.from_response(driver_model_response(0.2))
+
+    assert driver.temperature == 0.2
