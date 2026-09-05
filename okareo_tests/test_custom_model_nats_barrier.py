@@ -199,7 +199,9 @@ def _make_mut(
     monkeypatch.setattr(ModelUnderTest, "_call_run_test_method", fake_run)
     monkeypatch.setattr(ModelUnderTest, "connect_nats", connect_impl)
 
-    mut = ModelUnderTest.__new__(ModelUnderTest)
+    # Bypass __init__ (it starts a worker thread) and type as Any so the
+    # stand-in client/ids below satisfy mypy.
+    mut: Any = ModelUnderTest.__new__(ModelUnderTest)
     mut.client = object()
     mut.api_key = "k"
     mut.mut_id = "mut"
@@ -288,7 +290,10 @@ def test_hung_connect_is_cancelled_at_budget_and_thread_exits(
 
     msg = str(exc.value)
     assert "failed to connect to NATS (nats://nats.internal:4222)" in msg
-    assert "TimeoutError: listener setup (connect/subscribe/flush) did not complete within 1s" in msg
+    assert (
+        "TimeoutError: listener setup (connect/subscribe/flush) did not complete within 1s"
+        in msg
+    )
     assert events["run"] == 0
     # The listener cancelled its own connect, so the cleanup join did not have
     # to wait out its 5s timeout and the thread is gone.
