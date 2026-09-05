@@ -6,6 +6,7 @@ import os
 import ssl
 import threading
 import urllib
+import urllib.parse
 from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
@@ -640,8 +641,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         invoke_id: str,
         ready_event: Optional[threading.Event] = None,
         error_holder: Optional[dict] = None,
+        ready_timeout: Optional[float] = None,
     ) -> None:
-        nats_connection = None
+        nats_connection: Any = None
         # Track active tasks for proper cleanup
         active_tasks: set[asyncio.Task] = set()
 
@@ -651,8 +653,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             # (which has no except), died silently on threading.excepthook, and the
             # main thread blocked until a server-side timeout. Capturing it here
             # lets the run fail with a clear, attributable error instead.
-            nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
-
             async def message_handler_custom_model(msg: Any) -> None:
                 # Create task and track it
                 task = asyncio.create_task(
@@ -666,19 +666,43 @@ class ModelUnderTest(AsyncProcessorMixin):
 
                 task.add_done_callback(task_done_callback)
 
-            # Create multiple subscribers for better concurrency
-            await nats_connection.subscribe(
-                f"invoke.{invoke_id}",
-                cb=message_handler_custom_model,
-            )
-            # Force the SUB to reach the server before the run is allowed to start.
-            # NATS sends SUB asynchronously, so without this flush the server can
-            # publish invoke.{id} before the subscription is registered and see no
-            # responder ("Unable to connect to custom model on client.").
-            # If flush raises, it propagates to the except below and is captured
-            # into error_holder, so a broken connection surfaces as a clear run
-            # error rather than a false "ready" signal.
-            await nats_connection.flush()
+            async def _setup() -> None:
+                nonlocal nats_connection
+                nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
+                await nats_connection.subscribe(
+                    f"invoke.{invoke_id}",
+                    cb=message_handler_custom_model,
+                )
+                # Force the SUB to reach the server before the run is allowed to
+                # start. NATS sends SUB asynchronously, so without this flush the
+                # server can publish invoke.{id} before the subscription is
+                # registered and see no responder ("Unable to connect to custom
+                # model on client."). If flush raises, it propagates to the
+                # except below and is captured into error_holder, so a broken
+                # connection surfaces as a clear run error rather than a false
+                # "ready" signal.
+                await nats_connection.flush()
+
+            # Bound the whole setup with the same budget the caller waits on.
+            # nats-py retries the INITIAL connect (max_reconnect_attempts + 1
+            # attempts, reconnect_time_wait sleeps between them), so an
+            # unreachable NATS takes ~100s (local) to minutes before it raises.
+            # Without this bound the caller's barrier trips first with nothing
+            # in error_holder, and this non-daemon thread keeps connecting after
+            # run_test has already raised. wait_for cancels the retry loop.
+            try:
+                await asyncio.wait_for(_setup(), timeout=ready_timeout)
+            except asyncio.TimeoutError as te:
+                # Only wait_for's own timeout is relabelled. nats-py's
+                # TimeoutError/FlushTimeoutError subclass asyncio.TimeoutError
+                # and must keep their own name so the caller reports the real
+                # stage that failed.
+                if type(te) is not asyncio.TimeoutError or ready_timeout is None:
+                    raise
+                raise TimeoutError(
+                    "listener setup (connect/subscribe/flush) did not complete "
+                    f"within {ready_timeout:.0f}s"
+                ) from te
             if ready_event is not None:
                 # Subscribed and flushed: safe for the caller to create the run.
                 ready_event.set()
@@ -709,7 +733,12 @@ class ModelUnderTest(AsyncProcessorMixin):
             loop.close()
 
     def _internal_start_custom_model_thread(
-        self, nats_jwt: str, seed: str, local_nats: str, invoke_id: str
+        self,
+        nats_jwt: str,
+        seed: str,
+        local_nats: str,
+        invoke_id: str,
+        ready_timeout: Optional[float] = None,
     ) -> tuple:
         custom_model_thread_stop_event = threading.Event()
         # Per-call (never class-level) so parallel runs on separate MUT objects
@@ -728,6 +757,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     invoke_id,
                     custom_model_ready_event,
                     custom_model_error_holder,
+                    ready_timeout,
                 ),
             ),
         )
@@ -789,6 +819,22 @@ class ModelUnderTest(AsyncProcessorMixin):
                 # concat UUID to mut_id to make nats channel unique while maintaining like to mut
                 # allows multiple clients with same target to run in parallel
                 nats_invoke_id = f"{self.mut_id}_{str(uuid4())}"
+                # Parse the budget first: a bad value must not mint a NATS user
+                # or start a thread. It bounds the listener's connect and the
+                # caller's wait below.
+                raw_timeout = os.environ.get("OKAREO_CUSTOM_MODEL_READY_TIMEOUT", "60")
+                try:
+                    ready_timeout = float(raw_timeout)
+                except ValueError as e:
+                    raise TestRunError(
+                        "OKAREO_CUSTOM_MODEL_READY_TIMEOUT must be a number of "
+                        f"seconds, got {raw_timeout!r}"
+                    ) from e
+                if not 0 < ready_timeout < 86400:
+                    raise TestRunError(
+                        "OKAREO_CUSTOM_MODEL_READY_TIMEOUT must be between 0 and "
+                        f"86400 seconds, got {raw_timeout!r}"
+                    )
                 creds = internal_custom_model_listener_v0_internal_custom_model_listener_get.sync(
                     client=self.client,
                     api_key=self.api_key,
@@ -805,34 +851,45 @@ class ModelUnderTest(AsyncProcessorMixin):
                     custom_model_ready_event,
                     custom_model_error_holder,
                 ) = self._internal_start_custom_model_thread(
-                    nats_jwt, seed, local_nats, nats_invoke_id
+                    nats_jwt, seed, local_nats, nats_invoke_id, ready_timeout
                 )
                 self.custom_model_thread.start()
                 # Readiness barrier: do not create the run until the listener has
                 # actually subscribed (and flushed) to invoke.{id}. Otherwise the
                 # server can publish to an unsubscribed channel and the run fails
-                # with "Unable to connect to custom model on client." The wait is
-                # bounded so a failed/hung connect surfaces as a clear error
-                # rather than a silent hang; the default exceeds the NATS connect
-                # timeout (30s NGS / 120s local, see connect_nats). Raising here
-                # is safe: self.custom_model_thread is already set, so the finally
-                # at the end of this method stops and joins the listener thread.
-                ready_timeout = float(
-                    os.environ.get("OKAREO_CUSTOM_MODEL_READY_TIMEOUT", "60")
-                )
-                if not custom_model_ready_event.wait(ready_timeout):
-                    raise TestRunError(
-                        "Custom model listener did not subscribe to NATS within "
-                        f"{ready_timeout:.0f}s. Aborting before the run starts to "
-                        "avoid a no-responder failure. Check connectivity to NATS "
-                        "(connect.ngs.global), or raise "
-                        "OKAREO_CUSTOM_MODEL_READY_TIMEOUT."
+                # with "Unable to connect to custom model on client." The
+                # listener bounds its whole setup (connect, subscribe, flush)
+                # with ready_timeout and always releases the event, so the
+                # caller normally wakes with either readiness or a recorded
+                # error; the wait carries a small grace over the listener's
+                # bound so the recorded error wins over the generic timeout. The
+                # listener thread exits on its own once its bound trips, so the
+                # finally's join does not linger.
+                if not custom_model_ready_event.wait(ready_timeout + 5.0):
+                    self.custom_model_thread.join(timeout=1.0)
+                if local_nats:
+                    # Never echo the URL verbatim: an airgap NATS URL may carry
+                    # user:password userinfo.
+                    parts = urllib.parse.urlsplit(local_nats)
+                    nats_target = (
+                        f"{parts.scheme}://{parts.hostname}:{parts.port}"
+                        if parts.hostname
+                        else "local NATS"
                     )
+                else:
+                    nats_target = "connect.ngs.global"
                 listener_error = custom_model_error_holder.get("error")
                 if listener_error is not None:
                     raise TestRunError(
-                        "Custom model listener failed to connect to NATS: "
+                        f"Custom model listener failed to connect to NATS ({nats_target}): "
                         f"{type(listener_error).__name__}: {listener_error}"
+                    )
+                if not custom_model_ready_event.is_set():
+                    raise TestRunError(
+                        f"Custom model listener did not subscribe to NATS ({nats_target}) "
+                        f"within {ready_timeout:.0f}s. Aborting before the run starts "
+                        "to avoid a no-responder failure. Check connectivity, or raise "
+                        "OKAREO_CUSTOM_MODEL_READY_TIMEOUT."
                     )
             elif self._has_custom_model():
                 if run_test_method == submit_test_v0_test_run_submit_post.sync:

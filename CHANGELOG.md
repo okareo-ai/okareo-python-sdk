@@ -52,6 +52,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   output-type requirement for code-based checks (a check returning `CheckResponse`
   otherwise fails output-type inference).
 
+- Custom multiturn targets (`CustomMultiturnTarget`): the client-side NATS
+  listener now bounds its whole setup (connect, subscribe, flush) with
+  `OKAREO_CUSTOM_MODEL_READY_TIMEOUT` (default 60s) and exits when that budget
+  expires. An unreachable NATS fails at the budget with the real error instead
+  of a generic timeout, and the process no longer lingers on a background
+  connect at exit. The variable is validated before any request is made
+  (must be a number of seconds in (0, 86400)), and error messages name the
+  actual NATS target with any URL credentials redacted.
+
 ## [0.0.133] - 2026-06-09
 
 ### Added
