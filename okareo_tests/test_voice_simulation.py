@@ -292,6 +292,8 @@ def validate_test_run_sanity(
     expected_conversations: int | None = None,
     max_driver_latency_ms: int = 7000,
     median_driver_latency_ms: int = 5000,
+    max_target_ttfa_ms: int = 6000,
+    avg_target_ttfa_ms: int = 3000,
     validate_metrics: bool = True,
 ) -> None:
     """
@@ -304,6 +306,7 @@ def validate_test_run_sanity(
     - Per-conversation sanity (timing, content, order, recordings)
     - Median driver latency across all conversations
     - All individual driver latencies within max threshold
+    - Target time to first audio bounded: per-conversation max and run mean
 
     Args:
         okareo: Okareo client instance
@@ -311,6 +314,8 @@ def validate_test_run_sanity(
         expected_conversations: Expected number of conversations (optional)
         max_driver_latency_ms: Maximum acceptable driver latency in milliseconds (default 7000ms)
         median_driver_latency_ms: Maximum acceptable median driver latency in milliseconds (default 4500ms)
+        max_target_ttfa_ms: Maximum acceptable per-conversation max_time_to_first_audio in milliseconds (default 6000ms)
+        avg_target_ttfa_ms: Maximum acceptable mean time_to_first_audio in milliseconds (default 3000ms)
         validate_metrics: Whether to validate metrics (requires calculate_metrics=True)
     """
     import statistics
@@ -345,10 +350,32 @@ def validate_test_run_sanity(
         assert (
             target_latency is not None
         ), "time_to_first_audio should exist in mean_scores"
+        assert 0 < target_latency < avg_target_ttfa_ms, (
+            f"Mean time_to_first_audio {target_latency}ms should be under "
+            f"{avg_target_ttfa_ms}ms"
+        )
 
     # Get datapoints and messages
     all_datapoints = get_datapoints(okareo, evaluation.id)
     all_messages = get_messages(okareo, evaluation.id)
+
+    # Target worst-turn latency, per conversation, via the same check a
+    # customer runs (max_time_to_first_audio). Bounded per conversation so a
+    # single slow call fails the gate instead of hiding in the run mean, and
+    # floored because a near-zero max means the measurement broke, not that
+    # the target was fast. None fails too: a run that stopped capturing the
+    # metric must not pass the latency gate.
+    if validate_metrics:
+        for conv_idx, datapoint in enumerate(all_datapoints):
+            checks = datapoint.checks if datapoint.checks else {}  # type: ignore
+            max_ttfa = checks.get("max_time_to_first_audio")
+            assert (
+                max_ttfa is not None
+            ), f"Conversation {conv_idx}: max_time_to_first_audio check missing"
+            assert 100 < max_ttfa < max_target_ttfa_ms, (
+                f"Conversation {conv_idx}: max_time_to_first_audio {max_ttfa}ms "
+                f"should be between 100ms and {max_target_ttfa_ms}ms"
+            )
 
     # Validate expected conversation count
     if expected_conversations is not None:
@@ -478,7 +505,7 @@ class TestVoiceSanity:
         """
         Validates:
         - Driver turn taking latency < 5s
-        - Target turn taking latency exists
+        - Target time to first audio bounded (max < 6s per conversation, mean < 3s)
         - Parallel conversations complete (5/5)
         - All recordings captured with duration > 0
         - Call recordings exist and have size > 0
@@ -512,6 +539,7 @@ class TestVoiceSanity:
             calculate_metrics=True,
             checks=[
                 "time_to_first_audio",
+                "max_time_to_first_audio",
                 "avg_words_per_minute",
                 "total_turn_count",
             ],
@@ -562,6 +590,7 @@ class TestVoiceFirstTurn:
             calculate_metrics=True,
             checks=[
                 "time_to_first_audio",
+                "max_time_to_first_audio",
                 "avg_words_per_minute",
                 "total_turn_count",
             ],
@@ -616,6 +645,7 @@ class TestVoiceFirstTurn:
             calculate_metrics=True,
             checks=[
                 "time_to_first_audio",
+                "max_time_to_first_audio",
                 "avg_words_per_minute",
                 "total_turn_count",
             ],
