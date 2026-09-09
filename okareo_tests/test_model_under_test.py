@@ -25,6 +25,7 @@ from okareo.model_under_test import (
     OpenAIVoiceTarget,
     PineconeDb,
     SessionConfig,
+    SipTarget,
     Target,
     TurnConfig,
     TwilioVoiceTarget,
@@ -363,6 +364,45 @@ def test_target_to_dict_twilio_omits_sensitive_when_token_missing() -> None:
 
     # No auth_token provided -> do not emit sensitive_fields
     assert "sensitive_fields" not in payload
+
+
+def test_sip_target_default_params_unchanged() -> None:
+    """No direct-mode keys are emitted unless set (server defaults must win)."""
+    params = SipTarget(sip_uri="sip:agent@example.com").params()
+    assert params == {
+        "type": "voice",
+        "edge_type": "sip",
+        "sip_uri": "sip:agent@example.com",
+        "sip_username": None,
+        "sip_password": None,
+        "max_parallel_requests": None,
+    }
+
+
+def test_sip_target_direct_mode_params() -> None:
+    params = SipTarget(
+        sip_uri="sip:agent@example.com",
+        sip_username="user1",
+        sip_password="pw1",
+        sip_mode="direct",
+        sip_codec="pcma",
+        sip_headers={"X-Customer-Id": "abc"},
+    ).params()
+    assert params["sip_mode"] == "direct"
+    assert params["sip_codec"] == "pcma"
+    assert params["sip_headers"] == {"X-Customer-Id": "abc"}
+    # Unset optional knobs stay absent, not None.
+    assert "stun_server" not in params
+    assert "rtp_timeout_s" not in params
+    assert "sip_from_user" not in params
+
+
+def test_sip_target_marks_password_sensitive() -> None:
+    tgt = Target(
+        name="SIP Target",
+        target=SipTarget(sip_uri="sip:a@b.c", sip_password="secret"),
+    )
+    assert tgt.to_dict()["sensitive_fields"] == ["sip_password"]
 
 
 def test_target_to_dict_other_voice_targets_have_no_sensitive_fields() -> None:

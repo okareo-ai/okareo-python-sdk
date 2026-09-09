@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import json
 import logging
+import os
 import ssl
 import threading
 import urllib
@@ -631,13 +632,26 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
 
     async def _internal_run_custom_model_listener(
-        self, stop_event: Any, nats_jwt: str, seed: str, local_nats: str, invoke_id: str
+        self,
+        stop_event: Any,
+        nats_jwt: str,
+        seed: str,
+        local_nats: str,
+        invoke_id: str,
+        ready_event: Optional[threading.Event] = None,
+        error_holder: Optional[dict] = None,
     ) -> None:
-        nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
+        nats_connection = None
         # Track active tasks for proper cleanup
         active_tasks: set[asyncio.Task] = set()
 
         try:
+            # connect_nats is INSIDE the try on purpose. Previously it ran before
+            # the try, so a connection/auth failure escaped to the thread runner
+            # (which has no except), died silently on threading.excepthook, and the
+            # main thread blocked until a server-side timeout. Capturing it here
+            # lets the run fail with a clear, attributable error instead.
+            nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
 
             async def message_handler_custom_model(msg: Any) -> None:
                 # Create task and track it
@@ -657,16 +671,34 @@ class ModelUnderTest(AsyncProcessorMixin):
                 f"invoke.{invoke_id}",
                 cb=message_handler_custom_model,
             )
+            # Force the SUB to reach the server before the run is allowed to start.
+            # NATS sends SUB asynchronously, so without this flush the server can
+            # publish invoke.{id} before the subscription is registered and see no
+            # responder ("Unable to connect to custom model on client.").
+            # If flush raises, it propagates to the except below and is captured
+            # into error_holder, so a broken connection surfaces as a clear run
+            # error rather than a false "ready" signal.
+            await nats_connection.flush()
+            if ready_event is not None:
+                # Subscribed and flushed: safe for the caller to create the run.
+                ready_event.set()
             while not stop_event.is_set():
                 await asyncio.sleep(0.1)
 
         except Exception as e:
+            if error_holder is not None:
+                error_holder["error"] = e
             print(f"An error occurred in the custom model invocation: {str(e)}")
         finally:
+            # Always release the waiter, even on connect/subscribe failure, so the
+            # caller never blocks past the barrier timeout.
+            if ready_event is not None:
+                ready_event.set()
             # Wait for all active tasks to complete before closing
             if active_tasks:
                 await asyncio.gather(*active_tasks, return_exceptions=True)
-            await nats_connection.close()
+            if nats_connection is not None:
+                await nats_connection.close()
 
     def _internal_run_custom_model_thread(self, coro: Any) -> Any:
         loop = asyncio.new_event_loop()
@@ -680,6 +712,11 @@ class ModelUnderTest(AsyncProcessorMixin):
         self, nats_jwt: str, seed: str, local_nats: str, invoke_id: str
     ) -> tuple:
         custom_model_thread_stop_event = threading.Event()
+        # Per-call (never class-level) so parallel runs on separate MUT objects
+        # cannot cross signals. The listener sets ready_event once it has
+        # subscribed+flushed, and records any connect/subscribe error here.
+        custom_model_ready_event = threading.Event()
+        custom_model_error_holder: dict = {}
         custom_model_thread = threading.Thread(
             target=self._internal_run_custom_model_thread,
             args=(
@@ -689,10 +726,17 @@ class ModelUnderTest(AsyncProcessorMixin):
                     seed,
                     local_nats,
                     invoke_id,
+                    custom_model_ready_event,
+                    custom_model_error_holder,
                 ),
             ),
         )
-        return custom_model_thread, custom_model_thread_stop_event
+        return (
+            custom_model_thread,
+            custom_model_thread_stop_event,
+            custom_model_ready_event,
+            custom_model_error_holder,
+        )
 
     def _internal_cleanup_custom_model(
         self,
@@ -758,10 +802,38 @@ class ModelUnderTest(AsyncProcessorMixin):
                 (
                     self.custom_model_thread,
                     self.custom_model_thread_stop_event,
+                    custom_model_ready_event,
+                    custom_model_error_holder,
                 ) = self._internal_start_custom_model_thread(
                     nats_jwt, seed, local_nats, nats_invoke_id
                 )
                 self.custom_model_thread.start()
+                # Readiness barrier: do not create the run until the listener has
+                # actually subscribed (and flushed) to invoke.{id}. Otherwise the
+                # server can publish to an unsubscribed channel and the run fails
+                # with "Unable to connect to custom model on client." The wait is
+                # bounded so a failed/hung connect surfaces as a clear error
+                # rather than a silent hang; the default exceeds the NATS connect
+                # timeout (30s NGS / 120s local, see connect_nats). Raising here
+                # is safe: self.custom_model_thread is already set, so the finally
+                # at the end of this method stops and joins the listener thread.
+                ready_timeout = float(
+                    os.environ.get("OKAREO_CUSTOM_MODEL_READY_TIMEOUT", "60")
+                )
+                if not custom_model_ready_event.wait(ready_timeout):
+                    raise TestRunError(
+                        "Custom model listener did not subscribe to NATS within "
+                        f"{ready_timeout:.0f}s. Aborting before the run starts to "
+                        "avoid a no-responder failure. Check connectivity to NATS "
+                        "(connect.ngs.global), or raise "
+                        "OKAREO_CUSTOM_MODEL_READY_TIMEOUT."
+                    )
+                listener_error = custom_model_error_holder.get("error")
+                if listener_error is not None:
+                    raise TestRunError(
+                        "Custom model listener failed to connect to NATS: "
+                        f"{type(listener_error).__name__}: {listener_error}"
+                    )
             elif self._has_custom_model():
                 if run_test_method == submit_test_v0_test_run_submit_post.sync:
                     # call the 'run_test_method' to fetch the test_run_id first
@@ -1296,33 +1368,6 @@ class GenerationModel(BaseModel):
 
 
 @_attrs_define
-class OpenAIAssistantModel(BaseModel):
-    """An OpenAI Assistant definition with prompt template and relevant parameters for an Okareo evaluation.
-
-    Arguments:
-        model_id: Assistant ID to request to run a thread against.
-        assistant_prompt_template: `System` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`.
-        user_prompt_template: `User` role prompt template to pass to the model. Uses mustache syntax for variable substitution, e.g. `{scenario_input}`
-        dialog_template: Dialog template in OpenAI message format to pass to the model. Uses mustache syntax for variable substitution.
-    """
-
-    type = "openai_assistant"
-    model_id: str
-    assistant_prompt_template: Optional[str] = None
-    user_prompt_template: Optional[str] = None
-    dialog_template: Optional[str] = None
-
-    def params(self) -> dict:
-        return {
-            "model_id": self.model_id,
-            "assistant_prompt_template": self.assistant_prompt_template,
-            "user_prompt_template": self.user_prompt_template,
-            "dialog_template": self.dialog_template,
-            "type": self.type,
-        }
-
-
-@_attrs_define
 class CohereModel(BaseModel):
     """
     A Cohere model definition with prompt template and relevant parameters for an Okareo evaluation.
@@ -1700,6 +1745,29 @@ class SipTarget(VoiceTarget):
         sip_username: Optional SIP authentication username for the target.
         sip_password: Optional SIP authentication password for the target.
         max_parallel_requests: Cap on concurrent calls hitting the target.
+        sip_mode: How the call is placed. Default (unset) routes through
+            Okareo's telephony provider. "direct" makes Okareo the SIP client:
+            it sends the INVITE and carries the audio itself — no telephony
+            provider in the path. Requires a target reachable at a plain
+            ``sip:`` URI over UDP with symmetric RTP (modern platforms such as
+            LiveKit, Vapi, Daily, and Telnyx qualify).
+        sip_from_user: Direct mode only — user part of the From/caller
+            identity. Default "okareo".
+        sip_codec: Direct mode only — offered codec: "pcmu" (default),
+            "pcma", or "opus".
+        sip_headers: Direct mode only — extra headers for the INVITE, e.g.
+            ``{"X-Customer-Id": "abc"}``.
+        stun_server: Direct mode only — STUN server used for NAT discovery,
+            as ``"stun:host:port"``. Defaults server-side; not normally set.
+        rtp_timeout_s: Direct mode only — seconds without inbound audio
+            before the call is failed as one-way media. Defaults server-side.
+
+    Note:
+        The direct-mode keys are emitted only when set, so existing targets
+        serialize exactly as before. Server-side this maps onto
+        ``sip_mode="direct"`` handling in the voice target factory — a
+        cross-repo contract: renaming keys here requires a matching server
+        change.
     """
 
     edge_type = "sip"
@@ -1707,9 +1775,15 @@ class SipTarget(VoiceTarget):
     sip_username: Optional[str] = None
     sip_password: Optional[str] = None
     max_parallel_requests: Optional[int] = None
+    sip_mode: Optional[str] = None
+    sip_from_user: Optional[str] = None
+    sip_codec: Optional[str] = None
+    sip_headers: Optional[dict] = None
+    stun_server: Optional[str] = None
+    rtp_timeout_s: Optional[float] = None
 
     def params(self) -> dict:
-        return {
+        base: dict = {
             "type": self.type,
             "edge_type": self.edge_type,
             "sip_uri": self.sip_uri,
@@ -1717,6 +1791,18 @@ class SipTarget(VoiceTarget):
             "sip_password": self.sip_password,
             "max_parallel_requests": self.max_parallel_requests,
         }
+        # Emitted only when set: the server falls back to its own defaults for
+        # absent keys (a present-but-None stun_server would disable STUN).
+        optional = {
+            "sip_mode": self.sip_mode,
+            "sip_from_user": self.sip_from_user,
+            "sip_codec": self.sip_codec,
+            "sip_headers": self.sip_headers,
+            "stun_server": self.stun_server,
+            "rtp_timeout_s": self.rtp_timeout_s,
+        }
+        base.update({k: v for k, v in optional.items() if v is not None})
+        return base
 
     def get_sensitive_fields(self) -> list[str]:
         return ["sip_password"] if self.sip_password else []

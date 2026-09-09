@@ -1,11 +1,3 @@
-"""Hand-written client module for PATCH /v0/projects/{project_id}.
-
-NOT generated (regenerating the client wholesale is destructive — project-separation
-plan §7). Follows the shape of update_project_v0_projects_project_id_put.py with one
-deliberate difference: the backend's PATCH returns 200 (the PUT/GET routes keep their
-SDK-load-bearing 201), so the parser checks 200.
-"""
-
 from http import HTTPStatus
 from typing import Any
 from urllib.parse import quote
@@ -99,13 +91,21 @@ def sync_detailed(
 ) -> Response[ErrorResponse | ProjectResponse]:
     """Patch Project
 
-     Partially update a project: name, tags and/or archive state. Only the fields
-    present in the request body are applied.
+     Partially update a project: name, tags and/or archive state.
+
+    Only the fields present in the request body are applied. Archived projects
+    stay fully usable; they are only hidden from the project picker.
+
+    Returns:
+        the updated project
 
     Args:
         project_id (UUID): ID of the project
         api_key (str):
-        body (ProjectPatchSchema):
+        body (ProjectPatchSchema): Partial update — only the keys the caller actually sent are
+            applied
+            (`model_dump(exclude_unset=True)`); an explicit null is refused (400), it is
+            not a valid value for any of these fields.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -137,20 +137,28 @@ def sync(
 ) -> ErrorResponse | ProjectResponse | None:
     """Patch Project
 
-     Partially update a project: name, tags and/or archive state. Only the fields
-    present in the request body are applied.
+     Partially update a project: name, tags and/or archive state.
+
+    Only the fields present in the request body are applied. Archived projects
+    stay fully usable; they are only hidden from the project picker.
+
+    Returns:
+        the updated project
 
     Args:
         project_id (UUID): ID of the project
         api_key (str):
-        body (ProjectPatchSchema):
+        body (ProjectPatchSchema): Partial update — only the keys the caller actually sent are
+            applied
+            (`model_dump(exclude_unset=True)`); an explicit null is refused (400), it is
+            not a valid value for any of these fields.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ProjectResponse | None
+        ErrorResponse | ProjectResponse
     """
 
     return sync_detailed(
@@ -170,10 +178,21 @@ async def asyncio_detailed(
 ) -> Response[ErrorResponse | ProjectResponse]:
     """Patch Project
 
+     Partially update a project: name, tags and/or archive state.
+
+    Only the fields present in the request body are applied. Archived projects
+    stay fully usable; they are only hidden from the project picker.
+
+    Returns:
+        the updated project
+
     Args:
         project_id (UUID): ID of the project
         api_key (str):
-        body (ProjectPatchSchema):
+        body (ProjectPatchSchema): Partial update — only the keys the caller actually sent are
+            applied
+            (`model_dump(exclude_unset=True)`); an explicit null is refused (400), it is
+            not a valid value for any of these fields.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -203,17 +222,28 @@ async def asyncio(
 ) -> ErrorResponse | ProjectResponse | None:
     """Patch Project
 
+     Partially update a project: name, tags and/or archive state.
+
+    Only the fields present in the request body are applied. Archived projects
+    stay fully usable; they are only hidden from the project picker.
+
+    Returns:
+        the updated project
+
     Args:
         project_id (UUID): ID of the project
         api_key (str):
-        body (ProjectPatchSchema):
+        body (ProjectPatchSchema): Partial update — only the keys the caller actually sent are
+            applied
+            (`model_dump(exclude_unset=True)`); an explicit null is refused (400), it is
+            not a valid value for any of these fields.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ProjectResponse | None
+        ErrorResponse | ProjectResponse
     """
 
     return (

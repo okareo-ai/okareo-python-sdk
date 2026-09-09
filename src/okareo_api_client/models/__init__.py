@@ -160,8 +160,8 @@ from .panel_query_order_additional_property import PanelQueryOrderAdditionalProp
 from .panel_table_config import PanelTableConfig
 from .panel_table_config_mode import PanelTableConfigMode
 from .pass_fail_check_result import PassFailCheckResult
-from .project_response import ProjectResponse
 from .project_patch_schema import ProjectPatchSchema
+from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
 from .provider_integration_response import ProviderIntegrationResponse
 from .provider_integration_response_metadata import ProviderIntegrationResponseMetadata
@@ -396,8 +396,8 @@ __all__ = (
     "PanelTableConfig",
     "PanelTableConfigMode",
     "PassFailCheckResult",
-    "ProjectResponse",
     "ProjectPatchSchema",
+    "ProjectResponse",
     "ProjectSchema",
     "ProviderIntegrationResponse",
     "ProviderIntegrationResponseMetadata",

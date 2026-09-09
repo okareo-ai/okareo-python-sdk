@@ -46,8 +46,23 @@ FAILURE_REASONS = {
 # no usable reason, so there is no closing line to hold anyone to.
 HARNESS_WRITTEN_REASONS = FAILURE_REASONS | {
     "Reached the turn limit",
+    "Connection disconnected",
+    # Retired: the backend wrote this for a Target hangup until "Connection
+    # disconnected" replaced it. Kept because this PR merges BEFORE that backend
+    # change, and dropping it early makes driver_authored() call a Target hangup
+    # Driver prose -- which fires the "Target answers the closing line" assertion
+    # below on a conversation whose last turn is the Driver's. Measured against 29
+    # real conversations carrying this string: 3 would fail. Drop once the backend
+    # change is deployed everywhere.
     "Target ended the call",
     "The Driver ended the conversation",
+    # Okareo hung up on a Target that stopped answering. Not a failure — the call
+    # connected and ran, the Target just went quiet — so it stays out of
+    # FAILURE_REASONS. It MUST be here rather than fall through to Driver-authored:
+    # this ending is by construction a run of trailing Driver turns, so the
+    # "Target answers the Driver's closing line" assertion that `driver_authored`
+    # gates would fail on a conversation where nothing was wrong with our code.
+    "No response from the Target",
 }
 
 # Hard cap applied server-side at write.
