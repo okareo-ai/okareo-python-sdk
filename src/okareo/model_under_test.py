@@ -1745,6 +1745,29 @@ class SipTarget(VoiceTarget):
         sip_username: Optional SIP authentication username for the target.
         sip_password: Optional SIP authentication password for the target.
         max_parallel_requests: Cap on concurrent calls hitting the target.
+        sip_mode: How the call is placed. Default (unset) routes through
+            Okareo's telephony provider. "direct" makes Okareo the SIP client:
+            it sends the INVITE and carries the audio itself — no telephony
+            provider in the path. Requires a target reachable at a plain
+            ``sip:`` URI over UDP with symmetric RTP (modern platforms such as
+            LiveKit, Vapi, Daily, and Telnyx qualify).
+        sip_from_user: Direct mode only — user part of the From/caller
+            identity. Default "okareo".
+        sip_codec: Direct mode only — offered codec: "pcmu" (default),
+            "pcma", or "opus".
+        sip_headers: Direct mode only — extra headers for the INVITE, e.g.
+            ``{"X-Customer-Id": "abc"}``.
+        stun_server: Direct mode only — STUN server used for NAT discovery,
+            as ``"stun:host:port"``. Defaults server-side; not normally set.
+        rtp_timeout_s: Direct mode only — seconds without inbound audio
+            before the call is failed as one-way media. Defaults server-side.
+
+    Note:
+        The direct-mode keys are emitted only when set, so existing targets
+        serialize exactly as before. Server-side this maps onto
+        ``sip_mode="direct"`` handling in the voice target factory — a
+        cross-repo contract: renaming keys here requires a matching server
+        change.
     """
 
     edge_type = "sip"
@@ -1752,9 +1775,15 @@ class SipTarget(VoiceTarget):
     sip_username: Optional[str] = None
     sip_password: Optional[str] = None
     max_parallel_requests: Optional[int] = None
+    sip_mode: Optional[str] = None
+    sip_from_user: Optional[str] = None
+    sip_codec: Optional[str] = None
+    sip_headers: Optional[dict] = None
+    stun_server: Optional[str] = None
+    rtp_timeout_s: Optional[float] = None
 
     def params(self) -> dict:
-        return {
+        base: dict = {
             "type": self.type,
             "edge_type": self.edge_type,
             "sip_uri": self.sip_uri,
@@ -1762,6 +1791,18 @@ class SipTarget(VoiceTarget):
             "sip_password": self.sip_password,
             "max_parallel_requests": self.max_parallel_requests,
         }
+        # Emitted only when set: the server falls back to its own defaults for
+        # absent keys (a present-but-None stun_server would disable STUN).
+        optional = {
+            "sip_mode": self.sip_mode,
+            "sip_from_user": self.sip_from_user,
+            "sip_codec": self.sip_codec,
+            "sip_headers": self.sip_headers,
+            "stun_server": self.stun_server,
+            "rtp_timeout_s": self.rtp_timeout_s,
+        }
+        base.update({k: v for k, v in optional.items() if v is not None})
+        return base
 
     def get_sensitive_fields(self) -> list[str]:
         return ["sip_password"] if self.sip_password else []
