@@ -1807,23 +1807,6 @@ class Okareo:
             driver_id=str(driver_model.id) if driver_model.id else None,
         )
 
-    # Internal, NON-user-facing derivation constants. The user specifies only load
-    # (concurrent + duration); every SAFETY cap (ramp deadline, plateau fraction, per-call
-    # wall-clock kill, dial rate) is enforced SERVER-SIDE and NOT mirrored here. These are
-    # only what the SDK needs to shape its OWN request — the seed-row pool and max_turns:
-    _LOADTEST_DROP_MARGIN = (
-        0.2  # N_rows = target × (1 + this): backfill for dropped calls
-    )
-    # Catastrophic max_turns backstop (never the terminator — the server auto-stop + wall-clock
-    # cap end calls far sooner). MUST stay < 999: the server's ConversationOrchestrator rejects
-    # max_turns >= 999 with a 400. 998 is unreachable in practice (a 2400s wall-clock cap ends
-    # a ~11s/turn call near turn ~200), so it's a safe ceiling.
-    _LOADTEST_TURN_BACKSTOP = 998
-    # Server pacing DEFAULTS, used ONLY to estimate the cycling row-pool size (window / cap);
-    # overridable via the same env vars the server reads so a tuned deployment sizes correctly.
-    _LOADTEST_DEFAULT_CPS = 5.0  # server LOADTEST_CPS default (provider dial rate)
-    _LOADTEST_DRAIN_MARGIN_S = 120.0  # server MANAGER_LOADTEST_DRAIN_MARGIN_S default
-
     def run_load_test(
         self,
         name: str,
@@ -1870,6 +1853,12 @@ class Okareo:
             raise ValueError(
                 "load_concurrent >= 1 and load_duration_s > 0 are required"
             )
+        # Internal load-test tunables — method-local, never public class attributes. The user
+        # specifies only load; every SAFETY cap (ramp deadline, plateau fraction, hard per-call
+        # kill, dial rate, concurrency) is enforced SERVER-SIDE. These are only what the SDK
+        # needs to shape its OWN request.
+        drop_margin = 0.2  # seed-row over-provision: N_rows = target × (1 + this)
+        turns = 25  # max_turns backstop; calls normally end on the server's per-call time cap
         # Ship ONLY the two user-specified load values. The server manager derives the ramp
         # deadline, plateau fraction, and backstops internally (from the provider it actually
         # dials with) — see distributed_executor._loadtest_ramp_decision.
@@ -1886,29 +1875,22 @@ class Okareo:
             if cap_s <= 0:
                 raise ValueError("per_call_max_duration_s must be > 0 when provided")
             loadtest_cfg["loadtest_per_call_max_duration_s"] = cap_s
-        turns = self._LOADTEST_TURN_BACKSTOP
         # Row-pool sizing. Without cycling, calls are held for the whole plateau so the
         # pool only needs the drop-margin backfill. WITH cycling each slot recycles
         # ~window/cap times and the executor dials the next pool row when a slot frees, so
         # the pool must supply the whole ramp+hold+drain window (else it drains mid-hold and
-        # the plateau collapses). Estimate the window from the server's pacing defaults.
+        # the plateau collapses). Estimate the window from the server's pacing defaults
+        # (CPS + drain margin), both env-overridable so a tuned deployment sizes correctly.
         if loadtest_cfg.get("loadtest_per_call_max_duration_s"):
-            cps = float(
-                os.environ.get("OKAREO_LOADTEST_CPS") or self._LOADTEST_DEFAULT_CPS
-            )
-            drain_s = float(
-                os.environ.get("MANAGER_LOADTEST_DRAIN_MARGIN_S")
-                or self._LOADTEST_DRAIN_MARGIN_S
-            )
+            cps = float(os.environ.get("OKAREO_LOADTEST_CPS") or 5.0)
+            drain_s = float(os.environ.get("MANAGER_LOADTEST_DRAIN_MARGIN_S") or 120.0)
             ramp_s = (load_concurrent / cps) if cps > 0 else 0.0
             window_s = ramp_s + float(load_duration_s) + drain_s
             cap_s = float(loadtest_cfg["loadtest_per_call_max_duration_s"])
             cycles = max(1, math.ceil(window_s / cap_s))
-            n_rows = math.ceil(
-                load_concurrent * (1 + self._LOADTEST_DROP_MARGIN) * cycles
-            )
+            n_rows = math.ceil(load_concurrent * (1 + drop_margin) * cycles)
         else:
-            n_rows = math.ceil(load_concurrent * (1 + self._LOADTEST_DROP_MARGIN))
+            n_rows = math.ceil(load_concurrent * (1 + drop_margin))
 
         # Round-robin tile the seed rows to N_rows. `repeats` is NOT usable here: the
         # server expands it row-major (A,A,..,B,B,..), which would run the plateau all-A
