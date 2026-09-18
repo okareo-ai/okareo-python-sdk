@@ -1811,7 +1811,9 @@ class Okareo:
     # + duration); everything that protects the SYSTEM from a runaway (ramp deadline,
     # plateau fraction, backstops) is derived SERVER-SIDE from those two values, so it can
     # never be mistuned by a caller. Here we keep only the two client-side derivations:
-    _LOADTEST_DROP_MARGIN = 0.2       # N_rows = target × (1 + this): backfill for dropped calls
+    _LOADTEST_DROP_MARGIN = (
+        0.2  # N_rows = target × (1 + this): backfill for dropped calls
+    )
     # Catastrophic max_turns backstop (never the terminator — the auto-stop + wall-clock cap
     # end calls far sooner). MUST stay < 999: the server's ConversationOrchestrator rejects
     # max_turns >= 999 with a 400. 998 is unreachable in practice (a 2400s wall-clock cap ends
@@ -1824,6 +1826,7 @@ class Okareo:
         target: Union[str, Target],
         load_concurrent: int,
         load_duration_s: float,
+        per_call_max_duration_s: Optional[float] = None,
         seed_data: Optional[List[dict]] = None,
         driver: Optional[Union[str, Driver]] = None,
         checks: Optional[List[str]] = None,
@@ -1849,10 +1852,20 @@ class Okareo:
         server-side manager holds the plateau and ends it gracefully (measured from the ACTUAL
         plateau, and aborting a doomed ramp). Pair with a never-end driver prompt.
 
+        Optional **call cycling** (``per_call_max_duration_s``): cap each individual call's
+        wall-clock duration. Instead of holding ``load_concurrent`` long-lived calls, the
+        plateau is composed of short calls that are graceful-ended at the cap and immediately
+        backfilled, so the guarantee (``load_concurrent`` live for ``load_duration_s``) is
+        unchanged while each call is bounded. Shape/pacing caps (floor, hard per-call kill,
+        dial rate) are enforced server-side; the SDK only forwards the flat knob. Omit it for
+        the classic held-call behavior.
+
         Returns a ``TestRunItem`` for the load-test run.
         """
         if load_concurrent < 1 or load_duration_s <= 0:
-            raise ValueError("load_concurrent >= 1 and load_duration_s > 0 are required")
+            raise ValueError(
+                "load_concurrent >= 1 and load_duration_s > 0 are required"
+            )
         # Ship ONLY the two user-specified load values. The server manager derives the ramp
         # deadline, plateau fraction, and backstops internally (from the provider it actually
         # dials with) — see distributed_executor._loadtest_ramp_decision.
@@ -1860,6 +1873,15 @@ class Okareo:
             "loadtest_load_duration_s": float(load_duration_s),
             "loadtest_target_concurrent": int(load_concurrent),
         }
+        # Call cycling (optional): forward the flat per-call cap. The server manager
+        # backfills recycled slots for the whole hold and the runner graceful-ends each
+        # call at the cap; shape/pacing caps (floor, hard kill, dial rate) are enforced
+        # server-side, so the SDK only forwards the knob (guarding a non-positive value).
+        if per_call_max_duration_s is not None:
+            cap_s = float(per_call_max_duration_s)
+            if cap_s <= 0:
+                raise ValueError("per_call_max_duration_s must be > 0 when provided")
+            loadtest_cfg["loadtest_per_call_max_duration_s"] = cap_s
         turns = self._LOADTEST_TURN_BACKSTOP
         n_rows = math.ceil(load_concurrent * (1 + self._LOADTEST_DROP_MARGIN))
 
@@ -1875,7 +1897,9 @@ class Okareo:
 
         # Concurrency governor: the executor holds `load_concurrent` calls in flight and
         # dials a replacement on completion, up to N_rows.
-        if isinstance(target, Target) and hasattr(target.target, "max_parallel_requests"):
+        if isinstance(target, Target) and hasattr(
+            target.target, "max_parallel_requests"
+        ):
             target.target.max_parallel_requests = load_concurrent  # type: ignore[union-attr]
 
         return self.run_simulation(
