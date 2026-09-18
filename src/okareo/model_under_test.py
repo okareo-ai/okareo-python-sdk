@@ -2451,11 +2451,6 @@ class Simulation:
     concurrent_ask_probability: Optional[float] = 0.0
     turn_transition_time: Optional[int] = 1000
     augmentation: Optional[Union[Augmentation, dict[str, Any]]] = None
-    # Closed-loop load test only: a flat dict of loadtest_* knobs (hold duration, target
-    # concurrency, ramp deadline, plateau fraction, stop-after backstop) the server-side
-    # manager reads to time the measured-plateau hold + ramp watchdog. Spread verbatim into
-    # simulation_params. Set by run_load_test(); leave None for normal runs.
-    loadtest: Optional[dict] = None
 
     def __attrs_post_init__(self) -> None:
         if isinstance(self.stop_check, dict):
@@ -2481,10 +2476,6 @@ class Simulation:
                 if isinstance(self.augmentation, Augmentation)
                 else self.augmentation
             )
-        if self.loadtest:
-            # Flat loadtest_* knobs → top-level simulation_params (the executor reads them
-            # by flat key). All keys are loadtest_*-prefixed, so no collision with the above.
-            d.update(self.loadtest)
         return d
 
 

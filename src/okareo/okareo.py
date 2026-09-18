@@ -1693,7 +1693,6 @@ class Okareo:
         tags: Optional[list[str]] = None,
         sensitive_fields: Union[List[str], None] = None,
         submit: Optional[bool] = False,
-        loadtest: Optional[dict] = None,
     ) -> TestRunItem:
         """Run a multiturn simulation against a target.
 
@@ -1721,6 +1720,58 @@ class Okareo:
           ModelUnderTest.submit_test.
 
         Returns a TestRunItem representing the created simulation test run.
+        """
+        simulation_params = Simulation(
+            stop_check=stop_check,
+            repeats=repeats,
+            max_turns=max_turns,
+            first_turn=first_turn,
+            checks_at_every_turn=checks_at_every_turn,
+            concurrent_ask_probability=concurrent_ask_probability,
+            turn_transition_time=turn_transition_time,
+            augmentation=augmentation,
+        )
+        return self._submit_multiturn(
+            name=name,
+            scenario=scenario,
+            target=target,
+            driver=driver,
+            checks=checks,
+            simulation_params=simulation_params,
+            submit=submit,
+            api_key=api_key,
+            api_keys=api_keys,
+            metrics_kwargs=metrics_kwargs,
+            calculate_metrics=calculate_metrics,
+            project_id=project_id,
+            tags=tags,
+            sensitive_fields=sensitive_fields,
+        )
+
+    def _submit_multiturn(
+        self,
+        *,
+        name: str,
+        scenario: Union[ScenarioSetResponse, str],
+        target: str | Target,
+        driver: Optional[str | Driver],
+        checks: Optional[list[str]],
+        simulation_params: Any,
+        submit: Optional[bool],
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        calculate_metrics: bool = True,
+        project_id: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        sensitive_fields: Union[List[str], None] = None,
+    ) -> TestRunItem:
+        """Shared MULTI_TURN submit path: resolve the driver + target, build the MUT, and
+        run/submit the test with the given (already-built) ``simulation_params``.
+
+        Used by both ``run_simulation`` (conventional turn/repeats) and ``run_load_test``
+        (concurrency/duration); they differ only in the ``simulation_params`` they construct,
+        so neither public surface leaks the other's concern.
         """
         project_id = self._resolved_project_id(project_id)
         # create or update driver if needed
@@ -1752,19 +1803,6 @@ class Okareo:
                 raise TypeError(
                     "Cannot retrieve Target by name for CustomMultiturnTarget"
                 )
-
-        # create model with target
-        simulation_params = Simulation(
-            stop_check=stop_check,
-            repeats=repeats,
-            max_turns=max_turns,
-            first_turn=first_turn,
-            checks_at_every_turn=checks_at_every_turn,
-            concurrent_ask_probability=concurrent_ask_probability,
-            turn_transition_time=turn_transition_time,
-            augmentation=augmentation,
-            loadtest=loadtest,
-        )
 
         # create MUT object
         dummy_response = ModelUnderTestResponse(
@@ -1909,21 +1947,27 @@ class Okareo:
         ):
             target.target.max_parallel_requests = load_concurrent  # type: ignore[union-attr]
 
-        return self.run_simulation(
+        # Build the MULTI_TURN simulation_params directly — conventional turn controls plus
+        # the flat loadtest_* knobs — and submit via the shared path. run_simulation's own
+        # surface stays purely conventional and never sees the load-test knobs.
+        simulation_params = Simulation(
+            repeats=1,  # round-robin lives in the seed; never use repeats (row-major)
+            max_turns=turns,
+            first_turn="driver",  # SIP echo sink is silent until the driver speaks
+        ).to_dict()
+        simulation_params.update(loadtest_cfg)
+        return self._submit_multiturn(
             name=name,
             scenario=scenario,
             target=target,
             driver=driver,
             checks=checks,
-            max_turns=turns,
-            repeats=1,  # round-robin lives in the seed; never use repeats (row-major)
-            first_turn="driver",  # internal: SIP echo sink is silent until the driver speaks
+            simulation_params=simulation_params,
+            submit=True,
             api_key=api_key,
             api_keys=api_keys,
             calculate_metrics=calculate_metrics,
             project_id=project_id,
-            submit=True,
-            loadtest=loadtest_cfg,
         )
 
     def generate_driver_prompt(
