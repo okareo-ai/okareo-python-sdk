@@ -92,3 +92,42 @@ def test_omitting_cap_leaves_loadtest_cfg_unchanged(
     cfg = captured["loadtest"]
     assert "loadtest_per_call_max_duration_s" not in cfg
     assert set(cfg) == {"loadtest_target_concurrent", "loadtest_load_duration_s"}
+
+
+def test_cycling_presizes_row_pool_for_the_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With cycling the finite pool must cover the whole ramp+hold+drain window, so n_rows is
+    scaled by the number of cycles — much larger than the drop-margin-only pool a held-call
+    run uses. Uses the server's pacing defaults (overridable via env)."""
+    monkeypatch.setenv("OKAREO_LOADTEST_CPS", "5")
+    monkeypatch.setenv("MANAGER_LOADTEST_DRAIN_MARGIN_S", "120")
+    ok = _bare_client()
+    sizes: dict[str, int] = {}
+
+    def _capture_scenario(spec: Any) -> Any:
+        sizes["n_rows"] = len(spec.seed_data)
+        return object()
+
+    monkeypatch.setattr(ok, "create_scenario_set", _capture_scenario)
+    monkeypatch.setattr(ok, "run_simulation", lambda **k: object())
+
+    # ramp=50/5=10; window=10+120+120=250; cycles=ceil(250/90)=3; n_rows=ceil(50*1.2*3)=180.
+    ok.run_load_test(
+        name="lt",
+        target="t",
+        load_concurrent=50,
+        load_duration_s=120,
+        per_call_max_duration_s=90,
+    )
+    assert sizes["n_rows"] == 180
+
+    # Held-call (no cap) pool is just the drop margin: ceil(50*1.2)=60.
+    sizes.clear()
+    ok.run_load_test(
+        name="lt",
+        target="t",
+        load_concurrent=50,
+        load_duration_s=120,
+    )
+    assert sizes["n_rows"] == 60
