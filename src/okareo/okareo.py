@@ -20,6 +20,7 @@ from okareo.model_under_test import (
     Simulation,
     StopConfig,
     Target,
+    describe_listener_for_run,
     fetch_test_run,
     stop_listener_for_run,
     wait_for_test_run,
@@ -2044,13 +2045,16 @@ class Okareo:
 
         Raises:
             TestRunError: the Run ended FAILED (with the server's failure message),
-                or ``timeout`` passed without a terminal status.
+                or ``timeout`` passed without a terminal status. On a timeout the
+                Run may still be going, so its listener is left running; call
+                again to keep waiting.
         """
         item = wait_for_test_run(
             lambda: fetch_test_run(self.client, self.api_key, test_run_id),
             test_run_id,
             poll_interval,
             timeout,
+            listener_state=lambda: describe_listener_for_run(test_run_id),
         )
         # A custom multi-turn Target's listener in this process has nothing left
         # to answer; stop it now so it logs its summary and the thread ends.

@@ -92,9 +92,11 @@ class FakeNats:
         assert len(self.published) >= count, self.published
 
 
-def run_item(status: str, failure_message: str | None = None) -> TestRunItem:
+def run_item(
+    status: str, failure_message: str | None = None, run_id: Any = RUN_ID
+) -> TestRunItem:
     return TestRunItem(
-        id=RUN_ID,
+        id=run_id,
         project_id=PROJECT_ID,
         status=status,
         failure_message=failure_message,
@@ -106,8 +108,8 @@ LIVE_MUTS: list[ModelUnderTest] = []
 
 @pytest.fixture(autouse=True)
 def stop_listeners() -> Iterator[None]:
-    """A listener left running (a failed assertion mid-test) is a non-daemon
-    thread, and it would hold the whole test process open at exit."""
+    """A listener left running (a failed assertion mid-test) keeps a thread and
+    a fake connection alive into the next test; stop it here."""
     yield
     for mut in LIVE_MUTS:
         mut._internal_cleanup_custom_model(
@@ -159,9 +161,12 @@ def fake_nats(monkeypatch: pytest.MonkeyPatch) -> FakeNats:
 def submit_endpoint(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
     calls: list[dict] = []
 
+    # The first submit is RUN_ID; a second submit on the same model gets its own id.
+    run_ids = iter([RUN_ID, uuid4(), uuid4()])
+
     def fake_submit(**kwargs: Any) -> TestRunItem:
         calls.append(kwargs)
-        return run_item("RUNNING")
+        return run_item("RUNNING", run_id=next(run_ids))
 
     def refuse_run(**kwargs: Any) -> TestRunItem:
         raise AssertionError("the run_test endpoint must not be used by submit_test")
@@ -245,7 +250,7 @@ def test_submit_test_keeps_the_listener_alive_until_the_server_closes_the_run(
     assert fake_nats.closed
 
     out = capsys.readouterr().out
-    assert "submitted" in out and "listener stays up" in out
+    assert "submitted" in out and "stays up until wait_for_test_run" in out
     assert "server sent end-of-run close" in out
     assert "turns answered 1" in out and "turns failed 0" in out
 
@@ -256,7 +261,7 @@ def test_listener_stops_itself_when_the_run_reaches_a_terminal_status(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setenv("OKAREO_LISTENER_STATUS_POLL_SECONDS", "0.1")
+    monkeypatch.setattr(mut_module, "LISTENER_STATUS_POLL_SECONDS", 0.1)
     patch_fetch(monkeypatch, statuses("RUNNING", "RUNNING", "FINISHED"))
     mut = make_mut(EchoAsync(name="echo"))
 
@@ -374,6 +379,87 @@ def test_okareo_wait_for_test_run_stops_the_listener_that_answers_that_run(
     assert not mut.custom_model_thread.is_alive()
     assert "listener" in capsys.readouterr().out and fake_nats.closed
     assert str(RUN_ID) not in mut_module._LIVE_LISTENERS
+
+
+def test_two_submits_on_one_model_stop_the_right_listener(
+    fake_nats: FakeNats, submit_endpoint: list[dict], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The registry is per Run, not per model: stopping Run A must leave Run B's
+    listener answering. Before the fix the registry held the model, and stopping
+    A joined whichever thread the model held last, which was B's."""
+    patch_fetch(monkeypatch, statuses("RUNNING"))
+    mut = make_mut(EchoAsync(name="echo"))
+
+    first = submit(mut)
+    thread_a = mut.custom_model_thread
+    second = submit(mut)
+    thread_b = mut.custom_model_thread
+    assert first.id != second.id and thread_a is not thread_b
+    assert thread_a.is_alive() and thread_b.is_alive()
+
+    assert mut_module.stop_listener_for_run(first.id) is True
+    thread_a.join(timeout=3)
+
+    assert not thread_a.is_alive()
+    assert thread_b.is_alive()
+    assert mut_module.stop_listener_for_run(second.id) is True
+    thread_b.join(timeout=3)
+    assert not thread_b.is_alive()
+
+
+def test_listener_lines_carry_the_run_id_once_it_is_known(
+    fake_nats: FakeNats,
+    submit_endpoint: list[dict],
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    patch_fetch(monkeypatch, statuses("RUNNING"))
+    mut = make_mut(EchoAsync(name="echo"))
+
+    submit(mut)
+    fake_nats.deliver({"close": "True"})
+    assert mut.custom_model_thread is not None
+    mut.custom_model_thread.join(timeout=3)
+
+    out = capsys.readouterr().out
+    submitted = next(line for line in out.splitlines() if "submitted" in line)
+    exiting = next(line for line in out.splitlines() if "exiting" in line)
+    assert str(RUN_ID) in submitted and f"listener {mut.mut_id}_" in submitted
+    assert f"run {RUN_ID}" in exiting and f"listener {mut.mut_id}_" in exiting
+
+
+def test_the_long_run_line_reports_listener_state_when_waiting_by_run_id(
+    fake_nats: FakeNats,
+    submit_endpoint: list[dict],
+    monkeypatch: pytest.MonkeyPatch,
+    httpx_mock: HTTPXMock,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The harness waits through Okareo.wait_for_test_run with only a Run id; the
+    300 s line still has to say whether that Run's listener is connected."""
+    monkeypatch.setattr(mut_module, "LONG_RUN_MARK_SECONDS", 0.0)
+    patch_fetch(monkeypatch, statuses("RUNNING"))
+    mut = make_mut(EchoAsync(name="echo"))
+    submit(mut)
+
+    httpx_mock.add_response(
+        method="GET", url=f"{BASE_URL}/v0/projects", status_code=201, json=[]
+    )
+    run_url = f"{BASE_URL}/v0/test_runs/{RUN_ID}"
+    body = {"id": str(RUN_ID), "project_id": str(PROJECT_ID)}
+    httpx_mock.add_response(
+        method="GET", url=run_url, status_code=201, json={**body, "status": "RUNNING"}
+    )
+    httpx_mock.add_response(
+        method="GET", url=run_url, status_code=201, json={**body, "status": "FINISHED"}
+    )
+    okareo = Okareo(api_key="unit-test-key", base_path=BASE_URL)
+
+    okareo.wait_for_test_run(RUN_ID, poll_interval=0.01)
+
+    out = capsys.readouterr().out
+    long_line = next(line for line in out.splitlines() if "still running" in line)
+    assert "listener connected: yes (disconnects 0, reconnects 0)" in long_line
 
 
 # --- waiting for a submitted Run --------------------------------------------
