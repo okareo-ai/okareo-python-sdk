@@ -5,14 +5,16 @@ import logging
 import os
 import ssl
 import threading
+import time
 import urllib
 from abc import abstractmethod
 from base64 import b64encode
 from datetime import datetime
-from typing import Any, Awaitable, Dict, List, Optional, Union
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from uuid import UUID, uuid4
 
 import aiohttp
+import httpx
 from attrs import define
 from attrs import define as _attrs_define
 from attrs import field
@@ -89,6 +91,147 @@ import nats  # type: ignore # noqa: E402
 
 ## END Monkey Patch for nats to use proxy env vars (via aiohttp)
 
+TERMINAL_TEST_RUN_STATUSES = frozenset({"FINISHED", "FAILED"})
+# A Run that is still going past this mark gets one explicit log line: it is the
+# point past which a client holding one silent HTTP request has been seen cut.
+LONG_RUN_MARK_SECONDS = 300.0
+TEST_RUN_POLL_TIMEOUT_SECONDS = 30.0
+NGS_URL = "wss://connect.ngs.global:443"
+
+# Run id -> the ModelUnderTest whose listener is answering that Run. Filled on the
+# submit path, so a caller holding only the Run id (Okareo.wait_for_test_run) can
+# stop the listener cleanly once the Run is terminal. The server does not send the
+# listener a close on the queued text route (only the voice executor does), so
+# without this the listener's own status poll is the only stop.
+_LIVE_LISTENERS: dict[str, "ModelUnderTest"] = {}
+_LIVE_LISTENERS_LOCK = threading.Lock()
+
+
+def stop_listener_for_run(test_run_id: Union[str, UUID]) -> bool:
+    """Stop the custom-model listener answering this Run, if this process has one."""
+    with _LIVE_LISTENERS_LOCK:
+        mut = _LIVE_LISTENERS.pop(str(test_run_id), None)
+    if mut is None:
+        return False
+    mut._internal_cleanup_custom_model(
+        mut.custom_model_thread_stop_event, mut.custom_model_thread
+    )
+    return True
+
+
+def _log(message: str) -> None:
+    """One timestamped line to stdout, where the SDK already prints."""
+    print(f"[okareo {datetime.now().strftime('%H:%M:%S')}] {message}", flush=True)
+
+
+def fetch_test_run(
+    client: Client,
+    api_key: str,
+    test_run_id: Union[str, UUID],
+    timeout_seconds: float = TEST_RUN_POLL_TIMEOUT_SECONDS,
+) -> TestRunItem:
+    """GET one Run with its own request timeout, so a poll can never hang the caller.
+
+    The generated client is built without a timeout (a long ``run_test`` needs
+    none), so the timeout goes on this request alone.
+    """
+    kwargs = get_test_run_v0_test_runs_test_run_id_get._get_kwargs(
+        test_run_id=UUID(str(test_run_id)), api_key=api_key
+    )
+    kwargs["timeout"] = httpx.Timeout(timeout_seconds)
+    response = client.get_httpx_client().request(**kwargs)
+    return _parse_test_run_response(client, response, test_run_id)
+
+
+async def fetch_test_run_async(
+    client: Client,
+    api_key: str,
+    test_run_id: Union[str, UUID],
+    timeout_seconds: float = TEST_RUN_POLL_TIMEOUT_SECONDS,
+) -> TestRunItem:
+    """The listener's own copy of fetch_test_run, for use inside its event loop.
+
+    A fresh AsyncClient per call: the generated client's async client binds to
+    the first loop that uses it, and this runs on the listener's private loop.
+    No thread pool either: at interpreter exit the default executor refuses new
+    work, and a watchdog that depended on it could never see the Run end.
+    """
+    kwargs = get_test_run_v0_test_runs_test_run_id_get._get_kwargs(
+        test_run_id=UUID(str(test_run_id)), api_key=api_key
+    )
+    base_url = client.get_httpx_client().base_url
+    async with httpx.AsyncClient(
+        base_url=base_url, timeout=httpx.Timeout(timeout_seconds)
+    ) as http:
+        response = await http.request(**kwargs)
+    return _parse_test_run_response(client, response, test_run_id)
+
+
+def _parse_test_run_response(
+    client: Client, response: httpx.Response, test_run_id: Union[str, UUID]
+) -> TestRunItem:
+    parsed = get_test_run_v0_test_runs_test_run_id_get._build_response(
+        client=client, response=response
+    ).parsed
+    if isinstance(parsed, ErrorResponse):
+        raise TestRunError(f"error: {parsed}, {parsed.detail}")
+    if not isinstance(parsed, TestRunItem):
+        raise TestRunError(
+            f"Unexpected response fetching test run {test_run_id}: "
+            f"{response.status_code}"
+        )
+    return parsed
+
+
+def wait_for_test_run(
+    fetch: Callable[[], TestRunItem],
+    test_run_id: Union[str, UUID],
+    poll_interval: float = 10.0,
+    timeout: Optional[float] = None,
+    listener_state: Optional[Callable[[], str]] = None,
+) -> TestRunItem:
+    """Poll a submitted Run with short requests until it is FINISHED or FAILED.
+
+    Returns the terminal Run; the caller decides what FAILED means. A poll that
+    fails is logged and retried, never fatal on its own. Raises TestRunError only
+    when ``timeout`` seconds pass without a terminal status.
+    """
+    started = time.monotonic()
+    last_status = "UNKNOWN"
+    long_run_logged = False
+    while True:
+        poll_started = time.monotonic()
+        item: Optional[TestRunItem] = None
+        try:
+            item = fetch()
+        except Exception as e:
+            _log(
+                f"run {test_run_id}: poll failed ({type(e).__name__}: {e}); "
+                f"retrying in {poll_interval:g}s"
+            )
+        elapsed = time.monotonic() - started
+        if item is not None:
+            last_status = str(item.status or "UNKNOWN").upper()
+            _log(
+                f"run {test_run_id}: {last_status} at +{elapsed:.0f}s "
+                f"(poll took {time.monotonic() - poll_started:.1f}s)"
+            )
+            if last_status in TERMINAL_TEST_RUN_STATUSES:
+                return item
+        if not long_run_logged and elapsed >= LONG_RUN_MARK_SECONDS:
+            long_run_logged = True
+            state = f"; listener {listener_state()}" if listener_state else ""
+            _log(
+                f"run {test_run_id}: past {LONG_RUN_MARK_SECONDS:.0f}s and still "
+                f"running{state}"
+            )
+        if timeout is not None and elapsed >= timeout:
+            raise TestRunError(
+                f"run {test_run_id} did not finish within {timeout:g}s "
+                f"(last status {last_status})"
+            )
+        time.sleep(poll_interval)
+
 
 class BaseModel:
     type: str
@@ -125,6 +268,12 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.models = models
         self.app_link = mut.app_link
         self.model_key: Optional[str] = None
+        # The client-side listener for custom multi-turn Targets, set by
+        # _run_test_internal. On the submit path it outlives that call.
+        self.custom_model_thread: Any = None
+        self.custom_model_thread_stop_event: Any = None
+        self._custom_model_listener_stats: dict = {}
+        self._custom_model_run_id_holder: dict = {}
         super().__init__(name="OkareoDatapointsProcessor")
 
     def get_client(self) -> Client:
@@ -432,6 +581,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 allow_reconnect=True,
                 max_reconnect_attempts=10,
                 reconnect_time_wait=10,
+                **self._nats_connection_callbacks(),
             )
         else:
             nkey = from_seed(seed.encode())
@@ -446,7 +596,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             ssl_ctx = ssl.create_default_context()
             ssl_ctx.check_hostname = True
             ssl_ctx.verify_mode = ssl.CERT_REQUIRED
-            ngs_url = "wss://connect.ngs.global:443"
+            ngs_url = NGS_URL
             nc = await nats.connect(
                 servers=[ngs_url],
                 user_jwt_cb=user_jwt_cb,
@@ -456,8 +606,57 @@ class ModelUnderTest(AsyncProcessorMixin):
                 allow_reconnect=True,
                 max_reconnect_attempts=5,
                 reconnect_time_wait=1,
+                **self._nats_connection_callbacks(),
             )
         return nc
+
+    def _nats_connection_callbacks(self) -> dict:
+        """nats-py's connection events, each logged once with the invoke id.
+
+        Without these, a dropped WebSocket is invisible: nats-py reconnects (or
+        gives up) in silence and the listener loop keeps spinning. ``stopping``
+        is set by the listener right before its own close, so a normal shutdown
+        is not reported as a lost connection.
+        """
+        stats = self._custom_model_listener_stats
+
+        def label() -> str:
+            return f"listener {stats.get('invoke_id', '')}"
+
+        async def disconnected_cb() -> None:
+            if stats.get("stopping"):
+                return
+            stats["disconnects"] = stats.get("disconnects", 0) + 1
+            stats["disconnected_at"] = time.monotonic()
+            _log(f"{label()}: disconnected from NATS; reconnecting")
+
+        async def reconnected_cb() -> None:
+            stats["reconnects"] = stats.get("reconnects", 0) + 1
+            gap = time.monotonic() - stats.get("disconnected_at", time.monotonic())
+            _log(
+                f"{label()}: reconnected to NATS after {gap:.1f}s; any turn the "
+                "server sent in that gap failed on the server side"
+            )
+
+        async def closed_cb() -> None:
+            stats["closed"] = True
+            if stats.get("stopping"):
+                return
+            _log(
+                f"{label()}: NATS connection closed for good (reconnect attempts "
+                "exhausted); every remaining turn of this run will fail with no "
+                "responders"
+            )
+
+        async def error_cb(e: Exception) -> None:
+            _log(f"{label()}: NATS error: {type(e).__name__}: {e}")
+
+        return {
+            "disconnected_cb": disconnected_cb,
+            "reconnected_cb": reconnected_cb,
+            "closed_cb": closed_cb,
+            "error_cb": error_cb,
+        }
 
     async def call_custom_invoker_async(
         self,
@@ -596,9 +795,18 @@ class ModelUnderTest(AsyncProcessorMixin):
         nats_connection: Any,
         stop_event: Any,
     ) -> None:
+        stats = self._custom_model_listener_stats
         try:
             data = json.loads(msg.data.decode())
             if data.get("close"):
+                stats["server_close_received"] = True
+                since_connect = time.monotonic() - stats.get(
+                    "connected_at", time.monotonic()
+                )
+                _log(
+                    f"listener {stats.get('invoke_id', '')}: server sent end-of-run "
+                    f"close after {since_connect:.0f}s; stopping"
+                )
                 await nats_connection.publish(
                     msg.reply, json.dumps({"status": "disconnected"}).encode()
                 )
@@ -623,8 +831,10 @@ class ModelUnderTest(AsyncProcessorMixin):
             await nats_connection.publish(
                 msg.reply, json.dumps(json_encodable_result).encode()
             )
+            stats["turns_answered"] = stats.get("turns_answered", 0) + 1
 
         except Exception as e:
+            stats["turns_failed"] = stats.get("turns_failed", 0) + 1
             error_msg = f"An error occurred in the custom model invocation. {type(e).__name__}: {str(e)}"
             print(error_msg)
             await nats_connection.publish(
@@ -640,10 +850,16 @@ class ModelUnderTest(AsyncProcessorMixin):
         invoke_id: str,
         ready_event: Optional[threading.Event] = None,
         error_holder: Optional[dict] = None,
+        run_id_holder: Optional[dict] = None,
     ) -> None:
         nats_connection = None
         # Track active tasks for proper cleanup
         active_tasks: set[asyncio.Task] = set()
+        stats = self._custom_model_listener_stats
+        stats["invoke_id"] = invoke_id
+        # Submit path only: stops the listener once the Run is terminal, in case
+        # the server's end-of-run close never arrives.
+        run_watchdog: Optional[asyncio.Task] = None
 
         try:
             # connect_nats is INSIDE the try on purpose. Previously it ran before
@@ -652,6 +868,11 @@ class ModelUnderTest(AsyncProcessorMixin):
             # main thread blocked until a server-side timeout. Capturing it here
             # lets the run fail with a clear, attributable error instead.
             nats_connection = await self.connect_nats(nats_jwt, seed, local_nats)
+            stats["connected_at"] = time.monotonic()
+            _log(
+                f"listener {invoke_id}: connected to NATS "
+                f"({local_nats or NGS_URL}); subscribing to invoke.{invoke_id}"
+            )
 
             async def message_handler_custom_model(msg: Any) -> None:
                 # Create task and track it
@@ -682,6 +903,10 @@ class ModelUnderTest(AsyncProcessorMixin):
             if ready_event is not None:
                 # Subscribed and flushed: safe for the caller to create the run.
                 ready_event.set()
+            if run_id_holder is not None:
+                run_watchdog = asyncio.create_task(
+                    self._stop_listener_when_run_ends(run_id_holder, stop_event)
+                )
             while not stop_event.is_set():
                 await asyncio.sleep(0.1)
 
@@ -697,8 +922,60 @@ class ModelUnderTest(AsyncProcessorMixin):
             # Wait for all active tasks to complete before closing
             if active_tasks:
                 await asyncio.gather(*active_tasks, return_exceptions=True)
+            if run_watchdog is not None:
+                run_watchdog.cancel()
+                await asyncio.gather(run_watchdog, return_exceptions=True)
+            if run_id_holder is not None and run_id_holder.get("test_run_id"):
+                with _LIVE_LISTENERS_LOCK:
+                    _LIVE_LISTENERS.pop(str(run_id_holder["test_run_id"]), None)
+            # Our own close is not a lost connection; see _nats_connection_callbacks.
+            stats["stopping"] = True
             if nats_connection is not None:
                 await nats_connection.close()
+            lifetime = time.monotonic() - stats.get("connected_at", time.monotonic())
+            _log(
+                f"listener {invoke_id}: exiting; turns answered "
+                f"{stats.get('turns_answered', 0)}, turns failed "
+                f"{stats.get('turns_failed', 0)}, disconnects "
+                f"{stats.get('disconnects', 0)}, reconnects "
+                f"{stats.get('reconnects', 0)}, connection lifetime {lifetime:.0f}s, "
+                f"server close received "
+                f"{'yes' if stats.get('server_close_received') else 'no'}"
+            )
+
+    async def _stop_listener_when_run_ends(
+        self, run_id_holder: dict, stop_event: Any
+    ) -> None:
+        """Submit-path fallback: end the listener once the Run is FINISHED or FAILED.
+
+        The server sends one end-of-run close, which is the normal stop. This
+        covers the case where it never arrives. The status GET is async on this
+        loop with its own timeout, so a slow poll never blocks turn handling.
+        """
+        interval = float(os.environ.get("OKAREO_LISTENER_STATUS_POLL_SECONDS", "30"))
+        label = f"listener {self._custom_model_listener_stats.get('invoke_id', '')}"
+        while not stop_event.is_set():
+            await asyncio.sleep(interval)
+            test_run_id = run_id_holder.get("test_run_id")
+            if not test_run_id:
+                continue
+            try:
+                item = await asyncio.wait_for(
+                    self._fetch_test_run_async(test_run_id),
+                    timeout=TEST_RUN_POLL_TIMEOUT_SECONDS + 5,
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                _log(
+                    f"{label}: run status check failed ({type(e).__name__}: {e}); "
+                    "listener stays up until the next check or wait_for_test_run"
+                )
+                continue
+            status = str(item.status or "").upper()
+            if status in TERMINAL_TEST_RUN_STATUSES:
+                _log(f"{label}: run {test_run_id} is {status}; stopping listener")
+                stop_event.set()
 
     def _internal_run_custom_model_thread(self, coro: Any) -> Any:
         loop = asyncio.new_event_loop()
@@ -709,9 +986,22 @@ class ModelUnderTest(AsyncProcessorMixin):
             loop.close()
 
     def _internal_start_custom_model_thread(
-        self, nats_jwt: str, seed: str, local_nats: str, invoke_id: str
+        self,
+        nats_jwt: str,
+        seed: str,
+        local_nats: str,
+        invoke_id: str,
+        run_id_holder: Optional[dict] = None,
+        daemon: bool = False,
     ) -> tuple:
         custom_model_thread_stop_event = threading.Event()
+        self._custom_model_listener_stats = {
+            "invoke_id": invoke_id,
+            "disconnects": 0,
+            "reconnects": 0,
+            "turns_answered": 0,
+            "turns_failed": 0,
+        }
         # Per-call (never class-level) so parallel runs on separate MUT objects
         # cannot cross signals. The listener sets ready_event once it has
         # subscribed+flushed, and records any connect/subscribe error here.
@@ -728,8 +1018,17 @@ class ModelUnderTest(AsyncProcessorMixin):
                     invoke_id,
                     custom_model_ready_event,
                     custom_model_error_holder,
+                    run_id_holder,
                 ),
             ),
+            # Submit path: a daemon, so a process that already has its result can
+            # exit. Once the main thread is gone the interpreter refuses new
+            # executor work (which the status poll's DNS lookup needs), so a
+            # non-daemon listener with no server close would hold the process
+            # open for good. Keep the process alive (wait_for_test_run) until the
+            # Run ends; an early exit fails the Run's remaining turns, exactly as
+            # run_test's own teardown always has.
+            daemon=daemon,
         )
         return (
             custom_model_thread,
@@ -764,8 +1063,14 @@ class ModelUnderTest(AsyncProcessorMixin):
         driver_id: Optional[str] = None,
     ) -> TestRunItem:
         """Internal method to run a test. This method is used by both run_test and submit_test."""
-        self.custom_model_thread: Any = None
-        self.custom_model_thread_stop_event: Any = None
+        self.custom_model_thread = None
+        self.custom_model_thread_stop_event = None
+        self._custom_model_run_id_holder = {}
+        is_submit = run_test_method == submit_test_v0_test_run_submit_post.sync
+        # On the submit path the server keeps sending turns for the whole Run, so
+        # the listener has to outlive this call. Set only once the submit succeeded;
+        # any failure before that still stops the listener in the finally below.
+        keep_listener_running = False
 
         try:
             assert isinstance(self.models, dict)
@@ -805,7 +1110,14 @@ class ModelUnderTest(AsyncProcessorMixin):
                     custom_model_ready_event,
                     custom_model_error_holder,
                 ) = self._internal_start_custom_model_thread(
-                    nats_jwt, seed, local_nats, nats_invoke_id
+                    nats_jwt,
+                    seed,
+                    local_nats,
+                    nats_invoke_id,
+                    run_id_holder=(
+                        self._custom_model_run_id_holder if is_submit else None
+                    ),
+                    daemon=is_submit,
                 )
                 self.custom_model_thread.start()
                 # Readiness barrier: do not create the run until the listener has
@@ -898,14 +1210,25 @@ class ModelUnderTest(AsyncProcessorMixin):
                 nats_invoke_id,
             )
 
+            if is_submit and self.custom_model_thread is not None:
+                self._custom_model_run_id_holder["test_run_id"] = str(response.id)
+                with _LIVE_LISTENERS_LOCK:
+                    _LIVE_LISTENERS[str(response.id)] = self
+                keep_listener_running = True
+                _log(
+                    f"run {response.id}: submitted; the custom-model listener stays "
+                    "up until the server ends the run (wait_for_test_run blocks "
+                    "until then)"
+                )
             return response
         except UnexpectedStatus as e:
             print(f"Unexpected status {e=}, {e.content=}")
             raise
         finally:
-            self._internal_cleanup_custom_model(
-                self.custom_model_thread_stop_event, self.custom_model_thread
-            )
+            if not keep_listener_running:
+                self._internal_cleanup_custom_model(
+                    self.custom_model_thread_stop_event, self.custom_model_thread
+                )
 
     def _call_run_test_method(
         self,
@@ -982,18 +1305,6 @@ class ModelUnderTest(AsyncProcessorMixin):
         assert isinstance(response, TestRunItem)
         return response
 
-    def _check_multiturn_submit_safe(self, test_run_type: TestRunType) -> bool:
-        """Check if the test_run_type is MULTI_TURN and if the model is a CustomMultiturnTarget.
-        If so, return False to indicate that submit_test should not be used."""
-        if (
-            test_run_type == TestRunType.MULTI_TURN
-            and self.models is not None
-            and isinstance(self.models, dict)
-            and "custom_target" in self.models
-        ):
-            return False
-        return True
-
     def submit_test(
         self,
         scenario: Union[ScenarioSetResponse, str, UUID],
@@ -1011,6 +1322,12 @@ class ModelUnderTest(AsyncProcessorMixin):
         invocations are handled client-side in a background thread then evaluated server-side asynchronously.
         For other models, model invocations and evaluation are both handled server-side asynchronously.
 
+        For custom multi-turn Targets (CustomMultiturnTarget, CustomMultiturnTargetAsync) the
+        client-side listener thread keeps answering the server's turns after this call returns.
+        Call `wait_for_test_run` with the returned id to block until the Run is FINISHED or
+        FAILED; it stops the listener cleanly. The listener is a daemon thread, so the process
+        must stay alive for the whole Run: exiting early fails the Run's remaining turns.
+
         Arguments:
             scenario (Union[ScenarioSetResponse, str]): The scenario set or identifier to use for the test run.
             name (str): The name to assign to the test run.
@@ -1025,12 +1342,6 @@ class ModelUnderTest(AsyncProcessorMixin):
             TestRunItem: The resulting test run item for the submitted test run. The `id` field can be used to retrieve the test run.
         """
         endpoint = submit_test_v0_test_run_submit_post.sync
-        if not self._check_multiturn_submit_safe(test_run_type):
-            print(
-                "WARNING: CustomMultiturnTarget models are not supported in submit_test. "
-                + "Falling back to run_test instead."
-            )
-            endpoint = run_test_v0_test_run_post.sync
         return self._run_test_internal(
             scenario,
             name,
@@ -1091,6 +1402,65 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
         except Exception as e:
             raise TestRunError(str(e)) from e
+
+    def _fetch_test_run(
+        self,
+        test_run_id: Union[str, UUID],
+        timeout_seconds: float = TEST_RUN_POLL_TIMEOUT_SECONDS,
+    ) -> TestRunItem:
+        return fetch_test_run(self.client, self.api_key, test_run_id, timeout_seconds)
+
+    async def _fetch_test_run_async(
+        self,
+        test_run_id: Union[str, UUID],
+        timeout_seconds: float = TEST_RUN_POLL_TIMEOUT_SECONDS,
+    ) -> TestRunItem:
+        return await fetch_test_run_async(
+            self.client, self.api_key, test_run_id, timeout_seconds
+        )
+
+    def _describe_listener(self) -> str:
+        thread = self.custom_model_thread
+        if thread is None:
+            return "not used"
+        stats = self._custom_model_listener_stats
+        connected = thread.is_alive() and not stats.get("closed")
+        return (
+            f"connected: {'yes' if connected else 'no'} "
+            f"(disconnects {stats.get('disconnects', 0)}, "
+            f"reconnects {stats.get('reconnects', 0)})"
+        )
+
+    def wait_for_test_run(
+        self,
+        test_run_id: Union[str, UUID],
+        poll_interval: float = 10.0,
+        timeout: Optional[float] = None,
+    ) -> TestRunItem:
+        """Block until a submitted Run is FINISHED, polling with short requests.
+
+        Each poll is one GET with its own timeout; a failed poll is logged and
+        retried. Logs every poll, and one line if the Run passes 300 seconds.
+
+        Raises:
+            TestRunError: the Run ended FAILED (with the server's failure message),
+                or ``timeout`` seconds passed without a terminal status.
+        """
+        item = wait_for_test_run(
+            lambda: self._fetch_test_run(test_run_id),
+            test_run_id,
+            poll_interval,
+            timeout,
+            listener_state=self._describe_listener,
+        )
+        # Terminal either way: the listener has nothing left to answer.
+        if not stop_listener_for_run(test_run_id):
+            self._internal_cleanup_custom_model(
+                self.custom_model_thread_stop_event, self.custom_model_thread
+            )
+        if str(item.status or "").upper() == "FAILED":
+            raise TestRunError(item.failure_message or "Test run failed.")
+        return item
 
     def get_test_run(self, test_run_id: Union[str, UUID]) -> TestRunItem:
         """Retrieve a test run by its ID.
