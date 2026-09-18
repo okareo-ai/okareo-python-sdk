@@ -794,8 +794,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         msg: Any,
         nats_connection: Any,
         stop_event: Any,
+        stats: Optional[dict] = None,
     ) -> None:
-        stats = self._custom_model_listener_stats
+        stats = stats if stats is not None else {}
         try:
             data = json.loads(msg.data.decode())
             if data.get("close"):
@@ -851,11 +852,14 @@ class ModelUnderTest(AsyncProcessorMixin):
         ready_event: Optional[threading.Event] = None,
         error_holder: Optional[dict] = None,
         run_id_holder: Optional[dict] = None,
+        stats: Optional[dict] = None,
     ) -> None:
         nats_connection = None
         # Track active tasks for proper cleanup
         active_tasks: set[asyncio.Task] = set()
-        stats = self._custom_model_listener_stats
+        # Per-call, like the other holders, so nothing here depends on state hung
+        # on self: this coroutine is also driven directly by tests with a stand-in.
+        stats = stats if stats is not None else {}
         stats["invoke_id"] = invoke_id
         # Submit path only: stops the listener once the Run is terminal, in case
         # the server's end-of-run close never arrives.
@@ -877,7 +881,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             async def message_handler_custom_model(msg: Any) -> None:
                 # Create task and track it
                 task = asyncio.create_task(
-                    self.process_single_message(msg, nats_connection, stop_event)
+                    self.process_single_message(
+                        msg, nats_connection, stop_event, stats=stats
+                    )
                 )
                 active_tasks.add(task)
 
@@ -905,7 +911,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 ready_event.set()
             if run_id_holder is not None:
                 run_watchdog = asyncio.create_task(
-                    self._stop_listener_when_run_ends(run_id_holder, stop_event)
+                    self._stop_listener_when_run_ends(run_id_holder, stop_event, stats)
                 )
             while not stop_event.is_set():
                 await asyncio.sleep(0.1)
@@ -944,7 +950,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             )
 
     async def _stop_listener_when_run_ends(
-        self, run_id_holder: dict, stop_event: Any
+        self, run_id_holder: dict, stop_event: Any, stats: Optional[dict] = None
     ) -> None:
         """Submit-path fallback: end the listener once the Run is FINISHED or FAILED.
 
@@ -953,7 +959,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         loop with its own timeout, so a slow poll never blocks turn handling.
         """
         interval = float(os.environ.get("OKAREO_LISTENER_STATUS_POLL_SECONDS", "30"))
-        label = f"listener {self._custom_model_listener_stats.get('invoke_id', '')}"
+        label = f"listener {(stats or {}).get('invoke_id', '')}"
         while not stop_event.is_set():
             await asyncio.sleep(interval)
             test_run_id = run_id_holder.get("test_run_id")
@@ -995,13 +1001,16 @@ class ModelUnderTest(AsyncProcessorMixin):
         daemon: bool = False,
     ) -> tuple:
         custom_model_thread_stop_event = threading.Event()
-        self._custom_model_listener_stats = {
+        stats: dict = {
             "invoke_id": invoke_id,
             "disconnects": 0,
             "reconnects": 0,
             "turns_answered": 0,
             "turns_failed": 0,
         }
+        # The connection callbacks and _describe_listener read this copy; the
+        # listener itself is handed `stats` directly.
+        self._custom_model_listener_stats = stats
         # Per-call (never class-level) so parallel runs on separate MUT objects
         # cannot cross signals. The listener sets ready_event once it has
         # subscribed+flushed, and records any connect/subscribe error here.
@@ -1019,6 +1028,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     custom_model_ready_event,
                     custom_model_error_holder,
                     run_id_holder,
+                    stats,
                 ),
             ),
             # Submit path: a daemon, so a process that already has its result can
