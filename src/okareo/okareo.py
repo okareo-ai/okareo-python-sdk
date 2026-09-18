@@ -14,7 +14,17 @@ from tqdm import tqdm  # type: ignore
 
 from okareo.augmentations import Augmentation
 from okareo.checks import BaseCheck, CodeBasedCheck
-from okareo.model_under_test import Driver, Simulation, StopConfig, Target
+from okareo.error import TestRunError
+from okareo.model_under_test import (
+    Driver,
+    Simulation,
+    StopConfig,
+    Target,
+    describe_listener_for_run,
+    fetch_test_run,
+    stop_listener_for_run,
+    wait_for_test_run,
+)
 from okareo_api_client import Client
 from okareo_api_client.api.default import (
     add_model_to_group_v0_groups_group_id_models_post,
@@ -2014,6 +2024,44 @@ class Okareo:
             prompt_template=response.driver_prompt,
             **driver_kwargs,
         )
+
+    def wait_for_test_run(
+        self,
+        test_run_id: Union[str, UUID],
+        poll_interval: float = 10.0,
+        timeout: Optional[float] = None,
+    ) -> TestRunItem:
+        """Block until a submitted Run is FINISHED, polling with short requests.
+
+        The companion to ``run_simulation(..., submit=True)`` and ``submit_test``:
+        the submit call returns the accepted Run at once, this waits for it. Each
+        poll is one GET with its own timeout; a failed poll is logged and retried.
+
+        Args:
+            test_run_id: The id of the submitted Run.
+            poll_interval: Seconds between polls. Defaults to 10.
+            timeout: Give up after this many seconds. None (default) waits as long
+                as the Run runs.
+
+        Raises:
+            TestRunError: the Run ended FAILED (with the server's failure message),
+                or ``timeout`` passed without a terminal status. On a timeout the
+                Run may still be going, so its listener is left running; call
+                again to keep waiting.
+        """
+        item = wait_for_test_run(
+            lambda: fetch_test_run(self.client, self.api_key, test_run_id),
+            test_run_id,
+            poll_interval,
+            timeout,
+            listener_state=lambda: describe_listener_for_run(test_run_id),
+        )
+        # A custom multi-turn Target's listener in this process has nothing left
+        # to answer; stop it now so it logs its summary and the thread ends.
+        stop_listener_for_run(test_run_id)
+        if str(item.status or "").upper() == "FAILED":
+            raise TestRunError(item.failure_message or "Test run failed.")
+        return item
 
     def find_test_runs(
         self,

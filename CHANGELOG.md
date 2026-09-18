@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `wait_for_test_run` on `Okareo` and `ModelUnderTest`: block until a submitted Run is
+  FINISHED, polling with short requests (each poll has its own 30 s timeout, a failed poll is
+  logged and retried). Raises `TestRunError` with the server's failure message on FAILED.
+  Companion to `run_simulation(..., submit=True)` and `submit_test`.
+- The custom multi-turn listener logs its connection events: connect, disconnect, reconnect
+  (with the gap), close, the server's end-of-run close, and a summary on exit.
+
 - Client-level Project (project separation): `Okareo(..., project=...)` and
   `set_project()` scope every call without repeating `project_id`; precedence is
   per-call / explicitly-set field, then client-level, then the server default.
@@ -65,6 +72,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   the Okareo platform.
 
 ### Fixed
+
+- `submit_test` for custom multi-turn Targets (`CustomMultiturnTarget`,
+  `CustomMultiturnTargetAsync`) stopped the client-side listener as soon as the submit call
+  returned, so every later turn of the Run failed with "no responders". The listener now stays
+  up until `wait_for_test_run` sees the Run end, or its own status check does, or the server
+  sends a close. It is a daemon thread: keep the process alive until the Run ends. The silent
+  fallback to `run_test` is gone.
 
 - Example code-based check fixtures now declare `check_type` explicitly, matching the
   output-type requirement for code-based checks (a check returning `CheckResponse`
