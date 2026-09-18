@@ -1745,6 +1745,29 @@ class SipTarget(VoiceTarget):
         sip_username: Optional SIP authentication username for the target.
         sip_password: Optional SIP authentication password for the target.
         max_parallel_requests: Cap on concurrent calls hitting the target.
+        sip_mode: How the call is placed. Default (unset) routes through
+            Okareo's telephony provider. "direct" makes Okareo the SIP client:
+            it sends the INVITE and carries the audio itself — no telephony
+            provider in the path. Requires a target reachable at a plain
+            ``sip:`` URI over UDP with symmetric RTP (modern platforms such as
+            LiveKit, Vapi, Daily, and Telnyx qualify).
+        sip_from_user: Direct mode only — user part of the From/caller
+            identity. Default "okareo".
+        sip_codec: Direct mode only — offered codec: "pcmu" (default),
+            "pcma", or "opus".
+        sip_headers: Direct mode only — extra headers for the INVITE, e.g.
+            ``{"X-Customer-Id": "abc"}``.
+        stun_server: Direct mode only — STUN server used for NAT discovery,
+            as ``"stun:host:port"``. Defaults server-side; not normally set.
+        rtp_timeout_s: Direct mode only — seconds without inbound audio
+            before the call is failed as one-way media. Defaults server-side.
+
+    Note:
+        The direct-mode keys are emitted only when set, so existing targets
+        serialize exactly as before. Server-side this maps onto
+        ``sip_mode="direct"`` handling in the voice target factory — a
+        cross-repo contract: renaming keys here requires a matching server
+        change.
     """
 
     edge_type = "sip"
@@ -1752,9 +1775,15 @@ class SipTarget(VoiceTarget):
     sip_username: Optional[str] = None
     sip_password: Optional[str] = None
     max_parallel_requests: Optional[int] = None
+    sip_mode: Optional[str] = None
+    sip_from_user: Optional[str] = None
+    sip_codec: Optional[str] = None
+    sip_headers: Optional[dict] = None
+    stun_server: Optional[str] = None
+    rtp_timeout_s: Optional[float] = None
 
     def params(self) -> dict:
-        return {
+        base: dict = {
             "type": self.type,
             "edge_type": self.edge_type,
             "sip_uri": self.sip_uri,
@@ -1762,6 +1791,18 @@ class SipTarget(VoiceTarget):
             "sip_password": self.sip_password,
             "max_parallel_requests": self.max_parallel_requests,
         }
+        # Emitted only when set: the server falls back to its own defaults for
+        # absent keys (a present-but-None stun_server would disable STUN).
+        optional = {
+            "sip_mode": self.sip_mode,
+            "sip_from_user": self.sip_from_user,
+            "sip_codec": self.sip_codec,
+            "sip_headers": self.sip_headers,
+            "stun_server": self.stun_server,
+            "rtp_timeout_s": self.rtp_timeout_s,
+        }
+        base.update({k: v for k, v in optional.items() if v is not None})
+        return base
 
     def get_sensitive_fields(self) -> list[str]:
         return ["sip_password"] if self.sip_password else []
@@ -1846,6 +1887,86 @@ class VonagePhoneTarget(VoiceTarget):
         sensitive = []
         if self.private_key:
             sensitive.append("private_key")
+        return sensitive
+
+
+@_attrs_define
+class TelnyxPhoneTarget(VoiceTarget):
+    """Telnyx-backed voice target for Okareo multiturn simulation.
+
+    Sibling of `VonagePhoneTarget` for Okareo's Telnyx voice edge
+    (``edge_type="telnyx"``). Like Vonage, Telnyx credentials are caller-supplied
+    (no Okareo-managed-telephony mode), but Telnyx authenticates with a single
+    static Bearer API key rather than a JWT keypair, plus a ``connection_id``
+    (the Call Control Application the outbound call is placed from). Telnyx
+    delivers mid-call DTMF out-of-band via RFC 2833 with no media-stream
+    teardown.
+
+    Security note — create a **dedicated Telnyx API key** for Okareo (Telnyx
+    supports multiple keys per account) so it can be rotated or revoked
+    independently without touching the rest of your account.
+
+    Server contract — ``params()`` emits exactly these keys, consumed by the
+    server's Telnyx edge factory. **This is a cross-repo contract** — changing
+    these keys requires a matching change server-side:
+        ``type``, ``edge_type``, ``to_phone_number``, ``from_phone_number``,
+        ``telnyx_api_key``, ``connection_id``, ``max_parallel_requests``.
+
+    Recording (on, dual-channel), DTMF delivery (both out-of-band rfc2833 +
+    in-band), and the 8 kHz PCMU media format are fixed server-side defaults —
+    not configurable from this target.
+
+    Arguments:
+        phone_number: Destination phone number (E.164, e.g. "+15551234567").
+            Emitted as ``to_phone_number`` in ``params()``, mirroring
+            `VonagePhoneTarget`. Alias for `to_phone_number` — provide either.
+        to_phone_number: Same as `phone_number`; takes precedence if both are set.
+        from_phone_number: Outbound Telnyx phone number.
+        telnyx_api_key: Telnyx API v2 key (Bearer; treated as sensitive). Named
+            ``telnyx_api_key`` (not ``api_key``) because the server reserves the
+            ``api_key`` param for the voice/TTS model key.
+        connection_id: Telnyx Call Control Application id the call is placed from.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+    """
+
+    edge_type = "telnyx"
+    phone_number: Optional[str] = None
+    to_phone_number: Optional[str] = None
+    from_phone_number: Optional[str] = None
+    telnyx_api_key: Optional[str] = None
+    connection_id: Optional[str] = None
+    max_parallel_requests: Optional[int] = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.to_phone_number is None and self.phone_number is not None:
+            self.to_phone_number = self.phone_number
+        # Fail fast at construction, like the siblings (VonagePhoneTarget,
+        # PhoneTarget.phone_number, SipTarget.sip_uri). Without a destination the
+        # server never validates to_number either, so None would surface late as
+        # an opaque Telnyx provider error at dial time. Template strings are
+        # non-None -> still OK.
+        if self.to_phone_number is None:
+            raise ValueError(
+                "TelnyxPhoneTarget requires a destination: set phone_number or "
+                "to_phone_number (an E.164 number like '+15551234567' or a "
+                "template string such as '{scenario_input.phone}')."
+            )
+
+    def params(self) -> dict:
+        return {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "to_phone_number": self.to_phone_number,
+            "from_phone_number": self.from_phone_number,
+            "telnyx_api_key": self.telnyx_api_key,
+            "connection_id": self.connection_id,
+            "max_parallel_requests": self.max_parallel_requests,
+        }
+
+    def get_sensitive_fields(self) -> list[str]:
+        sensitive = []
+        if self.telnyx_api_key:
+            sensitive.append("telnyx_api_key")
         return sensitive
 
 
@@ -2275,6 +2396,7 @@ class Target:
         PhoneTarget,
         SipTarget,
         VonagePhoneTarget,
+        TelnyxPhoneTarget,
         dict,
     ]
     id: Optional[str] = None

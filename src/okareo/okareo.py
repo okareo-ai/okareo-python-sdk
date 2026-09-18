@@ -2,6 +2,7 @@ import base64
 import copy
 import datetime
 import json
+import math
 import os
 import warnings
 from typing import Any, Dict, List, Optional, Protocol, TypedDict, TypeVar, Union, cast
@@ -1727,6 +1728,58 @@ class Okareo:
 
         Returns a TestRunItem representing the created simulation test run.
         """
+        simulation_params = Simulation(
+            stop_check=stop_check,
+            repeats=repeats,
+            max_turns=max_turns,
+            first_turn=first_turn,
+            checks_at_every_turn=checks_at_every_turn,
+            concurrent_ask_probability=concurrent_ask_probability,
+            turn_transition_time=turn_transition_time,
+            augmentation=augmentation,
+        )
+        return self._submit_multiturn(
+            name=name,
+            scenario=scenario,
+            target=target,
+            driver=driver,
+            checks=checks,
+            simulation_params=simulation_params,
+            submit=submit,
+            api_key=api_key,
+            api_keys=api_keys,
+            metrics_kwargs=metrics_kwargs,
+            calculate_metrics=calculate_metrics,
+            project_id=project_id,
+            tags=tags,
+            sensitive_fields=sensitive_fields,
+        )
+
+    def _submit_multiturn(
+        self,
+        *,
+        name: str,
+        scenario: Union[ScenarioSetResponse, str],
+        target: str | Target,
+        driver: Optional[str | Driver],
+        checks: Optional[list[str]],
+        simulation_params: Any,
+        submit: Optional[bool],
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        calculate_metrics: bool = True,
+        project_id: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        sensitive_fields: Union[List[str], None] = None,
+    ) -> TestRunItem:
+        """Shared MULTI_TURN submit path: resolve the driver + target, build the MUT, and
+        run/submit the test with the given (already-built) ``simulation_params``.
+
+        Used by both ``run_simulation`` (conventional turn/repeats) and ``run_load_test``
+        (concurrency/duration); they differ only in the ``simulation_params`` they construct,
+        so neither public surface leaks the other's concern.
+        """
         project_id = self._resolved_project_id(project_id)
         # create or update driver if needed
         if isinstance(driver, Driver):
@@ -1757,18 +1810,6 @@ class Okareo:
                 raise TypeError(
                     "Cannot retrieve Target by name for CustomMultiturnTarget"
                 )
-
-        # create model with target
-        simulation_params = Simulation(
-            stop_check=stop_check,
-            repeats=repeats,
-            max_turns=max_turns,
-            first_turn=first_turn,
-            checks_at_every_turn=checks_at_every_turn,
-            concurrent_ask_probability=concurrent_ask_probability,
-            turn_transition_time=turn_transition_time,
-            augmentation=augmentation,
-        )
 
         # create MUT object
         dummy_response = ModelUnderTestResponse(
@@ -1809,6 +1850,131 @@ class Okareo:
             checks=checks,
             simulation_params=simulation_params,
             driver_id=str(driver_model.id) if driver_model.id else None,
+        )
+
+    def run_load_test(
+        self,
+        name: str,
+        target: Union[str, Target],
+        load_concurrent: int,
+        load_duration_s: float,
+        per_call_max_duration_s: Optional[float] = None,
+        seed_data: Optional[List[dict]] = None,
+        driver: Optional[Union[str, Driver]] = None,
+        checks: Optional[List[str]] = None,
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        project_id: Optional[str] = None,
+        calculate_metrics: bool = True,
+    ) -> TestRunItem:
+        """Run a closed-loop VOICE LOAD TEST: hold ``load_concurrent`` conversations for
+        ``load_duration_s`` seconds.
+
+        The **only** load knobs are ``load_concurrent`` (# calls to hold) and
+        ``load_duration_s`` (plateau seconds). Everything that paces the ramp and protects
+        the system from a runaway — the provider call-creation rate, the ramp deadline, the
+        plateau-detection fraction, and the stop backstops — is an INTERNAL SAFETY mechanism
+        derived server-side; it is deliberately not exposed here so a caller can't mistune it.
+
+        Distinct from ``run_simulation`` (which evaluates a scenario set once): here you
+        specify LOAD. ``seed_data`` rows are **round-robin sampled with replacement** to fill
+        the sustained load, and ``checks`` score every call's datapoint (quality-under-load).
+        Internally this builds a round-robin-tiled scenario, sets the target's
+        ``max_parallel_requests`` to ``load_concurrent``, and submits a MULTI_TURN run whose
+        server-side manager holds the plateau and ends it gracefully (measured from the ACTUAL
+        plateau, and aborting a doomed ramp). Pair with a never-end driver prompt.
+
+        Optional **call cycling** (``per_call_max_duration_s``): cap each individual call's
+        wall-clock duration. Instead of holding ``load_concurrent`` long-lived calls, the
+        plateau is composed of short calls that are graceful-ended at the cap and immediately
+        backfilled, so the guarantee (``load_concurrent`` live for ``load_duration_s``) is
+        unchanged while each call is bounded. Shape/pacing caps (floor, hard per-call kill,
+        dial rate) are enforced server-side; the SDK only forwards the flat knob. Omit it for
+        the classic held-call behavior.
+
+        Returns a ``TestRunItem`` for the load-test run.
+        """
+        if load_concurrent < 1 or load_duration_s <= 0:
+            raise ValueError(
+                "load_concurrent >= 1 and load_duration_s > 0 are required"
+            )
+        # Internal load-test tunables — method-local, never public class attributes. The user
+        # specifies only load; every SAFETY cap (ramp deadline, plateau fraction, hard per-call
+        # kill, dial rate, concurrency) is enforced SERVER-SIDE. These are only what the SDK
+        # needs to shape its OWN request.
+        drop_margin = 0.2  # seed-row over-provision: N_rows = target × (1 + this)
+        turns = 25  # max_turns backstop; calls normally end on the server's per-call time cap
+        # Ship ONLY the two user-specified load values. The server manager derives the ramp
+        # deadline, plateau fraction, and backstops internally (from the provider it actually
+        # dials with) — see distributed_executor._loadtest_ramp_decision.
+        loadtest_cfg = {
+            "loadtest_load_duration_s": float(load_duration_s),
+            "loadtest_target_concurrent": int(load_concurrent),
+        }
+        # Call cycling (optional): forward the flat per-call cap. The server manager
+        # backfills recycled slots for the whole hold and the runner graceful-ends each
+        # call at the cap; shape/pacing caps (floor, hard kill, dial rate) are enforced
+        # server-side, so the SDK only forwards the knob (guarding a non-positive value).
+        if per_call_max_duration_s is not None:
+            cap_s = float(per_call_max_duration_s)
+            if cap_s <= 0:
+                raise ValueError("per_call_max_duration_s must be > 0 when provided")
+            loadtest_cfg["loadtest_per_call_max_duration_s"] = cap_s
+        # Row-pool sizing. Without cycling, calls are held for the whole plateau so the
+        # pool only needs the drop-margin backfill. WITH cycling each slot recycles
+        # ~window/cap times and the executor dials the next pool row when a slot frees, so
+        # the pool must supply the whole ramp+hold+drain window (else it drains mid-hold and
+        # the plateau collapses). Estimate the window from the server's pacing defaults
+        # (CPS + drain margin), both env-overridable so a tuned deployment sizes correctly.
+        if loadtest_cfg.get("loadtest_per_call_max_duration_s"):
+            cps = float(os.environ.get("OKAREO_LOADTEST_CPS") or 5.0)
+            drain_s = float(os.environ.get("MANAGER_LOADTEST_DRAIN_MARGIN_S") or 120.0)
+            ramp_s = (load_concurrent / cps) if cps > 0 else 0.0
+            window_s = ramp_s + float(load_duration_s) + drain_s
+            cap_s = float(loadtest_cfg["loadtest_per_call_max_duration_s"])
+            cycles = max(1, math.ceil(window_s / cap_s))
+            n_rows = math.ceil(load_concurrent * (1 + drop_margin) * cycles)
+        else:
+            n_rows = math.ceil(load_concurrent * (1 + drop_margin))
+
+        # Round-robin tile the seed rows to N_rows. `repeats` is NOT usable here: the
+        # server expands it row-major (A,A,..,B,B,..), which would run the plateau all-A
+        # then all-B; tiling the seed makes the in-flight set cycle evenly through the rows.
+        rows = seed_data or [{"load_test": "conversation"}]
+        k = len(rows)
+        seed = [SeedData(input_=rows[i % k], result="n/a") for i in range(n_rows)]
+        scenario = self.create_scenario_set(
+            ScenarioSetCreate(name=f"{name}-scenario", seed_data=seed)
+        )
+
+        # Concurrency governor: the executor holds `load_concurrent` calls in flight and
+        # dials a replacement on completion, up to N_rows.
+        if isinstance(target, Target) and hasattr(
+            target.target, "max_parallel_requests"
+        ):
+            target.target.max_parallel_requests = load_concurrent  # type: ignore[union-attr]
+
+        # Build the MULTI_TURN simulation_params directly — conventional turn controls plus
+        # the flat loadtest_* knobs — and submit via the shared path. run_simulation's own
+        # surface stays purely conventional and never sees the load-test knobs.
+        simulation_params = Simulation(
+            repeats=1,  # round-robin lives in the seed; never use repeats (row-major)
+            max_turns=turns,
+            first_turn="driver",  # SIP echo sink is silent until the driver speaks
+        ).to_dict()
+        simulation_params.update(loadtest_cfg)
+        return self._submit_multiturn(
+            name=name,
+            scenario=scenario,
+            target=target,
+            driver=driver,
+            checks=checks,
+            simulation_params=simulation_params,
+            submit=True,
+            api_key=api_key,
+            api_keys=api_keys,
+            calculate_metrics=calculate_metrics,
+            project_id=project_id,
         )
 
     def generate_driver_prompt(
