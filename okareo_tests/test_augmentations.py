@@ -121,6 +121,17 @@ def test_dropout_augmentation_serializes_probability_only() -> None:
     assert DropoutAugmentation().to_dict() == {}
 
 
+def test_dropout_start_at_turn_is_forwarded() -> None:
+    """start_at_turn holds the drop off until that driver turn.
+
+    Transcript numbering: the target's greeting is turn 0, the first driver
+    turn is 1. Omitted means the server default of 1 (every turn).
+    """
+    assert Augmentation(
+        dropout=DropoutAugmentation(probability=1.0, start_at_turn=3)
+    ).to_dict() == {"dropout": {"probability": 1.0, "start_at_turn": 3}}
+
+
 def test_noise_and_dropout_compose() -> None:
     simulation = Simulation(
         augmentation=Augmentation(

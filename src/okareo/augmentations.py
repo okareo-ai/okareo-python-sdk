@@ -150,9 +150,13 @@ class DropoutAugmentation(AugmentationConfig):
     Arguments:
         probability: Probability (0-1) that the driver drops an entire turn:
             nothing is said and the target hears silence for that turn.
+        start_at_turn: First driver turn a drop may fire on, in transcript
+            numbering (the target's greeting is turn 0, the first driver turn
+            is 1). Defaults to 1 server-side, i.e. from the start of the call.
     """
 
     probability: float | None = None
+    start_at_turn: int | None = None
 
 
 @_attrs_define
