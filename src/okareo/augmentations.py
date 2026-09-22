@@ -144,6 +144,18 @@ class BargeInAugmentation(AugmentationConfig):
 
 
 @_attrs_define
+class DropoutAugmentation(AugmentationConfig):
+    """Dropout augmentation config.
+
+    Arguments:
+        probability: Probability (0-1) that the driver drops an entire turn:
+            nothing is said and the target hears silence for that turn.
+    """
+
+    probability: float | None = None
+
+
+@_attrs_define
 class Augmentation(_DictSerializable):
     """Container for voice simulation augmentation strategy config.
 
@@ -160,6 +172,7 @@ class Augmentation(_DictSerializable):
     secondary_speaker: SecondarySpeakerAugmentation | None = None
     backchannel: BackchannelAugmentation | None = None
     barge_in: BargeInAugmentation | None = None
+    dropout: DropoutAugmentation | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -177,4 +190,5 @@ __all__ = (
     "SecondarySpeakerAugmentation",
     "BackchannelAugmentation",
     "BargeInAugmentation",
+    "DropoutAugmentation",
 )

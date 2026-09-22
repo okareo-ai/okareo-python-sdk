@@ -11,6 +11,7 @@ from okareo.augmentations import (
     BargeInAugmentation,
     CAPAugmentation,
     DirectedSpeechAugmentation,
+    DropoutAugmentation,
     NoiseAugmentation,
     SecondarySpeakerAugmentation,
 )
@@ -79,6 +80,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             replacement_text="hold on",
             prompt="Interrupt the speaker and get them to pause.",
         ),
+        dropout=DropoutAugmentation(probability=0.2),
     )
 
     assert augmentation.to_dict() == {
@@ -108,6 +110,28 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             "replacement_text": "hold on",
             "prompt": "Interrupt the speaker and get them to pause.",
         },
+        "dropout": {"probability": 0.2},
+    }
+
+
+def test_dropout_augmentation_serializes_probability_only() -> None:
+    assert Augmentation(dropout=DropoutAugmentation(probability=0.2)).to_dict() == {
+        "dropout": {"probability": 0.2}
+    }
+    assert DropoutAugmentation().to_dict() == {}
+
+
+def test_noise_and_dropout_compose() -> None:
+    simulation = Simulation(
+        augmentation=Augmentation(
+            noise=NoiseAugmentation(profile="traffic", snr_db=15),
+            dropout=DropoutAugmentation(probability=0.2),
+        )
+    )
+
+    assert simulation.to_dict()["augmentation"] == {
+        "noise": {"profile": "traffic", "snr_db": 15},
+        "dropout": {"probability": 0.2},
     }
 
 

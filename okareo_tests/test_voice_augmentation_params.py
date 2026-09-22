@@ -23,6 +23,7 @@ from okareo.augmentations import (
     BargeInAugmentation,
     CAPAugmentation,
     DirectedSpeechAugmentation,
+    DropoutAugmentation,
     NoiseAugmentation,
     SecondarySpeakerAugmentation,
 )
@@ -91,6 +92,9 @@ AUGMENTATION_CONFIGS: Dict[str, Augmentation] = {
             min_offset_ms=500,
             max_offset_ms=2000,
         ),
+    ),
+    "dropout": Augmentation(
+        dropout=DropoutAugmentation(probability=0.2),
     ),
 }
 
