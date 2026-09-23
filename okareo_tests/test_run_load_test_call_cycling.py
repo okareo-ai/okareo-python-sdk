@@ -48,7 +48,7 @@ def test_cap_forwarded_in_simulation_params(monkeypatch: pytest.MonkeyPatch) -> 
     # Conventional turn controls ride in the same dict (built via Simulation).
     assert sp["max_turns"] == 25
     assert sp["repeats"] == 1
-    assert sp["first_turn"] == "driver"
+    assert sp["first_turn"] == "target"
 
 
 def test_small_cap_is_forwarded_not_rejected(monkeypatch: pytest.MonkeyPatch) -> None:

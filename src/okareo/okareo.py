@@ -1876,6 +1876,7 @@ class Okareo:
         load_concurrent: int,
         load_duration_s: float,
         per_call_max_duration_s: Optional[float] = None,
+        first_turn: Optional[str] = "target",
         seed_data: Optional[List[dict]] = None,
         driver: Optional[Union[str, Driver]] = None,
         checks: Optional[List[str]] = None,
@@ -1909,11 +1910,22 @@ class Okareo:
         dial rate) are enforced server-side; the SDK only forwards the flat knob. Omit it for
         the classic held-call behavior.
 
+        **Who speaks first** (``first_turn``): shapes each held call, not the load.
+        ``"target"`` (the default, matching ``run_simulation``) has the simulated caller
+        listen for the agent's opening turn before speaking, which is what most voice
+        agents expect. Pass ``first_turn="driver"`` for a target that waits for the caller
+        to speak first; otherwise the call would sit in silence until the turn timeout.
+        This does not change the load contract above.
+
         Returns a ``TestRunItem`` for the load-test run.
         """
         if load_concurrent < 1 or load_duration_s <= 0:
             raise ValueError(
                 "load_concurrent >= 1 and load_duration_s > 0 are required"
+            )
+        if first_turn not in ("driver", "target"):
+            raise ValueError(
+                f'first_turn must be "driver" or "target", got {first_turn!r}'
             )
         # Internal load-test tunables — method-local, never public class attributes. The user
         # specifies only load; every SAFETY cap (ramp deadline, plateau fraction, hard per-call
@@ -1977,7 +1989,9 @@ class Okareo:
         simulation_params = Simulation(
             repeats=1,  # round-robin lives in the seed; never use repeats (row-major)
             max_turns=turns,
-            first_turn="driver",  # SIP echo sink is silent until the driver speaks
+            # "target" (default, as in run_simulation): wait for the agent's greeting.
+            # "driver": the caller opens the call.
+            first_turn=first_turn,
         ).to_dict()
         simulation_params.update(loadtest_cfg)
         return self._submit_multiturn(
