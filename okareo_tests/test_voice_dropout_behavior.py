@@ -229,8 +229,13 @@ class TestDropoutDoesNotDerailTheDriver:
     def test_the_transcript_has_no_empty_or_placeholder_rows(
         self, baseline: Dict[str, Any], dropped: Dict[str, Any]
     ) -> None:
+        """A dropped turn must leave no row behind. A keypress is exempt: it
+        is recorded as a ``user`` row carrying the ``send_dtmf`` call with
+        ``content: null``, answered by a ``tool`` row -- the IVR testtarget
+        asks for keypad input, so real runs contain them."""
         for meta in (baseline, dropped):
-            assert all((m.get("content") or "").strip() for m in meta["messages"])
+            spoken = [m for m in meta["messages"] if not m.get("tool_calls")]
+            assert all((m.get("content") or "").strip() for m in spoken)
 
     def test_the_driver_still_sounds_like_itself(
         self, baseline: Dict[str, Any], dropped: Dict[str, Any]

@@ -338,5 +338,8 @@ class TestDropoutBehavior:
             "Target disconnected before the conversation started",
         }
 
-        # ... and a dropped turn left no empty row behind.
-        assert all((m.get("content") or "").strip() for m in meta["messages"])
+        # ... and a dropped turn left no empty row behind. A keypress is
+        # exempt: it is a ``user`` row carrying the send_dtmf call with
+        # ``content: null``, and the IVR testtarget asks for keypad input.
+        spoken = [m for m in meta["messages"] if not m.get("tool_calls")]
+        assert all((m.get("content") or "").strip() for m in spoken)
