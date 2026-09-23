@@ -11,7 +11,8 @@ to minimize per-sim runtime.
 """
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List
+from uuid import UUID
 
 import pytest
 from okareo_tests.common import random_string
@@ -28,6 +29,9 @@ from okareo.augmentations import (
     SecondarySpeakerAugmentation,
 )
 from okareo.model_under_test import Driver, Target, TwilioVoiceTarget
+from okareo_api_client.models.find_test_data_point_payload import (
+    FindTestDataPointPayload,
+)
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_item import TestRunItem
 from okareo_api_client.types import Unset
@@ -57,6 +61,7 @@ AUGMENTATION_CONFIGS: Dict[str, Augmentation] = {
             prompt="You are testing directed speech augmentation.",
             lpf_cutoff_hz=600,
             gain_db=-12.0,
+            start_at_turn=2,
         ),
     ),
     "noise": Augmentation(
@@ -74,6 +79,7 @@ AUGMENTATION_CONFIGS: Dict[str, Augmentation] = {
             lpf_cutoff_hz=600,
             gain_db=-12.0,
             inter_speaker_pause_ms=2000,
+            start_at_turn=2,
         ),
     ),
     "backchannel": Augmentation(
@@ -82,6 +88,7 @@ AUGMENTATION_CONFIGS: Dict[str, Augmentation] = {
             utterance="yeah",
             min_offset_ms=500,
             max_offset_ms=2000,
+            start_at_turn=2,
         ),
     ),
     "barge_in": Augmentation(
@@ -91,10 +98,11 @@ AUGMENTATION_CONFIGS: Dict[str, Augmentation] = {
             replacement_text="wait a second",
             min_offset_ms=500,
             max_offset_ms=2000,
+            start_at_turn=2,
         ),
     ),
     "dropout": Augmentation(
-        dropout=DropoutAugmentation(probability=0.2),
+        dropout=DropoutAugmentation(probability=0.2, start_at_turn=2),
     ),
 }
 
@@ -246,3 +254,89 @@ class TestAugmentationParams:
             aug_name,
             AUGMENTATION_CONFIGS[aug_name],
         )
+
+
+# ============================================================================
+# Behavior: dropout actually drops the turns it says it will
+# ============================================================================
+
+
+def _conversation(okareo: Okareo, test_run: TestRunItem) -> Dict[str, Any]:
+    rows = okareo.find_test_data_points(
+        FindTestDataPointPayload(
+            test_run_id=UUID(str(test_run.id)), full_data_point=True
+        )
+    )
+    for row in rows:
+        raw: Any = getattr(row, "model_metadata", None)
+        # full_data_point rows carry a generated model, not a plain dict.
+        meta = raw.to_dict() if hasattr(raw, "to_dict") else raw
+        if isinstance(meta, dict) and meta.get("messages"):
+            return meta
+    raise AssertionError(f"no conversation recorded for run {test_run.id}")
+
+
+def _driver_turns(meta: Dict[str, Any]) -> List[int]:
+    return sorted(
+        {
+            m["metadata"]["turn_number"]
+            for m in meta.get("messages", [])
+            if m.get("role") == "user"
+        }
+    )
+
+
+class TestDropoutBehavior:
+    """A roundtrip proves the config arrived; this proves it took effect."""
+
+    def test_dropout_silences_the_driver_from_its_start_turn(
+        self,
+        okareo: Okareo,
+        twilio_target: TwilioVoiceTarget,
+        scenario: Any,
+        driver: Driver,
+        rnd: str,
+    ) -> None:
+        start_at_turn = 2
+        evaluation = okareo.run_simulation(
+            driver=driver,
+            target=Target(
+                name=f"Dropout Behavior Target - {rnd}", target=twilio_target
+            ),
+            name=f"Dropout Behavior - {rnd}",
+            scenario=scenario,
+            max_turns=3,
+            repeats=1,
+            first_turn="target",
+            augmentation=Augmentation(
+                dropout=DropoutAugmentation(
+                    probability=1.0, start_at_turn=start_at_turn
+                )
+            ),
+            checks=["avg_turn_taking_latency"],
+        )
+        assert (
+            evaluation.status == "FINISHED"
+        ), f"expected FINISHED, got {evaluation.status}"
+
+        meta = _conversation(okareo, evaluation)
+
+        # Every turn from the start turn on was dropped ...
+        dropped = meta.get("dropped_turns") or []
+        assert dropped, "expected dropped_turns to be recorded on the datapoint"
+        assert min(dropped) >= start_at_turn
+
+        # ... the Driver spoke only before it ...
+        assert all(t < start_at_turn for t in _driver_turns(meta))
+
+        # ... the dead air did not end the call early (a Driver that says
+        # goodbye on its own is fine; the silence cutoff firing is not) ...
+        assert meta.get("termination_reason") not in {
+            "No response from the Target",
+            "Ended early after an error",
+            "Connection disconnected",
+            "Target disconnected before the conversation started",
+        }
+
+        # ... and a dropped turn left no empty row behind.
+        assert all((m.get("content") or "").strip() for m in meta["messages"])
