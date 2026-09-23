@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   Companion to `run_simulation(..., submit=True)` and `submit_test`.
 - The custom multi-turn listener logs its connection events: connect, disconnect, reconnect
   (with the gap), close, the server's end-of-run close, and a summary on exit.
+- `DropoutAugmentation` voice simulation augmentation (`Augmentation(dropout=...)`): with
+  the given `probability` per caller turn, the driver says nothing for the whole turn, so the
+  target hears dead air and must recover. Combines with `noise`; not with other strategies.
 
 - Client-level Project (project separation): `Okareo(..., project=...)` and
   `set_project()` scope every call without repeating `project_id`; precedence is

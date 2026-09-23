@@ -57,12 +57,16 @@ class DirectedSpeechAugmentation(AugmentationConfig):
         prompt: Optional independent prompt for the directed speech content.
         lpf_cutoff_hz: Low-pass filter cutoff used for off-mic speech.
         gain_db: Gain reduction applied to off-mic speech.
+        start_at_turn: First driver turn this may fire on, in transcript
+            numbering (the target's greeting is turn 0, the first driver turn
+            is 1). Defaults to 1 server-side, i.e. from the start of the call.
     """
 
     probability: float | None = None
     prompt: str | None = None
     lpf_cutoff_hz: int | None = None
     gain_db: float | None = None
+    start_at_turn: int | None = None
 
 
 @_attrs_define
@@ -95,6 +99,9 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
             secondary speaker audio.
         inter_speaker_pause_ms: Optional pause inserted between the primary
             and secondary speaker audio segments.
+        start_at_turn: First driver turn this may fire on, in transcript
+            numbering (the target's greeting is turn 0, the first driver turn
+            is 1). Defaults to 1 server-side, i.e. from the start of the call.
     """
 
     probability: float | None = None
@@ -103,6 +110,7 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
     lpf_cutoff_hz: int | None = None
     gain_db: float | None = None
     inter_speaker_pause_ms: int | None = None
+    start_at_turn: int | None = None
 
 
 @_attrs_define
@@ -114,12 +122,16 @@ class BackchannelAugmentation(AugmentationConfig):
         utterance: Optional backchannel text override, e.g. ``"mm-hmm"``.
         min_offset_ms: Minimum delay before the injection fires.
         max_offset_ms: Maximum delay before the injection fires.
+        start_at_turn: First driver turn this may fire on, in transcript
+            numbering (the target's greeting is turn 0, the first driver turn
+            is 1). Defaults to 1 server-side, i.e. from the start of the call.
     """
 
     probability: float | None = None
     utterance: str | None = None
     min_offset_ms: int | None = None
     max_offset_ms: int | None = None
+    start_at_turn: int | None = None
 
 
 @_attrs_define
@@ -133,6 +145,9 @@ class BargeInAugmentation(AugmentationConfig):
         utterance: Optional direct text override for the injected content.
         min_offset_ms: Minimum delay before the injection fires.
         max_offset_ms: Maximum delay before the injection fires.
+        start_at_turn: First driver turn this may fire on, in transcript
+            numbering (the target's greeting is turn 0, the first driver turn
+            is 1). Defaults to 1 server-side, i.e. from the start of the call.
     """
 
     probability: float | None = None
@@ -141,6 +156,23 @@ class BargeInAugmentation(AugmentationConfig):
     utterance: str | None = None
     min_offset_ms: int | None = None
     max_offset_ms: int | None = None
+    start_at_turn: int | None = None
+
+
+@_attrs_define
+class DropoutAugmentation(AugmentationConfig):
+    """Dropout augmentation config.
+
+    Arguments:
+        probability: Probability (0-1) that the driver drops an entire turn:
+            nothing is said and the target hears silence for that turn.
+        start_at_turn: First driver turn a drop may fire on, in transcript
+            numbering (the target's greeting is turn 0, the first driver turn
+            is 1). Defaults to 1 server-side, i.e. from the start of the call.
+    """
+
+    probability: float | None = None
+    start_at_turn: int | None = None
 
 
 @_attrs_define
@@ -160,6 +192,7 @@ class Augmentation(_DictSerializable):
     secondary_speaker: SecondarySpeakerAugmentation | None = None
     backchannel: BackchannelAugmentation | None = None
     barge_in: BargeInAugmentation | None = None
+    dropout: DropoutAugmentation | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -177,4 +210,5 @@ __all__ = (
     "SecondarySpeakerAugmentation",
     "BackchannelAugmentation",
     "BargeInAugmentation",
+    "DropoutAugmentation",
 )

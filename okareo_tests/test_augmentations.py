@@ -11,6 +11,7 @@ from okareo.augmentations import (
     BargeInAugmentation,
     CAPAugmentation,
     DirectedSpeechAugmentation,
+    DropoutAugmentation,
     NoiseAugmentation,
     SecondarySpeakerAugmentation,
 )
@@ -79,6 +80,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             replacement_text="hold on",
             prompt="Interrupt the speaker and get them to pause.",
         ),
+        dropout=DropoutAugmentation(probability=0.2),
     )
 
     assert augmentation.to_dict() == {
@@ -108,6 +110,55 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             "replacement_text": "hold on",
             "prompt": "Interrupt the speaker and get them to pause.",
         },
+        "dropout": {"probability": 0.2},
+    }
+
+
+def test_dropout_augmentation_serializes_probability_only() -> None:
+    assert Augmentation(dropout=DropoutAugmentation(probability=0.2)).to_dict() == {
+        "dropout": {"probability": 0.2}
+    }
+    assert DropoutAugmentation().to_dict() == {}
+
+
+def test_start_at_turn_is_forwarded_for_every_strategy_that_takes_it() -> None:
+    """cap and noise deliberately do not take it."""
+    assert Augmentation(
+        barge_in=BargeInAugmentation(prompt="hey", start_at_turn=2)
+    ).to_dict() == {"barge_in": {"prompt": "hey", "start_at_turn": 2}}
+    assert Augmentation(
+        backchannel=BackchannelAugmentation(utterance="mm", start_at_turn=4)
+    ).to_dict() == {"backchannel": {"utterance": "mm", "start_at_turn": 4}}
+    assert Augmentation(
+        directed_speech=DirectedSpeechAugmentation(probability=0.3, start_at_turn=5)
+    ).to_dict() == {"directed_speech": {"probability": 0.3, "start_at_turn": 5}}
+    assert Augmentation(
+        secondary_speaker=SecondarySpeakerAugmentation(voice="Cathy", start_at_turn=6)
+    ).to_dict() == {"secondary_speaker": {"voice": "Cathy", "start_at_turn": 6}}
+
+
+def test_dropout_start_at_turn_is_forwarded() -> None:
+    """start_at_turn holds the drop off until that driver turn.
+
+    Transcript numbering: the target's greeting is turn 0, the first driver
+    turn is 1. Omitted means the server default of 1 (every turn).
+    """
+    assert Augmentation(
+        dropout=DropoutAugmentation(probability=1.0, start_at_turn=3)
+    ).to_dict() == {"dropout": {"probability": 1.0, "start_at_turn": 3}}
+
+
+def test_noise_and_dropout_compose() -> None:
+    simulation = Simulation(
+        augmentation=Augmentation(
+            noise=NoiseAugmentation(profile="traffic", snr_db=15),
+            dropout=DropoutAugmentation(probability=0.2),
+        )
+    )
+
+    assert simulation.to_dict()["augmentation"] == {
+        "noise": {"profile": "traffic", "snr_db": 15},
+        "dropout": {"probability": 0.2},
     }
 
 
