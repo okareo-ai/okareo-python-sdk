@@ -283,8 +283,8 @@ def test_wire_contract_default_key_set(monkeypatch: pytest.MonkeyPatch) -> None:
     }
     assert sp["loadtest_target_concurrent"] == 10
     assert sp["loadtest_load_duration_s"] == 60.0
-    # Conventional turn controls are untouched by the cycling change.
-    assert sp["max_turns"] == 25
+    # No max_turns on the wire; repeats / first_turn are untouched by the cycling change.
+    assert "max_turns" not in sp
     assert sp["repeats"] == 1
     assert sp["first_turn"] == "target"
 

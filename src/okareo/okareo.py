@@ -1922,11 +1922,14 @@ class Okareo:
         whichever is reached first ends the run. Must be ``>= load_concurrent`` (a budget
         below the concurrency could never reach the plateau) and ``>= 1``.
 
-        **Per-call truncation** (``per_call_max_duration_s``): an optional cap on each
-        individual call's wall-clock duration. A call reaching the cap is graceful-ended
-        and its slot immediately backfilled, so the plateau guarantee is unchanged while
-        each call is bounded. It is truncation only — it sizes nothing — so omit it (the
-        default) to let every conversation run to its natural end.
+        **Per-call bound** (``per_call_max_duration_s``): the ONLY per-call bound, and
+        a duration, never a turn count — the agent's flow decides how many exchanges a
+        call takes, and no ``max_turns`` is sent. A call reaching the cap is
+        graceful-ended and its slot immediately backfilled, so the plateau guarantee is
+        unchanged while each call is bounded. It is truncation only — it sizes nothing.
+        ``None`` (the default) means the server defaults it to the run's own length,
+        hold + estimated ramp + drain margin, so a call that never ends on its own
+        cannot outlive the run; every other call runs to its natural end.
 
         **Who speaks first** (``first_turn``): shapes each held call, not the load.
         ``"target"`` (the default, matching ``run_simulation``) has the simulated caller
@@ -1951,10 +1954,8 @@ class Okareo:
             raise ValueError(
                 f'first_turn must be "driver" or "target", got {first_turn!r}'
             )
-        # Internal load-test tunables — method-local, never public class attributes. The user
-        # specifies only load; every SAFETY cap (ramp deadline, plateau fraction, hard per-call
-        # kill, dial rate, concurrency) is enforced SERVER-SIDE.
-        turns = 25  # max_turns backstop per conversation
+        # The user specifies only load; every SAFETY cap (ramp deadline, plateau fraction,
+        # hard per-call kill, dial rate, concurrency) is enforced SERVER-SIDE.
         # The flat loadtest_* knobs (validated; still before any network call).
         loadtest_cfg = self._load_test_cfg(
             load_concurrent=load_concurrent,
@@ -1970,19 +1971,23 @@ class Okareo:
         ):
             target.target.max_parallel_requests = load_concurrent  # type: ignore[union-attr]
 
-        # Build the MULTI_TURN simulation_params directly — conventional turn controls plus
-        # the flat loadtest_* knobs — and submit via the shared path. run_simulation's own
+        # Build the MULTI_TURN simulation_params directly — repeats + first_turn plus the
+        # flat loadtest_* knobs — and submit via the shared path. run_simulation's own
         # surface stays purely conventional and never sees the load-test knobs. The
         # scenario is forwarded verbatim: the server cycles its rows for the whole hold, and
         # `repeats` is NOT used (the server expands it row-major, A,A,..,B,B.., which would
-        # run the plateau all-A then all-B, whereas cycling walks the rows evenly).
+        # run the plateau all-A then all-B, whereas cycling walks the rows evenly). No
+        # `max_turns`, not even a fixed value: a load test bounds a call by DURATION only
+        # (per_call_max_duration_s), and the server ignores the field in load-test mode.
         simulation_params = Simulation(
             repeats=1,  # the server cycles rows; never use repeats (row-major)
-            max_turns=turns,
             # "target" (default, as in run_simulation): wait for the agent's greeting.
             # "driver": the caller opens the call.
             first_turn=first_turn,
         ).to_dict()
+        # Simulation.to_dict() always emits max_turns (run_simulation's default). A
+        # load test never sends one: the per-call bound is per_call_max_duration_s.
+        simulation_params.pop("max_turns", None)
         simulation_params.update(loadtest_cfg)
         return self._submit_multiturn(
             name=name,

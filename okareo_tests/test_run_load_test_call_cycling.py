@@ -1,7 +1,7 @@
 """Unit tests for run_load_test's optional call-cycling (per-call max-duration) knob.
 
 These construct a bare Okareo via ``__new__`` (bypassing __init__/network). run_load_test
-builds its OWN simulation_params (conventional turn controls + the flat loadtest_* knobs)
+builds its OWN simulation_params (repeats + first_turn + the flat loadtest_* knobs)
 and submits via the shared ``_submit_multiturn`` seam — run_simulation is never involved —
 so the tests patch that seam and capture the simulation_params it is handed. Shape/pacing
 caps are enforced server-side, so the SDK only forwards the flat knob (guarding a
@@ -59,8 +59,9 @@ def test_cap_forwarded_in_simulation_params(monkeypatch: pytest.MonkeyPatch) -> 
     assert sp["loadtest_target_concurrent"] == 50
     assert sp["loadtest_load_duration_s"] == 120.0
     assert sp["loadtest_per_call_max_duration_s"] == 90.0
-    # Conventional turn controls ride in the same dict (built via Simulation).
-    assert sp["max_turns"] == 25
+    # repeats / first_turn ride in the same dict (built via Simulation); no max_turns
+    # is ever sent -- the per-call bound is a duration, not a turn count.
+    assert "max_turns" not in sp
     assert sp["repeats"] == 1
     assert sp["first_turn"] == "target"
     assert captured["scenario"] == SCENARIO_ID

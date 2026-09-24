@@ -46,8 +46,8 @@ def _no_network(ok: Okareo, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_default_is_target_first(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Omitting first_turn gives run_simulation's default: the agent speaks first. The
-    25-turn backstop and repeats=1 are untouched."""
+    """Omitting first_turn gives run_simulation's default: the agent speaks first. No
+    max_turns is sent (the per-call bound is a duration) and repeats=1 is untouched."""
     ok = _bare_client()
     captured = _capture(ok, monkeypatch)
     ok.run_load_test(
@@ -59,7 +59,7 @@ def test_default_is_target_first(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     sp = captured["simulation_params"]
     assert sp["first_turn"] == "target"
-    assert sp["max_turns"] == 25
+    assert "max_turns" not in sp
     assert sp["repeats"] == 1
 
 
@@ -78,7 +78,7 @@ def test_driver_first_is_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     sp = captured["simulation_params"]
     assert sp["first_turn"] == "driver"
-    assert sp["max_turns"] == 25
+    assert "max_turns" not in sp
     assert sp["repeats"] == 1
     assert sp["loadtest_target_concurrent"] == 10
     assert sp["loadtest_load_duration_s"] == 60.0
