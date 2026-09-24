@@ -2,7 +2,6 @@ import base64
 import copy
 import datetime
 import json
-import math
 import os
 import warnings
 from typing import Any, Dict, List, Optional, Protocol, TypedDict, TypeVar, Union, cast
@@ -1872,43 +1871,62 @@ class Okareo:
     def run_load_test(
         self,
         name: str,
+        scenario: Union[ScenarioSetResponse, str],
         target: Union[str, Target],
         load_concurrent: int,
         load_duration_s: float,
-        per_call_max_duration_s: Optional[float] = None,
-        first_turn: Optional[str] = "target",
-        seed_data: Optional[List[dict]] = None,
         driver: Optional[Union[str, Driver]] = None,
         checks: Optional[List[str]] = None,
+        per_call_max_duration_s: Optional[float] = None,
+        first_turn: Optional[str] = "target",
+        max_total_calls: Optional[int] = None,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
         project_id: Optional[str] = None,
         calculate_metrics: bool = True,
     ) -> TestRunItem:
         """Run a closed-loop VOICE LOAD TEST: hold ``load_concurrent`` conversations for
-        ``load_duration_s`` seconds.
+        ``load_duration_s`` seconds against an existing scenario set.
 
-        The **only** load knobs are ``load_concurrent`` (# calls to hold) and
-        ``load_duration_s`` (plateau seconds). Everything that paces the ramp and protects
-        the system from a runaway — the provider call-creation rate, the ramp deadline, the
-        plateau-detection fraction, and the stop backstops — is an INTERNAL SAFETY mechanism
-        derived server-side; it is deliberately not exposed here so a caller can't mistune it.
+        The load knobs are ``load_concurrent`` (# calls to hold), ``load_duration_s``
+        (plateau seconds) and, optionally, ``max_total_calls`` (a conversation budget).
+        Everything that paces the ramp and protects the system from a runaway — the
+        provider call-creation rate, the ramp deadline, the plateau-detection fraction, and
+        the stop backstops — is an INTERNAL SAFETY mechanism derived server-side; it is
+        deliberately not exposed here so a caller can't mistune it.
 
         Distinct from ``run_simulation`` (which evaluates a scenario set once): here you
-        specify LOAD. ``seed_data`` rows are **round-robin sampled with replacement** to fill
-        the sustained load, and ``checks`` score every call's datapoint (quality-under-load).
-        Internally this builds a round-robin-tiled scenario, sets the target's
-        ``max_parallel_requests`` to ``load_concurrent``, and submits a MULTI_TURN run whose
-        server-side manager holds the plateau and ends it gracefully (measured from the ACTUAL
-        plateau, and aborting a doomed ramp). Pair with a never-end driver prompt.
+        specify LOAD, and the server cycles the scenario's rows for as long as the plateau
+        runs. A run produces roughly ``load_concurrent × load_duration_s / mean
+        conversation length`` conversations, or exactly ``max_total_calls`` if that is
+        reached first. ``checks`` score every call's datapoint (quality-under-load).
+        Internally this sets the target's ``max_parallel_requests`` to ``load_concurrent``
+        and submits a MULTI_TURN run whose server-side manager holds the plateau and ends
+        it gracefully (measured from the ACTUAL plateau, and aborting a doomed ramp). Pair
+        with a never-end driver prompt.
 
-        Optional **call cycling** (``per_call_max_duration_s``): cap each individual call's
-        wall-clock duration. Instead of holding ``load_concurrent`` long-lived calls, the
-        plateau is composed of short calls that are graceful-ended at the cap and immediately
-        backfilled, so the guarantee (``load_concurrent`` live for ``load_duration_s``) is
-        unchanged while each call is bounded. Shape/pacing caps (floor, hard per-call kill,
-        dial rate) are enforced server-side; the SDK only forwards the flat knob. Omit it for
-        the classic held-call behavior.
+        ``scenario``: the scenario set to draw callers from, exactly as ``run_simulation``
+        takes it. The server cycles its rows for the whole hold (wrapping from the last
+        row back to the first); each row's ``result`` is the expected outcome the checks
+        judge against, so outcome checks such as ``result_completed`` work the same as in
+        a simulation. No scenario set is created by this call.
+
+        **Contract change from 0.0.157**: ``seed_data`` is removed (this method no longer
+        creates a scenario set from inline rows) and ``scenario`` is now the required
+        second positional argument, mirroring ``run_simulation``. Build the scenario set
+        first with ``create_scenario_set`` (or ``seed_data_from_list``) and pass it here.
+
+        **Conversation budget** (``max_total_calls``): the number of conversations to
+        START. Once that many have been dialed no replacement is dialed; in-flight calls
+        finish naturally (not cut) and the run ends when they drain. Budget and hold race:
+        whichever is reached first ends the run. Must be ``>= load_concurrent`` (a budget
+        below the concurrency could never reach the plateau) and ``>= 1``.
+
+        **Per-call truncation** (``per_call_max_duration_s``): an optional cap on each
+        individual call's wall-clock duration. A call reaching the cap is graceful-ended
+        and its slot immediately backfilled, so the plateau guarantee is unchanged while
+        each call is bounded. It is truncation only — it sizes nothing — so omit it (the
+        default) to let every conversation run to its natural end.
 
         **Who speaks first** (``first_turn``): shapes each held call, not the load.
         ``"target"`` (the default, matching ``run_simulation``) has the simulated caller
@@ -1916,6 +1934,12 @@ class Okareo:
         agents expect. Pass ``first_turn="driver"`` for a target that waits for the caller
         to speak first; otherwise the call would sit in silence until the turn timeout.
         This does not change the load contract above.
+
+        **Server requirement**: row cycling is done by the server and requires an
+        okareo server release that cycles scenario rows for load tests. Against an
+        older server that does not cycle, the scenario is exhausted after one pass and
+        the run's concurrency decays from there; supply enough rows to cover the hold in
+        that case.
 
         Returns a ``TestRunItem`` for the load-test run.
         """
@@ -1929,55 +1953,18 @@ class Okareo:
             )
         # Internal load-test tunables — method-local, never public class attributes. The user
         # specifies only load; every SAFETY cap (ramp deadline, plateau fraction, hard per-call
-        # kill, dial rate, concurrency) is enforced SERVER-SIDE. These are only what the SDK
-        # needs to shape its OWN request.
-        drop_margin = 0.2  # seed-row over-provision: N_rows = target × (1 + this)
-        turns = 25  # max_turns backstop; calls normally end on the server's per-call time cap
-        # Ship ONLY the two user-specified load values. The server manager derives the ramp
-        # deadline, plateau fraction, and backstops internally (from the provider it actually
-        # dials with) — see distributed_executor._loadtest_ramp_decision.
-        loadtest_cfg = {
-            "loadtest_load_duration_s": float(load_duration_s),
-            "loadtest_target_concurrent": int(load_concurrent),
-        }
-        # Call cycling (optional): forward the flat per-call cap. The server manager
-        # backfills recycled slots for the whole hold and the runner graceful-ends each
-        # call at the cap; shape/pacing caps (floor, hard kill, dial rate) are enforced
-        # server-side, so the SDK only forwards the knob (guarding a non-positive value).
-        if per_call_max_duration_s is not None:
-            cap_s = float(per_call_max_duration_s)
-            if cap_s <= 0:
-                raise ValueError("per_call_max_duration_s must be > 0 when provided")
-            loadtest_cfg["loadtest_per_call_max_duration_s"] = cap_s
-        # Row-pool sizing. Without cycling, calls are held for the whole plateau so the
-        # pool only needs the drop-margin backfill. WITH cycling each slot recycles
-        # ~window/cap times and the executor dials the next pool row when a slot frees, so
-        # the pool must supply the whole ramp+hold+drain window (else it drains mid-hold and
-        # the plateau collapses). Estimate the window from the server's pacing defaults
-        # (CPS + drain margin), both env-overridable so a tuned deployment sizes correctly.
-        if loadtest_cfg.get("loadtest_per_call_max_duration_s"):
-            cps = float(os.environ.get("OKAREO_LOADTEST_CPS") or 5.0)
-            drain_s = float(os.environ.get("MANAGER_LOADTEST_DRAIN_MARGIN_S") or 120.0)
-            ramp_s = (load_concurrent / cps) if cps > 0 else 0.0
-            window_s = ramp_s + float(load_duration_s) + drain_s
-            cap_s = float(loadtest_cfg["loadtest_per_call_max_duration_s"])
-            cycles = max(1, math.ceil(window_s / cap_s))
-            n_rows = math.ceil(load_concurrent * (1 + drop_margin) * cycles)
-        else:
-            n_rows = math.ceil(load_concurrent * (1 + drop_margin))
-
-        # Round-robin tile the seed rows to N_rows. `repeats` is NOT usable here: the
-        # server expands it row-major (A,A,..,B,B,..), which would run the plateau all-A
-        # then all-B; tiling the seed makes the in-flight set cycle evenly through the rows.
-        rows = seed_data or [{"load_test": "conversation"}]
-        k = len(rows)
-        seed = [SeedData(input_=rows[i % k], result="n/a") for i in range(n_rows)]
-        scenario = self.create_scenario_set(
-            ScenarioSetCreate(name=f"{name}-scenario", seed_data=seed)
+        # kill, dial rate, concurrency) is enforced SERVER-SIDE.
+        turns = 25  # max_turns backstop per conversation
+        # The flat loadtest_* knobs (validated; still before any network call).
+        loadtest_cfg = self._load_test_cfg(
+            load_concurrent=load_concurrent,
+            load_duration_s=load_duration_s,
+            per_call_max_duration_s=per_call_max_duration_s,
+            max_total_calls=max_total_calls,
         )
 
         # Concurrency governor: the executor holds `load_concurrent` calls in flight and
-        # dials a replacement on completion, up to N_rows.
+        # dials a replacement on completion.
         if isinstance(target, Target) and hasattr(
             target.target, "max_parallel_requests"
         ):
@@ -1985,9 +1972,12 @@ class Okareo:
 
         # Build the MULTI_TURN simulation_params directly — conventional turn controls plus
         # the flat loadtest_* knobs — and submit via the shared path. run_simulation's own
-        # surface stays purely conventional and never sees the load-test knobs.
+        # surface stays purely conventional and never sees the load-test knobs. The
+        # scenario is forwarded verbatim: the server cycles its rows for the whole hold, and
+        # `repeats` is NOT used (the server expands it row-major, A,A,..,B,B.., which would
+        # run the plateau all-A then all-B, whereas cycling walks the rows evenly).
         simulation_params = Simulation(
-            repeats=1,  # round-robin lives in the seed; never use repeats (row-major)
+            repeats=1,  # the server cycles rows; never use repeats (row-major)
             max_turns=turns,
             # "target" (default, as in run_simulation): wait for the agent's greeting.
             # "driver": the caller opens the call.
@@ -2007,6 +1997,52 @@ class Okareo:
             calculate_metrics=calculate_metrics,
             project_id=project_id,
         )
+
+    @staticmethod
+    def _load_test_cfg(
+        *,
+        load_concurrent: int,
+        load_duration_s: float,
+        per_call_max_duration_s: Optional[float],
+        max_total_calls: Optional[int],
+    ) -> Dict[str, Any]:
+        """Build and validate the flat ``loadtest_*`` knobs ``run_load_test`` ships.
+
+        Ships ONLY the user-specified load values. The server manager derives the ramp
+        deadline, plateau fraction, and backstops internally (from the provider it actually
+        dials with) — see distributed_executor._loadtest_ramp_decision.
+        """
+        cfg: Dict[str, Any] = {
+            "loadtest_load_duration_s": float(load_duration_s),
+            "loadtest_target_concurrent": int(load_concurrent),
+        }
+        # Per-call truncation (optional): forward the flat cap. The runner graceful-ends
+        # each call at the cap and the manager backfills the slot; shape/pacing caps (floor,
+        # hard kill, dial rate) are enforced server-side, so the SDK only forwards the knob
+        # (guarding a non-positive value).
+        if per_call_max_duration_s is not None:
+            cap_s = float(per_call_max_duration_s)
+            if cap_s <= 0:
+                raise ValueError("per_call_max_duration_s must be > 0 when provided")
+            cfg["loadtest_per_call_max_duration_s"] = cap_s
+        # Conversation budget (optional): "N conversations or T seconds, whichever first".
+        # Validated here so a bad budget never reaches the server: below 1 is meaningless,
+        # and below load_concurrent could never reach the plateau (the server enforces the
+        # same bound with a 400).
+        if max_total_calls is not None:
+            budget = int(max_total_calls)
+            if budget < 1:
+                raise ValueError(
+                    f"max_total_calls must be >= 1 when provided, got {max_total_calls!r}"
+                )
+            if budget < load_concurrent:
+                raise ValueError(
+                    f"max_total_calls ({budget}) must be >= load_concurrent "
+                    f"({load_concurrent}); a budget below the concurrency can never "
+                    "reach the plateau"
+                )
+            cfg["loadtest_max_total_calls"] = budget
+        return cfg
 
     def generate_driver_prompt(
         self,

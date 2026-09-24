@@ -1,7 +1,8 @@
 """Unit tests for run_load_test's ``first_turn`` knob.
 
 Same harness as test_run_load_test_call_cycling.py: a bare Okareo via ``__new__`` (no
-__init__/network), ``create_scenario_set`` stubbed, and the shared ``_submit_multiturn``
+__init__/network), ``create_scenario_set`` patched to FAIL if ever called (run_load_test
+forwards an existing scenario and creates nothing), and the shared ``_submit_multiturn``
 seam patched to capture the simulation_params run_load_test hands it. ``first_turn`` shapes
 each held call, not the load: the default must match run_simulation (target-first), an
 explicit value must be forwarded verbatim into the Simulation, and a bad value must fail
@@ -14,6 +15,8 @@ import pytest
 
 from okareo import Okareo
 
+SCENARIO_ID = "scenario-id"
+
 
 def _bare_client() -> Okareo:
     return Okareo.__new__(Okareo)
@@ -21,7 +24,11 @@ def _bare_client() -> Okareo:
 
 def _capture(ok: Okareo, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     captured: dict[str, Any] = {}
-    monkeypatch.setattr(ok, "create_scenario_set", lambda _s: object())
+
+    def _boom(*_a: Any, **_k: Any) -> Any:
+        raise AssertionError("run_load_test must not call create_scenario_set")
+
+    monkeypatch.setattr(ok, "create_scenario_set", _boom)
     monkeypatch.setattr(
         ok, "_submit_multiturn", lambda **k: captured.update(k) or object()
     )
@@ -43,7 +50,13 @@ def test_default_is_target_first(monkeypatch: pytest.MonkeyPatch) -> None:
     25-turn backstop and repeats=1 are untouched."""
     ok = _bare_client()
     captured = _capture(ok, monkeypatch)
-    ok.run_load_test(name="lt", target="t", load_concurrent=10, load_duration_s=60)
+    ok.run_load_test(
+        name="lt",
+        scenario=SCENARIO_ID,
+        target="t",
+        load_concurrent=10,
+        load_duration_s=60,
+    )
     sp = captured["simulation_params"]
     assert sp["first_turn"] == "target"
     assert sp["max_turns"] == 25
@@ -57,6 +70,7 @@ def test_driver_first_is_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     captured = _capture(ok, monkeypatch)
     ok.run_load_test(
         name="lt",
+        scenario=SCENARIO_ID,
         target="t",
         load_concurrent=10,
         load_duration_s=60,
@@ -79,6 +93,7 @@ def test_explicit_target_first_is_accepted(monkeypatch: pytest.MonkeyPatch) -> N
     captured = _capture(ok, monkeypatch)
     ok.run_load_test(
         name="lt",
+        scenario=SCENARIO_ID,
         target="t",
         load_concurrent=10,
         load_duration_s=60,
@@ -96,6 +111,7 @@ def test_invalid_first_turn_raises_before_network(
     with pytest.raises(ValueError, match="first_turn"):
         ok.run_load_test(
             name="lt",
+            scenario=SCENARIO_ID,
             target="t",
             load_concurrent=10,
             load_duration_s=60,
@@ -103,23 +119,21 @@ def test_invalid_first_turn_raises_before_network(
         )
 
 
-def test_first_turn_does_not_change_row_pool(monkeypatch: pytest.MonkeyPatch) -> None:
-    """first_turn shapes the conversation, not the load: the seed-row pool is sized only
-    from concurrency (+ drop margin / cycling), never from who speaks first."""
+def test_first_turn_does_not_change_the_scenario(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """first_turn shapes the conversation, not the load: the scenario is forwarded
+    verbatim (the server cycles its rows) and nothing is created, regardless of who
+    speaks first."""
     ok = _bare_client()
-    sizes: dict[str, int] = {}
-
-    def _capture_scenario(spec: Any) -> Any:
-        sizes["n_rows"] = len(spec.seed_data)
-        return object()
-
-    monkeypatch.setattr(ok, "create_scenario_set", _capture_scenario)
-    monkeypatch.setattr(ok, "_submit_multiturn", lambda **k: object())
+    captured = _capture(ok, monkeypatch)
     ok.run_load_test(
         name="lt",
+        scenario=SCENARIO_ID,
         target="t",
         load_concurrent=50,
         load_duration_s=120,
         first_turn="driver",
     )
-    assert sizes["n_rows"] == 60  # ceil(50 * 1.2), same as the default-shape run
+    assert captured["scenario"] == SCENARIO_ID
+    assert captured["simulation_params"]["first_turn"] == "driver"
