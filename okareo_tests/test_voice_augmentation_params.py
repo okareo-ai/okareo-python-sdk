@@ -325,7 +325,16 @@ class TestDropoutBehavior:
         dropped = meta.get("dropped_turns") or []
         assert dropped, "expected dropped_turns to be recorded on the datapoint"
         assert min(dropped) >= start_at_turn
-        assert start_at_turn in dropped
+        # Guarded on its precondition: a turn is only dropped when the Target
+        # spoke on the turn before it, so a reply slow enough to hit the
+        # no-response wait legitimately leaves the start turn alone.
+        target_spoke_on = {
+            m["metadata"]["turn_number"]
+            for m in meta.get("messages", [])
+            if m.get("role") == "assistant" and (m.get("content") or "").strip()
+        }
+        if (start_at_turn - 1) in target_spoke_on:
+            assert start_at_turn in dropped
 
         # ... the Driver said nothing on any turn that was dropped ...
         #

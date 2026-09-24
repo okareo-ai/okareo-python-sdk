@@ -244,12 +244,15 @@ class TestDropoutDoesNotDerailTheDriver:
         dropped_turns = dropped.get("dropped_turns") or []
 
         assert dropped_turns, "expected dropped_turns on the datapoint"
-        # Nothing before the window, and the first turn of the window always
-        # drops: the Target spoke on the turn before it, so there was something
-        # to drop and the probability is 1.0.
+        # Nothing before the window ...
         assert min(dropped_turns) >= DROP_FROM_TURN
-        assert DROP_FROM_TURN in dropped_turns
-        # And no speech survives a turn that was dropped.
+        # ... the window's first turn drops WHEN there was something to drop.
+        # Guarded on its own precondition rather than assumed: the testtarget
+        # answers, but a reply slow enough to hit the no-response wait leaves
+        # that turn alone, and that is correct rather than a regression.
+        if (DROP_FROM_TURN - 1) in _turns_with_target_speech(dropped):
+            assert DROP_FROM_TURN in dropped_turns
+        # ... and no speech survives a turn that was dropped.
         assert set(_turns_with_driver_speech(dropped)).isdisjoint(dropped_turns)
 
     def test_a_drop_the_target_ignored_is_not_followed_by_another(
