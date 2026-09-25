@@ -59,7 +59,7 @@ def test_default_is_target_first(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     sp = captured["simulation_params"]
     assert sp["first_turn"] == "target"
-    assert "max_turns" not in sp
+    assert sp["max_turns"] == 5  # run_simulation's default
     assert sp["repeats"] == 1
 
 
@@ -78,7 +78,7 @@ def test_driver_first_is_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     sp = captured["simulation_params"]
     assert sp["first_turn"] == "driver"
-    assert "max_turns" not in sp
+    assert sp["max_turns"] == 5  # run_simulation's default
     assert sp["repeats"] == 1
     assert sp["loadtest_target_concurrent"] == 10
     assert sp["loadtest_load_duration_s"] == 60.0
@@ -137,3 +137,21 @@ def test_first_turn_does_not_change_the_scenario(
     )
     assert captured["scenario"] == SCENARIO_ID
     assert captured["simulation_params"]["first_turn"] == "driver"
+
+
+def test_max_turns_is_forwarded_when_given(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A caller's max_turns reaches simulation_params unchanged; it bounds each call
+    alongside per_call_max_duration_s (whichever comes first)."""
+    ok = _bare_client()
+    captured = _capture(ok, monkeypatch)
+    ok.run_load_test(
+        "lt",
+        "scenario-id",
+        "target",
+        load_concurrent=2,
+        load_duration_s=60,
+        max_turns=12,
+    )
+    sp = captured["simulation_params"]
+    assert sp["max_turns"] == 12
+    assert sp["repeats"] == 1

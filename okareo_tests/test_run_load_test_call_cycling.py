@@ -61,7 +61,7 @@ def test_cap_forwarded_in_simulation_params(monkeypatch: pytest.MonkeyPatch) -> 
     assert sp["loadtest_per_call_max_duration_s"] == 90.0
     # repeats / first_turn ride in the same dict (built via Simulation); no max_turns
     # is ever sent -- the per-call bound is a duration, not a turn count.
-    assert "max_turns" not in sp
+    assert sp["max_turns"] == 5  # run_simulation's default
     assert sp["repeats"] == 1
     assert sp["first_turn"] == "target"
     assert captured["scenario"] == SCENARIO_ID

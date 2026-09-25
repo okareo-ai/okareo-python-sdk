@@ -1879,6 +1879,7 @@ class Okareo:
         checks: Optional[List[str]] = None,
         per_call_max_duration_s: Optional[float] = None,
         first_turn: Optional[str] = "target",
+        max_turns: Optional[int] = 5,
         max_total_calls: Optional[int] = None,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
@@ -1922,14 +1923,17 @@ class Okareo:
         whichever is reached first ends the run. Must be ``>= load_concurrent`` (a budget
         below the concurrency could never reach the plateau) and ``>= 1``.
 
-        **Per-call bound** (``per_call_max_duration_s``): the ONLY per-call bound, and
-        a duration, never a turn count — the agent's flow decides how many exchanges a
-        call takes, and no ``max_turns`` is sent. A call reaching the cap is
-        graceful-ended and its slot immediately backfilled, so the plateau guarantee is
-        unchanged while each call is bounded. It is truncation only — it sizes nothing.
-        ``None`` (the default) means the server defaults it to the run's own length,
-        hold + estimated ramp + drain margin, so a call that never ends on its own
-        cannot outlive the run; every other call runs to its natural end.
+        **Per-call bounds** (``max_turns`` and ``per_call_max_duration_s``): each call is
+        bounded by a turn cap AND a wall-clock cap, whichever comes first. ``max_turns``
+        (default 5, the same as ``run_simulation``) ends a call at that many exchanges
+        ("Reached the turn limit"); size it to your agent's flow, exactly as you would for
+        a simulation. ``per_call_max_duration_s`` ends a call that has run that many
+        seconds since call setup ("per-call max duration reached"); ``None`` (the
+        default) means the server defaults it to the run's own length, hold + estimated
+        ramp + drain margin, so a call that never ends on its own cannot outlive the
+        run. Either way the call is graceful-ended and its slot immediately backfilled,
+        so the plateau guarantee is unchanged. Both are truncation only — they size
+        nothing.
 
         **Who speaks first** (``first_turn``): shapes each held call, not the load.
         ``"target"`` (the default, matching ``run_simulation``) has the simulated caller
@@ -1976,18 +1980,16 @@ class Okareo:
         # surface stays purely conventional and never sees the load-test knobs. The
         # scenario is forwarded verbatim: the server cycles its rows for the whole hold, and
         # `repeats` is NOT used (the server expands it row-major, A,A,..,B,B.., which would
-        # run the plateau all-A then all-B, whereas cycling walks the rows evenly). No
-        # `max_turns`, not even a fixed value: a load test bounds a call by DURATION only
-        # (per_call_max_duration_s), and the server ignores the field in load-test mode.
+        # run the plateau all-A then all-B, whereas cycling walks the rows evenly).
+        # `max_turns` is a real per-call bound here, alongside per_call_max_duration_s:
+        # the server ends a call on whichever of the two comes first.
         simulation_params = Simulation(
             repeats=1,  # the server cycles rows; never use repeats (row-major)
+            max_turns=max_turns,
             # "target" (default, as in run_simulation): wait for the agent's greeting.
             # "driver": the caller opens the call.
             first_turn=first_turn,
         ).to_dict()
-        # Simulation.to_dict() always emits max_turns (run_simulation's default). A
-        # load test never sends one: the per-call bound is per_call_max_duration_s.
-        simulation_params.pop("max_turns", None)
         simulation_params.update(loadtest_cfg)
         return self._submit_multiturn(
             name=name,
