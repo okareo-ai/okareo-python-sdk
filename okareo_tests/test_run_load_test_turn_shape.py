@@ -1,7 +1,8 @@
 """Unit tests for run_load_test's ``first_turn`` knob.
 
 Same harness as test_run_load_test_call_cycling.py: a bare Okareo via ``__new__`` (no
-__init__/network), ``create_scenario_set`` stubbed, and the shared ``_submit_multiturn``
+__init__/network), ``create_scenario_set`` patched to FAIL if ever called (run_load_test
+forwards an existing scenario and creates nothing), and the shared ``_submit_multiturn``
 seam patched to capture the simulation_params run_load_test hands it. ``first_turn`` shapes
 each held call, not the load: the default must match run_simulation (target-first), an
 explicit value must be forwarded verbatim into the Simulation, and a bad value must fail
@@ -14,6 +15,8 @@ import pytest
 
 from okareo import Okareo
 
+SCENARIO_ID = "scenario-id"
+
 
 def _bare_client() -> Okareo:
     return Okareo.__new__(Okareo)
@@ -21,7 +24,11 @@ def _bare_client() -> Okareo:
 
 def _capture(ok: Okareo, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     captured: dict[str, Any] = {}
-    monkeypatch.setattr(ok, "create_scenario_set", lambda _s: object())
+
+    def _boom(*_a: Any, **_k: Any) -> Any:
+        raise AssertionError("run_load_test must not call create_scenario_set")
+
+    monkeypatch.setattr(ok, "create_scenario_set", _boom)
     monkeypatch.setattr(
         ok, "_submit_multiturn", lambda **k: captured.update(k) or object()
     )
@@ -39,14 +46,20 @@ def _no_network(ok: Okareo, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_default_is_target_first(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Omitting first_turn gives run_simulation's default: the agent speaks first. The
-    25-turn backstop and repeats=1 are untouched."""
+    """Omitting first_turn gives run_simulation's default: the agent speaks first. No
+    max_turns is sent (the per-call bound is a duration) and repeats=1 is untouched."""
     ok = _bare_client()
     captured = _capture(ok, monkeypatch)
-    ok.run_load_test(name="lt", target="t", load_concurrent=10, load_duration_s=60)
+    ok.run_load_test(
+        name="lt",
+        scenario=SCENARIO_ID,
+        target="t",
+        load_concurrent=10,
+        load_duration_s=60,
+    )
     sp = captured["simulation_params"]
     assert sp["first_turn"] == "target"
-    assert sp["max_turns"] == 25
+    assert sp["max_turns"] == 5  # run_simulation's default
     assert sp["repeats"] == 1
 
 
@@ -57,6 +70,7 @@ def test_driver_first_is_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     captured = _capture(ok, monkeypatch)
     ok.run_load_test(
         name="lt",
+        scenario=SCENARIO_ID,
         target="t",
         load_concurrent=10,
         load_duration_s=60,
@@ -64,7 +78,7 @@ def test_driver_first_is_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     sp = captured["simulation_params"]
     assert sp["first_turn"] == "driver"
-    assert sp["max_turns"] == 25
+    assert sp["max_turns"] == 5  # run_simulation's default
     assert sp["repeats"] == 1
     assert sp["loadtest_target_concurrent"] == 10
     assert sp["loadtest_load_duration_s"] == 60.0
@@ -79,6 +93,7 @@ def test_explicit_target_first_is_accepted(monkeypatch: pytest.MonkeyPatch) -> N
     captured = _capture(ok, monkeypatch)
     ok.run_load_test(
         name="lt",
+        scenario=SCENARIO_ID,
         target="t",
         load_concurrent=10,
         load_duration_s=60,
@@ -96,6 +111,7 @@ def test_invalid_first_turn_raises_before_network(
     with pytest.raises(ValueError, match="first_turn"):
         ok.run_load_test(
             name="lt",
+            scenario=SCENARIO_ID,
             target="t",
             load_concurrent=10,
             load_duration_s=60,
@@ -103,23 +119,39 @@ def test_invalid_first_turn_raises_before_network(
         )
 
 
-def test_first_turn_does_not_change_row_pool(monkeypatch: pytest.MonkeyPatch) -> None:
-    """first_turn shapes the conversation, not the load: the seed-row pool is sized only
-    from concurrency (+ drop margin / cycling), never from who speaks first."""
+def test_first_turn_does_not_change_the_scenario(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """first_turn shapes the conversation, not the load: the scenario is forwarded
+    verbatim (the server cycles its rows) and nothing is created, regardless of who
+    speaks first."""
     ok = _bare_client()
-    sizes: dict[str, int] = {}
-
-    def _capture_scenario(spec: Any) -> Any:
-        sizes["n_rows"] = len(spec.seed_data)
-        return object()
-
-    monkeypatch.setattr(ok, "create_scenario_set", _capture_scenario)
-    monkeypatch.setattr(ok, "_submit_multiturn", lambda **k: object())
+    captured = _capture(ok, monkeypatch)
     ok.run_load_test(
         name="lt",
+        scenario=SCENARIO_ID,
         target="t",
         load_concurrent=50,
         load_duration_s=120,
         first_turn="driver",
     )
-    assert sizes["n_rows"] == 60  # ceil(50 * 1.2), same as the default-shape run
+    assert captured["scenario"] == SCENARIO_ID
+    assert captured["simulation_params"]["first_turn"] == "driver"
+
+
+def test_max_turns_is_forwarded_when_given(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A caller's max_turns reaches simulation_params unchanged; it bounds each call
+    alongside per_call_max_duration_s (whichever comes first)."""
+    ok = _bare_client()
+    captured = _capture(ok, monkeypatch)
+    ok.run_load_test(
+        "lt",
+        "scenario-id",
+        "target",
+        load_concurrent=2,
+        load_duration_s=60,
+        max_turns=12,
+    )
+    sp = captured["simulation_params"]
+    assert sp["max_turns"] == 12
+    assert sp["repeats"] == 1
