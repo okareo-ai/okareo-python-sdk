@@ -1658,7 +1658,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _scenario_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(scenario_id, Unset)
-            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+            else UUID(scenario_id)
+            if isinstance(scenario_id, str)
+            else scenario_id
         )
         _datapoint_ids: Union[Unset, list[UUID], None] = (
             UNSET
@@ -1677,7 +1679,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _test_run_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(test_run_id, Unset)
-            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+            else UUID(test_run_id)
+            if isinstance(test_run_id, str)
+            else test_run_id
         )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
@@ -2138,6 +2142,34 @@ class TwilioVoiceTarget(VoiceTarget):
         return ["auth_token"] if self.auth_token else []
 
 
+_DTMF_MECHANISMS = ("rfc2833", "inband")
+
+
+def _validated_dtmf_mechanism(value: Optional[str]) -> Optional[str]:
+    """Normalize and check a target's ``dtmf_mechanism``.
+
+    ``rfc2833`` is out-of-band (RFC 2833/4733) DTMF, which IVRs act on without
+    the tones having to survive the audio path; ``inband`` synthesizes audible
+    tones. Unset means in-band, which is what a phone target has always done.
+
+    Checked here so a typo fails at construction rather than as a 400 after the
+    run is submitted. ``both`` is deliberately not accepted: measured against an
+    rfc2833-only IVR it landed 6 of 11 presses (the in-band leg arrives as a
+    second digit) versus 8 of 8 for out-of-band alone.
+    """
+    if value is None:
+        return None
+    normalized = str(value).strip().lower()
+    if not normalized:
+        return None
+    if normalized not in _DTMF_MECHANISMS:
+        raise ValueError(
+            f"Invalid dtmf_mechanism {value!r}. Must be one of: "
+            f"{', '.join(_DTMF_MECHANISMS)}."
+        )
+    return normalized
+
+
 @_attrs_define
 class PhoneTarget(VoiceTarget):
     """Phone-number-only voice target for multiturn simulation.
@@ -2148,14 +2180,22 @@ class PhoneTarget(VoiceTarget):
     Arguments:
         phone_number: Destination phone number (E.164 format, e.g. "+15551234567").
         max_parallel_requests: Cap on concurrent calls hitting the target.
+        dtmf_mechanism: How the Driver presses keys -- "inband" (audible tones,
+            the default) or "rfc2833" (out-of-band, which IVRs act on directly).
+            "rfc2833" must be enabled for your organization; ask Okareo. Leave
+            unset unless an IVR is ignoring your keypresses.
     """
 
     edge_type = "twilio"
     phone_number: str = field()
     max_parallel_requests: Optional[int] = None
+    dtmf_mechanism: Optional[str] = None
+
+    def __attrs_post_init__(self) -> None:
+        self.dtmf_mechanism = _validated_dtmf_mechanism(self.dtmf_mechanism)
 
     def params(self) -> dict:
-        return {
+        params = {
             "type": self.type,
             "edge_type": self.edge_type,
             "account_sid": "",
@@ -2164,6 +2204,11 @@ class PhoneTarget(VoiceTarget):
             "to_phone_number": self.phone_number,
             "max_parallel_requests": self.max_parallel_requests,
         }
+        # Only when set: an absent key leaves the server on its own default, so
+        # targets saved before this field existed keep behaving identically.
+        if self.dtmf_mechanism is not None:
+            params["dtmf_mechanism"] = self.dtmf_mechanism
+        return params
 
 
 @_attrs_define
@@ -2362,6 +2407,8 @@ class TelnyxPhoneTarget(VoiceTarget):
             ``api_key`` param for the voice/TTS model key.
         connection_id: Telnyx Call Control Application id the call is placed from.
         max_parallel_requests: Cap on concurrent calls hitting the target.
+        dtmf_mechanism: "rfc2833" (out-of-band, the default for this target) or
+            "inband" (audible tones, for an IVR that only decodes audio).
     """
 
     edge_type = "telnyx"
@@ -2371,8 +2418,10 @@ class TelnyxPhoneTarget(VoiceTarget):
     telnyx_api_key: Optional[str] = None
     connection_id: Optional[str] = None
     max_parallel_requests: Optional[int] = None
+    dtmf_mechanism: Optional[str] = None
 
     def __attrs_post_init__(self) -> None:
+        self.dtmf_mechanism = _validated_dtmf_mechanism(self.dtmf_mechanism)
         if self.to_phone_number is None and self.phone_number is not None:
             self.to_phone_number = self.phone_number
         # Fail fast at construction, like the siblings (VonagePhoneTarget,
@@ -2388,7 +2437,7 @@ class TelnyxPhoneTarget(VoiceTarget):
             )
 
     def params(self) -> dict:
-        return {
+        params = {
             "type": self.type,
             "edge_type": self.edge_type,
             "to_phone_number": self.to_phone_number,
@@ -2397,6 +2446,9 @@ class TelnyxPhoneTarget(VoiceTarget):
             "connection_id": self.connection_id,
             "max_parallel_requests": self.max_parallel_requests,
         }
+        if self.dtmf_mechanism is not None:
+            params["dtmf_mechanism"] = self.dtmf_mechanism
+        return params
 
     def get_sensitive_fields(self) -> list[str]:
         sensitive = []
