@@ -321,13 +321,29 @@ class TestDropoutBehavior:
 
         meta = _conversation(okareo, evaluation)
 
-        # Every turn from the start turn on was dropped ...
+        # The start turn was dropped, and nothing before it ...
         dropped = meta.get("dropped_turns") or []
         assert dropped, "expected dropped_turns to be recorded on the datapoint"
         assert min(dropped) >= start_at_turn
+        # Guarded on its precondition: a turn is only dropped when the Target
+        # spoke on the turn before it, so a reply slow enough to hit the
+        # no-response wait legitimately leaves the start turn alone.
+        target_spoke_on = {
+            m["metadata"]["turn_number"]
+            for m in meta.get("messages", [])
+            if m.get("role") == "assistant" and (m.get("content") or "").strip()
+        }
+        if (start_at_turn - 1) in target_spoke_on:
+            assert start_at_turn in dropped
 
-        # ... the Driver spoke only before it ...
-        assert all(t < start_at_turn for t in _driver_turns(meta))
+        # ... the Driver said nothing on any turn that was dropped ...
+        #
+        # Not "nothing from the start turn on": a turn is only dropped when the
+        # Target spoke on the turn before it. Once both sides are silent the
+        # Driver's turn is the only thing that can revive the call, so it is
+        # left alone -- and against an agent that waits rather than re-prompts
+        # the Driver comes back on the next turn, which is correct.
+        assert set(_driver_turns(meta)).isdisjoint(dropped)
 
         # ... the dead air did not end the call early (a Driver that says
         # goodbye on its own is fine; the silence cutoff firing is not) ...

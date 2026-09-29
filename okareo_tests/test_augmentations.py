@@ -148,6 +148,49 @@ def test_dropout_start_at_turn_is_forwarded() -> None:
     ).to_dict() == {"dropout": {"probability": 1.0, "start_at_turn": 3}}
 
 
+def test_end_at_turn_is_forwarded_for_every_strategy_that_takes_it() -> None:
+    assert Augmentation(
+        barge_in=BargeInAugmentation(prompt="hey", start_at_turn=2, end_at_turn=4)
+    ).to_dict() == {"barge_in": {"prompt": "hey", "start_at_turn": 2, "end_at_turn": 4}}
+    assert Augmentation(
+        backchannel=BackchannelAugmentation(utterance="mm", end_at_turn=4)
+    ).to_dict() == {"backchannel": {"utterance": "mm", "end_at_turn": 4}}
+    assert Augmentation(
+        directed_speech=DirectedSpeechAugmentation(probability=0.3, end_at_turn=5)
+    ).to_dict() == {"directed_speech": {"probability": 0.3, "end_at_turn": 5}}
+    assert Augmentation(
+        secondary_speaker=SecondarySpeakerAugmentation(voice="Cathy", end_at_turn=6)
+    ).to_dict() == {"secondary_speaker": {"voice": "Cathy", "end_at_turn": 6}}
+    assert Augmentation(
+        dropout=DropoutAugmentation(probability=1.0, end_at_turn=3)
+    ).to_dict() == {"dropout": {"probability": 1.0, "end_at_turn": 3}}
+
+
+def test_a_single_turn_window_serializes_both_ends() -> None:
+    """The customer-facing shape: fire on turn 3 and nowhere else.
+
+    probability=1.0 is part of the idiom, not incidental -- the window bounds
+    WHERE the strategy may fire, and the probability is still drawn inside it,
+    so the default 0.1 would leave this doing nothing nine runs in ten.
+    """
+    assert Augmentation(
+        dropout=DropoutAugmentation(probability=1.0, start_at_turn=3, end_at_turn=3)
+    ).to_dict() == {
+        "dropout": {"probability": 1.0, "start_at_turn": 3, "end_at_turn": 3}
+    }
+
+
+def test_end_at_turn_is_omitted_when_unset() -> None:
+    """Unset means unbounded; the key must not reach the server at all, so
+    existing configs serialize exactly as they did before the parameter."""
+    payload = Augmentation(
+        dropout=DropoutAugmentation(probability=0.5, start_at_turn=2)
+    ).to_dict()
+
+    assert payload == {"dropout": {"probability": 0.5, "start_at_turn": 2}}
+    assert "end_at_turn" not in payload["dropout"]
+
+
 def test_noise_and_dropout_compose() -> None:
     simulation = Simulation(
         augmentation=Augmentation(
