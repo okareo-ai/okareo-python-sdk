@@ -24,7 +24,7 @@ Two calls, so it is skipped unless the Twilio credentials are present.
 """
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 from uuid import UUID
 
 import pytest
@@ -58,8 +58,16 @@ BAD_ENDINGS = {
 }
 
 MAX_TURNS = 4
-# Drop every Driver turn from here on, so the comparison is deterministic: the
-# turns before it must look like a clean run, and none after it may speak.
+# Open the drop window here, so the comparison is deterministic: the turns
+# before it must look like a clean run.
+#
+# Inside the window the Driver is not silent for the rest of the call. A turn is
+# only dropped when the Target spoke on the turn before it -- once both sides
+# have gone quiet, the Driver's turn is the only thing that can revive the call,
+# so it is left alone. Against an agent that answers dead air ("are you still
+# there?") every turn in the window drops; against one that simply waits, the
+# drops alternate. Both are correct, so the assertions below are written against
+# ``dropped_turns`` rather than against a fixed shape.
 DROP_FROM_TURN = 3
 
 DRIVER_PROMPT = """
@@ -171,6 +179,15 @@ def _turns_with_driver_speech(meta: Dict[str, Any]) -> List[int]:
     return sorted({m["metadata"]["turn_number"] for m in _driver_lines(meta)})
 
 
+def _turns_with_target_speech(meta: Dict[str, Any]) -> Set[int]:
+    """Turns the Target said something on -- including into dead air."""
+    return {
+        m["metadata"]["turn_number"]
+        for m in meta.get("messages", [])
+        if m.get("role") == "assistant" and (m.get("content") or "").strip()
+    }
+
+
 @pytest.fixture(scope="module")
 def baseline(
     okareo: Okareo,
@@ -213,18 +230,51 @@ class TestDropoutDoesNotDerailTheDriver:
     def test_the_driver_speaks_on_every_turn_before_the_drops(
         self, baseline: Dict[str, Any], dropped: Dict[str, Any]
     ) -> None:
+        """Up to the window, the two runs are the same conversation."""
         expected = [
             t for t in _turns_with_driver_speech(baseline) if t < DROP_FROM_TURN
         ]
+        before = [t for t in _turns_with_driver_speech(dropped) if t < DROP_FROM_TURN]
 
-        assert _turns_with_driver_speech(dropped) == expected
+        assert before == expected
 
-    def test_no_driver_speech_survives_a_dropped_turn(
+    def test_the_driver_is_silent_on_exactly_the_turns_that_were_dropped(
         self, dropped: Dict[str, Any]
     ) -> None:
-        assert all(t < DROP_FROM_TURN for t in _turns_with_driver_speech(dropped))
-        assert dropped.get("dropped_turns")
-        assert min(dropped["dropped_turns"]) >= DROP_FROM_TURN
+        dropped_turns = dropped.get("dropped_turns") or []
+
+        assert dropped_turns, "expected dropped_turns on the datapoint"
+        # Nothing before the window ...
+        assert min(dropped_turns) >= DROP_FROM_TURN
+        # ... the window's first turn drops WHEN there was something to drop.
+        # Guarded on its own precondition rather than assumed: the testtarget
+        # answers, but a reply slow enough to hit the no-response wait leaves
+        # that turn alone, and that is correct rather than a regression.
+        if (DROP_FROM_TURN - 1) in _turns_with_target_speech(dropped):
+            assert DROP_FROM_TURN in dropped_turns
+        # ... and no speech survives a turn that was dropped.
+        assert set(_turns_with_driver_speech(dropped)).isdisjoint(dropped_turns)
+
+    def test_a_drop_the_target_ignored_is_not_followed_by_another(
+        self, dropped: Dict[str, Any]
+    ) -> None:
+        """The regression that stacked "dropped turn" rows in the transcript.
+
+        Two dropped turns in a row are legal only when the Target spoke on the
+        first of them -- then the second had something to drop. With both sides
+        silent the call used to spiral: every turn drew again, each one costing
+        a no-response wait and moving nothing, until the turn limit.
+        """
+        dropped_turns = sorted(dropped.get("dropped_turns") or [])
+        answered = _turns_with_target_speech(dropped)
+
+        for earlier, later in zip(dropped_turns, dropped_turns[1:]):
+            if later - earlier == 1:
+                assert earlier in answered, (
+                    f"turn {later} was dropped although nobody spoke on turn "
+                    f"{earlier}: the Driver's turn was the only thing left to "
+                    f"revive the call. dropped_turns={dropped_turns}"
+                )
 
     def test_the_transcript_has_no_empty_or_placeholder_rows(
         self, baseline: Dict[str, Any], dropped: Dict[str, Any]
@@ -242,12 +292,13 @@ class TestDropoutDoesNotDerailTheDriver:
     ) -> None:
         """A rough guard against derailment: the surviving turns are still the
         short persona lines of a clean run, not confused restarts."""
+        dropped_turns = set(dropped.get("dropped_turns") or [])
         kept = [
             m
             for m in _driver_lines(dropped)
-            if m["metadata"]["turn_number"] < DROP_FROM_TURN
+            if m["metadata"]["turn_number"] not in dropped_turns
         ]
-        assert kept, "expected the Driver to speak before the drops began"
+        assert kept, "expected the Driver to speak on the turns it kept"
 
         base_words = [
             len((m.get("content") or "").split()) for m in _driver_lines(baseline)
