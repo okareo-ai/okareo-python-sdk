@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `dtmf_mechanism` on `PhoneTarget` and `TelnyxPhoneTarget`: `"rfc2833"` (out-of-band DTMF,
+  which IVRs act on directly) or `"inband"` (audible tones). Unset keeps today's behavior.
+  On a `PhoneTarget`, `"rfc2833"` routes the call over Telnyx and must be enabled for your
+  organization; an invalid value raises at construction.
+
 - `wait_for_test_run` on `Okareo` and `ModelUnderTest`: block until a submitted Run is
   FINISHED, polling with short requests (each poll has its own 30 s timeout, a failed poll is
   logged and retried). Raises `TestRunError` with the server's failure message on FAILED.
