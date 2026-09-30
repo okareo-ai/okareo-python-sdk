@@ -58,10 +58,13 @@ class DirectedSpeechAugmentation(AugmentationConfig):
         lpf_cutoff_hz: Low-pass filter cutoff used for off-mic speech.
         gain_db: Gain reduction applied to off-mic speech.
         start_at_turn: First turn this may fire on. Turns are counted as the
-            AGENT's speaking turns -- only turns whose transcript carried
-            words advance the count, so dial tones, hold music and dead air do
-            not. Not the transcript's turn numbering, which counts every turn.
-            Defaults to 1 server-side, i.e. from the agent's first real turn.
+            CALLER's own turns -- the turns Okareo's simulated caller takes,
+            not the agent's replies. Counting begins once the agent has said
+            something, so ringing, dial tone, hold music and an empty greeting
+            do not advance it. Not the transcript's turn numbering: on a call
+            that takes a while to get going, the window opens later in the
+            transcript than the number alone suggests. Defaults to 1
+            server-side, i.e. the first turn of the conversation proper.
         end_at_turn: Last turn this may fire on, counted the same way.
             Defaults to unbounded. Set it equal to ``start_at_turn`` to narrow
             the window to a single turn -- but a window is only a window: the
@@ -108,10 +111,13 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
         inter_speaker_pause_ms: Optional pause inserted between the primary
             and secondary speaker audio segments.
         start_at_turn: First turn this may fire on. Turns are counted as the
-            AGENT's speaking turns -- only turns whose transcript carried
-            words advance the count, so dial tones, hold music and dead air do
-            not. Not the transcript's turn numbering, which counts every turn.
-            Defaults to 1 server-side, i.e. from the agent's first real turn.
+            CALLER's own turns -- the turns Okareo's simulated caller takes,
+            not the agent's replies. Counting begins once the agent has said
+            something, so ringing, dial tone, hold music and an empty greeting
+            do not advance it. Not the transcript's turn numbering: on a call
+            that takes a while to get going, the window opens later in the
+            transcript than the number alone suggests. Defaults to 1
+            server-side, i.e. the first turn of the conversation proper.
         end_at_turn: Last turn this may fire on, counted the same way.
             Defaults to unbounded. Set it equal to ``start_at_turn`` to narrow
             the window to a single turn -- but a window is only a window: the
@@ -139,10 +145,13 @@ class BackchannelAugmentation(AugmentationConfig):
         min_offset_ms: Minimum delay before the injection fires.
         max_offset_ms: Maximum delay before the injection fires.
         start_at_turn: First turn this may fire on. Turns are counted as the
-            AGENT's speaking turns -- only turns whose transcript carried
-            words advance the count, so dial tones, hold music and dead air do
-            not. Not the transcript's turn numbering, which counts every turn.
-            Defaults to 1 server-side, i.e. from the agent's first real turn.
+            CALLER's own turns -- the turns Okareo's simulated caller takes,
+            not the agent's replies. Counting begins once the agent has said
+            something, so ringing, dial tone, hold music and an empty greeting
+            do not advance it. Not the transcript's turn numbering: on a call
+            that takes a while to get going, the window opens later in the
+            transcript than the number alone suggests. Defaults to 1
+            server-side, i.e. the first turn of the conversation proper.
         end_at_turn: Last turn this may fire on, counted the same way.
             Defaults to unbounded. Set it equal to ``start_at_turn`` to narrow
             the window to a single turn -- but a window is only a window: the
@@ -170,10 +179,13 @@ class BargeInAugmentation(AugmentationConfig):
         min_offset_ms: Minimum delay before the injection fires.
         max_offset_ms: Maximum delay before the injection fires.
         start_at_turn: First turn this may fire on. Turns are counted as the
-            AGENT's speaking turns -- only turns whose transcript carried
-            words advance the count, so dial tones, hold music and dead air do
-            not. Not the transcript's turn numbering, which counts every turn.
-            Defaults to 1 server-side, i.e. from the agent's first real turn.
+            CALLER's own turns -- the turns Okareo's simulated caller takes,
+            not the agent's replies. Counting begins once the agent has said
+            something, so ringing, dial tone, hold music and an empty greeting
+            do not advance it. Not the transcript's turn numbering: on a call
+            that takes a while to get going, the window opens later in the
+            transcript than the number alone suggests. Defaults to 1
+            server-side, i.e. the first turn of the conversation proper.
         end_at_turn: Last turn this may fire on, counted the same way.
             Defaults to unbounded. Set it equal to ``start_at_turn`` to narrow
             the window to a single turn -- but a window is only a window: the
@@ -199,10 +211,13 @@ class DropoutAugmentation(AugmentationConfig):
         probability: Probability (0-1) that the driver drops an entire turn:
             nothing is said and the target hears silence for that turn.
         start_at_turn: First turn this may fire on. Turns are counted as the
-            AGENT's speaking turns -- only turns whose transcript carried
-            words advance the count, so dial tones, hold music and dead air do
-            not. Not the transcript's turn numbering, which counts every turn.
-            Defaults to 1 server-side, i.e. from the agent's first real turn.
+            CALLER's own turns -- the turns Okareo's simulated caller takes,
+            not the agent's replies. Counting begins once the agent has said
+            something, so ringing, dial tone, hold music and an empty greeting
+            do not advance it. Not the transcript's turn numbering: on a call
+            that takes a while to get going, the window opens later in the
+            transcript than the number alone suggests. Defaults to 1
+            server-side, i.e. the first turn of the conversation proper.
         end_at_turn: Last turn this may fire on, counted the same way.
             Defaults to unbounded. Set it equal to ``start_at_turn`` to narrow
             the window to a single turn -- but a window is only a window: the
