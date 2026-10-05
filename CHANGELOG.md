@@ -42,6 +42,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   (free-form text rather than a score). Analysis Checks were previously not
   constructible from the SDK.
 
+- `ModelUnderTest.close()`, and `ModelUnderTest` as a context manager
+  (`with okareo.register_model(...) as model:`): delivers the datapoints queued by
+  `add_data_point_async`, then stops the background thread that sends them. It prints
+  nothing, so it is safe inside a stdio MCP server, and calling it twice is fine.
+
 ### Changed
 
 - Model-based Check prompts may only use the current template variables. Okareo now
@@ -62,6 +67,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   should pass an explicit `project_id` once they use multiple Projects.
 - `ingest_conversations` accepts an omitted `project_id` when a client-level
   Project is set, and raises a clear error when neither is available.
+- `ModelUnderTest` starts its datapoint thread on the first `add_data_point_async`, not
+  when the model is built, so a model that queues no datapoints costs no thread.
+  `worker_thread` is `None` until then. After `close()` or `flush()`,
+  `add_data_point_async` returns `False` and queues nothing; a datapoint queued after
+  `flush()` was never delivered before either.
+- The datapoint thread's "Queue is full, data points might get dropped." and "Error
+  performing async call" messages go to the `okareo.async_utils` logger as warnings
+  (the error with its exception) instead of stdout, which a stdio MCP server reserves
+  for its protocol. `flush()` still prints "Shutting down".
+- `run_test` and `submit_test` log their start errors (an unexpected status, an error
+  response, an empty response) as warnings on the `okareo.model_under_test` logger
+  instead of printing them. They raise the same exceptions as before.
+- `Okareo(..., timeout=...)` now applies the timeout, which it used to ignore, to every
+  request through the client, including the Project lookup the constructor makes.
+  **If you already pass `timeout=`, a `run_test` that takes longer than that value is
+  now cut off**, because `run_test` holds its request open until the Run finishes. Pass
+  no timeout, or one longer than your longest Run. The default is now `None` (no
+  timeout), which is what every client already had. `HTTPX_TIME_OUT` stays in
+  `okareo.common`, but the client does not read it.
 
 ### Removed
 
@@ -90,6 +114,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Example code-based check fixtures now declare `check_type` explicitly, matching the
   output-type requirement for code-based checks (a check returning `CheckResponse`
   otherwise fails output-type inference).
+- Every `ModelUnderTest` started a background thread when it was built, and the thread
+  ran until the process exited, keeping the model and its HTTP client in memory. A
+  process that builds a model per request leaked a thread and its memory each time. The
+  thread now starts on the first queued datapoint and stops on `close()`.
 
 ## [0.0.133] - 2026-06-09
 

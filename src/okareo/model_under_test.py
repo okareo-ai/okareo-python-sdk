@@ -91,6 +91,9 @@ import nats  # type: ignore # noqa: E402
 
 ## END Monkey Patch for nats to use proxy env vars (via aiohttp)
 
+# Start errors go here, never to stdout: a stdio MCP server speaks its protocol there.
+logger = logging.getLogger(__name__)
+
 TERMINAL_TEST_RUN_STATUSES = frozenset({"FINISHED", "FAILED"})
 # A Run that is still going past this mark gets one explicit log line: it is the
 # point past which a client holding one silent HTTP request has been seen cut.
@@ -176,10 +179,10 @@ def fetch_test_run(
 ) -> TestRunItem:
     """GET one Run with its own request timeout, so a poll can never hang the caller.
 
-    The generated client is built without a timeout (a long ``run_test`` needs
-    none), so the timeout goes on this request alone. Not ``Client.with_timeout``:
-    that mutates the already-built shared httpx client, which would give
-    ``run_test``'s hour-long POST a 30 s read timeout.
+    The timeout goes on this request alone and applies whatever the client's own
+    setting is (by default the client has none, since a long ``run_test`` needs
+    none). Not ``Client.with_timeout``: that mutates the already-built shared httpx
+    client, which would give ``run_test``'s hour-long POST a 30 s read timeout.
     """
     kwargs = get_test_run_v0_test_runs_test_run_id_get._get_kwargs(
         test_run_id=UUID(str(test_run_id)), api_key=api_key
@@ -295,6 +298,11 @@ class BaseModel:
 class ModelUnderTest(AsyncProcessorMixin):
     """A class for managing a Model Under Test (MUT) in Okareo.
     Returned by [okareo.register_model()](/docs/reference/python-sdk/okareo#register_model)
+
+    `add_data_point_async` hands datapoints to a background thread, started by the
+    first one. Call `close()`, or use the model as a context manager
+    (`with okareo.register_model(...) as model:`), to deliver what is queued and stop
+    that thread.
     """
 
     def __init__(
@@ -1290,7 +1298,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 )
             return response
         except UnexpectedStatus as e:
-            print(f"Unexpected status {e=}, {e.content=}")
+            logger.warning("Unexpected status %s, content=%r", e.status_code, e.content)
             raise
         finally:
             if not keep_listener_running:
@@ -1337,11 +1345,10 @@ class ModelUnderTest(AsyncProcessorMixin):
             ),
         )
         if isinstance(response, ErrorResponse):
-            error_message = f"error: {response}, {response.detail}"
-            print(error_message)
+            logger.warning("error: %s, %s", response, response.detail)
             raise TestRunError(str(response.detail))
         if not response:
-            print("Empty response from API")
+            logger.warning("Empty response from API")
         assert response is not None
         return response
 
