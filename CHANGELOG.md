@@ -49,6 +49,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   integers; unset ones use the server defaults (60 s, 30 s, 1200 s). Targets without
   `trace_pull` send the same payload as before. A Target read back with
   `get_target_by_name` keeps its `trace_params` when saved again.
+- `LiveKitSessionVoiceTarget` and `JoinCallConfig`: the "LiveKit Session" voice Target, used
+  for Salesforce Agentforce voice. For each conversation Okareo authenticates (`auth`),
+  starts a session (`start_session`), asks the agent's API for a LiveKit room (`join_call`:
+  server URL, join token and room name, read from the response), joins it over WebRTC, and
+  ends the session (`end_session`). The blocks serialize as on `CustomEndpointTarget`, with
+  `join_call_params` in place of `next_message_params`, and `{access_token}`,
+  `{session_id}` and `{scenario_row_run_guid}` are sent as written. Unlike a direct LiveKit
+  room join, the Target holds no LiveKit key or secret. Takes `trace_pull` like
+  `CustomEndpointTarget`, plus `max_parallel_requests` and a fallback `livekit_url`.
+  `join_call`, its URL and its room-token path are required, as is a LiveKit server URL
+  (`join_call.response_livekit_url_path` or `livekit_url`); each block must be its config
+  class. `get_sensitive_fields()` returns `auth_params.body.client_secret` when the auth body
+  has a `client_secret`; pass it as `sensitive_fields` to `create_or_update_target` or
+  `run_simulation` so Okareo masks the secret when the Target is read back.
 - Generated API client: Agentforce voice integrations (`provider="agentforce"`, Salesforce
   `client_id` / `client_secret` secrets, `my_domain` metadata) and the `livekit` provider;
   `ProviderIntegrationResponse.delivery` (`"webhook"` or `"pull"`); and the connection-test
