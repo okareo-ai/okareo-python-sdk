@@ -2698,6 +2698,66 @@ class AuthConfig:
         }
 
 
+class TracePullConfig:
+    """Pull the agent's own trace of each simulated conversation into Okareo.
+
+    After each conversation ends, Okareo fetches the agent platform's record of
+    that session (for example, Salesforce Agentforce session tracing) and
+    attaches it to the conversation as a trace. The platform's credentials live
+    on a voice integration in your Project; this config only names that
+    integration, so no credentials are stored on the Target.
+
+    The platform's record can take a few minutes to appear after the call
+    ends, so Okareo waits, then checks again on an interval until it finds the
+    record or gives up. Unset timings use the server defaults
+    (60 s, 30 s and 1200 s).
+
+    Arguments:
+        integration_id: ID of the voice integration to pull through (an
+            Agentforce integration in the Target's Project).
+        initial_delay_s: Seconds to wait after a conversation ends before the
+            first check.
+        poll_interval_s: Seconds between checks.
+        timeout_s: Seconds after the conversation ends to stop checking.
+    """
+
+    def __init__(
+        self,
+        integration_id: Union[str, UUID],
+        initial_delay_s: Optional[int] = None,
+        poll_interval_s: Optional[int] = None,
+        timeout_s: Optional[int] = None,
+    ) -> None:
+        try:
+            self.integration_id = str(UUID(str(integration_id)))
+        except ValueError:
+            raise ValueError(
+                f"integration_id must be a UUID, got {integration_id!r}"
+            ) from None
+        for name, value in (
+            ("initial_delay_s", initial_delay_s),
+            ("poll_interval_s", poll_interval_s),
+            ("timeout_s", timeout_s),
+        ):
+            if value is not None and (
+                isinstance(value, bool) or not isinstance(value, int) or value <= 0
+            ):
+                raise ValueError(f"{name} must be a positive integer, got {value!r}")
+        self.initial_delay_s = initial_delay_s
+        self.poll_interval_s = poll_interval_s
+        self.timeout_s = timeout_s
+
+    def to_dict(self) -> dict:
+        d: dict = {"integration_id": self.integration_id}
+        if self.initial_delay_s is not None:
+            d["initial_delay_s"] = self.initial_delay_s
+        if self.poll_interval_s is not None:
+            d["poll_interval_s"] = self.poll_interval_s
+        if self.timeout_s is not None:
+            d["timeout_s"] = self.timeout_s
+        return d
+
+
 class CustomEndpointTarget(BaseModel):
     """
     A trio of custom API endpoints for starting a session and continuing a conversation to use in
@@ -2709,6 +2769,8 @@ class CustomEndpointTarget(BaseModel):
         end_session: A valid EndSessionConfig for ending a session.
         auth: A valid AuthConfig for authenticating a session.
         max_parallel_requests: Maximum number of parallel requests to allow when running the evaluation.
+        trace_pull: Optional TracePullConfig. Pulls the agent platform's own trace of each
+            conversation through a voice integration (e.g. Agentforce). Sent as `trace_params`.
     """
 
     type = "custom_endpoint"
@@ -2720,12 +2782,14 @@ class CustomEndpointTarget(BaseModel):
         end_session: Optional[EndSessionConfig] = None,
         auth: Optional[AuthConfig] = None,
         max_parallel_requests: Optional[int] = None,
+        trace_pull: Optional[TracePullConfig] = None,
     ) -> None:
         self.start_session = start_session
         self.next_turn = next_turn
         self.end_session = end_session
         self.auth = auth
         self.max_parallel_requests = max_parallel_requests
+        self.trace_pull = trace_pull
 
     def params(self) -> dict:
         result = {
@@ -2741,6 +2805,8 @@ class CustomEndpointTarget(BaseModel):
         }
         if self.auth is not None:
             result["auth_params"] = self.auth.to_dict()
+        if self.trace_pull is not None:
+            result["trace_params"] = self.trace_pull.to_dict()
         return result
 
 
