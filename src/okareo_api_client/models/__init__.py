@@ -29,6 +29,12 @@ from .check_value_item import CheckValueItem
 from .check_value_item_check_metadata_type_0 import CheckValueItemCheckMetadataType0
 from .compare_test_runs_payload import CompareTestRunsPayload
 from .comparison_operator import ComparisonOperator
+from .connection_check import ConnectionCheck
+from .connection_test_request import ConnectionTestRequest
+from .connection_test_request_metadata import ConnectionTestRequestMetadata
+from .connection_test_request_provider import ConnectionTestRequestProvider
+from .connection_test_request_secrets import ConnectionTestRequestSecrets
+from .connection_test_response import ConnectionTestResponse
 from .conversation_audio import ConversationAudio
 from .conversation_audio_type import ConversationAudioType
 from .conversation_ingest_request import ConversationIngestRequest
@@ -44,7 +50,9 @@ from .create_provider_integration_request import CreateProviderIntegrationReques
 from .create_provider_integration_request_metadata import CreateProviderIntegrationRequestMetadata
 from .create_provider_integration_request_provider import CreateProviderIntegrationRequestProvider
 from .create_provider_integration_request_secrets import CreateProviderIntegrationRequestSecrets
-from .create_provider_integration_request_webhook_auth_type import CreateProviderIntegrationRequestWebhookAuthType
+from .create_provider_integration_request_webhook_auth_type_type_0 import (
+    CreateProviderIntegrationRequestWebhookAuthTypeType0,
+)
 from .create_trace_eval_v0_groups_group_id_trace_eval_post_response_create_trace_eval_v0_groups_group_id_trace_eval_post import (
     CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost,
 )
@@ -164,6 +172,7 @@ from .project_patch_schema import ProjectPatchSchema
 from .project_response import ProjectResponse
 from .project_schema import ProjectSchema
 from .provider_integration_response import ProviderIntegrationResponse
+from .provider_integration_response_delivery import ProviderIntegrationResponseDelivery
 from .provider_integration_response_metadata import ProviderIntegrationResponseMetadata
 from .provider_integration_response_provider import ProviderIntegrationResponseProvider
 from .provider_integration_response_webhook_auth_type import ProviderIntegrationResponseWebhookAuthType
@@ -285,6 +294,12 @@ __all__ = (
     "CheckValueItemCheckMetadataType0",
     "CompareTestRunsPayload",
     "ComparisonOperator",
+    "ConnectionCheck",
+    "ConnectionTestRequest",
+    "ConnectionTestRequestMetadata",
+    "ConnectionTestRequestProvider",
+    "ConnectionTestRequestSecrets",
+    "ConnectionTestResponse",
     "ConversationAudio",
     "ConversationAudioType",
     "ConversationIngestRequest",
@@ -298,7 +313,7 @@ __all__ = (
     "CreateProviderIntegrationRequestMetadata",
     "CreateProviderIntegrationRequestProvider",
     "CreateProviderIntegrationRequestSecrets",
-    "CreateProviderIntegrationRequestWebhookAuthType",
+    "CreateProviderIntegrationRequestWebhookAuthTypeType0",
     "CreateTraceEvalV0GroupsGroupIdTraceEvalPostResponseCreateTraceEvalV0GroupsGroupIdTraceEvalPost",
     "CubeMeta",
     "DashboardCreate",
@@ -400,6 +415,7 @@ __all__ = (
     "ProjectResponse",
     "ProjectSchema",
     "ProviderIntegrationResponse",
+    "ProviderIntegrationResponseDelivery",
     "ProviderIntegrationResponseMetadata",
     "ProviderIntegrationResponseProvider",
     "ProviderIntegrationResponseWebhookAuthType",

@@ -10,23 +10,38 @@ from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.provider_integration_response import ProviderIntegrationResponse
 from ...models.update_provider_integration_request import UpdateProviderIntegrationRequest
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     integration_id: UUID,
     *,
     body: UpdateProviderIntegrationRequest,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     headers["api-key"] = api_key
+
+    params: dict[str, Any] = {}
+
+    json_project_id: None | str | Unset
+    if isinstance(project_id, Unset):
+        json_project_id = UNSET
+    elif isinstance(project_id, UUID):
+        json_project_id = str(project_id)
+    else:
+        json_project_id = project_id
+    params["project_id"] = json_project_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
         "url": "/v0/voice/integration/{integration_id}".format(
             integration_id=quote(str(integration_id), safe=""),
         ),
+        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -72,12 +87,14 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: UpdateProviderIntegrationRequest,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
     """Update Provider Integration
 
     Args:
         integration_id (UUID):
+        project_id (None | Unset | UUID):
         api_key (str):
         body (UpdateProviderIntegrationRequest):
 
@@ -92,6 +109,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         integration_id=integration_id,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -107,12 +125,14 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: UpdateProviderIntegrationRequest,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> HTTPValidationError | ProviderIntegrationResponse | None:
     """Update Provider Integration
 
     Args:
         integration_id (UUID):
+        project_id (None | Unset | UUID):
         api_key (str):
         body (UpdateProviderIntegrationRequest):
 
@@ -128,6 +148,7 @@ def sync(
         integration_id=integration_id,
         client=client,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     ).parsed
 
@@ -137,12 +158,14 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: UpdateProviderIntegrationRequest,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> Response[HTTPValidationError | ProviderIntegrationResponse]:
     """Update Provider Integration
 
     Args:
         integration_id (UUID):
+        project_id (None | Unset | UUID):
         api_key (str):
         body (UpdateProviderIntegrationRequest):
 
@@ -157,6 +180,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         integration_id=integration_id,
         body=body,
+        project_id=project_id,
         api_key=api_key,
     )
 
@@ -170,12 +194,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: UpdateProviderIntegrationRequest,
+    project_id: None | Unset | UUID = UNSET,
     api_key: str,
 ) -> HTTPValidationError | ProviderIntegrationResponse | None:
     """Update Provider Integration
 
     Args:
         integration_id (UUID):
+        project_id (None | Unset | UUID):
         api_key (str):
         body (UpdateProviderIntegrationRequest):
 
@@ -192,6 +218,7 @@ async def asyncio(
             integration_id=integration_id,
             client=client,
             body=body,
+            project_id=project_id,
             api_key=api_key,
         )
     ).parsed

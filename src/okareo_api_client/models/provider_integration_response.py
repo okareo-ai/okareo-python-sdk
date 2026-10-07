@@ -8,6 +8,7 @@ from uuid import UUID
 from attrs import define as _attrs_define
 from dateutil.parser import isoparse
 
+from ..models.provider_integration_response_delivery import ProviderIntegrationResponseDelivery
 from ..models.provider_integration_response_provider import ProviderIntegrationResponseProvider
 from ..models.provider_integration_response_webhook_auth_type import ProviderIntegrationResponseWebhookAuthType
 from ..types import UNSET, Unset
@@ -32,6 +33,8 @@ class ProviderIntegrationResponse:
         webhook_auth_type (ProviderIntegrationResponseWebhookAuthType):
         metadata (ProviderIntegrationResponseMetadata):
         secret_summary (SecretSummaryResponse):
+        delivery (ProviderIntegrationResponseDelivery | Unset): webhook: the provider calls Okareo. pull: Okareo calls
+            the provider.
         last_validated_at (datetime.datetime | None | Unset):
         last_used_at (datetime.datetime | None | Unset):
     """
@@ -44,6 +47,7 @@ class ProviderIntegrationResponse:
     webhook_auth_type: ProviderIntegrationResponseWebhookAuthType
     metadata: ProviderIntegrationResponseMetadata
     secret_summary: SecretSummaryResponse
+    delivery: ProviderIntegrationResponseDelivery | Unset = UNSET
     last_validated_at: datetime.datetime | None | Unset = UNSET
     last_used_at: datetime.datetime | None | Unset = UNSET
 
@@ -63,6 +67,10 @@ class ProviderIntegrationResponse:
         metadata = self.metadata.to_dict()
 
         secret_summary = self.secret_summary.to_dict()
+
+        delivery: str | Unset = UNSET
+        if not isinstance(self.delivery, Unset):
+            delivery = self.delivery.value
 
         last_validated_at: None | str | Unset
         if isinstance(self.last_validated_at, Unset):
@@ -94,6 +102,8 @@ class ProviderIntegrationResponse:
                 "secret_summary": secret_summary,
             }
         )
+        if delivery is not UNSET:
+            field_dict["delivery"] = delivery
         if last_validated_at is not UNSET:
             field_dict["last_validated_at"] = last_validated_at
         if last_used_at is not UNSET:
@@ -122,6 +132,13 @@ class ProviderIntegrationResponse:
         metadata = ProviderIntegrationResponseMetadata.from_dict(d.pop("metadata"))
 
         secret_summary = SecretSummaryResponse.from_dict(d.pop("secret_summary"))
+
+        _delivery = d.pop("delivery", UNSET)
+        delivery: ProviderIntegrationResponseDelivery | Unset
+        if isinstance(_delivery, Unset):
+            delivery = UNSET
+        else:
+            delivery = ProviderIntegrationResponseDelivery(_delivery)
 
         def _parse_last_validated_at(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -166,6 +183,7 @@ class ProviderIntegrationResponse:
             webhook_auth_type=webhook_auth_type,
             metadata=metadata,
             secret_summary=secret_summary,
+            delivery=delivery,
             last_validated_at=last_validated_at,
             last_used_at=last_used_at,
         )
