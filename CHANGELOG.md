@@ -41,6 +41,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `CheckOutputType.ANALYSIS`, the third model-check output type the platform supports
   (free-form text rather than a score). Analysis Checks were previously not
   constructible from the SDK.
+- `TracePullConfig` and `CustomEndpointTarget(..., trace_pull=...)`: after each simulated
+  conversation, Okareo fetches the agent platform's own trace of it (Salesforce Agentforce
+  session tracing) and attaches it to the conversation. The config names an Agentforce voice
+  integration in your Project, which holds the Salesforce credentials, so the Target carries
+  none. Optional `initial_delay_s`, `poll_interval_s` and `timeout_s` must be positive
+  integers; unset ones use the server defaults (60 s, 30 s, 1200 s). Targets without
+  `trace_pull` send the same payload as before. A Target read back with
+  `get_target_by_name` keeps its `trace_params` when saved again.
+- `LiveKitSessionVoiceTarget` and `JoinCallConfig`: the "LiveKit Session" voice Target, used
+  for Salesforce Agentforce voice. For each conversation Okareo authenticates (`auth`),
+  starts a session (`start_session`), asks the agent's API for a LiveKit room (`join_call`:
+  server URL, join token and room name, read from the response), joins it over WebRTC, and
+  ends the session (`end_session`). The blocks serialize as on `CustomEndpointTarget`, with
+  `join_call_params` in place of `next_message_params`, and `{access_token}`,
+  `{session_id}` and `{scenario_row_run_guid}` are sent as written. Unlike a direct LiveKit
+  room join, the Target holds no LiveKit key or secret. Takes `trace_pull` like
+  `CustomEndpointTarget`, plus `max_parallel_requests` and a fallback `livekit_url`.
+  `join_call`, its URL and its room-token path are required, as is a LiveKit server URL
+  (`join_call.response_livekit_url_path` or `livekit_url`); each block must be its config
+  class. `get_sensitive_fields()` returns `auth_params.body.client_secret` when the auth body
+  has a `client_secret`; pass it as `sensitive_fields` to `create_or_update_target` or
+  `run_simulation` so Okareo masks the secret when the Target is read back.
+- Generated API client: Agentforce voice integrations (`provider="agentforce"`, Salesforce
+  `client_id` / `client_secret` secrets, `my_domain` metadata) and the `livekit` provider;
+  `ProviderIntegrationResponse.delivery` (`"webhook"` or `"pull"`); and the connection-test
+  routes `check_unsaved_integration_connection_v0_voice_integration_test_post` (settings
+  not yet saved) and `check_integration_connection_v0_voice_integration_integration_id_test_post`
+  (a saved integration), both returning `ConnectionTestResponse` with one entry per check.
+  The integration get/update/delete/rotate/status routes take an optional `project_id`.
+- `ProviderIntegrationResponse.delivery` is optional (`UNSET` when the server doesn't send
+  it), so the client parses integrations from servers both before and after the Agentforce
+  release.
 
 ### Changed
 
@@ -62,6 +94,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   should pass an explicit `project_id` once they use multiple Projects.
 - `ingest_conversations` accepts an omitted `project_id` when a client-level
   Project is set, and raises a clear error when neither is available.
+- Generated API client: `CreateProviderIntegrationRequest.project_id` and
+  `webhook_auth_type` are optional keyword fields (the server picks the provider's auth
+  type), so pass the remaining fields by keyword. The enum for `webhook_auth_type` is now
+  `CreateProviderIntegrationRequestWebhookAuthTypeType0`
+  (was `CreateProviderIntegrationRequestWebhookAuthType`).
 
 ### Removed
 
@@ -90,6 +127,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Example code-based check fixtures now declare `check_type` explicitly, matching the
   output-type requirement for code-based checks (a check returning `CheckResponse`
   otherwise fails output-type inference).
+- Listing or getting voice integrations through the generated API client raised
+  `ValueError` when the Project had a LiveKit or Agentforce integration; those providers
+  now parse.
 
 ## [0.0.133] - 2026-06-09
 

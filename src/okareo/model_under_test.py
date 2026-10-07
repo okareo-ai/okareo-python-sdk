@@ -2698,6 +2698,148 @@ class AuthConfig:
         }
 
 
+class JoinCallConfig:
+    """Configuration for the HTTP call that gets a LiveKit room for a voice session.
+
+    Used by `LiveKitSessionVoiceTarget`. Okareo calls this endpoint once per
+    conversation, after `auth` and `start_session`, and reads from the response
+    what it needs to join the conversation's LiveKit room: the server URL, a
+    join token, and the room name. Paths use the same `response.`-prefixed
+    syntax as the other endpoint configs.
+
+    Arguments:
+        url: URL of the join endpoint. May reference `{session_id}` (read by
+            `start_session.response_session_id_path`), e.g.
+            `https://api.example.com/sessions/{session_id}/join`.
+        method: HTTP method to use for the request. Defaults to `POST`.
+        headers: Headers to include in the request. May reference
+            `{access_token}` (read by `auth.response_access_token_path`).
+            Defaults to an empty JSON object.
+        body: Body to include in the request. Defaults to an empty JSON object.
+        status_code: Expected HTTP status code of the response. Any 2xx when unset.
+        response_room_token_path: Path to the LiveKit join token (a JWT) in the
+            response, e.g. `response.room.token`. Required.
+        response_livekit_url_path: Path to the LiveKit server URL in the
+            response, e.g. `response.room.endpoint`. Required unless the Target
+            sets `livekit_url`.
+        response_room_name_path: Path to the room name in the response. Optional;
+            without it Okareo takes the room from the token's grant.
+        response_session_id_path: Path to a session ID in the response, for
+            services whose join call (rather than a start-session call) creates
+            the session. Optional.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        method: str = "POST",
+        headers: Optional[Union[str, dict]] = None,
+        body: Union[str, dict] = "{}",
+        status_code: Optional[int] = None,
+        response_room_token_path: str = "",
+        response_livekit_url_path: str = "",
+        response_room_name_path: str = "",
+        response_session_id_path: str = "",
+    ) -> None:
+        if not url:
+            raise ValueError("JoinCallConfig requires url: the join endpoint to call.")
+        if not response_room_token_path:
+            raise ValueError(
+                "JoinCallConfig requires response_room_token_path: where the join "
+                "response carries the LiveKit join token (e.g. 'response.room.token')."
+            )
+        self.url = url
+        self.method = method
+        self.headers = headers or json.dumps({})
+        self.body = body
+        self.status_code = status_code
+        self.response_room_token_path = response_room_token_path
+        self.response_livekit_url_path = response_livekit_url_path
+        self.response_room_name_path = response_room_name_path
+        self.response_session_id_path = response_session_id_path
+
+    def to_dict(self) -> dict:
+        d: dict = {
+            "url": self.url,
+            "method": self.method,
+            "headers": self.headers,
+            "body": self.body,
+            "status_code": self.status_code,
+            "response_room_token_path": self.response_room_token_path,
+        }
+        # Optional paths are sent only when set; the server treats a missing
+        # path as "not in the response" and falls back (livekit_url, the token's
+        # room grant, the start-session ID).
+        for key in (
+            "response_livekit_url_path",
+            "response_room_name_path",
+            "response_session_id_path",
+        ):
+            if getattr(self, key):
+                d[key] = getattr(self, key)
+        return d
+
+
+class TracePullConfig:
+    """Pull the agent's own trace of each simulated conversation into Okareo.
+
+    After each conversation ends, Okareo fetches the agent platform's record of
+    that session (for example, Salesforce Agentforce session tracing) and
+    attaches it to the conversation as a trace. The platform's credentials live
+    on a voice integration in your Project; this config only names that
+    integration, so no credentials are stored on the Target.
+
+    The platform's record can take a few minutes to appear after the call
+    ends, so Okareo waits, then checks again on an interval until it finds the
+    record or gives up. Unset timings use the server defaults
+    (60 s, 30 s and 1200 s).
+
+    Arguments:
+        integration_id: ID of the voice integration to pull through (an
+            Agentforce integration in the Target's Project).
+        initial_delay_s: Seconds to wait after a conversation ends before the
+            first check.
+        poll_interval_s: Seconds between checks.
+        timeout_s: Seconds after the conversation ends to stop checking.
+    """
+
+    def __init__(
+        self,
+        integration_id: Union[str, UUID],
+        initial_delay_s: Optional[int] = None,
+        poll_interval_s: Optional[int] = None,
+        timeout_s: Optional[int] = None,
+    ) -> None:
+        try:
+            self.integration_id = str(UUID(str(integration_id)))
+        except ValueError:
+            raise ValueError(
+                f"integration_id must be a UUID, got {integration_id!r}"
+            ) from None
+        for name, value in (
+            ("initial_delay_s", initial_delay_s),
+            ("poll_interval_s", poll_interval_s),
+            ("timeout_s", timeout_s),
+        ):
+            if value is not None and (
+                isinstance(value, bool) or not isinstance(value, int) or value <= 0
+            ):
+                raise ValueError(f"{name} must be a positive integer, got {value!r}")
+        self.initial_delay_s = initial_delay_s
+        self.poll_interval_s = poll_interval_s
+        self.timeout_s = timeout_s
+
+    def to_dict(self) -> dict:
+        d: dict = {"integration_id": self.integration_id}
+        if self.initial_delay_s is not None:
+            d["initial_delay_s"] = self.initial_delay_s
+        if self.poll_interval_s is not None:
+            d["poll_interval_s"] = self.poll_interval_s
+        if self.timeout_s is not None:
+            d["timeout_s"] = self.timeout_s
+        return d
+
+
 class CustomEndpointTarget(BaseModel):
     """
     A trio of custom API endpoints for starting a session and continuing a conversation to use in
@@ -2709,6 +2851,8 @@ class CustomEndpointTarget(BaseModel):
         end_session: A valid EndSessionConfig for ending a session.
         auth: A valid AuthConfig for authenticating a session.
         max_parallel_requests: Maximum number of parallel requests to allow when running the evaluation.
+        trace_pull: Optional TracePullConfig. Pulls the agent platform's own trace of each
+            conversation through a voice integration (e.g. Agentforce). Sent as `trace_params`.
     """
 
     type = "custom_endpoint"
@@ -2720,12 +2864,14 @@ class CustomEndpointTarget(BaseModel):
         end_session: Optional[EndSessionConfig] = None,
         auth: Optional[AuthConfig] = None,
         max_parallel_requests: Optional[int] = None,
+        trace_pull: Optional[TracePullConfig] = None,
     ) -> None:
         self.start_session = start_session
         self.next_turn = next_turn
         self.end_session = end_session
         self.auth = auth
         self.max_parallel_requests = max_parallel_requests
+        self.trace_pull = trace_pull
 
     def params(self) -> dict:
         result = {
@@ -2741,7 +2887,182 @@ class CustomEndpointTarget(BaseModel):
         }
         if self.auth is not None:
             result["auth_params"] = self.auth.to_dict()
+        if self.trace_pull is not None:
+            result["trace_params"] = self.trace_pull.to_dict()
         return result
+
+
+def _json_object_keys(value: Union[str, dict, None]) -> set:
+    """Keys of a dict, or of a JSON object given as a string; empty otherwise."""
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except ValueError:
+            return set()
+    return set(value) if isinstance(value, dict) else set()
+
+
+@_attrs_define
+class LiveKitSessionVoiceTarget(VoiceTarget):
+    """Voice target reached through a LiveKit room that the agent's own API sets up.
+
+    This is the "LiveKit Session" voice Target in the Okareo app; Salesforce
+    Agentforce voice is reached this way. For each simulated conversation
+    Okareo makes the same HTTP calls a `CustomEndpointTarget` makes, with the
+    join call in place of the per-turn call:
+
+    1. `auth` (optional) gets an access token, available to later calls as
+       `{access_token}`. Set its `response_access_token_path`; while it is
+       empty (the AuthConfig default) `{access_token}` stays blank.
+    2. `start_session` (optional) starts a session; its
+       `response_session_id_path` makes the ID available as `{session_id}`.
+    3. `join_call` returns the LiveKit server URL, a join token and the room
+       name. Okareo joins that room over WebRTC and runs the conversation.
+    4. `end_session` (optional) ends the session after Okareo leaves the room.
+
+    Requests may also use `{scenario_row_run_guid}`, an ID unique to the
+    conversation. Templates are sent as written and filled in by Okareo.
+
+    How this differs from joining a LiveKit room directly: there, the Target
+    stores your LiveKit URL, API key, API secret and room name, and Okareo signs
+    its own token for that room (the "LiveKit API Key" Target in the app).
+    Here Okareo never holds a LiveKit key or secret: the agent's API creates
+    the room and a short-lived join token for every conversation, as it does
+    for its real callers.
+
+    Secrets: the configs are stored with the Target as given, including any
+    client secret in `auth`. `get_sensitive_fields()` returns
+    `auth_params.body.client_secret` when the auth body has a `client_secret`,
+    the path the Okareo app marks. `create_or_update_target` and
+    `run_simulation` send only the `sensitive_fields` you pass, so pass
+    `sensitive_fields=target.get_sensitive_fields()` to have Okareo mask the
+    secret whenever the Target is read back. A list replaces the default
+    masking of keys containing `apikey` or `authorization`, so add the path of
+    any other secret, e.g. `join_call_params.headers.X-Api-Key`.
+
+    Arguments:
+        start_session: A SessionConfig that starts the session, or None when
+            the join call itself starts it.
+        join_call: A JoinCallConfig for the call that returns the LiveKit room.
+        end_session: An optional EndSessionConfig that ends the session.
+        auth: An optional AuthConfig that gets an access token.
+        max_parallel_requests: Cap on concurrent calls hitting the target.
+        trace_pull: Optional TracePullConfig. Pulls the agent platform's own
+            trace of each conversation through a voice integration (e.g.
+            Agentforce). The trace is looked up by the session ID, so set
+            `start_session.response_session_id_path` (or
+            `join_call.response_session_id_path`). Sent as `trace_params`.
+        livekit_url: LiveKit server URL to use when the join response doesn't
+            carry one. Optional when `join_call.response_livekit_url_path` is set.
+
+    Example:
+    ```python
+    MY_DOMAIN = "https://your-domain.my.salesforce.com"
+    AGENT_API = "https://api.example.com/einstein/ai-agent"
+    HEADERS = {"Authorization": "Bearer {access_token}", "Content-Type": "application/json"}
+
+    voice = LiveKitSessionVoiceTarget(
+        auth=AuthConfig(
+            url=MY_DOMAIN + "/services/oauth2/token",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            body={
+                "grant_type": "client_credentials",
+                "client_id": "<client-id>",
+                "client_secret": "<client-secret>",
+            },
+            response_access_token_path="response.access_token",
+        ),
+        start_session=SessionConfig(
+            url=AGENT_API + "/v1/agents/<agent-id>/sessions",
+            headers=HEADERS,
+            body={"externalSessionKey": "{scenario_row_run_guid}", "bypassUser": True},
+            response_session_id_path="response.sessionId",
+        ),
+        join_call=JoinCallConfig(
+            url=AGENT_API + "/v1.1/realtime/sessions/{session_id}/join",
+            headers=HEADERS,
+            body={"greeted": False},
+            response_livekit_url_path="response.room.endpoint",
+            response_room_token_path="response.room.token",
+            response_room_name_path="response.room.name",
+        ),
+        end_session=EndSessionConfig(
+            url=AGENT_API + "/v1/sessions/{session_id}",
+            method="DELETE",
+            headers={"Authorization": "Bearer {access_token}"},
+        ),
+        trace_pull=TracePullConfig("<agentforce-integration-id>"),
+    )
+    okareo.create_or_update_target(
+        Target(name="Agentforce voice", target=voice),
+        sensitive_fields=voice.get_sensitive_fields(),
+    )
+    ```
+    """
+
+    edge_type = "webrtc"
+    platform = "livekit"
+    start_session: Optional[SessionConfig]
+    join_call: JoinCallConfig
+    end_session: Optional[EndSessionConfig] = None
+    auth: Optional[AuthConfig] = None
+    max_parallel_requests: Optional[int] = None
+    trace_pull: Optional[TracePullConfig] = None
+    livekit_url: Optional[str] = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.join_call is None:
+            raise ValueError(
+                "LiveKitSessionVoiceTarget requires join_call: a JoinCallConfig for "
+                "the call that returns the LiveKit room."
+            )
+        expected: tuple = (
+            ("start_session", SessionConfig),
+            ("join_call", JoinCallConfig),
+            ("end_session", EndSessionConfig),
+            ("auth", AuthConfig),
+            ("trace_pull", TracePullConfig),
+        )
+        for name, config_class in expected:
+            value = getattr(self, name)
+            if value is not None and not isinstance(value, config_class):
+                raise TypeError(
+                    f"LiveKitSessionVoiceTarget {name} must be a "
+                    f"{config_class.__name__}, got {type(value).__name__}."
+                )
+        if not (self.join_call.response_livekit_url_path or self.livekit_url):
+            raise ValueError(
+                "LiveKitSessionVoiceTarget needs the LiveKit server URL: set "
+                "join_call.response_livekit_url_path (where the join response "
+                "carries it) or livekit_url."
+            )
+
+    def params(self) -> dict:
+        result: dict = {
+            "type": self.type,
+            "edge_type": self.edge_type,
+            "platform": self.platform,
+        }
+        if self.auth is not None:
+            result["auth_params"] = self.auth.to_dict()
+        if self.start_session is not None:
+            result["start_session_params"] = self.start_session.to_dict()
+        result["join_call_params"] = self.join_call.to_dict()
+        if self.end_session is not None:
+            result["end_session_params"] = self.end_session.to_dict()
+        if self.livekit_url:
+            result["livekit_url"] = self.livekit_url
+        result["max_parallel_requests"] = self.max_parallel_requests
+        if self.trace_pull is not None:
+            result["trace_params"] = self.trace_pull.to_dict()
+        return result
+
+    def get_sensitive_fields(self) -> list[str]:
+        if self.auth is not None and "client_secret" in _json_object_keys(
+            self.auth.body
+        ):
+            return ["auth_params.body.client_secret"]
+        return []
 
 
 @_attrs_define
@@ -2832,6 +3153,7 @@ class Target:
         SipTarget,
         VonagePhoneTarget,
         TelnyxPhoneTarget,
+        LiveKitSessionVoiceTarget,
         dict,
     ]
     id: Optional[str] = None

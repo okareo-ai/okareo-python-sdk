@@ -2,6 +2,8 @@ from enum import Enum
 
 
 class ProviderIntegrationResponseProvider(str, Enum):
+    AGENTFORCE = "agentforce"
+    LIVEKIT = "livekit"
     RETELL = "retell"
     TWILIO = "twilio"
 

@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class CreateProviderIntegrationRequestProvider(str, Enum):
+class ConnectionTestRequestProvider(str, Enum):
     AGENTFORCE = "agentforce"
     LIVEKIT = "livekit"
     RETELL = "retell"

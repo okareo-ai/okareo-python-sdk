@@ -1,7 +1,9 @@
 from enum import Enum
 
 
-class CreateProviderIntegrationRequestWebhookAuthType(str, Enum):
+class CreateProviderIntegrationRequestWebhookAuthTypeType0(str, Enum):
+    LIVEKIT_JWT = "livekit_jwt"
+    OAUTH_CLIENT_CREDENTIALS = "oauth_client_credentials"
     RETELL_SIGNATURE = "retell_signature"
     TWILIO_SIGNATURE = "twilio_signature"
 
