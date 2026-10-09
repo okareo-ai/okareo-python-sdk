@@ -76,6 +76,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- A `Driver` built without a `temperature` now gets Okareo's default, 0.8 (what the Okareo
+  app gives a new Driver), instead of an SDK-only 0.6. This also covers the Driver
+  `run_simulation` registers when none is passed. `Driver.temperature` now defaults to
+  `None`; `temperature=None` sends 0.8 instead of a null the API rejected. An explicit
+  temperature is sent as given.
 - `submit_test` for custom multi-turn Targets (`CustomMultiturnTarget`,
   `CustomMultiturnTargetAsync`) stopped the client-side listener as soon as the submit call
   returned, so every later turn of the Run failed with "no responders". The listener now stays

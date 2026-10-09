@@ -2744,18 +2744,24 @@ class CustomEndpointTarget(BaseModel):
         return result
 
 
+# The temperature the Okareo app gives a new Driver, and the one the server falls back
+# to. POST /v0/driver requires a number, so a Driver with no temperature is sent this.
+OKAREO_DEFAULT_DRIVER_TEMPERATURE = 0.8
+
+
 @_attrs_define
 class Driver:
     """Driver configuration used to simulate the caller side of a conversation.
 
     Registered via `Okareo.create_or_update_driver(...)` and used by
-    `Okareo.run_simulation(...)`.
+    `Okareo.run_simulation(...)`. Leave `temperature` unset (or None) to get
+    Okareo's default, 0.8.
     """
 
     name: str
     prompt_template: str = "{scenario_input}"
     model_id: Optional[str] = None
-    temperature: Optional[float] = 0.6
+    temperature: Optional[float] = None
     id: Optional[Union[str, UUID]] = None
     time_created: Optional[str] = datetime.now().isoformat()
     project_id: Optional[Union[str, UUID]] = None
@@ -2766,7 +2772,11 @@ class Driver:
     def to_dict(self) -> dict:
         d: dict = {
             "name": self.name,
-            "temperature": self.temperature,
+            "temperature": (
+                self.temperature
+                if self.temperature is not None
+                else OKAREO_DEFAULT_DRIVER_TEMPERATURE
+            ),
             "model_id": self.model_id,
             "prompt_template": self.prompt_template,
             "time_created": self.time_created,
