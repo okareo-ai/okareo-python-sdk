@@ -92,3 +92,19 @@ class TestTelnyxPhoneTarget:
         assert d["target"]["edge_type"] == "telnyx"
         assert d["target"]["connection_id"] == "conn-123"
         assert d["sensitive_fields"] == ["telnyx_api_key"]
+
+
+class TestTelnyxDtmfMechanism:
+    def test_unset_emits_no_key(self) -> None:
+        params = TelnyxPhoneTarget(phone_number="+15551234567").params()
+        assert "dtmf_mechanism" not in params
+
+    def test_inband_is_emitted(self) -> None:
+        params = TelnyxPhoneTarget(
+            phone_number="+15551234567", dtmf_mechanism="inband"
+        ).params()
+        assert params["dtmf_mechanism"] == "inband"
+
+    def test_invalid_value_fails_at_construction(self) -> None:
+        with pytest.raises(ValueError, match="Invalid dtmf_mechanism"):
+            TelnyxPhoneTarget(phone_number="+15551234567", dtmf_mechanism="both")
