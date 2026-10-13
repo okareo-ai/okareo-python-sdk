@@ -11,7 +11,6 @@ waits on it.
 from __future__ import annotations
 
 import threading
-from typing import Optional
 
 
 class TargetListener:
@@ -31,7 +30,7 @@ class TargetListener:
         """Whether it is still connected and answering."""
         return self._thread.is_alive() and not self._stats.get("closed")
 
-    def wait(self, timeout: Optional[float] = None) -> bool:
+    def wait(self, timeout: float | None = None) -> bool:
         """Block until the listener ends, or ``timeout`` seconds pass; whether it ended."""
         self._thread.join(timeout)
         return not self._thread.is_alive()

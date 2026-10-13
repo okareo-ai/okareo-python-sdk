@@ -14,16 +14,16 @@ network.
 from typing import Any, Iterator
 
 import pytest
-
-from okareo import model_under_test as mut_module
-from okareo.error import TestRunError
-from okareo.model_under_test import ModelUnderTest
-from okareo.target_listener import TargetListener
 from okareo_tests.test_submit_test_custom_multiturn_listener import (
     EchoAsync,
     FakeNats,
     make_mut,
 )
+
+from okareo import model_under_test as mut_module
+from okareo.error import TestRunError
+from okareo.model_under_test import ModelUnderTest
+from okareo.target_listener import TargetListener
 
 LISTENERS: list[TargetListener] = []
 
@@ -57,7 +57,9 @@ def asked(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
 def fake_nats(monkeypatch: pytest.MonkeyPatch) -> FakeNats:
     fake = FakeNats()
 
-    async def connect(self: ModelUnderTest, jwt: str, seed: str, local: str) -> FakeNats:
+    async def connect(
+        self: ModelUnderTest, jwt: str, seed: str, local: str
+    ) -> FakeNats:
         import asyncio
 
         fake.loop = asyncio.get_running_loop()
@@ -107,7 +109,9 @@ def test_it_answers_what_okareo_sends_with_no_run_submitted(
     assert fake_nats.published[0][1]["actual"] == "olleh"
 
 
-def test_it_stays_up_until_it_is_stopped(asked: list[dict], fake_nats: FakeNats) -> None:
+def test_it_stays_up_until_it_is_stopped(
+    asked: list[dict], fake_nats: FakeNats
+) -> None:
     mut = make_mut(EchoAsync(name="echo"))
     listener = listen(mut)
     assert listener.wait(timeout=0.5) is False, "nothing ends it but a stop"
