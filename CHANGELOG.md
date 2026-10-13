@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- The vision Target kind, as a reader: `openapi.json` lists `vision` among the kinds a stored
+  Target's `models` may hold, so a vision Target reads through `get_model` and
+  `get_target_by_name` like any other. Registering one is still refused by the server; the
+  settings class comes with the server change that lets clients create the kind. The generated
+  client is unchanged: it reads `models` as a mapping of any key.
 - Listen-only mode for custom multi-turn Targets: `ModelUnderTest.listen_on_target_channel()`
   subscribes to the Target's own channel (`invoke.<target id>`) and answers whatever Okareo
   sends it, a session open or a turn, with no Run submitted and none watched, until the
