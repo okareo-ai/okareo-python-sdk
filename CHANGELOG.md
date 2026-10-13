@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- Listen-only mode for custom multi-turn Targets: `ModelUnderTest.listen_on_target_channel()`
+  subscribes to the Target's own channel (`invoke.<target id>`) and answers whatever Okareo
+  sends it, a session open or a turn, with no Run submitted and none watched, until the
+  returned `TargetListener` is stopped (`stop()`, `wait()`, `is_listening()`, `describe()`).
+  The submit and run paths share its start and readiness barrier and are otherwise unchanged.
+  okareo-vision's `serve` uses it, so a browser runner can wait for Okareo before any Run
+  exists.
 - `wait_for_test_run` on `Okareo` and `ModelUnderTest`: block until a submitted Run is
   FINISHED, polling with short requests (each poll has its own 30 s timeout, a failed poll is
   logged and retried). Raises `TestRunError` with the server's failure message on FAILED.
