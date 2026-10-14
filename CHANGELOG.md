@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `interrupt`, `min_offset_ms`, `max_offset_ms` and `seed` on `DirectedSpeechAugmentation` and
+  `SecondarySpeakerAugmentation`: with `interrupt=True` the background remark plays over the
+  agent's next reply instead of in the caller's turn, starting `min_offset_ms`..`max_offset_ms`
+  after the agent starts speaking (barge-in's window, 200-600 ms by default). It does not take a
+  turn. Offsets are only valid with `interrupt`, and `inter_speaker_pause_ms` only without it.
 - `wait_for_test_run` on `Okareo` and `ModelUnderTest`: block until a submitted Run is
   FINISHED, polling with short requests (each poll has its own 30 s timeout, a failed poll is
   logged and retried). Raises `TestRunError` with the server's failure message on FAILED.

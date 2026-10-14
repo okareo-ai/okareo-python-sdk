@@ -191,6 +191,63 @@ def test_end_at_turn_is_omitted_when_unset() -> None:
     assert "end_at_turn" not in payload["dropout"]
 
 
+def test_interrupt_options_are_forwarded_for_directed_and_secondary_speaker() -> None:
+    """``interrupt`` moves the remark over the agent's next reply, timed with
+    barge-in's offset window; all four keys reach the server as given."""
+    assert Augmentation(
+        directed_speech=DirectedSpeechAugmentation(
+            probability=1.0,
+            interrupt=True,
+            min_offset_ms=900,
+            max_offset_ms=1100,
+            seed=3,
+        )
+    ).to_dict() == {
+        "directed_speech": {
+            "probability": 1.0,
+            "interrupt": True,
+            "min_offset_ms": 900,
+            "max_offset_ms": 1100,
+            "seed": 3,
+        }
+    }
+    assert Augmentation(
+        secondary_speaker=SecondarySpeakerAugmentation(
+            voice="Cathy - Coworker",
+            prompt="Ask the caller: did you have coffee?",
+            interrupt=True,
+            start_at_turn=2,
+            end_at_turn=2,
+        )
+    ).to_dict() == {
+        "secondary_speaker": {
+            "voice": "Cathy - Coworker",
+            "prompt": "Ask the caller: did you have coffee?",
+            "start_at_turn": 2,
+            "end_at_turn": 2,
+            "interrupt": True,
+        }
+    }
+
+
+def test_interrupt_options_are_omitted_when_unset() -> None:
+    """Unset keys never reach the server, so in-turn configs serialize exactly
+    as they did before the toggle existed (the server refuses offsets without
+    ``interrupt``)."""
+    payload = Augmentation(
+        secondary_speaker=SecondarySpeakerAugmentation(
+            voice="Cathy - Coworker", inter_speaker_pause_ms=120
+        )
+    ).to_dict()
+
+    assert payload == {
+        "secondary_speaker": {
+            "voice": "Cathy - Coworker",
+            "inter_speaker_pause_ms": 120,
+        }
+    }
+
+
 def test_noise_and_dropout_compose() -> None:
     simulation = Simulation(
         augmentation=Augmentation(
