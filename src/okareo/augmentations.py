@@ -70,6 +70,19 @@ class DirectedSpeechAugmentation(AugmentationConfig):
             the window to a single turn -- but a window is only a window: the
             ``probability`` above is still drawn inside it, so pair a one-turn
             window with ``probability=1.0`` to actually fire on that turn.
+        interrupt: Play the remark over the agent's next reply instead of
+            in the caller's turn. The caller says their line as usual; the
+            remark then overlaps the agent's reply to it and does not take a
+            turn. Needs a connection that can interrupt the agent, as barge-in
+            does. Defaults to off server-side.
+        min_offset_ms: With ``interrupt``: earliest delay, after the agent
+            starts speaking, before the remark plays. Defaults to 200
+            server-side, as on barge-in. Only valid with ``interrupt``.
+        max_offset_ms: With ``interrupt``: latest such delay; at least
+            ``min_offset_ms``. Defaults to 600 server-side, as on barge-in.
+            Only valid with ``interrupt``.
+        seed: Optional seed that makes the probability and offset draws
+            reproducible.
     """
 
     probability: float | None = None
@@ -78,6 +91,10 @@ class DirectedSpeechAugmentation(AugmentationConfig):
     gain_db: float | None = None
     start_at_turn: int | None = None
     end_at_turn: int | None = None
+    interrupt: bool | None = None
+    min_offset_ms: int | None = None
+    max_offset_ms: int | None = None
+    seed: int | None = None
 
 
 @_attrs_define
@@ -109,7 +126,8 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
         gain_db: Optional gain adjustment applied only to the
             secondary speaker audio.
         inter_speaker_pause_ms: Optional pause inserted between the primary
-            and secondary speaker audio segments.
+            and secondary speaker audio segments. Not valid with ``interrupt``,
+            where the remark is timed from the agent's speech instead.
         start_at_turn: First turn this may fire on. Turns are counted as the
             CALLER's own turns -- the turns Okareo's simulated caller takes,
             not the agent's replies. Counting begins once the agent has said
@@ -123,6 +141,19 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
             the window to a single turn -- but a window is only a window: the
             ``probability`` above is still drawn inside it, so pair a one-turn
             window with ``probability=1.0`` to actually fire on that turn.
+        interrupt: Play the remark over the agent's next reply instead of
+            in the caller's turn. The caller says their line as usual; the
+            remark then overlaps the agent's reply to it and does not take a
+            turn. Needs a connection that can interrupt the agent, as barge-in
+            does. Defaults to off server-side.
+        min_offset_ms: With ``interrupt``: earliest delay, after the agent
+            starts speaking, before the remark plays. Defaults to 200
+            server-side, as on barge-in. Only valid with ``interrupt``.
+        max_offset_ms: With ``interrupt``: latest such delay; at least
+            ``min_offset_ms``. Defaults to 600 server-side, as on barge-in.
+            Only valid with ``interrupt``.
+        seed: Optional seed that makes the probability and offset draws
+            reproducible.
     """
 
     probability: float | None = None
@@ -133,6 +164,10 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
     inter_speaker_pause_ms: int | None = None
     start_at_turn: int | None = None
     end_at_turn: int | None = None
+    interrupt: bool | None = None
+    min_offset_ms: int | None = None
+    max_offset_ms: int | None = None
+    seed: int | None = None
 
 
 @_attrs_define
