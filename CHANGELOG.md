@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- Per-turn augmentation plans: `Augmentation(plan={turn: [AugmentationConfig, ...]})` schedules
+  augmentations by the caller's turn (counted from 1), reusing the strategy classes. Each entry is
+  sent as `{"type": ..., <fields>}`, with `type` taken from its class. Interruptions in a turn
+  (barge-in, backchannel, speakers with `interrupt=True`) play in listed order over the agent's
+  reply, at most 6 per turn. Entries refuse `start_at_turn` / `end_at_turn` and CAP `pause_ms`;
+  only `noise` may sit beside a plan. Needs a server with plan support: older servers reject the
+  `plan` key.
+- `count` on `BargeInAugmentation` and `BackchannelAugmentation` (plan entries only): how many times
+  the entry plays in its turn.
+- `utterance` (exact words, no LLM call) on `DirectedSpeechAugmentation` and
+  `SecondarySpeakerAugmentation`; `BargeInAugmentation.utterance` is now honored. `utterance` and
+  `prompt` are mutually exclusive on all three. Inside a plan, `BargeInAugmentation.replacement_text`
+  is sent as `utterance`; outside one it is still ignored.
+- `consecutive_messages` (2-4) on `CAPAugmentation`: how many messages the caller sends back to back
+  when CAP fires.
 - `interrupt`, `min_offset_ms`, `max_offset_ms` and `seed` on `DirectedSpeechAugmentation` and
   `SecondarySpeakerAugmentation`: with `interrupt=True` the background remark plays over the
   agent's next reply instead of in the caller's turn, starting `min_offset_ms`..`max_offset_ms`
