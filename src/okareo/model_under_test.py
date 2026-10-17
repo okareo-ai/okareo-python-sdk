@@ -2768,6 +2768,11 @@ class Driver:
     voice_instructions: Optional[str] = None
     voice_profile: Optional[str] = None
     voice: Optional[str] = None
+    # Scripted Driver: an ordered list of steps ({"message": ...}, {"dtmf": ...}, {"silence": true},
+    # {"end_conversation": ...}; end_conversation last) or one "{scenario_input.<column>}" reference
+    # resolved per scenario row. When set, prompt_template is not used and no Driver
+    # LLM runs.
+    steps: Optional[Union[List[dict], str]] = None
 
     def to_dict(self) -> dict:
         d: dict = {
@@ -2786,6 +2791,8 @@ class Driver:
         }
         if self.id is not None:
             d["id"] = str(self.id)
+        if self.steps is not None:
+            d["steps"] = self.steps
         return d
 
     def _get_driver_fields(
@@ -2802,6 +2809,12 @@ class Driver:
             self.time_created = response.time_created
         if response.project_id:
             self.project_id = response.project_id
+        steps = response.steps
+        if isinstance(steps, list):
+            # The generated client wraps each step row; hand back plain dicts.
+            self.steps = [row.to_dict() for row in steps]
+        elif isinstance(steps, str):
+            self.steps = steps
 
     def _get_voice_driver_fields(self, response: VoiceDriverModelResponse) -> None:
         if response.voice_instructions:
