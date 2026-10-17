@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.voice_driver_model_response_steps_type_0_item import VoiceDriverModelResponseStepsType0Item
+
 
 T = TypeVar("T", bound="VoiceDriverModelResponse")
 
@@ -26,6 +30,7 @@ class VoiceDriverModelResponse:
         voice_instructions (None | str | Unset):
         voice (None | str | Unset):
         language (None | str | Unset):
+        steps (list[VoiceDriverModelResponseStepsType0Item] | None | str | Unset):
     """
 
     id: UUID
@@ -38,6 +43,7 @@ class VoiceDriverModelResponse:
     voice_instructions: None | str | Unset = UNSET
     voice: None | str | Unset = UNSET
     language: None | str | Unset = UNSET
+    steps: list[VoiceDriverModelResponseStepsType0Item] | None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -83,6 +89,18 @@ class VoiceDriverModelResponse:
         else:
             language = self.language
 
+        steps: list[dict[str, Any]] | None | str | Unset
+        if isinstance(self.steps, Unset):
+            steps = UNSET
+        elif isinstance(self.steps, list):
+            steps = []
+            for steps_type_0_item_data in self.steps:
+                steps_type_0_item = steps_type_0_item_data.to_dict()
+                steps.append(steps_type_0_item)
+
+        else:
+            steps = self.steps
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -104,11 +122,15 @@ class VoiceDriverModelResponse:
             field_dict["voice"] = voice
         if language is not UNSET:
             field_dict["language"] = language
+        if steps is not UNSET:
+            field_dict["steps"] = steps
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.voice_driver_model_response_steps_type_0_item import VoiceDriverModelResponseStepsType0Item
+
         d = dict(src_dict)
         id = UUID(d.pop("id"))
 
@@ -173,6 +195,28 @@ class VoiceDriverModelResponse:
 
         language = _parse_language(d.pop("language", UNSET))
 
+        def _parse_steps(data: object) -> list[VoiceDriverModelResponseStepsType0Item] | None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                steps_type_0 = []
+                _steps_type_0 = data
+                for steps_type_0_item_data in _steps_type_0:
+                    steps_type_0_item = VoiceDriverModelResponseStepsType0Item.from_dict(steps_type_0_item_data)
+
+                    steps_type_0.append(steps_type_0_item)
+
+                return steps_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[VoiceDriverModelResponseStepsType0Item] | None | str | Unset, data)
+
+        steps = _parse_steps(d.pop("steps", UNSET))
+
         voice_driver_model_response = cls(
             id=id,
             name=name,
@@ -184,6 +228,7 @@ class VoiceDriverModelResponse:
             voice_instructions=voice_instructions,
             voice=voice,
             language=language,
+            steps=steps,
         )
 
         voice_driver_model_response.additional_properties = d

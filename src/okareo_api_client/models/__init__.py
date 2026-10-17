@@ -83,9 +83,11 @@ from .datapoint_summary_item_user_metadata_type_0 import DatapointSummaryItemUse
 from .datapoint_tags_schema import DatapointTagsSchema
 from .dimension_meta_response import DimensionMetaResponse
 from .driver_model_response import DriverModelResponse
+from .driver_model_response_steps_type_0_item import DriverModelResponseStepsType0Item
 from .driver_model_schema import DriverModelSchema
 from .driver_prompt_request import DriverPromptRequest
 from .driver_prompt_response import DriverPromptResponse
+from .driver_step_schema import DriverStepSchema
 from .error_response import ErrorResponse
 from .evaluation_payload import EvaluationPayload
 from .evaluation_payload_metrics_kwargs import EvaluationPayloadMetricsKwargs
@@ -253,6 +255,7 @@ from .usage_metrics_response import UsageMetricsResponse
 from .usage_precision import UsagePrecision
 from .validation_error import ValidationError
 from .voice_driver_model_response import VoiceDriverModelResponse
+from .voice_driver_model_response_steps_type_0_item import VoiceDriverModelResponseStepsType0Item
 from .voice_profile_response import VoiceProfileResponse
 from .voice_upload_request import VoiceUploadRequest
 from .voice_upload_response import VoiceUploadResponse
@@ -335,9 +338,11 @@ __all__ = (
     "DatapointTagsSchema",
     "DimensionMetaResponse",
     "DriverModelResponse",
+    "DriverModelResponseStepsType0Item",
     "DriverModelSchema",
     "DriverPromptRequest",
     "DriverPromptResponse",
+    "DriverStepSchema",
     "ErrorResponse",
     "EvaluationPayload",
     "EvaluationPayloadMetricsKwargs",
@@ -475,6 +480,7 @@ __all__ = (
     "UsagePrecision",
     "ValidationError",
     "VoiceDriverModelResponse",
+    "VoiceDriverModelResponseStepsType0Item",
     "VoiceProfileResponse",
     "VoiceUploadRequest",
     "VoiceUploadResponse",
