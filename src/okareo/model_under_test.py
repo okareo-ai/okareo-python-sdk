@@ -2909,6 +2909,13 @@ class Simulation:
     concurrent_ask_probability: Optional[float] = 0.0
     turn_transition_time: Optional[int] = 1000
     augmentation: Optional[Union[Augmentation, dict[str, Any]]] = None
+    # Voice only. How long the caller waits for the agent to start replying, in
+    # milliseconds (500-30000); None leaves the platform default (10 s).
+    silence_timeout_ms: Optional[int] = None
+    # Voice only. Hang up once the agent has produced no recognizable speech --
+    # hold music, ringing, dead air -- for this long, in milliseconds
+    # (10000-600000), at any point in the call. None: off.
+    hold_timeout_ms: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
         if isinstance(self.stop_check, dict):
@@ -2934,6 +2941,12 @@ class Simulation:
                 if isinstance(self.augmentation, Augmentation)
                 else self.augmentation
             )
+        # Only when set, so a run that leaves them alone keeps the platform's
+        # defaults rather than sending an explicit null.
+        if self.silence_timeout_ms is not None:
+            d["silence_timeout_ms"] = self.silence_timeout_ms
+        if self.hold_timeout_ms is not None:
+            d["hold_timeout_ms"] = self.hold_timeout_ms
         return d
 
 
