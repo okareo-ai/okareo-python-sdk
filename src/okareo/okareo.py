@@ -1731,10 +1731,13 @@ class Okareo:
           ``turn_transition_time``: Runtime simulation controls.
         - ``augmentation``: Optional augmentation settings.
         - ``silence_timeout_ms``: Voice only. How long the caller waits for the
-          agent to start replying (500-30000 ms); omitted = platform default.
+          agent to start replying (500-30000 ms); omitted = the Target's own
+          setting if it has one, else the platform default (10 s).
         - ``hold_timeout_ms``: Voice only. Hang up once the agent has produced no
           recognizable speech -- hold music, ringing, dead air -- for this long
-          (10000-600000 ms), at any point in the call; omitted = off.
+          (10000-600000 ms). The clock starts once the caller's line has
+          finished and restarts whenever the agent says something recognizable;
+          omitted = the Target's own setting if it has one, else off.
         - ``api_key`` / ``api_keys``: Provider credentials for target calls.
         - ``metrics_kwargs`` / ``calculate_metrics``: Metrics configuration.
         - ``project_id`` / ``sensitive_fields``: Registration controls.

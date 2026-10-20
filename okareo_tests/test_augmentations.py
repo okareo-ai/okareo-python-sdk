@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -340,3 +341,95 @@ def test_run_simulation_serializes_augmentation_payload(
             "snr_db": 10,
         }
     }
+
+
+def _simulation_params_sent_by(
+    okareo_client: Okareo, httpx_mock: HTTPXMock, **simulation_kwargs: Any
+) -> dict:
+    """Run a simulation against the mock; return the ``simulation_params`` it sent."""
+    httpx_mock.add_response(
+        json={
+            "id": MOCK_UUID,
+            "name": "driver",
+            "temperature": 0.6,
+            "model_id": "gpt-4o-mini",
+            "prompt_template": "{scenario_input}",
+            "time_created": datetime.now().isoformat(),
+        },
+        status_code=201,
+    )
+    httpx_mock.add_response(
+        json={
+            "id": MOCK_UUID,
+            "project_id": MOCK_UUID,
+            "name": "target",
+            "tags": [],
+            "time_created": datetime.now().isoformat(),
+            "version": 1,
+            "models": {
+                "openai": {
+                    "type": "openai",
+                    "model_id": "gpt-4o-mini",
+                    "temperature": 0,
+                    "system_prompt_template": "Be helpful",
+                }
+            },
+        },
+        status_code=201,
+    )
+    httpx_mock.add_response(
+        json={
+            "id": MOCK_UUID,
+            "project_id": MOCK_UUID,
+            "mut_id": MOCK_UUID,
+            "scenario_set_id": MOCK_UUID,
+            "name": "voice sim",
+            "type": "MULTI_TURN",
+        },
+        status_code=201,
+    )
+
+    okareo_client.run_simulation(
+        name="voice sim",
+        scenario=ScenarioSetResponse(
+            scenario_id=UUID(MOCK_UUID),
+            project_id=UUID(MOCK_UUID),
+            name="scenario",
+            time_created=datetime.now(),
+            type_=ScenarioType.SEED,
+        ),
+        target=Target(
+            name="target",
+            target=OpenAIModel(
+                model_id="gpt-4o-mini",
+                temperature=0,
+                system_prompt_template="Be helpful",
+            ),
+        ),
+        **simulation_kwargs,
+    )
+
+    request = httpx_mock.get_requests()[-1]
+    body = json.loads(request.content.decode("utf-8"))
+    params: dict = body["simulation_params"]
+    return params
+
+
+def test_run_simulation_sends_the_voice_timeouts_when_set(
+    okareo_client: Okareo, httpx_mock: HTTPXMock
+) -> None:
+    params = _simulation_params_sent_by(
+        okareo_client, httpx_mock, silence_timeout_ms=15000, hold_timeout_ms=60000
+    )
+
+    assert params["silence_timeout_ms"] == 15000
+    assert params["hold_timeout_ms"] == 60000
+
+
+def test_run_simulation_omits_the_voice_timeouts_unless_set(
+    okareo_client: Okareo, httpx_mock: HTTPXMock
+) -> None:
+    params = _simulation_params_sent_by(okareo_client, httpx_mock)
+
+    assert "silence_timeout_ms" not in params
+    assert "hold_timeout_ms" not in params
