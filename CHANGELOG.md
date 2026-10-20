@@ -8,15 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- Per-turn augmentation plans: `Augmentation(plan={turn: [AugmentationConfig, ...]})` schedules
-  augmentations by the caller's turn (counted from 1), reusing the strategy classes. Each entry is
-  sent as `{"type": ..., <fields>}`, with `type` taken from its class. Interruptions in a turn
-  (barge-in, backchannel, speakers with `interrupt=True`) play in listed order over the agent's
-  reply, at most 6 per turn. Entries refuse `start_at_turn` / `end_at_turn` and CAP `pause_ms`;
-  only `noise` may sit beside a plan. Needs a server with plan support: older servers reject the
-  `plan` key.
+- Per-turn augmentation plans: `Augmentation(plan={key: [AugmentationConfig, ...]})` schedules
+  augmentations by the caller's turns (counted from 1), reusing the strategy classes. A key is a
+  turn (`2`), a range (`"2-4"` or `(2, 4)`) or a turn to the end of the call (`"5-"` or
+  `(5, None)`); keys can't overlap. Each entry is sent as `{"type": ..., <fields>}`, with `type`
+  taken from its class. Each turn takes one augmentation on what the caller says (CAP, dropout,
+  off-mic, in-turn speakers) and one on the agent's reply (barge-in, backchannel, speakers with
+  `interrupt=True`); dropout takes the whole turn. The server enforces these limits. Entries refuse
+  `start_at_turn` / `end_at_turn` and CAP `pause_ms`; only `noise` may sit beside a plan. Needs a
+  server with plan support: older servers reject the `plan` key.
+- `OffMicAugmentation` (`off_mic`): the caller's own line, said turned away from the phone, through
+  a low-pass filter (`lpf_cutoff_hz`, default 800) and a gain cut (`gain_db`, default -8). Run-wide
+  or as a plan entry.
 - `count` on `BargeInAugmentation` and `BackchannelAugmentation` (plan entries only): how many times
-  the entry plays in its turn.
+  the entry plays in its turn, up to 6.
 - `utterance` (exact words, no LLM call) on `DirectedSpeechAugmentation` and
   `SecondarySpeakerAugmentation`; `BargeInAugmentation.utterance` is now honored. `utterance` and
   `prompt` are mutually exclusive on all three. Inside a plan, `BargeInAugmentation.replacement_text`

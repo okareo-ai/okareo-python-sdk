@@ -14,6 +14,7 @@ from okareo.augmentations import (
     DirectedSpeechAugmentation,
     DropoutAugmentation,
     NoiseAugmentation,
+    OffMicAugmentation,
     SecondarySpeakerAugmentation,
 )
 from okareo.model_under_test import OpenAIModel, Simulation, Target
@@ -402,15 +403,14 @@ def test_count_is_refused_outside_a_plan(build: Any) -> None:
 def test_plan_serializes_to_turn_keyed_wire_shape() -> None:
     """Turn keys become strings in turn order, each entry gets its ``type``
     from its class, ``None`` / ``[]`` turns pass through, and ``noise`` stays
-    beside the plan."""
+    beside the plan. One augmentation on what the caller says and one on the
+    agent's reply per turn."""
     augmentation = Augmentation(
         noise=NoiseAugmentation(profile="cafeteria", snr_db=10),
         plan={
             4: [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
             2: [
-                BackchannelAugmentation(
-                    utterance="OK, good.", min_offset_ms=1500, max_offset_ms=2500
-                ),
+                OffMicAugmentation(gain_db=-10),
                 BargeInAugmentation(utterance="No thank you.", count=2),
             ],
             1: None,
@@ -436,12 +436,7 @@ def test_plan_serializes_to_turn_keyed_wire_shape() -> None:
         "plan": {
             "1": None,
             "2": [
-                {
-                    "type": "backchannel",
-                    "utterance": "OK, good.",
-                    "min_offset_ms": 1500,
-                    "max_offset_ms": 2500,
-                },
+                {"type": "off_mic", "gain_db": -10},
                 {"type": "barge_in", "utterance": "No thank you.", "count": 2},
             ],
             "3": [
@@ -484,7 +479,7 @@ def test_plan_entry_types_cover_every_turn_level_strategy() -> None:
     ],
 )
 def test_plan_entries_refuse_turn_window_keys(entry: BargeInAugmentation) -> None:
-    with pytest.raises(ValueError, match="the turn key \\(2\\) is the turn"):
+    with pytest.raises(ValueError, match="the key \\(2\\) sets the turns"):
         Augmentation(plan={2: [entry]})
 
 
@@ -503,19 +498,66 @@ def test_plan_refuses_noise_and_cap_pause_entries() -> None:
         Augmentation(plan={1: [CAPAugmentation(pause_ms=500)]})
 
 
-@pytest.mark.parametrize("turn", [0, -1, True, "x", "02x", 1.5])
-def test_plan_refuses_turns_that_are_not_positive_integers(turn: Any) -> None:
+@pytest.mark.parametrize(
+    "turn",
+    [0, -1, True, "x", "02x", 1.5, "0-2", "3-2", "-3", "2-x", (0, 2), (3, 2), (2,)],
+)
+def test_plan_refuses_keys_that_are_not_turns_or_ranges(turn: Any) -> None:
     with pytest.raises(ValueError, match="counted from 1"):
         Augmentation(plan={turn: [BargeInAugmentation(utterance="Hi.")]})
 
 
-def test_plan_accepts_digit_string_turns_but_not_the_same_turn_twice() -> None:
-    plan = {"3": [DropoutAugmentation()]}
-    assert Augmentation(plan=plan).to_dict() == {  # type: ignore[arg-type]
-        "plan": {"3": [{"type": "dropout"}]}
+def test_plan_takes_ranges_and_turns_to_the_end_of_the_call() -> None:
+    """A range plays its entries on each turn it covers; "N-" or (N, None) runs
+    to the end of the call. Keys go out as the server reads them, in turn
+    order."""
+    plan = Augmentation(
+        plan={
+            "6-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
+            (2, 4): [BackchannelAugmentation(utterance="mm-hmm", probability=0.5)],
+            5: None,
+            "1": [OffMicAugmentation()],
+        }
+    ).to_dict()["plan"]
+
+    assert list(plan) == ["1", "2-4", "5", "6-"]
+    assert plan["2-4"] == [
+        {"type": "backchannel", "utterance": "mm-hmm", "probability": 0.5}
+    ]
+    assert Augmentation(plan={(3, None): [], "2-2": None}).to_dict()["plan"] == {
+        "2": None,
+        "3-": [],
     }
-    with pytest.raises(ValueError, match="lists turn 2 twice"):
-        Augmentation(plan={2: [DropoutAugmentation()], "2": None})  # type: ignore[dict-item]
+
+
+@pytest.mark.parametrize(
+    "plan, message",
+    [
+        ({2: [DropoutAugmentation()], "2": None}, "keys '2' and '2' both cover turn 2"),
+        ({"2-4": None, 3: None}, "keys '2-4' and '3' both cover turn 3"),
+        ({"5-": None, (7, 9): None}, "keys '5-' and '7-9' both cover turn 7"),
+    ],
+)
+def test_plan_refuses_overlapping_keys(plan: Any, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        Augmentation(plan=plan)
+
+
+def test_off_mic_serializes_run_wide_and_in_a_plan() -> None:
+    """Off-mic muffles the caller's own line: run-wide with its window, or on
+    what the caller says in a plan entry."""
+    assert Augmentation(
+        off_mic=OffMicAugmentation(probability=0.3, lpf_cutoff_hz=600, start_at_turn=2)
+    ).to_dict() == {
+        "off_mic": {"probability": 0.3, "lpf_cutoff_hz": 600, "start_at_turn": 2}
+    }
+    assert Augmentation(
+        plan={"2-3": [OffMicAugmentation(lpf_cutoff_hz=700, gain_db=-6)]}
+    ).to_dict() == {
+        "plan": {"2-3": [{"type": "off_mic", "lpf_cutoff_hz": 700, "gain_db": -6}]}
+    }
+    with pytest.raises(ValueError, match="the key \\(2-3\\) sets the turns"):
+        Augmentation(plan={"2-3": [OffMicAugmentation(end_at_turn=3)]})
 
 
 def test_plan_refuses_entries_that_are_not_strategy_configs() -> None:

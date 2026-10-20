@@ -308,6 +308,36 @@ class DropoutAugmentation(AugmentationConfig):
     end_at_turn: int | None = None
 
 
+@_attrs_define
+class OffMicAugmentation(AugmentationConfig):
+    """Off-mic augmentation config: the caller's own line, said turned away
+    from the phone.
+
+    The driver still writes and says its line, prompt-written or a scripted
+    step's words alike; it reaches the agent muffled and quieter through a
+    low-pass filter and a gain cut. Nothing else is said.
+
+    Arguments:
+        probability: Probability (0-1) that a turn's line is said off-mic.
+        lpf_cutoff_hz: Low-pass filter cutoff, above 0 and up to 20000 Hz.
+            Defaults to 800 server-side.
+        gain_db: Gain applied to the line, from -40 to 0 dB. Defaults to -8
+            server-side.
+        start_at_turn: First turn this may fire on, counted as the caller's
+            own turns, as for ``DropoutAugmentation``. Not in a plan entry.
+        end_at_turn: Last turn this may fire on, counted the same way. Not in
+            a plan entry.
+        seed: Seed for the probability draws.
+    """
+
+    probability: float | None = None
+    lpf_cutoff_hz: float | None = None
+    gain_db: float | None = None
+    start_at_turn: int | None = None
+    end_at_turn: int | None = None
+    seed: int | None = None
+
+
 # The ``type`` each strategy class takes in a plan entry: its key on Augmentation.
 _PLAN_TYPES: dict[type, str] = {
     CAPAugmentation: "cap",
@@ -317,7 +347,12 @@ _PLAN_TYPES: dict[type, str] = {
     BackchannelAugmentation: "backchannel",
     BargeInAugmentation: "barge_in",
     DropoutAugmentation: "dropout",
+    OffMicAugmentation: "off_mic",
 }
+
+# A plan key: a turn (2 or "2"), a range ("2-4" or (2, 4)), or a turn to the
+# end of the call ("5-" or (5, None)).
+PlanKey = int | str | tuple[int, int | None]
 
 
 @_attrs_define
@@ -328,26 +363,37 @@ class Augmentation(_DictSerializable):
 
     - **One strategy** for the whole run: set one strategy field. ``noise``
       may be combined with one other strategy.
-    - **A per-turn plan**: ``plan`` maps the caller's turn number (counted
-      from 1, the same turns ``start_at_turn`` counts) to the augmentations
-      for that turn, using the same strategy classes. Only ``noise``, which is
+    - **A per-turn plan**: ``plan`` maps the caller's turns (counted from 1,
+      the same turns ``start_at_turn`` counts) to the augmentations played on
+      them, using the same strategy classes. Only ``noise``, which is
       run-wide, may be set beside it.
 
-    In a plan:
+    A plan key is a turn (``2`` or ``"2"``), a range (``"2-4"`` or
+    ``(2, 4)``), or a turn to the end of the call (``"5-"`` or ``(5, None)``).
+    A key's entries play on every turn it covers, and keys can't overlap.
 
-    - The turn key is the turn, so entries don't take ``start_at_turn`` or
-      ``end_at_turn``, and ``probability`` defaults to 1.0.
-    - Entries that shape the caller's own line (``cap``, ``dropout``, and
-      ``directed_speech`` / ``secondary_speaker`` without ``interrupt``) apply
-      first. Interruptions (``barge_in``, ``backchannel``, and the speaker
-      kinds with ``interrupt=True``) then play in listed order over the
-      agent's reply, best effort: one that can't land is skipped and
-      reported. A turn holds at most 6 interruptions, counting each
-      ``count``.
+    Each turn has two slots, and each takes one augmentation:
+
+    - **What the caller says**: ``cap``, ``dropout``, ``off_mic``, and
+      ``directed_speech`` / ``secondary_speaker`` without ``interrupt``. These
+      shape or follow the caller's own line.
+    - **The agent's reply**: ``barge_in``, ``backchannel``, and the speaker
+      kinds with ``interrupt=True``. These play over the reply, best effort:
+      one that can't land is reported as missed. ``count`` repeats a
+      barge-in or backchannel, up to 6 plays per turn.
+
+    ``dropout`` leaves the caller silent, so it takes the whole turn. The
+    server refuses a plan over these limits with a 400 that names the turn and
+    the slot.
+
+    Also in a plan:
+
+    - Entries don't take ``start_at_turn`` or ``end_at_turn`` (the key sets
+      the turns), and ``probability`` defaults to 1.0, drawn on each turn.
     - Interruptions start 200-600 ms into the agent's reply by default. Real
       agents usually need later offsets.
     - ``CAPAugmentation.pause_ms`` is run-wide and can't be set in an entry.
-    - ``None`` or ``[]`` for a turn means no augmentation on it.
+    - ``None`` or ``[]`` for a key means no augmentation on its turns.
 
     Example:
         ``Augmentation(noise=NoiseAugmentation(profile="cafeteria", snr_db=10))``
@@ -356,10 +402,11 @@ class Augmentation(_DictSerializable):
 
             Augmentation(plan={
                 1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
-                2: [
+                "2-3": [
+                    OffMicAugmentation(),
                     BackchannelAugmentation(utterance="OK, good."),
-                    BargeInAugmentation(utterance="No thank you."),
                 ],
+                "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
             })
     """
 
@@ -370,7 +417,8 @@ class Augmentation(_DictSerializable):
     backchannel: BackchannelAugmentation | None = None
     barge_in: BargeInAugmentation | None = None
     dropout: DropoutAugmentation | None = None
-    plan: Mapping[int, Sequence[AugmentationConfig] | None] | None = None
+    off_mic: OffMicAugmentation | None = None
+    plan: Mapping[PlanKey, Sequence[AugmentationConfig] | None] | None = None
 
     def __attrs_post_init__(self) -> None:
         # Refuse a bad config when it is built, not when the run is submitted.
@@ -403,65 +451,101 @@ class Augmentation(_DictSerializable):
 def _plan_to_dict(
     plan: Mapping[Any, Sequence[AugmentationConfig] | None],
 ) -> dict[str, Any]:
-    """The wire shape: ``{"<turn>": [{"type": ..., <fields>}, ...] | None}``."""
+    """The wire shape: ``{"<key>": [{"type": ..., <fields>}, ...] | None}``, with
+    keys as ``"2"``, ``"2-4"`` or ``"5-"`` in turn order."""
     if not isinstance(plan, Mapping):
-        raise TypeError(
-            "Augmentation.plan must map turn numbers to lists of augmentations."
-        )
-    turns: dict[int, Any] = {}
-    for raw_turn, entries in plan.items():
-        turn = _plan_turn(raw_turn)
-        if turn in turns:
-            raise ValueError(f"Augmentation.plan lists turn {turn} twice.")
+        raise TypeError("Augmentation.plan must map turns to lists of augmentations.")
+    boxes: list[tuple[tuple[int, int | None], Any]] = []
+    for raw_key, entries in plan.items():
+        box = _plan_range(raw_key)
+        key = _plan_key(box)
+        clash = next((b for b, _ in boxes if _overlap(b, box)), None)
+        if clash is not None:
+            raise ValueError(
+                f"Augmentation.plan keys {_plan_key(clash)!r} and {key!r} both "
+                f"cover turn {max(box[0], clash[0])}; keys can't overlap."
+            )
         if entries is None:
-            turns[turn] = None
+            boxes.append((box, None))
         elif isinstance(entries, (list, tuple)):
-            turns[turn] = [_plan_entry_dict(turn, entry) for entry in entries]
+            boxes.append((box, [_plan_entry_dict(key, entry) for entry in entries]))
         else:
             raise TypeError(
-                f"Augmentation.plan turn {turn} must be a list of augmentations, "
+                f"Augmentation.plan key {key!r} must be a list of augmentations, "
                 "or None for none."
             )
-    return {str(turn): turns[turn] for turn in sorted(turns)}
+    return {
+        _plan_key(box): entries for box, entries in sorted(boxes, key=lambda b: b[0][0])
+    }
 
 
-def _plan_turn(raw_turn: Any) -> int:
-    turn = (
-        int(raw_turn) if isinstance(raw_turn, str) and raw_turn.isdigit() else raw_turn
-    )
-    if isinstance(turn, bool) or not isinstance(turn, int) or turn < 1:
+def _is_turn(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 1
+
+
+def _plan_range(raw_key: Any) -> tuple[int, int | None]:
+    """A plan key as (first turn, last turn); the last is None to the end of the call."""
+    start: Any = raw_key
+    end: Any = raw_key
+    if isinstance(raw_key, tuple) and len(raw_key) == 2:
+        start, end = raw_key
+    elif isinstance(raw_key, str):
+        first, dash, last = raw_key.strip().partition("-")
+        start = int(first) if first.isdigit() else None
+        if not dash:
+            end = start
+        elif last == "":
+            end = None
+        else:
+            end = int(last) if last.isdigit() else None
+            start = start if end is not None else None
+    if not _is_turn(start) or not (end is None or (_is_turn(end) and end >= start)):
         raise ValueError(
-            f"Invalid Augmentation.plan turn {raw_turn!r}: turns are the caller's "
-            "turns, counted from 1."
+            f"Invalid Augmentation.plan key {raw_key!r}: use a caller turn counted "
+            'from 1 (2 or "2"), a range ("2-4" or (2, 4)), or a turn to the end '
+            'of the call ("5-" or (5, None)).'
         )
-    return turn
+    return start, end
 
 
-def _plan_entry_dict(turn: int, entry: Any) -> dict[str, Any]:
+def _plan_key(box: tuple[int, int | None]) -> str:
+    start, end = box
+    if end is None:
+        return f"{start}-"
+    return str(start) if end == start else f"{start}-{end}"
+
+
+def _overlap(a: tuple[int, int | None], b: tuple[int, int | None]) -> bool:
+    a_end = float("inf") if a[1] is None else a[1]
+    b_end = float("inf") if b[1] is None else b[1]
+    return a[0] <= b_end and b[0] <= a_end
+
+
+def _plan_entry_dict(key: str, entry: Any) -> dict[str, Any]:
     entry_type = next(
         (_PLAN_TYPES[cls] for cls in type(entry).__mro__ if cls in _PLAN_TYPES),
         None,
     )
     if entry_type is None:
         raise TypeError(
-            f"Augmentation.plan turn {turn} entries must be augmentation configs "
+            f"Augmentation.plan key {key!r} entries must be augmentation configs "
             f"such as BargeInAugmentation, not {type(entry).__name__}."
         )
     if entry_type == "noise":
         raise ValueError(
             "NoiseAugmentation is run-wide: set Augmentation(noise=...) beside "
-            f"the plan, not in turn {turn}."
+            f"the plan, not under key {key!r}."
         )
     body = entry.to_dict()
     window = [key for key in ("start_at_turn", "end_at_turn") if key in body]
     if window:
         raise ValueError(
             f"Augmentation.plan entries don't take {' / '.join(window)}: the "
-            f"turn key ({turn}) is the turn."
+            f"key ({key}) sets the turns."
         )
     if entry_type == "cap" and "pause_ms" in body:
         raise ValueError(
-            f"cap pause_ms can't be set in a plan entry (turn {turn}): it sets a "
+            f"cap pause_ms can't be set in a plan entry (key {key!r}): it sets a "
             "run-wide pause, which can't vary by turn."
         )
     if entry_type == "barge_in" and "replacement_text" in body:
@@ -485,4 +569,5 @@ __all__ = (
     "BackchannelAugmentation",
     "BargeInAugmentation",
     "DropoutAugmentation",
+    "OffMicAugmentation",
 )
