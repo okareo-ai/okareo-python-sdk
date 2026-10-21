@@ -342,7 +342,7 @@ def test_run_simulation_serializes_augmentation_payload(
     }
 
 
-def test_exact_words_and_own_line_serialize() -> None:
+def test_exact_words_serialize() -> None:
     assert Augmentation(
         directed_speech=DirectedSpeechAugmentation(utterance="Hold on, sweetie!")
     ).to_dict() == {"directed_speech": {"utterance": "Hold on, sweetie!"}}
@@ -356,9 +356,6 @@ def test_exact_words_and_own_line_serialize() -> None:
             "utterance": "Did you have coffee?",
         }
     }
-    assert Augmentation(
-        directed_speech=DirectedSpeechAugmentation(own_line=True, gain_db=-12)
-    ).to_dict() == {"directed_speech": {"gain_db": -12, "own_line": True}}
 
 
 def test_plan_serializes_keys_as_strings_and_types_from_classes() -> None:
@@ -369,7 +366,7 @@ def test_plan_serializes_keys_as_strings_and_types_from_classes() -> None:
         plan={
             1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
             "2-4": [
-                DirectedSpeechAugmentation(own_line=True),
+                DirectedSpeechAugmentation(utterance="Hold on, sweetie!"),
                 BackchannelAugmentation(utterance="mm-hmm", probability=0.5),
             ],
             "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
@@ -384,7 +381,7 @@ def test_plan_serializes_keys_as_strings_and_types_from_classes() -> None:
         "plan": {
             "1": [{"type": "barge_in", "utterance": "Can I refill my prescription?"}],
             "2-4": [
-                {"type": "directed_speech", "own_line": True},
+                {"type": "directed_speech", "utterance": "Hold on, sweetie!"},
                 {"type": "backchannel", "utterance": "mm-hmm", "probability": 0.5},
             ],
             "5-": [{"type": "barge_in", "prompt": "Ask to speak to a pharmacist."}],

@@ -86,10 +86,6 @@ class DirectedSpeechAugmentation(AugmentationConfig):
             Only valid with ``interrupt``.
         seed: Optional seed that makes the probability and offset draws
             reproducible.
-        own_line: Say the caller's own line off-mic instead of a remark: the
-            line the caller would say anyway reaches the agent muffled and
-            quieter, through ``lpf_cutoff_hz`` and ``gain_db``. Not with
-            ``prompt``, ``utterance``, ``interrupt`` or the offsets.
     """
 
     probability: float | None = None
@@ -103,7 +99,6 @@ class DirectedSpeechAugmentation(AugmentationConfig):
     max_offset_ms: int | None = None
     seed: int | None = None
     utterance: str | None = None
-    own_line: bool | None = None
 
 
 @_attrs_define
@@ -296,9 +291,8 @@ class Augmentation(_DictSerializable):
     turn it covers, and keys can't overlap.
 
     Each turn takes one augmentation on what the caller says (``cap``,
-    ``dropout``, ``directed_speech`` / ``secondary_speaker`` without
-    ``interrupt``, or ``directed_speech`` with ``own_line``) and one on the
-    agent's reply (``barge_in``, ``backchannel``, or the speaker kinds with
+    ``dropout``, or ``directed_speech`` / ``secondary_speaker`` without
+    ``interrupt``) and one on the agent's reply (``barge_in``, ``backchannel``, or the speaker kinds with
     ``interrupt=True``). ``dropout`` takes the whole turn. In a plan entry,
     ``probability`` defaults to 1.0 and the key replaces ``start_at_turn`` /
     ``end_at_turn``. Okareo refuses a plan that breaks these rules, with a
@@ -311,7 +305,7 @@ class Augmentation(_DictSerializable):
 
             Augmentation(plan={
                 1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
-                "2-3": [DirectedSpeechAugmentation(own_line=True)],
+                "2-3": [BackchannelAugmentation(utterance="mm-hmm")],
                 "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
             })
     """

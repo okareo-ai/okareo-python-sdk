@@ -14,8 +14,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `{"type": ..., <fields>}`, with `type` taken from its class. Each turn takes one augmentation on
   what the caller says and one on the agent's reply; Okareo enforces the rules. Needs a server with
   plan support: older servers reject the `plan` key.
-- `own_line` on `DirectedSpeechAugmentation`: the caller's own line, said turned away from the phone
-  (muffled and quieter), instead of a remark.
 - `utterance` (exact words, no LLM call) on `DirectedSpeechAugmentation` and
   `SecondarySpeakerAugmentation`; `BargeInAugmentation.utterance` is now honored.
 - `interrupt`, `min_offset_ms`, `max_offset_ms` and `seed` on `DirectedSpeechAugmentation` and
