@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 import pytest
@@ -14,7 +13,6 @@ from okareo.augmentations import (
     DirectedSpeechAugmentation,
     DropoutAugmentation,
     NoiseAugmentation,
-    OffMicAugmentation,
     SecondarySpeakerAugmentation,
 )
 from okareo.model_under_test import OpenAIModel, Simulation, Target
@@ -344,9 +342,7 @@ def test_run_simulation_serializes_augmentation_payload(
     }
 
 
-def test_new_entry_fields_serialize_on_the_single_strategy_path() -> None:
-    """``utterance`` on the two speaker kinds (the server reads secondary
-    speaker's as ``secondary_utterance``) and CAP's ``consecutive_messages``."""
+def test_exact_words_and_own_line_serialize() -> None:
     assert Augmentation(
         directed_speech=DirectedSpeechAugmentation(utterance="Hold on, sweetie!")
     ).to_dict() == {"directed_speech": {"utterance": "Hold on, sweetie!"}}
@@ -361,223 +357,45 @@ def test_new_entry_fields_serialize_on_the_single_strategy_path() -> None:
         }
     }
     assert Augmentation(
-        cap=CAPAugmentation(probability=1.0, consecutive_messages=3)
-    ).to_dict() == {"cap": {"probability": 1.0, "consecutive_messages": 3}}
+        directed_speech=DirectedSpeechAugmentation(own_line=True, gain_db=-12)
+    ).to_dict() == {"directed_speech": {"gain_db": -12, "own_line": True}}
 
 
-@pytest.mark.parametrize(
-    "build",
-    [
-        lambda: BargeInAugmentation(utterance="No thank you.", prompt="Decline."),
-        lambda: DirectedSpeechAugmentation(utterance="Hold on!", prompt="Aside."),
-        lambda: SecondarySpeakerAugmentation(utterance="Coffee?", prompt="Ask."),
-    ],
-)
-def test_utterance_and_prompt_are_mutually_exclusive(build: Any) -> None:
-    with pytest.raises(ValueError, match="prompt or utterance, not both"):
-        build()
-
-
-def test_barge_in_replacement_text_beside_prompt_is_unchanged_outside_a_plan() -> None:
-    """Existing callers send ``replacement_text`` beside ``prompt``; the server
-    ignores it outside a plan, so it must not be read as ``utterance`` there."""
-    assert Augmentation(
-        barge_in=BargeInAugmentation(replacement_text="hold on", prompt="Interrupt.")
-    ).to_dict() == {"barge_in": {"replacement_text": "hold on", "prompt": "Interrupt."}}
-
-
-@pytest.mark.parametrize(
-    "build",
-    [
-        lambda: Augmentation(barge_in=BargeInAugmentation(prompt="Hi.", count=2)),
-        lambda: Augmentation(backchannel=BackchannelAugmentation(count=2)),
-    ],
-)
-def test_count_is_refused_outside_a_plan(build: Any) -> None:
-    """The single-strategy path has no per-turn play count; the server would
-    drop it silently."""
-    with pytest.raises(ValueError, match="count only applies inside a plan"):
-        build()
-
-
-def test_plan_serializes_to_turn_keyed_wire_shape() -> None:
-    """Turn keys become strings in turn order, each entry gets its ``type``
-    from its class, ``None`` / ``[]`` turns pass through, and ``noise`` stays
-    beside the plan. One augmentation on what the caller says and one on the
-    agent's reply per turn."""
+def test_plan_serializes_keys_as_strings_and_types_from_classes() -> None:
+    """Keys go out as strings, each entry gets its ``type`` from its class,
+    ``None`` / ``[]`` pass through, and ``noise`` stays beside the plan."""
     augmentation = Augmentation(
         noise=NoiseAugmentation(profile="cafeteria", snr_db=10),
         plan={
-            4: [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
-            2: [
-                OffMicAugmentation(gain_db=-10),
-                BargeInAugmentation(utterance="No thank you.", count=2),
+            1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
+            "2-4": [
+                DirectedSpeechAugmentation(own_line=True),
+                BackchannelAugmentation(utterance="mm-hmm", probability=0.5),
             ],
-            1: None,
-            3: [
-                SecondarySpeakerAugmentation(
-                    voice="Cathy - Coworker",
-                    utterance="Did you have coffee?",
-                    interrupt=True,
-                    lpf_cutoff_hz=800,
-                    gain_db=-8,
-                ),
-                CAPAugmentation(consecutive_messages=4),
-            ],
-            5: [],
+            "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
+            6: None,
         },
     )
 
     payload = augmentation.to_dict()
 
-    assert list(payload["plan"]) == ["1", "2", "3", "4", "5"]
     assert payload == {
         "noise": {"profile": "cafeteria", "snr_db": 10},
         "plan": {
-            "1": None,
-            "2": [
-                {"type": "off_mic", "gain_db": -10},
-                {"type": "barge_in", "utterance": "No thank you.", "count": 2},
+            "1": [{"type": "barge_in", "utterance": "Can I refill my prescription?"}],
+            "2-4": [
+                {"type": "directed_speech", "own_line": True},
+                {"type": "backchannel", "utterance": "mm-hmm", "probability": 0.5},
             ],
-            "3": [
-                {
-                    "type": "secondary_speaker",
-                    "voice": "Cathy - Coworker",
-                    "utterance": "Did you have coffee?",
-                    "interrupt": True,
-                    "lpf_cutoff_hz": 800,
-                    "gain_db": -8,
-                },
-                {"type": "cap", "consecutive_messages": 4},
-            ],
-            "4": [{"type": "barge_in", "prompt": "Ask to speak to a pharmacist."}],
-            "5": [],
+            "5-": [{"type": "barge_in", "prompt": "Ask to speak to a pharmacist."}],
+            "6": None,
         },
     }
     assert Simulation(augmentation=augmentation).to_dict()["augmentation"] == payload
 
 
-def test_plan_entry_types_cover_every_turn_level_strategy() -> None:
-    plan = Augmentation(
-        plan={
-            1: [DropoutAugmentation()],
-            2: [DirectedSpeechAugmentation(prompt="Talk to your dog.")],
-        }
-    ).to_dict()["plan"]
-
-    assert plan == {
-        "1": [{"type": "dropout"}],
-        "2": [{"type": "directed_speech", "prompt": "Talk to your dog."}],
-    }
-
-
-@pytest.mark.parametrize(
-    "entry",
-    [
-        BargeInAugmentation(prompt="Interrupt.", start_at_turn=2),
-        BargeInAugmentation(prompt="Interrupt.", end_at_turn=2),
-    ],
-)
-def test_plan_entries_refuse_turn_window_keys(entry: BargeInAugmentation) -> None:
-    with pytest.raises(ValueError, match="the key \\(2\\) sets the turns"):
-        Augmentation(plan={2: [entry]})
-
-
-def test_plan_refuses_strategies_beside_it_other_than_noise() -> None:
-    with pytest.raises(ValueError, match="can't be combined with barge_in"):
-        Augmentation(
-            barge_in=BargeInAugmentation(prompt="Interrupt."),
-            plan={2: [BargeInAugmentation(utterance="No thank you.")]},
-        )
-
-
-def test_plan_refuses_noise_and_cap_pause_entries() -> None:
-    with pytest.raises(ValueError, match="NoiseAugmentation is run-wide"):
-        Augmentation(plan={1: [NoiseAugmentation(profile="cafeteria")]})
-    with pytest.raises(ValueError, match="cap pause_ms can't be set"):
-        Augmentation(plan={1: [CAPAugmentation(pause_ms=500)]})
-
-
-@pytest.mark.parametrize(
-    "turn",
-    [0, -1, True, "x", "02x", 1.5, "0-2", "3-2", "-3", "2-x", (0, 2), (3, 2), (2,)],
-)
-def test_plan_refuses_keys_that_are_not_turns_or_ranges(turn: Any) -> None:
-    with pytest.raises(ValueError, match="counted from 1"):
-        Augmentation(plan={turn: [BargeInAugmentation(utterance="Hi.")]})
-
-
-def test_plan_takes_ranges_and_turns_to_the_end_of_the_call() -> None:
-    """A range plays its entries on each turn it covers; "N-" or (N, None) runs
-    to the end of the call. Keys go out as the server reads them, in turn
-    order."""
-    plan = Augmentation(
-        plan={
-            "6-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
-            (2, 4): [BackchannelAugmentation(utterance="mm-hmm", probability=0.5)],
-            5: None,
-            "1": [OffMicAugmentation()],
-        }
-    ).to_dict()["plan"]
-
-    assert list(plan) == ["1", "2-4", "5", "6-"]
-    assert plan["2-4"] == [
-        {"type": "backchannel", "utterance": "mm-hmm", "probability": 0.5}
-    ]
-    assert Augmentation(plan={(3, None): [], "2-2": None}).to_dict()["plan"] == {
-        "2": None,
-        "3-": [],
-    }
-
-
-@pytest.mark.parametrize(
-    "plan, message",
-    [
-        ({2: [DropoutAugmentation()], "2": None}, "keys '2' and '2' both cover turn 2"),
-        ({"2-4": None, 3: None}, "keys '2-4' and '3' both cover turn 3"),
-        ({"5-": None, (7, 9): None}, "keys '5-' and '7-9' both cover turn 7"),
-    ],
-)
-def test_plan_refuses_overlapping_keys(plan: Any, message: str) -> None:
-    with pytest.raises(ValueError, match=message):
-        Augmentation(plan=plan)
-
-
-def test_off_mic_serializes_run_wide_and_in_a_plan() -> None:
-    """Off-mic muffles the caller's own line: run-wide with its window, or on
-    what the caller says in a plan entry."""
-    assert Augmentation(
-        off_mic=OffMicAugmentation(probability=0.3, lpf_cutoff_hz=600, start_at_turn=2)
-    ).to_dict() == {
-        "off_mic": {"probability": 0.3, "lpf_cutoff_hz": 600, "start_at_turn": 2}
-    }
-    assert Augmentation(
-        plan={"2-3": [OffMicAugmentation(lpf_cutoff_hz=700, gain_db=-6)]}
-    ).to_dict() == {
-        "plan": {"2-3": [{"type": "off_mic", "lpf_cutoff_hz": 700, "gain_db": -6}]}
-    }
-    with pytest.raises(ValueError, match="the key \\(2-3\\) sets the turns"):
-        Augmentation(plan={"2-3": [OffMicAugmentation(end_at_turn=3)]})
-
-
-def test_plan_refuses_entries_that_are_not_strategy_configs() -> None:
+def test_plan_refuses_one_key_twice_and_entries_that_are_not_configs() -> None:
+    with pytest.raises(ValueError, match="lists key '2' twice"):
+        Augmentation(plan={2: [DropoutAugmentation()], "2": None}).to_dict()  # type: ignore[dict-item]
     with pytest.raises(TypeError, match="not dict"):
-        Augmentation(plan={2: [{"type": "barge_in", "utterance": "Hi."}]})  # type: ignore[list-item]
-    with pytest.raises(TypeError, match="must be a list"):
-        Augmentation(plan={2: BargeInAugmentation(utterance="Hi.")})  # type: ignore[dict-item]
-
-
-def test_plan_reads_barge_in_replacement_text_as_utterance() -> None:
-    """Inside a plan the server reads the older name as exact words, so the SDK
-    sends it as ``utterance`` and applies the same exclusivity."""
-    assert Augmentation(
-        plan={2: [BargeInAugmentation(replacement_text="No thank you.")]}
-    ).to_dict() == {"plan": {"2": [{"type": "barge_in", "utterance": "No thank you."}]}}
-    with pytest.raises(ValueError, match="prompt or utterance, not both"):
-        Augmentation(
-            plan={2: [BargeInAugmentation(replacement_text="No.", prompt="Decline.")]}
-        )
-    with pytest.raises(ValueError, match="utterance or replacement_text"):
-        Augmentation(
-            plan={2: [BargeInAugmentation(replacement_text="No.", utterance="No.")]}
-        )
+        Augmentation(plan={2: [{"type": "barge_in"}]}).to_dict()  # type: ignore[list-item]
