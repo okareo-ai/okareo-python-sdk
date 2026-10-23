@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Deprecated
+
+- `BargeInAugmentation.replacement_text`: Okareo ignores it. Setting it now warns
+  (`FutureWarning`); it will be removed in a future release. Use `utterance` for exact words.
+
 ### Added
 
 - Per-turn augmentation plans: `Augmentation(plan={key: [AugmentationConfig, ...]})` schedules

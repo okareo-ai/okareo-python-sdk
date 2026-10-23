@@ -57,6 +57,13 @@ def test_simulation_serializes_augmentation_wrappers() -> None:
 
 
 def test_augmentation_wrapper_shapes_match_server_contract() -> None:
+    # The deprecated replacement_text still serializes as before, and warns.
+    with pytest.warns(FutureWarning, match="replacement_text"):
+        barge_in = BargeInAugmentation(
+            probability=0.05,
+            replacement_text="hold on",
+            prompt="Interrupt the speaker and get them to pause.",
+        )
     augmentation = Augmentation(
         cap=CAPAugmentation(probability=0.3, pause_ms=1000),
         directed_speech=DirectedSpeechAugmentation(
@@ -75,11 +82,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             inter_speaker_pause_ms=1000,
         ),
         backchannel=BackchannelAugmentation(probability=0.3),
-        barge_in=BargeInAugmentation(
-            probability=0.05,
-            replacement_text="hold on",
-            prompt="Interrupt the speaker and get them to pause.",
-        ),
+        barge_in=barge_in,
         dropout=DropoutAugmentation(probability=0.2),
     )
 

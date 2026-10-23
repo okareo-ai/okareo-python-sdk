@@ -6,6 +6,7 @@ Import these from ``okareo.augmentations`` and pass them into
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -215,7 +216,9 @@ class BargeInAugmentation(AugmentationConfig):
 
     Arguments:
         probability: Probability that a barge-in interruption is injected.
-        replacement_text: Older field, ignored server-side. Use ``utterance``.
+        replacement_text: Deprecated: ignored by Okareo, and to be removed in a
+            future release. Setting it warns (``FutureWarning``). Use
+            ``utterance``.
         prompt: Prompt the LLM writes the interruption from.
         utterance: Exact words for the interruption, spoken as given with no
             LLM call. Not with ``prompt``.
@@ -244,6 +247,16 @@ class BargeInAugmentation(AugmentationConfig):
     max_offset_ms: int | None = None
     start_at_turn: int | None = None
     end_at_turn: int | None = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.replacement_text is not None:
+            warnings.warn(
+                "BargeInAugmentation.replacement_text is ignored by Okareo and will "
+                "be removed in a future release. Use utterance for exact words, or "
+                "prompt to have them generated.",
+                FutureWarning,
+                stacklevel=3,
+            )
 
 
 @_attrs_define
