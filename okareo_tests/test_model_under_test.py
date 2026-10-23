@@ -1,7 +1,8 @@
+import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Type
 from unittest.mock import Mock
 
 import pytest
@@ -30,6 +31,7 @@ from okareo.model_under_test import (
     TurnConfig,
     TwilioVoiceTarget,
 )
+from okareo_api_client.errors import UnexpectedStatus
 from okareo_api_client.models import SeedData
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.test_run_type import TestRunType
@@ -484,3 +486,63 @@ class TestCustomEndpointTargetParams:
     def test_type_is_custom_endpoint(self) -> None:
         target = CustomEndpointTarget(None, MINIMAL_TURN)
         assert target.params()["type"] == "custom_endpoint"
+
+
+INTERNAL_ERROR = str(UnexpectedStatus(500, b"internal error"))
+
+
+@pytest.mark.parametrize(
+    "method, url, status_code, expected_type, expected_message",
+    [
+        ("run_test", "/v0/test_run", 500, TestRunError, INTERNAL_ERROR),
+        ("run_test", "/v0/test_run", 400, TestRunError, "bad scenario"),
+        ("submit_test", "/v0/test_run/submit", 500, UnexpectedStatus, INTERNAL_ERROR),
+        ("submit_test", "/v0/test_run/submit", 400, TestRunError, "bad scenario"),
+    ],
+    ids=["run_test-500", "run_test-400", "submit_test-500", "submit_test-400"],
+)
+def test_a_failed_start_raises_without_printing(
+    httpx_mock: HTTPXMock,
+    capsys: pytest.CaptureFixture,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+    url: str,
+    status_code: int,
+    expected_type: Type[Exception],
+    expected_message: str,
+) -> None:
+    httpx_mock.add_response(json=GLOBAL_PROJECT_RESPONSE, status_code=201)
+    httpx_mock.add_response(status_code=201, json=get_mut_fixture())
+    okareo = Okareo("api-key", "http://mocked.com")
+    mut = okareo.register_model(
+        name="start error model",
+        model=OpenAIModel(
+            model_id=OPENAI_MODEL, temperature=0, system_prompt_template="prompt"
+        ),
+    )
+    if status_code == 500:
+        httpx_mock.add_response(
+            method="POST",
+            url=f"http://mocked.com{url}",
+            status_code=500,
+            content=b"internal error",
+        )
+    else:
+        httpx_mock.add_response(
+            method="POST",
+            url=f"http://mocked.com{url}",
+            status_code=400,
+            json={"detail": "bad scenario"},
+        )
+    capsys.readouterr()
+    caplog.set_level(logging.WARNING, logger="okareo.model_under_test")
+
+    with pytest.raises(Exception) as raised:
+        getattr(mut, method)(scenario=MOCK_UUID, name="CI start error", api_key="foo")
+
+    assert type(raised.value) is expected_type
+    assert str(raised.value) == expected_message
+    assert capsys.readouterr().out == ""
+    records = [r for r in caplog.records if r.name == "okareo.model_under_test"]
+    assert [r.levelno for r in records] == [logging.WARNING]
+    assert ("500" if status_code == 500 else "bad scenario") in records[0].getMessage()
