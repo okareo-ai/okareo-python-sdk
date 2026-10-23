@@ -123,6 +123,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Example code-based check fixtures now declare `check_type` explicitly, matching the
   output-type requirement for code-based checks (a check returning `CheckResponse`
   otherwise fails output-type inference).
+- The `Augmentation` docstring's per-turn plan example now renders as code in the SDK
+  reference. It came out as a list with the wrong plan keys (2, 3 and 4).
 
 ## [0.0.133] - 2026-06-09
 
