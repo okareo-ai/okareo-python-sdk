@@ -42,11 +42,10 @@ def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
 
 
 def test_simulation_serializes_augmentation_wrappers() -> None:
-    simulation = Simulation(
-        augmentation=Augmentation(
-            noise=NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10),
-        )
-    )
+    # The deprecated noise probability still serializes as before, and warns.
+    with pytest.warns(FutureWarning, match="NoiseAugmentation.probability"):
+        noise = NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10)
+    simulation = Simulation(augmentation=Augmentation(noise=noise))
 
     assert simulation.to_dict()["augmentation"] == {
         "noise": {
@@ -58,6 +57,13 @@ def test_simulation_serializes_augmentation_wrappers() -> None:
 
 
 def test_augmentation_wrapper_shapes_match_server_contract() -> None:
+    # The deprecated replacement_text still serializes as before, and warns.
+    with pytest.warns(FutureWarning, match="replacement_text"):
+        barge_in = BargeInAugmentation(
+            probability=0.05,
+            replacement_text="hold on",
+            prompt="Interrupt the speaker and get them to pause.",
+        )
     augmentation = Augmentation(
         cap=CAPAugmentation(probability=0.3, pause_ms=1000),
         directed_speech=DirectedSpeechAugmentation(
@@ -66,7 +72,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             lpf_cutoff_hz=800,
             gain_db=-8.0,
         ),
-        noise=NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10),
+        noise=NoiseAugmentation(profile="cafeteria", snr_db=10),
         secondary_speaker=SecondarySpeakerAugmentation(
             probability=0.2,
             voice="voice-id",
@@ -76,11 +82,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             inter_speaker_pause_ms=1000,
         ),
         backchannel=BackchannelAugmentation(probability=0.3),
-        barge_in=BargeInAugmentation(
-            probability=0.05,
-            replacement_text="hold on",
-            prompt="Interrupt the speaker and get them to pause.",
-        ),
+        barge_in=barge_in,
         dropout=DropoutAugmentation(probability=0.2),
     )
 
@@ -93,7 +95,6 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             "gain_db": -8.0,
         },
         "noise": {
-            "probability": 0.3,
             "profile": "cafeteria",
             "snr_db": 10,
         },
@@ -328,7 +329,7 @@ def test_run_simulation_serializes_augmentation_payload(
             ),
         ),
         augmentation=Augmentation(
-            noise=NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10)
+            noise=NoiseAugmentation(profile="cafeteria", snr_db=10)
         ),
     )
 
@@ -336,11 +337,66 @@ def test_run_simulation_serializes_augmentation_payload(
     body = json.loads(request.content.decode("utf-8"))
     assert body["simulation_params"]["augmentation"] == {
         "noise": {
-            "probability": 0.3,
             "profile": "cafeteria",
             "snr_db": 10,
         }
     }
+
+
+def test_exact_words_serialize() -> None:
+    assert Augmentation(
+        directed_speech=DirectedSpeechAugmentation(utterance="Hold on, sweetie!")
+    ).to_dict() == {"directed_speech": {"utterance": "Hold on, sweetie!"}}
+    assert Augmentation(
+        secondary_speaker=SecondarySpeakerAugmentation(
+            voice="Cathy - Coworker", utterance="Did you have coffee?"
+        )
+    ).to_dict() == {
+        "secondary_speaker": {
+            "voice": "Cathy - Coworker",
+            "utterance": "Did you have coffee?",
+        }
+    }
+
+
+def test_plan_serializes_keys_as_strings_and_types_from_classes() -> None:
+    """Keys go out as strings, each entry gets its ``type`` from its class,
+    ``None`` / ``[]`` pass through, and ``noise`` stays beside the plan."""
+    augmentation = Augmentation(
+        noise=NoiseAugmentation(profile="cafeteria", snr_db=10),
+        plan={
+            1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
+            "2-4": [
+                DirectedSpeechAugmentation(utterance="Hold on, sweetie!"),
+                BackchannelAugmentation(utterance="mm-hmm", probability=0.5),
+            ],
+            "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
+            6: None,
+        },
+    )
+
+    payload = augmentation.to_dict()
+
+    assert payload == {
+        "noise": {"profile": "cafeteria", "snr_db": 10},
+        "plan": {
+            "1": [{"type": "barge_in", "utterance": "Can I refill my prescription?"}],
+            "2-4": [
+                {"type": "directed_speech", "utterance": "Hold on, sweetie!"},
+                {"type": "backchannel", "utterance": "mm-hmm", "probability": 0.5},
+            ],
+            "5-": [{"type": "barge_in", "prompt": "Ask to speak to a pharmacist."}],
+            "6": None,
+        },
+    }
+    assert Simulation(augmentation=augmentation).to_dict()["augmentation"] == payload
+
+
+def test_plan_refuses_one_key_twice_and_entries_that_are_not_configs() -> None:
+    with pytest.raises(ValueError, match="lists key '2' twice"):
+        Augmentation(plan={2: [DropoutAugmentation()], "2": None}).to_dict()  # type: ignore[dict-item]
+    with pytest.raises(TypeError, match="not dict"):
+        Augmentation(plan={2: [{"type": "barge_in"}]}).to_dict()  # type: ignore[list-item]
 
 
 def _simulation_params_sent_by(

@@ -6,6 +6,8 @@ Import these from ``okareo.augmentations`` and pass them into
 
 from __future__ import annotations
 
+import warnings
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from attrs import asdict as _attrs_asdict
@@ -55,6 +57,8 @@ class DirectedSpeechAugmentation(AugmentationConfig):
         probability: Probability that directed speech is injected for a given
             opportunity.
         prompt: Optional independent prompt for the directed speech content.
+        utterance: Exact words for the remark, spoken as given with no LLM
+            call; voice and filters still apply. Not with ``prompt``.
         lpf_cutoff_hz: Low-pass filter cutoff used for off-mic speech.
         gain_db: Gain reduction applied to off-mic speech.
         start_at_turn: First turn this may fire on. Turns are counted as the
@@ -95,6 +99,7 @@ class DirectedSpeechAugmentation(AugmentationConfig):
     min_offset_ms: int | None = None
     max_offset_ms: int | None = None
     seed: int | None = None
+    utterance: str | None = None
 
 
 @_attrs_define
@@ -102,7 +107,9 @@ class NoiseAugmentation(AugmentationConfig):
     """Background noise augmentation config.
 
     Arguments:
-        probability: Probability that background noise is applied during a run.
+        probability: Deprecated: ignored by Okareo, since noise plays for the
+            whole call, and to be removed in a future release. Setting it warns
+            (``FutureWarning``).
         profile: Noise profile name, e.g. ``"cafeteria"`` or ``"traffic"``.
         snr_db: Target signal-to-noise ratio in dB.
     """
@@ -110,6 +117,15 @@ class NoiseAugmentation(AugmentationConfig):
     probability: float | None = None
     profile: str | None = None
     snr_db: float | None = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.probability is not None:
+            warnings.warn(
+                "NoiseAugmentation.probability is ignored by Okareo: noise plays for "
+                "the whole call. It will be removed in a future release.",
+                FutureWarning,
+                stacklevel=3,
+            )
 
 
 @_attrs_define
@@ -121,6 +137,8 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
             for a given opportunity.
         voice: Voice identifier for the secondary speaker.
         prompt: Optional independent prompt for the secondary speaker.
+        utterance: Exact words for the secondary speaker, spoken as given with
+            no LLM call; voice and filters still apply. Not with ``prompt``.
         lpf_cutoff_hz: Optional low-pass filter cutoff applied only to
             the secondary speaker audio.
         gain_db: Optional gain adjustment applied only to the
@@ -168,6 +186,7 @@ class SecondarySpeakerAugmentation(AugmentationConfig):
     min_offset_ms: int | None = None
     max_offset_ms: int | None = None
     seed: int | None = None
+    utterance: str | None = None
 
 
 @_attrs_define
@@ -208,9 +227,12 @@ class BargeInAugmentation(AugmentationConfig):
 
     Arguments:
         probability: Probability that a barge-in interruption is injected.
-        replacement_text: Text to use for the interruption utterance.
-        prompt: Optional independent prompt for the barge-in content.
-        utterance: Optional direct text override for the injected content.
+        replacement_text: Deprecated: ignored by Okareo, and to be removed in a
+            future release. Setting it warns (``FutureWarning``). Use
+            ``utterance``.
+        prompt: Prompt the LLM writes the interruption from.
+        utterance: Exact words for the interruption, spoken as given with no
+            LLM call. Not with ``prompt``.
         min_offset_ms: Minimum delay before the injection fires.
         max_offset_ms: Maximum delay before the injection fires.
         start_at_turn: First turn this may fire on. Turns are counted as the
@@ -236,6 +258,16 @@ class BargeInAugmentation(AugmentationConfig):
     max_offset_ms: int | None = None
     start_at_turn: int | None = None
     end_at_turn: int | None = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.replacement_text is not None:
+            warnings.warn(
+                "BargeInAugmentation.replacement_text is ignored by Okareo and will "
+                "be removed in a future release. Use utterance for exact words, or "
+                "prompt to have them generated.",
+                FutureWarning,
+                stacklevel=3,
+            )
 
 
 @_attrs_define
@@ -269,11 +301,37 @@ class DropoutAugmentation(AugmentationConfig):
 class Augmentation(_DictSerializable):
     """Container for voice simulation augmentation strategy config.
 
-    Configure one primary strategy at a time. ``noise`` may be combined with
-    one additional strategy.
+    Configure it one of two ways:
+
+    - **One strategy** for the whole run: set one strategy field. ``noise``
+      may be combined with one other strategy.
+    - **A per-turn plan**: ``plan`` maps the caller's turns (counted from 1,
+      the same turns ``start_at_turn`` counts) to the augmentations played on
+      them, using the same strategy classes. Only ``noise`` may be set
+      beside it.
+
+    A plan key is a turn (``2`` or ``"2"``), a range (``"2-4"``), or a turn
+    to the end of the call (``"5-"``). A key's augmentations play on every
+    turn it covers, and keys can't overlap.
+
+    Each turn takes one augmentation on what the caller says (``cap``,
+    ``dropout``, or ``directed_speech`` / ``secondary_speaker`` without
+    ``interrupt``) and one on the agent's reply (``barge_in``, ``backchannel``, or the speaker kinds with
+    ``interrupt=True``). ``dropout`` takes the whole turn. In a plan entry,
+    ``probability`` defaults to 1.0 and the key replaces ``start_at_turn`` /
+    ``end_at_turn``. Okareo refuses a plan that breaks these rules, with a
+    message that names the turn.
 
     Example:
         ``Augmentation(noise=NoiseAugmentation(profile="cafeteria", snr_db=10))``
+
+        A per-turn plan::
+
+            Augmentation(plan={
+                1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
+                "2-3": [BackchannelAugmentation(utterance="mm-hmm")],
+                "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
+            })
     """
 
     cap: CAPAugmentation | None = None
@@ -283,13 +341,58 @@ class Augmentation(_DictSerializable):
     backchannel: BackchannelAugmentation | None = None
     barge_in: BargeInAugmentation | None = None
     dropout: DropoutAugmentation | None = None
+    plan: Mapping[int | str, Sequence[AugmentationConfig] | None] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            key: value.to_dict()
-            for key, value in _attrs_asdict(self, recurse=False).items()
-            if value is not None
+        fields = _attrs_asdict(self, recurse=False)
+        plan = fields.pop("plan")
+        out = {
+            key: value.to_dict() for key, value in fields.items() if value is not None
         }
+        if plan is not None:
+            out["plan"] = _plan_to_dict(plan)
+        return out
+
+
+# The ``type`` each strategy class takes in a plan entry: its key on Augmentation.
+_PLAN_TYPES: dict[type, str] = {
+    CAPAugmentation: "cap",
+    DirectedSpeechAugmentation: "directed_speech",
+    NoiseAugmentation: "noise",
+    SecondarySpeakerAugmentation: "secondary_speaker",
+    BackchannelAugmentation: "backchannel",
+    BargeInAugmentation: "barge_in",
+    DropoutAugmentation: "dropout",
+}
+
+
+def _plan_to_dict(
+    plan: Mapping[Any, Sequence[AugmentationConfig] | None],
+) -> dict[str, Any]:
+    """The wire shape: ``{"<key>": [{"type": ..., <fields>}, ...] | None}``.
+    Keys are sent as strings; Okareo validates them."""
+    out: dict[str, Any] = {}
+    for raw_key, entries in plan.items():
+        key = str(raw_key).strip()
+        if key in out:
+            raise ValueError(f"Augmentation.plan lists key {key!r} twice.")
+        out[key] = (
+            None if entries is None else [_plan_entry_dict(key, e) for e in entries]
+        )
+    return out
+
+
+def _plan_entry_dict(key: str, entry: Any) -> dict[str, Any]:
+    entry_type = next(
+        (_PLAN_TYPES[cls] for cls in type(entry).__mro__ if cls in _PLAN_TYPES),
+        None,
+    )
+    if entry_type is None:
+        raise TypeError(
+            f"Augmentation.plan key {key!r} entries must be augmentation configs "
+            f"such as BargeInAugmentation, not {type(entry).__name__}."
+        )
+    return {"type": entry_type, **entry.to_dict()}
 
 
 __all__ = (

@@ -6,8 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Deprecated
+
+- `BargeInAugmentation.replacement_text`: Okareo ignores it. Setting it now warns
+  (`FutureWarning`); it will be removed in a future release. Use `utterance` for exact words.
+- `NoiseAugmentation.probability`: Okareo ignores it, since noise plays for the whole call.
+  Setting it now warns (`FutureWarning`); it will be removed in a future release.
+
 ### Added
 
+- Per-turn augmentation plans: `Augmentation(plan={key: [AugmentationConfig, ...]})` schedules
+  augmentations by the caller's turns (counted from 1), reusing the strategy classes. A key is a
+  turn (`2`), a range (`"2-4"`) or a turn to the end of the call (`"5-"`). Each entry is sent as
+  `{"type": ..., <fields>}`, with `type` taken from its class. Each turn takes one augmentation on
+  what the caller says and one on the agent's reply; Okareo enforces the rules. Needs a server with
+  plan support: older servers reject the `plan` key.
+- `utterance` (exact words, no LLM call) on `DirectedSpeechAugmentation` and
+  `SecondarySpeakerAugmentation`; `BargeInAugmentation.utterance` is now honored.
 - `hold_timeout_ms` and `silence_timeout_ms` on `Simulation` and `Okareo.run_simulation`
   (voice only). `hold_timeout_ms` hangs up once the agent has produced no recognizable
   speech -- hold music, ringing, dead air -- for that long (10-600 s); the clock starts
