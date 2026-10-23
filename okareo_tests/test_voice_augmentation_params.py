@@ -66,7 +66,6 @@ AUGMENTATION_CONFIGS: Dict[str, Augmentation] = {
     ),
     "noise": Augmentation(
         noise=NoiseAugmentation(
-            probability=0.5,
             profile="traffic",
             snr_db=15,
         ),

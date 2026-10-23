@@ -41,11 +41,10 @@ def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
 
 
 def test_simulation_serializes_augmentation_wrappers() -> None:
-    simulation = Simulation(
-        augmentation=Augmentation(
-            noise=NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10),
-        )
-    )
+    # The deprecated noise probability still serializes as before, and warns.
+    with pytest.warns(FutureWarning, match="NoiseAugmentation.probability"):
+        noise = NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10)
+    simulation = Simulation(augmentation=Augmentation(noise=noise))
 
     assert simulation.to_dict()["augmentation"] == {
         "noise": {
@@ -72,7 +71,7 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             lpf_cutoff_hz=800,
             gain_db=-8.0,
         ),
-        noise=NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10),
+        noise=NoiseAugmentation(profile="cafeteria", snr_db=10),
         secondary_speaker=SecondarySpeakerAugmentation(
             probability=0.2,
             voice="voice-id",
@@ -95,7 +94,6 @@ def test_augmentation_wrapper_shapes_match_server_contract() -> None:
             "gain_db": -8.0,
         },
         "noise": {
-            "probability": 0.3,
             "profile": "cafeteria",
             "snr_db": 10,
         },
@@ -330,7 +328,7 @@ def test_run_simulation_serializes_augmentation_payload(
             ),
         ),
         augmentation=Augmentation(
-            noise=NoiseAugmentation(probability=0.3, profile="cafeteria", snr_db=10)
+            noise=NoiseAugmentation(profile="cafeteria", snr_db=10)
         ),
     )
 
@@ -338,7 +336,6 @@ def test_run_simulation_serializes_augmentation_payload(
     body = json.loads(request.content.decode("utf-8"))
     assert body["simulation_params"]["augmentation"] == {
         "noise": {
-            "probability": 0.3,
             "profile": "cafeteria",
             "snr_db": 10,
         }

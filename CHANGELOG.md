@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `BargeInAugmentation.replacement_text`: Okareo ignores it. Setting it now warns
   (`FutureWarning`); it will be removed in a future release. Use `utterance` for exact words.
+- `NoiseAugmentation.probability`: Okareo ignores it, since noise plays for the whole call.
+  Setting it now warns (`FutureWarning`); it will be removed in a future release.
 
 ### Added
 

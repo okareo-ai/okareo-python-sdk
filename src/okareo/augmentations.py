@@ -107,7 +107,9 @@ class NoiseAugmentation(AugmentationConfig):
     """Background noise augmentation config.
 
     Arguments:
-        probability: Probability that background noise is applied during a run.
+        probability: Deprecated: ignored by Okareo, since noise plays for the
+            whole call, and to be removed in a future release. Setting it warns
+            (``FutureWarning``).
         profile: Noise profile name, e.g. ``"cafeteria"`` or ``"traffic"``.
         snr_db: Target signal-to-noise ratio in dB.
     """
@@ -115,6 +117,15 @@ class NoiseAugmentation(AugmentationConfig):
     probability: float | None = None
     profile: str | None = None
     snr_db: float | None = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.probability is not None:
+            warnings.warn(
+                "NoiseAugmentation.probability is ignored by Okareo: noise plays for "
+                "the whole call. It will be removed in a future release.",
+                FutureWarning,
+                stacklevel=3,
+            )
 
 
 @_attrs_define
