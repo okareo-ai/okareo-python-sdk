@@ -1701,6 +1701,8 @@ class Okareo:
         concurrent_ask_probability: Optional[float] = 0.0,
         turn_transition_time: Optional[int] = 1000,
         augmentation: Optional[Union[Augmentation, dict[str, Any]]] = None,
+        silence_timeout_ms: Optional[int] = None,
+        hold_timeout_ms: Optional[int] = None,
         api_key: Optional[str] = None,
         api_keys: Optional[dict] = None,
         metrics_kwargs: Optional[dict] = None,
@@ -1728,6 +1730,14 @@ class Okareo:
         - ``checks_at_every_turn``, ``concurrent_ask_probability``,
           ``turn_transition_time``: Runtime simulation controls.
         - ``augmentation``: Optional augmentation settings.
+        - ``silence_timeout_ms``: Voice only. How long the caller waits for the
+          agent to start replying (500-30000 ms); omitted = the Target's own
+          setting if it has one, else the platform default (10 s).
+        - ``hold_timeout_ms``: Voice only. Hang up once the agent has produced no
+          recognizable speech -- hold music, ringing, dead air -- for this long
+          (10000-600000 ms). The clock starts once the caller's line has
+          finished and restarts whenever the agent says something recognizable;
+          omitted = the Target's own setting if it has one, else off.
         - ``api_key`` / ``api_keys``: Provider credentials for target calls.
         - ``metrics_kwargs`` / ``calculate_metrics``: Metrics configuration.
         - ``project_id`` / ``sensitive_fields``: Registration controls.
@@ -1752,6 +1762,8 @@ class Okareo:
             concurrent_ask_probability=concurrent_ask_probability,
             turn_transition_time=turn_transition_time,
             augmentation=augmentation,
+            silence_timeout_ms=silence_timeout_ms,
+            hold_timeout_ms=hold_timeout_ms,
         )
         return self._submit_multiturn(
             name=name,
