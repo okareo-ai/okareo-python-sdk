@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.driver_step_schema import DriverStepSchema
+
 
 T = TypeVar("T", bound="DriverModelSchema")
 
@@ -30,6 +34,9 @@ class DriverModelSchema:
             targets, improves STT accuracy by constraining language model. If not specified, defaults to 'multi' for
             automatic language detection.
         project_id (None | Unset | UUID): ID for project
+        steps (list[DriverStepSchema] | None | str | Unset): Scripted Driver: an ordered list of steps ({message},
+            {dtmf}, {end_conversation}), or one {scenario_input.<column>} reference that resolves to that list per scenario
+            row. end_conversation must be last. When set, prompt_template is not used and no Driver LLM runs.
     """
 
     name: str
@@ -42,6 +49,7 @@ class DriverModelSchema:
     voice: None | str | Unset = UNSET
     language: None | str | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
+    steps: list[DriverStepSchema] | None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -97,6 +105,18 @@ class DriverModelSchema:
         else:
             project_id = self.project_id
 
+        steps: list[dict[str, Any]] | None | str | Unset
+        if isinstance(self.steps, Unset):
+            steps = UNSET
+        elif isinstance(self.steps, list):
+            steps = []
+            for steps_type_0_item_data in self.steps:
+                steps_type_0_item = steps_type_0_item_data.to_dict()
+                steps.append(steps_type_0_item)
+
+        else:
+            steps = self.steps
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -120,11 +140,15 @@ class DriverModelSchema:
             field_dict["language"] = language
         if project_id is not UNSET:
             field_dict["project_id"] = project_id
+        if steps is not UNSET:
+            field_dict["steps"] = steps
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.driver_step_schema import DriverStepSchema
+
         d = dict(src_dict)
         name = d.pop("name")
 
@@ -211,6 +235,28 @@ class DriverModelSchema:
 
         project_id = _parse_project_id(d.pop("project_id", UNSET))
 
+        def _parse_steps(data: object) -> list[DriverStepSchema] | None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                steps_type_0 = []
+                _steps_type_0 = data
+                for steps_type_0_item_data in _steps_type_0:
+                    steps_type_0_item = DriverStepSchema.from_dict(steps_type_0_item_data)
+
+                    steps_type_0.append(steps_type_0_item)
+
+                return steps_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[DriverStepSchema] | None | str | Unset, data)
+
+        steps = _parse_steps(d.pop("steps", UNSET))
+
         driver_model_schema = cls(
             name=name,
             temperature=temperature,
@@ -222,6 +268,7 @@ class DriverModelSchema:
             voice=voice,
             language=language,
             project_id=project_id,
+            steps=steps,
         )
 
         driver_model_schema.additional_properties = d

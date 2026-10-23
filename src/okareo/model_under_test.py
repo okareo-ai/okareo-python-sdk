@@ -2768,6 +2768,11 @@ class Driver:
     voice_instructions: Optional[str] = None
     voice_profile: Optional[str] = None
     voice: Optional[str] = None
+    # Scripted Driver: an ordered list of steps ({"message": ...}, {"dtmf": ...}, {"silence": true},
+    # {"end_conversation": ...}; end_conversation last) or one "{scenario_input.<column>}" reference
+    # resolved per scenario row. When set, prompt_template is not used and no Driver
+    # LLM runs.
+    steps: Optional[Union[List[dict], str]] = None
 
     def to_dict(self) -> dict:
         d: dict = {
@@ -2786,6 +2791,8 @@ class Driver:
         }
         if self.id is not None:
             d["id"] = str(self.id)
+        if self.steps is not None:
+            d["steps"] = self.steps
         return d
 
     def _get_driver_fields(
@@ -2802,6 +2809,12 @@ class Driver:
             self.time_created = response.time_created
         if response.project_id:
             self.project_id = response.project_id
+        steps = response.steps
+        if isinstance(steps, list):
+            # The generated client wraps each step row; hand back plain dicts.
+            self.steps = [row.to_dict() for row in steps]
+        elif isinstance(steps, str):
+            self.steps = steps
 
     def _get_voice_driver_fields(self, response: VoiceDriverModelResponse) -> None:
         if response.voice_instructions:
@@ -2896,6 +2909,16 @@ class Simulation:
     concurrent_ask_probability: Optional[float] = 0.0
     turn_transition_time: Optional[int] = 1000
     augmentation: Optional[Union[Augmentation, dict[str, Any]]] = None
+    # Voice only. How long the caller waits for the agent to start replying, in
+    # milliseconds (500-30000). None: the Target's own setting if it has one,
+    # else the platform default (10 s).
+    silence_timeout_ms: Optional[int] = None
+    # Voice only. Hang up once the agent has produced no recognizable speech --
+    # hold music, ringing, dead air -- for this long, in milliseconds
+    # (10000-600000). The clock starts once the caller's line has finished and
+    # restarts whenever the agent says something recognizable. None: the
+    # Target's own setting if it has one, else off.
+    hold_timeout_ms: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
         if isinstance(self.stop_check, dict):
@@ -2921,6 +2944,12 @@ class Simulation:
                 if isinstance(self.augmentation, Augmentation)
                 else self.augmentation
             )
+        # Only when set, so a run that leaves them alone keeps the platform's
+        # defaults rather than sending an explicit null.
+        if self.silence_timeout_ms is not None:
+            d["silence_timeout_ms"] = self.silence_timeout_ms
+        if self.hold_timeout_ms is not None:
+            d["hold_timeout_ms"] = self.hold_timeout_ms
         return d
 
 

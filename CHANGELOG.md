@@ -23,6 +23,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   plan support: older servers reject the `plan` key.
 - `utterance` (exact words, no LLM call) on `DirectedSpeechAugmentation` and
   `SecondarySpeakerAugmentation`; `BargeInAugmentation.utterance` is now honored.
+- `hold_timeout_ms` and `silence_timeout_ms` on `Simulation` and `Okareo.run_simulation`
+  (voice only). `hold_timeout_ms` hangs up once the agent has produced no recognizable
+  speech -- hold music, ringing, dead air -- for that long (10-600 s); the clock starts
+  once the caller's line has finished and restarts whenever the agent says something
+  recognizable. `silence_timeout_ms` is the existing target reply timeout, now settable
+  from the SDK (0.5-30 s). Omitted means the Target's own setting if it has one, else the
+  platform default (10 s) for `silence_timeout_ms` and off for `hold_timeout_ms`. Neither
+  is sent unless set.
 - `interrupt`, `min_offset_ms`, `max_offset_ms` and `seed` on `DirectedSpeechAugmentation` and
   `SecondarySpeakerAugmentation`: with `interrupt=True` the background remark plays over the
   agent's next reply instead of in the caller's turn, starting `min_offset_ms`..`max_offset_ms`
