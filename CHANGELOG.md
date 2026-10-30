@@ -15,11 +15,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- `bind_listener(nc, invoke_id)`, an optional method on a custom multiturn Target: the SDK's
-  listener hands it the Run's NATS connection and invoke id once its subscription is in place,
-  before the Run starts, on the listener's own event loop. It returns None, or a release that the
-  listener runs before it closes the connection. A bind that raises stops the Run from starting,
-  saying so. Targets without the method are unchanged.
+- `bind_listener(nc, invoke_id)`, an optional method on a custom multiturn Target's class: the
+  SDK's listener hands it the Run's NATS connection and invoke id once its subscription is in
+  place, before the Run starts, on the listener's own event loop. It returns None, or a release
+  that the listener runs before it closes the connection. A bind that fails stops the Run from
+  starting, saying so. Targets without the method are unchanged. New names:
+  `okareo.model_under_test.LISTENER_BIND_HOOK` (present in an SDK that calls the method; check it
+  before relying on it), `okareo.listener_binding` with the `BindsListener` Protocol and the
+  `ListenerRelease` type, and `okareo.error.ListenerBindError`, the cause of the `TestRunError`
+  when the bind fails.
 - Per-turn augmentation plans: `Augmentation(plan={key: [AugmentationConfig, ...]})` schedules
   augmentations by the caller's turns (counted from 1), reusing the strategy classes. A key is a
   turn (`2`), a range (`"2-4"`) or a turn to the end of the call (`"5-"`). Each entry is sent as

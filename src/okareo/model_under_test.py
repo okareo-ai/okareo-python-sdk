@@ -21,7 +21,12 @@ from attrs import field
 from nkeys import from_seed  # type: ignore
 from tqdm import tqdm  # type: ignore
 
-from okareo.error import MissingApiKeyError, MissingVectorDbError, TestRunError
+from okareo.error import (
+    ListenerBindError,
+    MissingApiKeyError,
+    MissingVectorDbError,
+    TestRunError,
+)
 from okareo_api_client.api.default import (
     add_datapoint_v0_datapoints_post,
     evaluate_v0_evaluate_post,
@@ -69,6 +74,12 @@ from okareo_api_client.types import UNSET, Unset
 
 from .async_utils import AsyncProcessorMixin
 from .augmentations import Augmentation
+from .listener_binding import (  # LISTENER_BIND_HOOK: okareo-vision checks it here
+    LISTENER_BIND_HOOK,
+    LISTENER_BIND_TIMEOUT_SECONDS,
+    LISTENER_RELEASE_TIMEOUT_SECONDS,
+    ListenerBinding,
+)
 
 ## BEGIN Monkey Patch for nats to use proxy env vars (via aiohttp)
 #  Apply monkey patch at module level to allow aiohttp client session to pull proxy env vars
@@ -102,6 +113,11 @@ NGS_URL = "wss://connect.ngs.global:443"
 # lower it; a module constant rather than an env knob so a typo cannot kill the
 # watchdog silently.
 LISTENER_STATUS_POLL_SECONDS = 30.0
+# How long stopping a listener waits for its thread: the five seconds its close
+# has always had, plus the budget of the release a Target's bind_listener
+# returned (see okareo.listener_binding), which runs before the close. A
+# plain-function release is not cut off, so it can outlast this.
+LISTENER_STOP_JOIN_SECONDS = 5.0 + LISTENER_RELEASE_TIMEOUT_SECONDS
 
 
 @define
@@ -118,7 +134,7 @@ class _ListenerHandle:
 
     def stop(self) -> None:
         self.stop_event.set()
-        self.thread.join(timeout=5)
+        self.thread.join(timeout=LISTENER_STOP_JOIN_SECONDS)
 
     def describe(self) -> str:
         connected = self.thread.is_alive() and not self.stats.get("closed")
@@ -168,126 +184,13 @@ def _log(message: str) -> None:
     print(f"[okareo {datetime.now().strftime('%H:%M:%S')}] {message}", flush=True)
 
 
-# The optional method a custom multiturn Target defines to be handed the
-# listener's NATS connection (see CustomMultiturnTargetAsync). Its presence on
-# this module says the SDK calls it.
-LISTENER_BIND_HOOK = "bind_listener"
-# How long a Target's bind_listener, and the release it returns, may take.
-LISTENER_BIND_TIMEOUT_SECONDS = 30.0
-LISTENER_RELEASE_TIMEOUT_SECONDS = 30.0
-
-
-class ListenerBindError(RuntimeError):
-    """The Target's ``bind_listener`` raised, ran past its time, or returned
-    something that is not a release: the listener does not start."""
-
-
-def _listener_bind_hook(mut: Any) -> Optional[Callable[..., Any]]:
-    """The custom multiturn Target's ``bind_listener``, or None.
-
-    The SDK does not keep the Target object: registration keeps its
-    ``params()``, whose ``model_invoker`` is the Target's bound ``invoke``. The
-    hook is looked up on the object that method is bound to, so a Target
-    without it, or one given as a plain dict of functions, is left alone.
-    """
-    models = getattr(mut, "models", None)
-    if not isinstance(models, dict):
-        return None
-    for key in ("custom_target_async", "custom_target"):
-        entry = models.get(key)
-        if not isinstance(entry, dict):
-            continue
-        owner = getattr(entry.get("model_invoker"), "__self__", None)
-        hook = getattr(owner, LISTENER_BIND_HOOK, None) if owner is not None else None
-        return hook if callable(hook) else None
-    return None
-
-
-async def _bind_target(
-    hook: Callable[..., Any], nats_connection: Any, invoke_id: str
-) -> Optional[Callable[[], Any]]:
-    """Call the Target's ``bind_listener(nc, invoke_id)``, awaiting it when it
-    is a coroutine; its release (a callable, or None when it bound nothing).
-    Any failure is a ``ListenerBindError`` saying what happened."""
-    try:
-        bound: Any = hook(nats_connection, invoke_id)
-        if inspect.isawaitable(bound):
-            binding = asyncio.ensure_future(bound)
-            done, _ = await asyncio.wait(
-                {binding}, timeout=LISTENER_BIND_TIMEOUT_SECONDS
-            )
-            if not done:
-                binding.cancel()
-                await asyncio.gather(binding, return_exceptions=True)
-                raise ListenerBindError(
-                    f"the Target's {LISTENER_BIND_HOOK} did not return within "
-                    f"{LISTENER_BIND_TIMEOUT_SECONDS:.0f}s"
-                )
-            bound = binding.result()
-    except ListenerBindError:
-        raise
-    except Exception as e:
-        raise ListenerBindError(
-            f"the Target's {LISTENER_BIND_HOOK} failed: {type(e).__name__}: {e}"
-        ) from e
-    if bound is None:
-        return None
-    if not callable(bound):
-        raise ListenerBindError(
-            f"the Target's {LISTENER_BIND_HOOK} returned a {type(bound).__name__}; "
-            "it returns None, or a callable that releases what it bound"
-        )
-    release: Callable[[], Any] = bound
-    return release
-
-
-async def _hand_connection_to_target(
-    mut: Any, nats_connection: Any, invoke_id: str, stats: dict
-) -> Optional[Callable[[], Any]]:
-    """The listener's connection handed to a Target with ``bind_listener``,
-    then flushed, so what the Target subscribed reaches the server before the
-    Run starts; the release it returned. None for a Target without the hook."""
-    hook = _listener_bind_hook(mut)
-    if hook is None:
-        return None
-    release = await _bind_target(hook, nats_connection, invoke_id)
-    await nats_connection.flush()
-    if release is not None:
-        _log(
-            f"{_listener_label(stats)}: the Target is using the Run's NATS "
-            f"connection ({LISTENER_BIND_HOOK})"
-        )
-    return release
-
-
-async def _release_target(release: Optional[Callable[[], Any]], stats: dict) -> None:
-    """Call the release ``bind_listener`` returned, if any, awaiting it when
-    it is a coroutine. Never raises: the listener is shutting down either way,
-    and the NATS connection still has to close, so a failure is logged."""
-    if release is None:
-        return
-    try:
-        released = release()
-        if inspect.isawaitable(released):
-            releasing = asyncio.ensure_future(released)
-            done, _ = await asyncio.wait(
-                {releasing}, timeout=LISTENER_RELEASE_TIMEOUT_SECONDS
-            )
-            if not done:
-                releasing.cancel()
-                await asyncio.gather(releasing, return_exceptions=True)
-                _log(
-                    f"{_listener_label(stats)}: the Target's {LISTENER_BIND_HOOK} "
-                    f"release did not finish within "
-                    f"{LISTENER_RELEASE_TIMEOUT_SECONDS:.0f}s; closing NATS anyway"
-                )
-                return
-            releasing.result()
-    except Exception as e:
-        _log(
-            f"{_listener_label(stats)}: the Target's {LISTENER_BIND_HOOK} release "
-            f"failed ({type(e).__name__}: {e}); closing NATS anyway"
-        )
+def _report_listener_failure(stats: dict, error: Exception) -> None:
+    """The listener's one line for the failure that stopped it: a Target's
+    failed ``bind_listener`` in its own words, anything else as before."""
+    if isinstance(error, ListenerBindError):
+        _log(f"{_listener_label(stats)}: {error}; the Run is not started")
+    else:
+        print(f"An error occurred in the custom model invocation: {str(error)}")
 
 
 def fetch_test_run(
@@ -1024,26 +927,28 @@ class ModelUnderTest(AsyncProcessorMixin):
         error_holder: Optional[dict] = None,
         run_id_holder: Optional[dict] = None,
         stats: Optional[dict] = None,
+        binding: Optional[ListenerBinding] = None,
     ) -> None:
         """Answer the Run's turns on ``invoke.<invoke_id>`` until ``stop_event``.
 
         Runs on an event loop of its own, in a thread of its own
         (``_internal_run_custom_model_thread``), and the NATS connection belongs
-        to that loop. A Target with a ``bind_listener`` method (see
-        ``CustomMultiturnTargetAsync``) is handed the connection and the invoke
-        id on that loop, once the subscription is flushed and before
-        ``ready_event``; the release it returns runs before the connection
-        closes, on failure paths too.
+        to that loop. ``binding`` is set for a Target with a ``bind_listener``
+        method (see ``okareo.listener_binding``): the Target is handed the
+        connection and the invoke id on that loop, once the subscription is
+        flushed and before ``ready_event``, and the release it returns runs
+        before the connection closes and before this Run's handle is dropped,
+        on failure paths too. ``stats["stage"]`` says how far it got, for the
+        readiness barrier's message.
         """
         nats_connection = None
-        # what the Target's bind_listener returned; run before the close
-        release_target: Optional[Callable[[], Any]] = None
         # Track active tasks for proper cleanup
         active_tasks: set[asyncio.Task] = set()
         # Per-call, like the other holders, so nothing here depends on state hung
         # on self: this coroutine is also driven directly by tests with a stand-in.
         stats = stats if stats is not None else {}
         stats["invoke_id"] = invoke_id
+        stats["stage"] = "connecting"
         # Submit path only: stops the listener once the Run is terminal, in case
         # the server's end-of-run close never arrives.
         run_watchdog: Optional[asyncio.Task] = None
@@ -1089,12 +994,17 @@ class ModelUnderTest(AsyncProcessorMixin):
             # into error_holder, so a broken connection surfaces as a clear run
             # error rather than a false "ready" signal.
             await nats_connection.flush()
-            # A Target that asks for the Run's connection (bind_listener) gets it
-            # here. A failure is a ListenerBindError, captured below as a connect
-            # failure is, so the Run never starts.
-            release_target = await _hand_connection_to_target(
-                self, nats_connection, invoke_id, stats
-            )
+            if binding is not None:
+                # A Target that asks for the Run's connection (bind_listener) gets
+                # it here. The binding holds the release from the moment the bind
+                # returns, so a failure of the flush below still releases. A bind
+                # failure is a ListenerBindError, captured below as a connect
+                # failure is, so the Run never starts.
+                stats["stage"] = "binding"
+                await binding.bind(nats_connection, invoke_id)
+                # What the Target subscribed reaches the server before the Run.
+                await nats_connection.flush()
+            stats["stage"] = "listening"
             if ready_event is not None:
                 # Subscribed and flushed: safe for the caller to create the run.
                 ready_event.set()
@@ -1108,7 +1018,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         except Exception as e:
             if error_holder is not None:
                 error_holder["error"] = e
-            print(f"An error occurred in the custom model invocation: {str(e)}")
+            _report_listener_failure(stats, e)
         finally:
             # Always release the waiter, even on connect/subscribe failure, so the
             # caller never blocks past the barrier timeout.
@@ -1120,15 +1030,18 @@ class ModelUnderTest(AsyncProcessorMixin):
             if run_watchdog is not None:
                 run_watchdog.cancel()
                 await asyncio.gather(run_watchdog, return_exceptions=True)
-            if run_id_holder is not None and run_id_holder.get("test_run_id"):
-                with _LIVE_LISTENERS_LOCK:
-                    _LIVE_LISTENERS.pop(str(run_id_holder["test_run_id"]), None)
             # The Target lets go of the connection while it is still open.
-            await _release_target(release_target, stats)
+            if binding is not None:
+                await binding.release()
             # Our own close is not a lost connection; see _nats_connection_callbacks.
             stats["stopping"] = True
             if nats_connection is not None:
                 await nats_connection.close()
+            # Dropped only now, so stop_listener_for_run, which finds the Run by
+            # this handle, waits for the release and the close.
+            if run_id_holder is not None and run_id_holder.get("test_run_id"):
+                with _LIVE_LISTENERS_LOCK:
+                    _LIVE_LISTENERS.pop(str(run_id_holder["test_run_id"]), None)
             lifetime = time.monotonic() - stats.get("connected_at", time.monotonic())
             _log(
                 f"{_listener_label(stats)}: exiting; turns answered "
@@ -1202,6 +1115,8 @@ class ModelUnderTest(AsyncProcessorMixin):
         # The connection callbacks and _describe_listener read this copy; the
         # listener itself is handed `stats` directly.
         self._custom_model_listener_stats = stats
+        # None for a Target without bind_listener: the listener runs as before.
+        binding = self._listener_binding(stats)
         # Per-call (never class-level) so parallel runs on separate MUT objects
         # cannot cross signals. The listener sets ready_event once it has
         # subscribed+flushed, and records any connect/subscribe error here.
@@ -1220,6 +1135,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     custom_model_error_holder,
                     run_id_holder,
                     stats,
+                    binding,
                 ),
             ),
             # Submit path: a daemon, so a process that already has its result can
@@ -1238,6 +1154,26 @@ class ModelUnderTest(AsyncProcessorMixin):
             custom_model_error_holder,
         )
 
+    def _listener_binding(self, stats: dict) -> Optional[ListenerBinding]:
+        """The binding for a custom multiturn Target whose class defines
+        ``bind_listener``; None for any other Target.
+
+        The SDK does not keep the Target object: registration keeps its
+        ``params()``, whose ``model_invoker`` is the Target's bound ``invoke``,
+        so the Target is the object that method is bound to. A Target given as
+        a plain dict of functions has none, and is left alone.
+        """
+        models = self.models if isinstance(self.models, dict) else {}
+        for key in ("custom_target_async", "custom_target"):
+            entry = models.get(key)
+            if isinstance(entry, dict):
+                target = getattr(entry.get("model_invoker"), "__self__", None)
+                return ListenerBinding.for_target(
+                    target,
+                    log=lambda message: _log(f"{_listener_label(stats)}: {message}"),
+                )
+        return None
+
     def _internal_cleanup_custom_model(
         self,
         custom_model_thread_stop_event: threading.Event,
@@ -1247,7 +1183,8 @@ class ModelUnderTest(AsyncProcessorMixin):
             custom_model_thread_stop_event.set()  # Signal the thread to stop
 
         if custom_model_thread:
-            custom_model_thread.join(timeout=5)
+            # Long enough for a Target's bind_listener release and the close.
+            custom_model_thread.join(timeout=LISTENER_STOP_JOIN_SECONDS)
 
     def _run_test_internal(
         self,
@@ -1327,27 +1264,25 @@ class ModelUnderTest(AsyncProcessorMixin):
                 # server can publish to an unsubscribed channel and the run fails
                 # with "Unable to connect to custom model on client." The wait is
                 # bounded so a failed/hung connect surfaces as a clear error
-                # rather than a silent hang; the default exceeds the NATS connect
-                # timeout (30s NGS / 120s local, see connect_nats). Raising here
-                # is safe: self.custom_model_thread is already set, so the finally
-                # at the end of this method stops and joins the listener thread.
+                # rather than a silent hang. It covers the NATS connect (30s on
+                # NGS, see connect_nats), the subscribe and its flush, and, for a
+                # Target with bind_listener, the bind (up to 30s as a coroutine,
+                # unbounded as a plain function) and a second flush, so a slow
+                # bind can use it up; the listener's stage says which one did.
+                # Raising here is safe: self.custom_model_thread is already set,
+                # so the finally at the end of this method stops and joins the
+                # listener thread.
                 ready_timeout = float(
                     os.environ.get("OKAREO_CUSTOM_MODEL_READY_TIMEOUT", "60")
                 )
                 if not custom_model_ready_event.wait(ready_timeout):
-                    raise TestRunError(
-                        "Custom model listener did not subscribe to NATS within "
-                        f"{ready_timeout:.0f}s. Aborting before the run starts to "
-                        "avoid a no-responder failure. Check connectivity to NATS "
-                        "(connect.ngs.global), or raise "
-                        "OKAREO_CUSTOM_MODEL_READY_TIMEOUT."
-                    )
+                    raise self._listener_not_ready_error(ready_timeout)
                 listener_error = custom_model_error_holder.get("error")
                 if isinstance(listener_error, ListenerBindError):
                     raise TestRunError(
                         "Custom model listener could not hand its NATS connection "
                         f"to the Target: {listener_error}"
-                    )
+                    ) from listener_error
                 if listener_error is not None:
                     raise TestRunError(
                         "Custom model listener failed to connect to NATS: "
@@ -1444,6 +1379,26 @@ class ModelUnderTest(AsyncProcessorMixin):
                 self._internal_cleanup_custom_model(
                     self.custom_model_thread_stop_event, self.custom_model_thread
                 )
+
+    def _listener_not_ready_error(self, ready_timeout: float) -> TestRunError:
+        """Why the listener was not ready within ``ready_timeout``: the
+        Target's ``bind_listener`` when the listener was still binding, NATS
+        otherwise."""
+        if self._custom_model_listener_stats.get("stage") == "binding":
+            return TestRunError(
+                f"The Target's {LISTENER_BIND_HOOK} did not return within "
+                f"{ready_timeout:.0f}s of the listener starting. Aborting before "
+                "the run starts. A coroutine bind_listener is cut off after "
+                f"{LISTENER_BIND_TIMEOUT_SECONDS:.0f}s; a plain function is not. "
+                "Raise OKAREO_CUSTOM_MODEL_READY_TIMEOUT if the bind needs longer."
+            )
+        return TestRunError(
+            "Custom model listener did not subscribe to NATS within "
+            f"{ready_timeout:.0f}s. Aborting before the run starts to "
+            "avoid a no-responder failure. Check connectivity to NATS "
+            "(connect.ngs.global), or raise "
+            "OKAREO_CUSTOM_MODEL_READY_TIMEOUT."
+        )
 
     def _call_run_test_method(
         self,
@@ -2070,7 +2025,7 @@ class CustomMultiturnTarget(BaseModel):
     Requires a valid `invoke` definition that operates on a single turn of a converstation.
 
     May define the optional `bind_listener` described on `CustomMultiturnTargetAsync`;
-    it may be a plain function here too.
+    it may be a plain function here too, and then it is not cut off at 30 s.
     """
 
     type = "custom_target"
@@ -2129,7 +2084,8 @@ class CustomMultiturnTargetAsync(BaseModel):
     Requires a valid `invoke` definition that operates on a single turn of a converstation.
 
     Optional: a Target that needs the Run's own NATS connection defines
-    `bind_listener(nc, invoke_id)`. A Target without it is answered exactly as before.
+    `bind_listener(nc, invoke_id)` on its class (the `BindsListener` Protocol in
+    `okareo.listener_binding`). A Target without it is answered exactly as before.
 
     - When: once per Run, after the SDK's listener has subscribed to
       `invoke.<invoke_id>` and before the Run is created. Whatever it subscribes
@@ -2141,8 +2097,13 @@ class CustomMultiturnTargetAsync(BaseModel):
       coroutine function, no arguments) that lets go of everything it started
       on `nc`. The release runs when the listener stops, on failure paths too,
       before the connection closes; a failure there is logged, not raised.
-    - Failure: if it raises (or takes more than 30 s), the Run is not started
-      and the error says so. It must leave nothing running when it raises.
+    - Failure: if it raises, ends cancelled, or returns something that is not a
+      release, the Run is not started and the error says so, caused by the
+      Target's own exception. It must leave nothing running when it fails.
+    - Time: a coroutine `bind_listener` that takes more than 30 s is cancelled
+      and the Run is not started; a coroutine release past 30 s is cancelled and
+      logged. The limits apply to coroutines only: a plain function runs on the
+      listener's event loop and blocks it, with no limit, until it returns.
     - Event loop: it runs on the listener's event loop, in the listener's own
       thread, as `start_session`, `invoke` and `end_session` do. `nc` belongs to
       that loop: subscribe, publish and start tasks for it there, never from
