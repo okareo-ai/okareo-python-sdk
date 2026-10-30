@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Awaitable, Callable, Optional, Protocol, Union
 from okareo.error import ListenerBindError
 
 if TYPE_CHECKING:
-    from nats.aio.client import Client as NATS
+    from nats.aio.client import Client as NatsClient
 
 # The method a Target defines to be handed the Run's NATS connection.
 # okareo.model_under_test re-exports it: its presence there tells a caller
@@ -33,16 +33,16 @@ LISTENER_BIND_HOOK = "bind_listener"
 LISTENER_BIND_TIMEOUT_SECONDS = 30.0
 LISTENER_RELEASE_TIMEOUT_SECONDS = 30.0
 
+# What ``bind_listener`` returns when it bound something: a function or a
+# coroutine function, no arguments, that lets go of everything it started.
 ListenerRelease = Callable[[], Optional[Awaitable[None]]]
-"""What ``bind_listener`` returns when it bound something: a function or a
-coroutine function, no arguments, that lets go of everything it started."""
 
 
 class BindsListener(Protocol):
     """A custom multiturn Target that is handed the Run's NATS connection."""
 
     def bind_listener(
-        self, nc: "NATS", invoke_id: str
+        self, nc: "NatsClient", invoke_id: str
     ) -> Union[Optional[ListenerRelease], Awaitable[Optional[ListenerRelease]]]:
         """Use ``nc`` (subscribe, publish, start tasks on the listener's loop)
         for the Run whose id on NATS is ``invoke_id``; None, or the release."""
@@ -80,7 +80,7 @@ class ListenerBinding:
             return None
         return cls(cast(BindsListener, target), log)
 
-    async def bind(self, nc: "NATS", invoke_id: str) -> None:
+    async def bind(self, nc: "NatsClient", invoke_id: str) -> None:
         """Hand the Target ``nc`` and ``invoke_id``, and hold the release it returns.
 
         The release is held the moment ``bind_listener`` returns, so whatever
@@ -112,7 +112,9 @@ class ListenerBinding:
                 "it returns None, or a callable that releases what it bound"
             )
         self._release = bound
-        self._log(f"the Target is using the Run's NATS connection ({LISTENER_BIND_HOOK})")
+        self._log(
+            f"the Target is using the Run's NATS connection ({LISTENER_BIND_HOOK})"
+        )
 
     async def release(self) -> None:
         """Run the release ``bind_listener`` returned, once, if it returned one.
@@ -132,7 +134,9 @@ class ListenerBinding:
                 f"{LISTENER_RELEASE_TIMEOUT_SECONDS:.0f}s; {closing}"
             )
         except _EndedCancelled:
-            self._log(f"the Target's {LISTENER_BIND_HOOK} release ended cancelled; {closing}")
+            self._log(
+                f"the Target's {LISTENER_BIND_HOOK} release ended cancelled; {closing}"
+            )
         except Exception as e:
             self._log(
                 f"the Target's {LISTENER_BIND_HOOK} release failed "
@@ -160,4 +164,3 @@ class ListenerBinding:
             return pending.result()
         except asyncio.CancelledError as e:
             raise _EndedCancelled() from e
-
