@@ -6,218 +6,40 @@ is created; what it returns (its release) runs before the connection closes,
 on failure paths too. A Target without it sees no change. A bind that fails
 stops the Run from starting with a clear error rather than a hang.
 
-Every test goes through ``run_test`` or ``submit_test``. The NATS connection is
-a stand-in returned by a fake ``nats.connect`` that records the order of
-events, and the Okareo endpoints are fakes; nothing touches the network.
+Every test goes through ``run_test`` or ``submit_test``. The stand-ins (a fake
+``nats.connect`` whose connection records the order of events, the Targets,
+the Okareo endpoints) are in ``listener_bind_fakes``; nothing touches the
+network.
 """
 
 import asyncio
 import time
 import traceback
-from typing import Any, Callable, Iterator, List, Optional
-from uuid import uuid4
+from typing import Any, Iterator, Optional
 
-import nats.errors
 import pytest
+from okareo_tests.listener_bind_fakes import (
+    A_TURN,
+    NO_HOOK,
+    AnswersAnyName,
+    Binding,
+    Echo,
+    FakeOkareo,
+    Forwarding,
+    Recording,
+    SlowTurn,
+    SyncBinding,
+    first_words,
+    models_of,
+    refused,
+    run_test,
+    submit_test,
+)
 
 from okareo import listener_binding
 from okareo import model_under_test as mut_module
-from okareo.error import ListenerBindError, TestRunError
-from okareo.model_under_test import (
-    CustomMultiturnTarget,
-    CustomMultiturnTargetAsync,
-    ModelInvocation,
-    ModelUnderTest,
-    stop_listener_for_run,
-)
-from okareo_api_client.client import Client
-from okareo_api_client.models import ModelUnderTestResponse, TestRunItem, TestRunType
-
-
-class Recording:
-    """The order things happened in, across the stand-in connection, the Target and the Run."""
-
-    def __init__(self) -> None:
-        self.events: List[str] = []
-
-    def index(self, event: str) -> int:
-        return self.events.index(event)
-
-    def invoke_id(self) -> str:
-        """The Run's id on NATS, read off the listener's own subscription."""
-        return self.events[0].removeprefix("subscribe invoke.")
-
-
-class FakeConn:
-    """The slice of nats-py's Client the listener and a Target use."""
-
-    def __init__(self, log: Recording, fail_flush: Optional[int] = None) -> None:
-        self.log = log
-        self.fail_flush = fail_flush
-        self.flushes = 0
-
-    async def subscribe(self, subject: str, cb: Any = None) -> None:
-        self.log.events.append(f"subscribe {subject}")
-
-    async def flush(self, timeout: int = 10) -> None:
-        self.flushes += 1
-        self.log.events.append("flush")
-        if self.flushes == self.fail_flush:
-            raise nats.errors.FlushTimeoutError()
-
-    async def publish(self, subject: str, data: bytes) -> None:
-        self.log.events.append(f"publish {subject}")
-
-    async def close(self) -> None:
-        self.log.events.append("close")
-
-
-class Echo(CustomMultiturnTargetAsync):
-    async def invoke(  # type: ignore[override]
-        self,
-        messages: list[dict[str, str]],
-        scenario_input: Any = None,
-        session_id: Optional[str] = None,
-    ) -> ModelInvocation:
-        return ModelInvocation("echo", messages, {})
-
-
-class Binding(Echo):
-    """A Target that subscribes a subject of its own on the Run's connection and
-    keeps a task running on it, which its release cancels."""
-
-    def __init__(self, name: str, log: Recording, **behaviour: Any) -> None:
-        super().__init__(name=name)
-        self.log = log
-        self.behaviour = behaviour
-        self.bound_to: List[tuple] = []
-        self.pump: Optional[asyncio.Future] = None
-
-    async def bind_listener(self, nc: Any, invoke_id: str) -> Any:
-        self.bound_to.append((nc, invoke_id))
-        self.log.events.append("bind")
-        if self.behaviour.get("raise_at_bind"):
-            raise RuntimeError("bind boom")
-        if "hang_for" in self.behaviour:
-            await asyncio.sleep(self.behaviour["hang_for"])
-        if self.behaviour.get("cancel_at_bind"):
-            helper = asyncio.ensure_future(asyncio.sleep(3600))
-            helper.cancel()
-            await helper  # the usual cleanup idiom: this coroutine ends cancelled
-        if "returns" in self.behaviour:
-            return self.behaviour["returns"]
-        await nc.subscribe(f"own.{invoke_id}.>", cb=None)
-        pump = asyncio.ensure_future(asyncio.sleep(3600))
-        self.pump = pump
-
-        async def release() -> None:
-            self.log.events.append("release")
-            pump.cancel()
-            if self.behaviour.get("cancel_at_release"):
-                await pump  # ends this coroutine cancelled
-            if self.behaviour.get("raise_at_release"):
-                raise RuntimeError("release boom")
-            if "release_takes" in self.behaviour:
-                await asyncio.sleep(self.behaviour["release_takes"])
-                self.log.events.append("release done")
-
-        return release
-
-
-class SyncBinding(CustomMultiturnTarget):
-    def __init__(self, name: str, log: Recording) -> None:
-        super().__init__(name=name)
-        self.log = log
-
-    def invoke(  # type: ignore[override]
-        self,
-        messages: list[dict[str, str]],
-        scenario_input: Any = None,
-        session_id: Optional[str] = None,
-    ) -> ModelInvocation:
-        return ModelInvocation("echo", messages, {})
-
-    def bind_listener(self, nc: Any, invoke_id: str) -> Callable[[], None]:
-        self.log.events.append("bind")
-        return lambda: self.log.events.append("release")
-
-
-class AnswersAnyName:
-    """A client proxy: any name it lacks is a remote call, answered with a string."""
-
-    def __getattr__(self, name: str) -> Callable[..., str]:
-        return lambda *_a, **_k: f"remote result of {name}"
-
-    async def invoke(self, messages: Any, *_a: Any, **_k: Any) -> ModelInvocation:
-        return ModelInvocation("echo", messages, {})
-
-
-class Forwarding(Echo):
-    """An SDK Target that forwards any name it lacks to a client of its own."""
-
-    def __init__(self, name: str, client: Any) -> None:
-        super().__init__(name=name)
-        self.client = client
-
-    def __getattr__(self, name: str) -> Any:
-        if name == "client":
-            raise AttributeError(name)
-        return getattr(self.client, name)
-
-
-def models_of(target: Any) -> dict:
-    return {target.type: target.params()}
-
-
-class FakeOkareo:
-    """The fakes around the model: NATS, the listener's credentials, the Run endpoints."""
-
-    def __init__(self, monkeypatch: pytest.MonkeyPatch, log: Recording) -> None:
-        self.log = log
-        self.conn = FakeConn(log)
-        self.run_id = uuid4()
-
-        async def fake_nats_connect(**_kwargs: Any) -> FakeConn:
-            return self.conn
-
-        monkeypatch.setattr(mut_module.nats, "connect", fake_nats_connect)
-        monkeypatch.setattr(
-            mut_module.internal_custom_model_listener_v0_internal_custom_model_listener_get,
-            "sync",
-            lambda **_k: {
-                "jwt": "jwt",
-                "seed": "seed",
-                "local_nats": "nats://unit.invalid:4222",
-            },
-        )
-        monkeypatch.setattr(mut_module.run_test_v0_test_run_post, "sync", self._run)
-        monkeypatch.setattr(
-            mut_module.submit_test_v0_test_run_submit_post, "sync", self._submit
-        )
-
-    def model(self, models: dict) -> ModelUnderTest:
-        return ModelUnderTest(
-            client=Client(
-                base_url="http://unit.invalid", raise_on_unexpected_status=True
-            ),
-            api_key="unit-test-key",
-            mut=ModelUnderTestResponse(
-                id=uuid4(),
-                project_id=uuid4(),
-                name="bound",
-                tags=[],
-                time_created="2026-10-27T00:00:00",
-            ),
-            models=models,
-        )
-
-    def _run(self, **_k: Any) -> TestRunItem:
-        self.log.events.append("run created")
-        return TestRunItem(id=self.run_id, project_id=uuid4(), status="FINISHED")
-
-    def _submit(self, **_k: Any) -> TestRunItem:
-        self.log.events.append("run submitted")
-        return TestRunItem(id=self.run_id, project_id=uuid4(), status="RUNNING")
+from okareo.error import ListenerBindError
+from okareo.model_under_test import ModelInvocation, stop_listener_for_run
 
 
 @pytest.fixture
@@ -231,18 +53,6 @@ def fakes(monkeypatch: pytest.MonkeyPatch, log: Recording) -> Iterator[FakeOkare
     yield fake
     # a submit_test whose test failed midway leaves its listener up
     stop_listener_for_run(fake.run_id)
-
-
-def run_test(mut: ModelUnderTest) -> TestRunItem:
-    return mut.run_test(
-        scenario=str(uuid4()), name="bind unit", test_run_type=TestRunType.MULTI_TURN
-    )
-
-
-def refused(mut: ModelUnderTest) -> TestRunError:
-    with pytest.raises(TestRunError) as raised:
-        run_test(mut)
-    return raised.value
 
 
 # --- the hook is called once, after the flush, before the Run ------------------
@@ -286,6 +96,16 @@ def test_a_sync_hook_and_a_sync_release_work_too(
     ]
 
 
+def test_model_under_test_still_names_the_hook_okareo_vision_checks_for() -> None:
+    """okareo-vision refuses its client relay unless okareo.model_under_test has
+    LISTENER_BIND_HOOK; the re-export is the SDK saying it calls the hook."""
+    assert (
+        mut_module.LISTENER_BIND_HOOK
+        is listener_binding.LISTENER_BIND_HOOK
+        == "bind_listener"
+    )
+
+
 # --- the release runs before the close, on failure paths too -----------------
 
 
@@ -325,6 +145,20 @@ def test_a_release_that_ends_cancelled_is_logged_and_the_connection_still_closes
     assert "bind_listener release ended cancelled" in capsys.readouterr().out
 
 
+def test_a_sync_release_that_ends_cancelled_is_logged_and_the_connection_still_closes(
+    fakes: FakeOkareo, log: Recording, capsys: pytest.CaptureFixture[str]
+) -> None:
+    mut = fakes.model(models_of(SyncBinding("sync", log, cancel_at_release=True)))
+
+    run_test(mut)
+
+    assert log.events[-2:] == ["release", "close"]
+    assert not mut.custom_model_thread.is_alive()
+    out = capsys.readouterr().out
+    assert "bind_listener release ended cancelled; closing NATS anyway" in out
+    assert ": exiting; turns answered" in out
+
+
 def test_a_release_that_hangs_is_cut_off_and_the_connection_still_closes(
     fakes: FakeOkareo,
     log: Recording,
@@ -343,13 +177,14 @@ def test_a_release_that_hangs_is_cut_off_and_the_connection_still_closes(
     assert "release did not finish within" in capsys.readouterr().out
 
 
+# --- stopping waits for the release, and only a bound listener waits for it --
+
+
 def test_stop_listener_for_run_waits_for_a_release_longer_than_five_seconds(
     fakes: FakeOkareo, log: Recording
 ) -> None:
     mut = fakes.model(models_of(Binding("bound", log, release_takes=5.5)))
-    submitted = mut.submit_test(
-        scenario=str(uuid4()), name="bind unit", test_run_type=TestRunType.MULTI_TURN
-    )
+    submitted = submit_test(mut)
 
     started = time.monotonic()
     assert stop_listener_for_run(submitted.id)
@@ -361,14 +196,71 @@ def test_stop_listener_for_run_waits_for_a_release_longer_than_five_seconds(
     assert not mut.custom_model_thread.is_alive()
 
 
+def test_stop_listener_for_run_waits_for_a_release_the_listener_began_on_its_own(
+    fakes: FakeOkareo, log: Recording
+) -> None:
+    """The server's end-of-run close stands in for the status poll's self-stop:
+    either way the listener stops itself, and wait_for_test_run then calls
+    stop_listener_for_run while the release runs. The handle is dropped only
+    after the release and the close, so the call finds it and waits."""
+    target = Binding("bound", log, release_takes=1.5)
+    mut = fakes.model(models_of(target))
+    submitted = submit_test(mut)
+
+    fakes.conn.deliver({"close": True})
+    assert target.releasing.wait(5)
+    found = stop_listener_for_run(submitted.id)
+    log.events.append("stop returned")
+
+    assert found is True
+    assert log.events[-4:] == ["release", "release done", "close", "stop returned"]
+    assert not mut.custom_model_thread.is_alive()
+
+
+def test_run_test_waits_five_seconds_for_a_target_without_the_hook_then_says_so(
+    fakes: FakeOkareo, log: Recording, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = SlowTurn("plain", takes=5.5)
+    mut = fakes.model(models_of(target))
+
+    def a_turn_still_answering_when_the_run_returns() -> None:
+        fakes.conn.deliver(A_TURN)
+        assert target.answering.wait(5)
+
+    fakes.during_run = a_turn_still_answering_when_the_run_returns
+
+    started = time.monotonic()
+    run_test(mut)
+    took = time.monotonic() - started
+
+    assert took < 6  # the 5 s it always had, not the release's 30 s on top
+    out = capsys.readouterr().out
+    assert out.count("still running 5s after it was told to stop") == 1
+    mut.custom_model_thread.join(5)
+    assert not mut.custom_model_thread.is_alive()
+
+
+def test_stop_listener_for_run_waits_five_seconds_for_a_target_without_the_hook(
+    fakes: FakeOkareo, log: Recording, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = SlowTurn("plain", takes=5.5)
+    mut = fakes.model(models_of(target))
+    submitted = submit_test(mut)
+    fakes.conn.deliver(A_TURN)
+    assert target.answering.wait(5)
+
+    started = time.monotonic()
+    assert stop_listener_for_run(submitted.id)
+    took = time.monotonic() - started
+
+    assert took < 6
+    out = capsys.readouterr().out
+    assert out.count("still running 5s after it was told to stop") == 1
+    mut.custom_model_thread.join(5)
+    assert not mut.custom_model_thread.is_alive()
+
+
 # --- no hook: no change ------------------------------------------------------
-
-
-NO_HOOK = ["subscribe", "flush", "run", "close"]
-
-
-def first_words(log: Recording) -> List[str]:
-    return [event.split(" ")[0] for event in log.events]
 
 
 def test_a_target_without_the_hook_sees_no_change(
@@ -483,6 +375,19 @@ def test_a_hook_that_ends_cancelled_refuses_the_run(
     assert log.events[-1] == "close"
 
 
+def test_a_sync_hook_that_ends_cancelled_refuses_the_run(
+    fakes: FakeOkareo, log: Recording
+) -> None:
+    mut = fakes.model(models_of(SyncBinding("sync", log, cancel_at_bind=True)))
+
+    error = refused(mut)
+
+    assert "bind_listener ended cancelled" in str(error)
+    assert "run created" not in log.events
+    assert log.events[1:] == ["flush", "bind", "close"]
+    assert not mut.custom_model_thread.is_alive()
+
+
 def test_a_hook_that_returns_something_else_refuses_the_run(
     fakes: FakeOkareo, log: Recording
 ) -> None:
@@ -505,6 +410,9 @@ def test_a_hook_that_hangs_refuses_the_run(
     assert log.events[-1] == "close"
 
 
+# --- the readiness wait names what used it up --------------------------------
+
+
 def test_the_readiness_wait_names_the_bind_when_the_bind_used_it_up(
     fakes: FakeOkareo, log: Recording, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -516,3 +424,32 @@ def test_the_readiness_wait_names_the_bind_when_the_bind_used_it_up(
     assert "Check connectivity to NATS" not in str(error)
     assert "run created" not in log.events
     assert log.events[-1] == "close"
+
+
+def test_the_readiness_wait_names_nats_when_the_connect_used_it_up(
+    fakes: FakeOkareo, log: Recording, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OKAREO_CUSTOM_MODEL_READY_TIMEOUT", "0.3")
+    fakes.connect_takes = 1.0
+
+    error = refused(fakes.model(models_of(Binding("bound", log))))
+
+    assert "did not subscribe to NATS within" in str(error)
+    assert "bind_listener" not in str(error)
+    assert "run created" not in log.events
+
+
+def test_a_listener_that_connects_after_the_readiness_wait_gave_up_does_not_bind(
+    fakes: FakeOkareo, log: Recording, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("OKAREO_CUSTOM_MODEL_READY_TIMEOUT", "0.3")
+    fakes.connect_takes = 1.0
+    target = Binding("bound", log)
+    mut = fakes.model(models_of(target))
+
+    refused(mut)
+
+    # the Run was never created, so the Target is never handed its connection
+    assert not mut.custom_model_thread.is_alive()
+    assert log.events[1:] == ["flush", "close"]
+    assert target.bound_to == []

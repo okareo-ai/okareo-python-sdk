@@ -114,10 +114,11 @@ NGS_URL = "wss://connect.ngs.global:443"
 # watchdog silently.
 LISTENER_STATUS_POLL_SECONDS = 30.0
 # How long stopping a listener waits for its thread: the five seconds its close
-# has always had, plus the budget of the release a Target's bind_listener
-# returned (see okareo.listener_binding), which runs before the close. A
-# plain-function release is not cut off, so it can outlast this.
-LISTENER_STOP_JOIN_SECONDS = 5.0 + LISTENER_RELEASE_TIMEOUT_SECONDS
+# has always had. A listener whose Target defines bind_listener waits
+# LISTENER_RELEASE_TIMEOUT_SECONDS more, for the release the bind may return
+# (see okareo.listener_binding), which runs before the close. A plain-function
+# release is not cut off, so it can outlast this; a wait that gives up says so.
+LISTENER_STOP_JOIN_SECONDS = 5.0
 
 
 @define
@@ -131,10 +132,12 @@ class _ListenerHandle:
     stop_event: threading.Event
     thread: threading.Thread
     stats: dict
+    # How long stop() waits for the thread; see LISTENER_STOP_JOIN_SECONDS.
+    join_seconds: float
 
     def stop(self) -> None:
         self.stop_event.set()
-        self.thread.join(timeout=LISTENER_STOP_JOIN_SECONDS)
+        _join_listener(self.thread, self.join_seconds, self.stats)
 
     def describe(self) -> str:
         connected = self.thread.is_alive() and not self.stats.get("closed")
@@ -191,6 +194,34 @@ def _report_listener_failure(stats: dict, error: Exception) -> None:
         _log(f"{_listener_label(stats)}: {error}; the Run is not started")
     else:
         print(f"An error occurred in the custom model invocation: {str(error)}")
+
+
+def _report_listener_exit(stats: dict) -> None:
+    """The listener's last line: what it answered and how its connection fared."""
+    lifetime = time.monotonic() - stats.get("connected_at", time.monotonic())
+    _log(
+        f"{_listener_label(stats)}: exiting; turns answered "
+        f"{stats.get('turns_answered', 0)}, turns failed "
+        f"{stats.get('turns_failed', 0)}, disconnects "
+        f"{stats.get('disconnects', 0)}, reconnects "
+        f"{stats.get('reconnects', 0)}, connection lifetime {lifetime:.0f}s, "
+        f"server close received "
+        f"{'yes' if stats.get('server_close_received') else 'no'}"
+    )
+
+
+def _join_listener(thread: threading.Thread, seconds: float, stats: dict) -> None:
+    """Wait at most ``seconds`` for a listener told to stop; one line if it is
+    still running then, since on the submit path the thread is a daemon and
+    whatever it had left (a turn, the Target's release, the close) dies with
+    the process."""
+    thread.join(timeout=seconds)
+    if thread.is_alive():
+        _log(
+            f"{_listener_label(stats)}: still running {seconds:.0f}s after it was "
+            "told to stop; no longer waiting for it. A turn in flight, the "
+            "Target's release or the close has not finished"
+        )
 
 
 def fetch_test_run(
@@ -936,10 +967,15 @@ class ModelUnderTest(AsyncProcessorMixin):
         to that loop. ``binding`` is set for a Target with a ``bind_listener``
         method (see ``okareo.listener_binding``): the Target is handed the
         connection and the invoke id on that loop, once the subscription is
-        flushed and before ``ready_event``, and the release it returns runs
-        before the connection closes and before this Run's handle is dropped,
-        on failure paths too. ``stats["stage"]`` says how far it got, for the
-        readiness barrier's message.
+        flushed and before ``ready_event``, unless the listener was told to stop
+        before then; the release it returns runs before the connection closes
+        and before this Run's handle is dropped, on failure paths too.
+        ``stats["stage"]`` says how far it got, for the readiness barrier's
+        message.
+
+        The ``finally`` is the teardown, in the order it must run. It stays in
+        this function because each step reads what the setup above made (the
+        connection, the turns, the watchdog), possibly half made on a failure.
         """
         nats_connection = None
         # Track active tasks for proper cleanup
@@ -994,7 +1030,9 @@ class ModelUnderTest(AsyncProcessorMixin):
             # into error_holder, so a broken connection surfaces as a clear run
             # error rather than a false "ready" signal.
             await nats_connection.flush()
-            if binding is not None:
+            # Told to stop already (the readiness wait gave up, so no Run will
+            # start): the Target is not handed the connection.
+            if binding is not None and not stop_event.is_set():
                 # A Target that asks for the Run's connection (bind_listener) gets
                 # it here. The binding holds the release from the moment the bind
                 # returns, so a failure of the flush below still releases. A bind
@@ -1042,16 +1080,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             if run_id_holder is not None and run_id_holder.get("test_run_id"):
                 with _LIVE_LISTENERS_LOCK:
                     _LIVE_LISTENERS.pop(str(run_id_holder["test_run_id"]), None)
-            lifetime = time.monotonic() - stats.get("connected_at", time.monotonic())
-            _log(
-                f"{_listener_label(stats)}: exiting; turns answered "
-                f"{stats.get('turns_answered', 0)}, turns failed "
-                f"{stats.get('turns_failed', 0)}, disconnects "
-                f"{stats.get('disconnects', 0)}, reconnects "
-                f"{stats.get('reconnects', 0)}, connection lifetime {lifetime:.0f}s, "
-                f"server close received "
-                f"{'yes' if stats.get('server_close_received') else 'no'}"
-            )
+            _report_listener_exit(stats)
 
     async def _stop_listener_when_run_ends(
         self, run_id_holder: dict, stop_event: Any, stats: Optional[dict] = None
@@ -1117,6 +1146,11 @@ class ModelUnderTest(AsyncProcessorMixin):
         self._custom_model_listener_stats = stats
         # None for a Target without bind_listener: the listener runs as before.
         binding = self._listener_binding(stats)
+        # Only a Target with bind_listener can hold a release, which runs before
+        # the close, so only its stop waits for the release's budget too.
+        join_seconds = LISTENER_STOP_JOIN_SECONDS + (
+            LISTENER_RELEASE_TIMEOUT_SECONDS if binding is not None else 0.0
+        )
         # Per-call (never class-level) so parallel runs on separate MUT objects
         # cannot cross signals. The listener sets ready_event once it has
         # subscribed+flushed, and records any connect/subscribe error here.
@@ -1152,6 +1186,7 @@ class ModelUnderTest(AsyncProcessorMixin):
             custom_model_thread_stop_event,
             custom_model_ready_event,
             custom_model_error_holder,
+            join_seconds,
         )
 
     def _listener_binding(self, stats: dict) -> Optional[ListenerBinding]:
@@ -1178,13 +1213,17 @@ class ModelUnderTest(AsyncProcessorMixin):
         self,
         custom_model_thread_stop_event: threading.Event,
         custom_model_thread: threading.Thread,
+        join_seconds: float = LISTENER_STOP_JOIN_SECONDS,
     ) -> None:
         if custom_model_thread_stop_event:
             custom_model_thread_stop_event.set()  # Signal the thread to stop
 
         if custom_model_thread:
-            # Long enough for a Target's bind_listener release and the close.
-            custom_model_thread.join(timeout=LISTENER_STOP_JOIN_SECONDS)
+            # The listener's own wait, chosen when it started; one line if it
+            # gives up (_join_listener).
+            _join_listener(
+                custom_model_thread, join_seconds, self._custom_model_listener_stats
+            )
 
     def _run_test_internal(
         self,
@@ -1205,6 +1244,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         self.custom_model_thread = None
         self.custom_model_thread_stop_event = None
         self._custom_model_run_id_holder = {}
+        listener_join_seconds = LISTENER_STOP_JOIN_SECONDS
         is_submit = run_test_method == submit_test_v0_test_run_submit_post.sync
         # On the submit path the server keeps sending turns for the whole Run, so
         # the listener has to outlive this call. Set only once the submit succeeded;
@@ -1248,6 +1288,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     self.custom_model_thread_stop_event,
                     custom_model_ready_event,
                     custom_model_error_holder,
+                    listener_join_seconds,
                 ) = self._internal_start_custom_model_thread(
                     nats_jwt,
                     seed,
@@ -1363,6 +1404,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                         self.custom_model_thread_stop_event,
                         self.custom_model_thread,
                         self._custom_model_listener_stats,
+                        listener_join_seconds,
                     )
                 keep_listener_running = True
                 _log(
@@ -1377,7 +1419,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         finally:
             if not keep_listener_running:
                 self._internal_cleanup_custom_model(
-                    self.custom_model_thread_stop_event, self.custom_model_thread
+                    self.custom_model_thread_stop_event,
+                    self.custom_model_thread,
+                    listener_join_seconds,
                 )
 
     def _listener_not_ready_error(self, ready_timeout: float) -> TestRunError:
@@ -2096,7 +2140,8 @@ class CustomMultiturnTargetAsync(BaseModel):
     - Returns: None when it bound nothing, or a release (a function or a
       coroutine function, no arguments) that lets go of everything it started
       on `nc`. The release runs when the listener stops, on failure paths too,
-      before the connection closes; a failure there is logged, not raised.
+      before the connection closes; a release that raises, ends cancelled or
+      runs past its time is logged, not raised.
     - Failure: if it raises, ends cancelled, or returns something that is not a
       release, the Run is not started and the error says so, caused by the
       Target's own exception. It must leave nothing running when it fails.

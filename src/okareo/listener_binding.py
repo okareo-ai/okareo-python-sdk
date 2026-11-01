@@ -7,12 +7,12 @@ flushed and before the Run starts; it returns None, or a release
 (``ListenerRelease``) that the listener runs before it closes the connection.
 
 ``ListenerBinding`` is that call and that release for one Run. A bind that
-raises, returns something that is not a release, or, as a coroutine, runs past
-``LISTENER_BIND_TIMEOUT_SECONDS`` is a ``ListenerBindError``. A release that
-raises or, as a coroutine, runs past ``LISTENER_RELEASE_TIMEOUT_SECONDS`` is
-logged, never raised. The time limits apply to coroutines only: a plain-function
-``bind_listener`` or release runs on the listener's loop and blocks it until it
-returns.
+raises, ends cancelled, returns something that is not a release, or, as a
+coroutine, runs past ``LISTENER_BIND_TIMEOUT_SECONDS`` is a
+``ListenerBindError``. A release that raises, ends cancelled or, as a coroutine,
+runs past ``LISTENER_RELEASE_TIMEOUT_SECONDS`` is logged, never raised. The
+time limits apply to coroutines only: a plain-function ``bind_listener`` or
+release runs on the listener's loop and blocks it until it returns.
 """
 
 import asyncio
@@ -53,7 +53,7 @@ class _OutOfTime(Exception):
 
 
 class _EndedCancelled(Exception):
-    """The Target's coroutine ended cancelled: a task it cancelled and awaited."""
+    """The Target's call ended cancelled: a task or future it cancelled, then awaited or read."""
 
 
 class ListenerBinding:
@@ -89,7 +89,8 @@ class ListenerBinding:
         Target's own exception when there is one."""
         try:
             bound = await self._finished(
-                self._target.bind_listener(nc, invoke_id), LISTENER_BIND_TIMEOUT_SECONDS
+                lambda: self._target.bind_listener(nc, invoke_id),
+                LISTENER_BIND_TIMEOUT_SECONDS,
             )
         except _OutOfTime:
             raise ListenerBindError(
@@ -127,7 +128,7 @@ class ListenerBinding:
             return
         closing = "closing NATS anyway"
         try:
-            await self._finished(release(), LISTENER_RELEASE_TIMEOUT_SECONDS)
+            await self._finished(release, LISTENER_RELEASE_TIMEOUT_SECONDS)
         except _OutOfTime:
             self._log(
                 f"the Target's {LISTENER_BIND_HOOK} release did not finish within "
@@ -143,15 +144,21 @@ class ListenerBinding:
                 f"({type(e).__name__}: {e}); {closing}"
             )
 
-    async def _finished(self, returned: object, seconds: float) -> object:
-        """``returned``, or, when it is awaitable, what it ends with, waited for at most ``seconds``.
+    async def _finished(self, call: Callable[[], object], seconds: float) -> object:
+        """What ``call`` returns, or, when that is awaitable, what it ends with, waited for at most ``seconds``.
 
         Past that it is cancelled and ``_OutOfTime`` is raised, kept apart from
         a timeout the Target raises itself (nats-py's ``TimeoutError`` is
-        asyncio's), which is raised as it is. A cancellation that arrives when
-        the result is read is the Target's own (the listener is already past
-        the wait), so it is ``_EndedCancelled``, an ordinary exception; a
+        asyncio's), which is raised as it is. A cancellation raised by the call
+        itself (a plain function that reads a future it cancelled) or one that
+        arrives when the result is read is the Target's own: nothing can cancel
+        the listener inside a plain call, and the listener is already past the
+        wait. Either is ``_EndedCancelled``, an ordinary exception; a
         cancellation of the listener, during the wait, still propagates."""
+        try:
+            returned = call()
+        except asyncio.CancelledError as e:
+            raise _EndedCancelled() from e
         if not inspect.isawaitable(returned):
             return returned
         pending = asyncio.ensure_future(returned)
