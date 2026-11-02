@@ -1658,7 +1658,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _scenario_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(scenario_id, Unset)
-            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+            else UUID(scenario_id)
+            if isinstance(scenario_id, str)
+            else scenario_id
         )
         _datapoint_ids: Union[Unset, list[UUID], None] = (
             UNSET
@@ -1677,7 +1679,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _test_run_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(test_run_id, Unset)
-            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+            else UUID(test_run_id)
+            if isinstance(test_run_id, str)
+            else test_run_id
         )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
@@ -2765,9 +2769,18 @@ class Driver:
     id: Optional[Union[str, UUID]] = None
     time_created: Optional[str] = datetime.now().isoformat()
     project_id: Optional[Union[str, UUID]] = None
-    voice_instructions: Optional[str] = None
-    voice_profile: Optional[str] = None
     voice: Optional[str] = None
+    # The emotion the driver's voice performs: a tone preset such as "angry" or "calm"
+    # (GET /v0/driver_profiles lists them), or a "{scenario_input.<column>}" reference.
+    voice_tone: Optional[str] = None
+    # Speech rate, 0.6 to 1.5 times the voice's own pace. None keeps the voice's default.
+    voice_speed: Optional[float] = None
+    # Loudness, 0.5 to 2.0 times the voice's own level. None keeps the voice's default.
+    voice_volume: Optional[float] = None
+    # Alias of voice_tone, accepted for older code.
+    voice_profile: Optional[str] = None
+    # Accepted for older code; it no longer affects the driver.
+    voice_instructions: Optional[str] = None
     # Scripted Driver: an ordered list of steps ({"message": ...}, {"dtmf": ...}, {"silence": true},
     # {"end_conversation": ...}; end_conversation last) or one "{scenario_input.<column>}" reference
     # resolved per scenario row. When set, prompt_template is not used and no Driver
@@ -2785,9 +2798,12 @@ class Driver:
             "model_id": self.model_id,
             "prompt_template": self.prompt_template,
             "time_created": self.time_created,
-            "voice_instructions": self.voice_instructions,
-            "voice_profile": self.voice_profile,
             "voice": self.voice,
+            "voice_tone": self.voice_tone,
+            "voice_speed": self.voice_speed,
+            "voice_volume": self.voice_volume,
+            "voice_profile": self.voice_profile,
+            "voice_instructions": self.voice_instructions,
         }
         if self.id is not None:
             d["id"] = str(self.id)
@@ -2817,10 +2833,14 @@ class Driver:
             self.steps = steps
 
     def _get_voice_driver_fields(self, response: VoiceDriverModelResponse) -> None:
-        if response.voice_instructions:
-            self.voice_instructions = response.voice_instructions
         if response.voice:
             self.voice = response.voice
+        if isinstance(response.voice_tone, str):
+            self.voice_tone = response.voice_tone
+        if isinstance(response.voice_speed, float):
+            self.voice_speed = response.voice_speed
+        if isinstance(response.voice_volume, float):
+            self.voice_volume = response.voice_volume
 
     @classmethod
     def from_response(
