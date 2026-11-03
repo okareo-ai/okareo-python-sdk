@@ -237,7 +237,7 @@ def run_voice_multiturn_test_audio_check(
         prompt_template=FRUSTRATED_PROMPT.replace(
             "{scenario_input.voice_profile}", "frustrated"
         ),
-        voice_instructions="Speak with a frustrated and impatient tone.",
+        voice_tone="frustrated",
     )
 
     seed_data = Okareo.seed_data_from_list(
@@ -341,7 +341,7 @@ VOICE_PROFILE_DRIVERS = [
             "name": "Voice Simulation Driver Profile (templated)",
             "temperature": 0.5,
             "prompt_template": FRUSTRATED_PROMPT,
-            "voice_instructions": "Speak in a {scenario_input.voice_profile} tone.",
+            "voice_tone": "{scenario_input.voice_profile}",
             "voice": "{scenario_input.voice_name}",
         },
         id="templated",

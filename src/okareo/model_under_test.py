@@ -2775,8 +2775,6 @@ class Driver:
     voice_volume: Optional[float] = None
     # Alias of voice_tone, accepted for older code.
     voice_profile: Optional[str] = None
-    # Accepted for older code; it no longer affects the driver.
-    voice_instructions: Optional[str] = None
     # Scripted Driver: an ordered list of steps ({"message": ...}, {"dtmf": ...}, {"silence": true},
     # {"end_conversation": ...}; end_conversation last) or one "{scenario_input.<column>}" reference
     # resolved per scenario row. When set, prompt_template is not used and no Driver
@@ -2799,7 +2797,6 @@ class Driver:
             "voice_speed": self.voice_speed,
             "voice_volume": self.voice_volume,
             "voice_profile": self.voice_profile,
-            "voice_instructions": self.voice_instructions,
         }
         if self.id is not None:
             d["id"] = str(self.id)
