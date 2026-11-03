@@ -2077,7 +2077,7 @@ class Okareo:
             prior_prompt: Optional existing prompt to refine.
             language: BCP-47 language code (e.g. "en", "es", "fr-CA").
             **driver_kwargs: Extra fields forwarded to the returned Driver
-                (e.g. voice_instructions, temperature, voice).
+                (e.g. voice, voice_tone, temperature).
 
         Returns:
             A Driver with the AI-generated name and prompt_template.

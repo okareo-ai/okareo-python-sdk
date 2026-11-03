@@ -19,22 +19,28 @@ class TestDriverRequest:
         prompt_template (None | str | Unset): Prompt template for the driver model. If not provided, backend will
             generate one based on language parameter.
         temperature (float | None | Unset): Temperature of the driver model Default: 0.0.
-        voice_instructions (None | str | Unset): Voice instructions for the driver model
-        voice_profile (None | str | Unset): Voice profile for the driver model. Select from the following list of
-            options: friendly, angry, confused, whispering, shouting, annoyed, urgent.
+        voice_profile (None | str | Unset): Alias of voice_tone, kept for older clients.
         voice (None | str | Unset): Voice setting for the driver model. Use GET /v0/voices to retrieve available voice
             options.
         language (None | str | Unset): Language code in BCP-47 format (e.g., 'en-US', 'es-MX', 'ja', 'fr-CA'). For voice
             targets, improves STT accuracy by constraining language model.
+        voice_tone (None | str | Unset): The emotion the driver's voice performs: a supported tone token such as 'angry'
+            or 'calm', or a template such as {scenario_input.voice_tone}.
+        voice_speed (float | None | Unset): Speech rate for the driver's voice, 0.6 to 1.5 times the voice's own pace.
+            Omit for the voice's default.
+        voice_volume (float | None | Unset): Loudness for the driver's voice, 0.5 to 2.0 times the voice's own level.
+            Omit for the voice's default.
     """
 
     test_input: str
     prompt_template: None | str | Unset = UNSET
     temperature: float | None | Unset = 0.0
-    voice_instructions: None | str | Unset = UNSET
     voice_profile: None | str | Unset = UNSET
     voice: None | str | Unset = UNSET
     language: None | str | Unset = UNSET
+    voice_tone: None | str | Unset = UNSET
+    voice_speed: float | None | Unset = UNSET
+    voice_volume: float | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -51,12 +57,6 @@ class TestDriverRequest:
             temperature = UNSET
         else:
             temperature = self.temperature
-
-        voice_instructions: None | str | Unset
-        if isinstance(self.voice_instructions, Unset):
-            voice_instructions = UNSET
-        else:
-            voice_instructions = self.voice_instructions
 
         voice_profile: None | str | Unset
         if isinstance(self.voice_profile, Unset):
@@ -76,6 +76,24 @@ class TestDriverRequest:
         else:
             language = self.language
 
+        voice_tone: None | str | Unset
+        if isinstance(self.voice_tone, Unset):
+            voice_tone = UNSET
+        else:
+            voice_tone = self.voice_tone
+
+        voice_speed: float | None | Unset
+        if isinstance(self.voice_speed, Unset):
+            voice_speed = UNSET
+        else:
+            voice_speed = self.voice_speed
+
+        voice_volume: float | None | Unset
+        if isinstance(self.voice_volume, Unset):
+            voice_volume = UNSET
+        else:
+            voice_volume = self.voice_volume
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -87,14 +105,18 @@ class TestDriverRequest:
             field_dict["prompt_template"] = prompt_template
         if temperature is not UNSET:
             field_dict["temperature"] = temperature
-        if voice_instructions is not UNSET:
-            field_dict["voice_instructions"] = voice_instructions
         if voice_profile is not UNSET:
             field_dict["voice_profile"] = voice_profile
         if voice is not UNSET:
             field_dict["voice"] = voice
         if language is not UNSET:
             field_dict["language"] = language
+        if voice_tone is not UNSET:
+            field_dict["voice_tone"] = voice_tone
+        if voice_speed is not UNSET:
+            field_dict["voice_speed"] = voice_speed
+        if voice_volume is not UNSET:
+            field_dict["voice_volume"] = voice_volume
 
         return field_dict
 
@@ -120,15 +142,6 @@ class TestDriverRequest:
             return cast(float | None | Unset, data)
 
         temperature = _parse_temperature(d.pop("temperature", UNSET))
-
-        def _parse_voice_instructions(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        voice_instructions = _parse_voice_instructions(d.pop("voice_instructions", UNSET))
 
         def _parse_voice_profile(data: object) -> None | str | Unset:
             if data is None:
@@ -157,14 +170,43 @@ class TestDriverRequest:
 
         language = _parse_language(d.pop("language", UNSET))
 
+        def _parse_voice_tone(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        voice_tone = _parse_voice_tone(d.pop("voice_tone", UNSET))
+
+        def _parse_voice_speed(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        voice_speed = _parse_voice_speed(d.pop("voice_speed", UNSET))
+
+        def _parse_voice_volume(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        voice_volume = _parse_voice_volume(d.pop("voice_volume", UNSET))
+
         test_driver_request = cls(
             test_input=test_input,
             prompt_template=prompt_template,
             temperature=temperature,
-            voice_instructions=voice_instructions,
             voice_profile=voice_profile,
             voice=voice,
             language=language,
+            voice_tone=voice_tone,
+            voice_speed=voice_speed,
+            voice_volume=voice_volume,
         )
 
         test_driver_request.additional_properties = d

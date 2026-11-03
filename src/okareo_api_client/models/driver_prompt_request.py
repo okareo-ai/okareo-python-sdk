@@ -19,11 +19,14 @@ class DriverPromptRequest:
         language (None | str | Unset): BCP-47 language code (e.g., 'en', 'es', 'fr-CA', 'ja') for the driver prompt.
             Specifies what language the driver should always and only respond to. Defaults to 'en' (English) if not
             provided.
+        voice_tone (None | str | Unset): The driver's tone preset. When it names a preset, its guidance is added to the
+            generation request so the prompt's wording matches the voice.
     """
 
     user_input: str
     prior_prompt: None | str | Unset = UNSET
     language: None | str | Unset = UNSET
+    voice_tone: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         user_input = self.user_input
@@ -40,6 +43,12 @@ class DriverPromptRequest:
         else:
             language = self.language
 
+        voice_tone: None | str | Unset
+        if isinstance(self.voice_tone, Unset):
+            voice_tone = UNSET
+        else:
+            voice_tone = self.voice_tone
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -51,6 +60,8 @@ class DriverPromptRequest:
             field_dict["prior_prompt"] = prior_prompt
         if language is not UNSET:
             field_dict["language"] = language
+        if voice_tone is not UNSET:
+            field_dict["voice_tone"] = voice_tone
 
         return field_dict
 
@@ -77,10 +88,20 @@ class DriverPromptRequest:
 
         language = _parse_language(d.pop("language", UNSET))
 
+        def _parse_voice_tone(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        voice_tone = _parse_voice_tone(d.pop("voice_tone", UNSET))
+
         driver_prompt_request = cls(
             user_input=user_input,
             prior_prompt=prior_prompt,
             language=language,
+            voice_tone=voice_tone,
         )
 
         return driver_prompt_request

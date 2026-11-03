@@ -25,9 +25,7 @@ class DriverModelSchema:
         prompt_template (str): Prompt template for the driver model
         id (None | Unset | UUID): ID of the driver model
         model_id (None | str | Unset): Model ID of the driver model
-        voice_instructions (None | str | Unset): Voice instructions for the driver model
-        voice_profile (None | str | Unset): Voice profile for the driver model. Select from the following list of
-            options: friendly, angry, confused, whispering, shouting, annoyed, urgent.
+        voice_profile (None | str | Unset): Alias of voice_tone, kept for older clients.
         voice (None | str | Unset): Voice setting for the driver model. Use GET /v0/voices to retrieve available voice
             options.
         language (None | str | Unset): Language code in BCP-47 format (e.g., 'en-US', 'es-MX', 'ja', 'fr-CA'). For voice
@@ -37,6 +35,12 @@ class DriverModelSchema:
         steps (list[DriverStepSchema] | None | str | Unset): Scripted Driver: an ordered list of steps ({message},
             {dtmf}, {end_conversation}), or one {scenario_input.<column>} reference that resolves to that list per scenario
             row. end_conversation must be last. When set, prompt_template is not used and no Driver LLM runs.
+        voice_tone (None | str | Unset): The emotion the driver's voice performs: a supported tone token such as 'angry'
+            or 'calm' (GET /v0/driver_profiles lists the presets), or a template such as {scenario_input.voice_tone}.
+        voice_speed (float | None | Unset): Speech rate for the driver's voice, 0.6 to 1.5 times the voice's own pace.
+            Omit for the voice's default.
+        voice_volume (float | None | Unset): Loudness for the driver's voice, 0.5 to 2.0 times the voice's own level.
+            Omit for the voice's default.
     """
 
     name: str
@@ -44,12 +48,14 @@ class DriverModelSchema:
     prompt_template: str
     id: None | Unset | UUID = UNSET
     model_id: None | str | Unset = UNSET
-    voice_instructions: None | str | Unset = UNSET
     voice_profile: None | str | Unset = UNSET
     voice: None | str | Unset = UNSET
     language: None | str | Unset = UNSET
     project_id: None | Unset | UUID = UNSET
     steps: list[DriverStepSchema] | None | str | Unset = UNSET
+    voice_tone: None | str | Unset = UNSET
+    voice_speed: float | None | Unset = UNSET
+    voice_volume: float | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -72,12 +78,6 @@ class DriverModelSchema:
             model_id = UNSET
         else:
             model_id = self.model_id
-
-        voice_instructions: None | str | Unset
-        if isinstance(self.voice_instructions, Unset):
-            voice_instructions = UNSET
-        else:
-            voice_instructions = self.voice_instructions
 
         voice_profile: None | str | Unset
         if isinstance(self.voice_profile, Unset):
@@ -117,6 +117,24 @@ class DriverModelSchema:
         else:
             steps = self.steps
 
+        voice_tone: None | str | Unset
+        if isinstance(self.voice_tone, Unset):
+            voice_tone = UNSET
+        else:
+            voice_tone = self.voice_tone
+
+        voice_speed: float | None | Unset
+        if isinstance(self.voice_speed, Unset):
+            voice_speed = UNSET
+        else:
+            voice_speed = self.voice_speed
+
+        voice_volume: float | None | Unset
+        if isinstance(self.voice_volume, Unset):
+            voice_volume = UNSET
+        else:
+            voice_volume = self.voice_volume
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -130,8 +148,6 @@ class DriverModelSchema:
             field_dict["id"] = id
         if model_id is not UNSET:
             field_dict["model_id"] = model_id
-        if voice_instructions is not UNSET:
-            field_dict["voice_instructions"] = voice_instructions
         if voice_profile is not UNSET:
             field_dict["voice_profile"] = voice_profile
         if voice is not UNSET:
@@ -142,6 +158,12 @@ class DriverModelSchema:
             field_dict["project_id"] = project_id
         if steps is not UNSET:
             field_dict["steps"] = steps
+        if voice_tone is not UNSET:
+            field_dict["voice_tone"] = voice_tone
+        if voice_speed is not UNSET:
+            field_dict["voice_speed"] = voice_speed
+        if voice_volume is not UNSET:
+            field_dict["voice_volume"] = voice_volume
 
         return field_dict
 
@@ -181,15 +203,6 @@ class DriverModelSchema:
             return cast(None | str | Unset, data)
 
         model_id = _parse_model_id(d.pop("model_id", UNSET))
-
-        def _parse_voice_instructions(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        voice_instructions = _parse_voice_instructions(d.pop("voice_instructions", UNSET))
 
         def _parse_voice_profile(data: object) -> None | str | Unset:
             if data is None:
@@ -257,18 +270,47 @@ class DriverModelSchema:
 
         steps = _parse_steps(d.pop("steps", UNSET))
 
+        def _parse_voice_tone(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        voice_tone = _parse_voice_tone(d.pop("voice_tone", UNSET))
+
+        def _parse_voice_speed(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        voice_speed = _parse_voice_speed(d.pop("voice_speed", UNSET))
+
+        def _parse_voice_volume(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        voice_volume = _parse_voice_volume(d.pop("voice_volume", UNSET))
+
         driver_model_schema = cls(
             name=name,
             temperature=temperature,
             prompt_template=prompt_template,
             id=id,
             model_id=model_id,
-            voice_instructions=voice_instructions,
             voice_profile=voice_profile,
             voice=voice,
             language=language,
             project_id=project_id,
             steps=steps,
+            voice_tone=voice_tone,
+            voice_speed=voice_speed,
+            voice_volume=voice_volume,
         )
 
         driver_model_schema.additional_properties = d

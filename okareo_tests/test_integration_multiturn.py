@@ -178,13 +178,13 @@ def test_run_multiturn_run_test_driver_prompt(rnd: str, okareo: Okareo) -> None:
 def test_generate_driver_prompt_returns_driver(okareo: Okareo) -> None:
     driver = okareo.generate_driver_prompt(
         "confused customer calling about a charge",
-        voice_instructions="Speak with frustration and urgency.",
+        voice_tone="frustrated",
     )
     assert isinstance(driver, Driver)
     assert driver.name
     assert driver.prompt_template
     assert len(driver.prompt_template) > 50
-    assert driver.voice_instructions == "Speak with frustration and urgency."
+    assert driver.voice_tone == "frustrated"
 
 
 def test_generate_driver_prompt_with_language(okareo: Okareo) -> None:
