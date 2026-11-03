@@ -297,22 +297,38 @@ class DropoutAugmentation(AugmentationConfig):
     end_at_turn: int | None = None
 
 
+# The SDK reference is built with pydoc-markdown, which html-escapes a fenced
+# block that comes after a ``code`` span and shows quotes inside a ``code`` span
+# as &quot;. Keep the example above the first span and its quotes in the fence.
 @_attrs_define
 class Augmentation(_DictSerializable):
     """Container for voice simulation augmentation strategy config.
 
-    Configure it one of two ways:
+    Configure it one of two ways: one strategy for the whole run, or a
+    per-turn plan that maps the caller's turns to the augmentations played
+    on them.
 
-    - **One strategy** for the whole run: set one strategy field. ``noise``
-      may be combined with one other strategy.
-    - **A per-turn plan**: ``plan`` maps the caller's turns (counted from 1,
-      the same turns ``start_at_turn`` counts) to the augmentations played on
-      them, using the same strategy classes. Only ``noise`` may be set
-      beside it.
+    ```python
+    # One strategy for the whole run
+    Augmentation(noise=NoiseAugmentation(profile="cafeteria", snr_db=10))
 
-    A plan key is a turn (``2`` or ``"2"``), a range (``"2-4"``), or a turn
-    to the end of the call (``"5-"``). A key's augmentations play on every
-    turn it covers, and keys can't overlap.
+    # A per-turn plan
+    Augmentation(plan={
+        1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
+        "2-3": [BackchannelAugmentation(utterance="mm-hmm")],
+        "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
+    })
+    ```
+
+    For one strategy, set one strategy field. ``noise`` may be combined with
+    one other strategy.
+
+    A plan counts the caller's turns from 1, the same turns ``start_at_turn``
+    counts, and takes the same strategy classes. Only ``noise`` may be set
+    beside ``plan``. A plan key is a turn (``2``), a range (``2-4``), or a
+    turn to the end of the call (``5-``). A turn may be an int or a string;
+    a range is always a string, as in the example. A key's augmentations play
+    on every turn it covers, and keys can't overlap.
 
     Each turn takes one augmentation on what the caller says (``cap``,
     ``dropout``, or ``directed_speech`` / ``secondary_speaker`` without
@@ -321,17 +337,6 @@ class Augmentation(_DictSerializable):
     ``probability`` defaults to 1.0 and the key replaces ``start_at_turn`` /
     ``end_at_turn``. Okareo refuses a plan that breaks these rules, with a
     message that names the turn.
-
-    Example:
-        ``Augmentation(noise=NoiseAugmentation(profile="cafeteria", snr_db=10))``
-
-        A per-turn plan::
-
-            Augmentation(plan={
-                1: [BargeInAugmentation(utterance="Can I refill my prescription?")],
-                "2-3": [BackchannelAugmentation(utterance="mm-hmm")],
-                "5-": [BargeInAugmentation(prompt="Ask to speak to a pharmacist.")],
-            })
     """
 
     cap: CAPAugmentation | None = None
