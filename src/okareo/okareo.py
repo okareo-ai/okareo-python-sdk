@@ -2133,8 +2133,8 @@ class Okareo:
         assigned; the calls happen whenever the agent places them. The
         simulation stays on, holding the number, until `stop_outbound_simulation`
         is called or one of its limits is reached. Turn it off as soon as the
-        calls are made: the number comes from a limited shared pool, and an
-        organization may only have a few on at once.
+        calls are made: Okareo numbers are limited, and an organization may
+        only have a few simulations on at once.
 
         Parameter summary:
         - ``name``: Name of the resulting test run.
@@ -2164,9 +2164,9 @@ class Okareo:
 
         Raises:
             ValueError: A limit is out of range, the target is one Okareo
-                dials, or the server refused the request. The message carries
-                the server's reason: the organization is on a trial plan, too
-                many are already on, or no number is free.
+                dials, or Okareo refused the request. The message carries the
+                reason: the organization is on a trial plan, too many are
+                already on, or no number is free.
         """
         if max_duration_s is not None and not 60 <= max_duration_s <= 28800:
             raise ValueError(
@@ -2231,7 +2231,7 @@ class Okareo:
             test_run_id: The id ``start_outbound_simulation`` returned.
 
         Raises:
-            ValueError: The server refused the request, e.g. no outbound
+            ValueError: Okareo refused the request, e.g. no outbound
                 simulation has this id.
         """
         return self._outbound_item(
@@ -2259,7 +2259,7 @@ class Okareo:
             the run ended).
 
         Raises:
-            ValueError: The server refused the request, e.g. no outbound
+            ValueError: Okareo refused the request, e.g. no outbound
                 simulation has this id.
         """
         return self._outbound_item(
@@ -2302,8 +2302,8 @@ class Okareo:
         expected_caller_ids: Optional[list[str]],
         api_keys: Optional[dict],
     ) -> Dict[str, Any]:
-        """The start request, under the server's field names. Only what was
-        given is sent, so the server's own defaults apply to the rest."""
+        """The start request body. Only what was given is sent, so Okareo's
+        defaults apply to the rest."""
         scenario_id = (
             scenario.scenario_id
             if isinstance(scenario, ScenarioSetResponse)
@@ -2338,16 +2338,13 @@ class Okareo:
     def _outbound_item(self, method: str, call: Callable[[], Any]) -> OutboundLineItem:
         result = self._outbound_call(method, call)
         if result is None:
-            raise ValueError(f"{method} failed: the server returned no result.")
+            raise ValueError(f"{method} failed: no result was returned.")
         return cast(OutboundLineItem, result)
 
     @staticmethod
     def _outbound_call(method: str, call: Callable[[], Any]) -> Any:
         """Run one outbound request and turn a refusal into a ValueError that
-        carries the server's own reason. The outbound routes document only
-        their success and validation responses, so every other refusal (trial
-        plan, too many on, no number free, not found) arrives as an unexpected
-        status rather than a parsed error."""
+        carries Okareo's reason for it."""
         try:
             result = call()
         except UnexpectedStatus as e:

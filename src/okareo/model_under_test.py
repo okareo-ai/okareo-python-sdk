@@ -2582,8 +2582,8 @@ class TelnyxPhoneTarget(VoiceTarget):
         return sensitive
 
 
-# How the server marks a voice target the agent under test calls, rather than
-# one Okareo dials. The value is the server's own (voice/outbound/views.py).
+# Marks a voice target that the agent under test calls, rather than one Okareo
+# dials.
 RECEIVING_CALL_DIRECTION = "agent_calls_okareo"
 
 
@@ -2610,7 +2610,7 @@ class ReceivingPhoneTarget(VoiceTarget):
             queued.
     """
 
-    # Okareo chooses the carrier for a receiving target, so no edge is sent.
+    # A receiving target has nothing to dial, so it sends no edge.
     edge_type = ""
     call_direction = RECEIVING_CALL_DIRECTION
     expected_caller_ids: Optional[List[str]] = None

@@ -100,7 +100,7 @@ class TestStart:
             "checks": ["result_completed"],
         }
 
-    def test_limits_and_turn_settings_travel_under_the_servers_names(
+    def test_limits_and_turn_settings_are_sent_under_the_api_names(
         self, okareo: Okareo, httpx_mock: HTTPXMock
     ) -> None:
         httpx_mock.add_response(
@@ -176,7 +176,7 @@ class TestStart:
             (503, "No Okareo number is available for this workspace."),
         ],
     )
-    def test_a_refusal_carries_the_servers_reason(
+    def test_a_refusal_carries_the_reason(
         self, okareo: Okareo, httpx_mock: HTTPXMock, status: int, detail: str
     ) -> None:
         httpx_mock.add_response(

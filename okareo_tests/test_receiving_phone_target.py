@@ -10,9 +10,9 @@ from okareo.model_under_test import (
 class TestReceivingPhoneTarget:
     def test_params_carry_the_direction_and_nothing_to_dial(self) -> None:
         params = ReceivingPhoneTarget().params()
-        # Closed contract: Okareo supplies the number and the carrier, so the
-        # target sends neither. A stray edge_type or to_phone_number here would
-        # make the server treat it as a target it dials.
+        # Closed contract: a receiving target has nothing to dial, so it sends
+        # no number and no edge. A stray edge_type or to_phone_number here
+        # would describe a target Okareo dials.
         assert params == {"type": "voice", "call_direction": "agent_calls_okareo"}
         assert params["call_direction"] == RECEIVING_CALL_DIRECTION
 
