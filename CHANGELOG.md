@@ -15,6 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- Outbound simulations, for an agent that places calls instead of answering them.
+  `ReceivingPhoneTarget` is a voice target with nothing to dial, and four methods on `Okareo`
+  run it: `start_outbound_simulation(...)` assigns an Okareo phone number for the agent to call
+  while the simulation is on (a Driver answers each call), `get_outbound_simulation(test_run_id)`
+  reports whether it is on and how many calls it has answered, `find_outbound_simulations()`
+  lists those that are on, and `stop_outbound_simulation(test_run_id)` turns one off and gives
+  the number back. Results are read like any other run once it is off. A refused request
+  (trial plan, too many on, no number free) raises `ValueError` with the reason.
 - `bind_listener(nc, invoke_id)`, an optional method on a custom multiturn Target's class: the
   SDK's listener hands it the Run's NATS connection and invoke id once its subscription is in
   place, before the Run starts, on the listener's own event loop. It returns None, or a release
