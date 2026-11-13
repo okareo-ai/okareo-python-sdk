@@ -4,7 +4,18 @@ import datetime
 import json
 import os
 import warnings
-from typing import Any, Dict, List, Optional, Protocol, TypedDict, TypeVar, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    TypedDict,
+    TypeVar,
+    Union,
+    cast,
+)
 from uuid import UUID
 
 import pydantic
@@ -15,6 +26,7 @@ from okareo.augmentations import Augmentation
 from okareo.checks import BaseCheck, CodeBasedCheck
 from okareo.error import TestRunError
 from okareo.model_under_test import (
+    RECEIVING_CALL_DIRECTION,
     Driver,
     Simulation,
     StopConfig,
@@ -53,6 +65,12 @@ from okareo_api_client.api.default import (
     register_model_v0_register_model_post,
     scenario_sets_upload_v0_scenario_sets_upload_post,
     upload_voice_file_v0_voice_upload_post,
+)
+from okareo_api_client.api.voice import (
+    get_line_v0_outbound_lines_test_run_id_get,
+    list_lines_v0_outbound_lines_get,
+    turn_line_off_v0_outbound_lines_test_run_id_off_post,
+    turn_line_on_v0_outbound_lines_post,
 )
 from okareo_api_client.errors import UnexpectedStatus
 from okareo_api_client.models.body_check_delete_v0_check_check_id_delete import (
@@ -96,6 +114,8 @@ from okareo_api_client.models.model_under_test_response_models_type_0 import (
     ModelUnderTestResponseModelsType0,
 )
 from okareo_api_client.models.model_under_test_schema import ModelUnderTestSchema
+from okareo_api_client.models.outbound_line_item import OutboundLineItem
+from okareo_api_client.models.outbound_line_request import OutboundLineRequest
 from okareo_api_client.models.project_patch_schema import ProjectPatchSchema
 from okareo_api_client.models.project_response import ProjectResponse
 from okareo_api_client.models.project_schema import ProjectSchema
@@ -1782,32 +1802,17 @@ class Okareo:
             sensitive_fields=sensitive_fields,
         )
 
-    def _submit_multiturn(
+    def _resolve_driver_and_target(
         self,
         *,
-        name: str,
-        scenario: Union[ScenarioSetResponse, str],
-        target: str | Target,
         driver: Optional[str | Driver],
-        checks: Optional[list[str]],
-        simulation_params: Any,
-        submit: Optional[bool],
-        api_key: Optional[str] = None,
-        api_keys: Optional[dict] = None,
-        metrics_kwargs: Optional[dict] = None,
-        calculate_metrics: bool = True,
-        project_id: Optional[str] = None,
+        target: str | Target,
+        project_id: Optional[str],
         tags: Optional[list[str]] = None,
         sensitive_fields: Union[List[str], None] = None,
-    ) -> TestRunItem:
-        """Shared MULTI_TURN submit path: resolve the driver + target, build the MUT, and
-        run/submit the test with the given (already-built) ``simulation_params``.
-
-        Used by both ``run_simulation`` (conventional turn/repeats) and ``run_load_test``
-        (concurrency/duration); they differ only in the ``simulation_params`` they construct,
-        so neither public surface leaks the other's concern.
-        """
-        project_id = self._resolved_project_id(project_id)
+    ) -> tuple[Driver, Target]:
+        """Resolve (creating or updating where an object was passed) the Driver
+        and Target a simulation names. Shared by every way of starting one."""
         # create or update driver if needed
         if isinstance(driver, Driver):
             driver_model = self.create_or_update_driver(driver)
@@ -1837,6 +1842,41 @@ class Okareo:
                 raise TypeError(
                     "Cannot retrieve Target by name for CustomMultiturnTarget"
                 )
+        return driver_model, target_model
+
+    def _submit_multiturn(
+        self,
+        *,
+        name: str,
+        scenario: Union[ScenarioSetResponse, str],
+        target: str | Target,
+        driver: Optional[str | Driver],
+        checks: Optional[list[str]],
+        simulation_params: Any,
+        submit: Optional[bool],
+        api_key: Optional[str] = None,
+        api_keys: Optional[dict] = None,
+        metrics_kwargs: Optional[dict] = None,
+        calculate_metrics: bool = True,
+        project_id: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        sensitive_fields: Union[List[str], None] = None,
+    ) -> TestRunItem:
+        """Shared MULTI_TURN submit path: resolve the driver + target, build the MUT, and
+        run/submit the test with the given (already-built) ``simulation_params``.
+
+        Used by both ``run_simulation`` (conventional turn/repeats) and ``run_load_test``
+        (concurrency/duration); they differ only in the ``simulation_params`` they construct,
+        so neither public surface leaks the other's concern.
+        """
+        project_id = self._resolved_project_id(project_id)
+        driver_model, target_model = self._resolve_driver_and_target(
+            driver=driver,
+            target=target,
+            project_id=project_id,
+            tags=tags,
+            sensitive_fields=sensitive_fields,
+        )
 
         # create MUT object
         dummy_response = ModelUnderTestResponse(
@@ -2062,6 +2102,267 @@ class Okareo:
                 )
             cfg["loadtest_max_total_calls"] = budget
         return cfg
+
+    # --- Outbound simulations: the agent under test calls Okareo -------------
+
+    def start_outbound_simulation(
+        self,
+        name: str,
+        scenario: Union[ScenarioSetResponse, str],
+        target: str | Target,
+        driver: Optional[str | Driver] = None,
+        checks: Optional[list[str]] = None,
+        max_turns: Optional[int] = None,
+        first_turn: Optional[str] = None,
+        max_duration_s: Optional[int] = None,
+        idle_timeout_s: Optional[int] = None,
+        expected_caller_ids: Optional[list[str]] = None,
+        api_keys: Optional[dict] = None,
+        project_id: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+    ) -> OutboundLineItem:
+        """Turn on a simulation that the agent under test calls.
+
+        Use this for an agent that *places* calls (collections, reminders,
+        sales). Okareo cannot dial such an agent, so the direction is reversed:
+        this assigns an Okareo phone number, the agent calls it, and the Driver
+        answers as the person being called. Each call is one conversation and
+        takes the next Scenario row, starting over after the last.
+
+        Nothing is dialed by this call. It returns as soon as the number is
+        assigned; the calls happen whenever the agent places them. The
+        simulation stays on, holding the number, until `stop_outbound_simulation`
+        is called or one of its limits is reached. Turn it off as soon as the
+        calls are made: the number comes from a limited shared pool, and an
+        organization may only have a few on at once.
+
+        Parameter summary:
+        - ``name``: Name of the resulting test run.
+        - ``scenario``: Scenario set object or scenario set ID.
+        - ``target``: A registered name, or a ``Target`` wrapping a
+          ``ReceivingPhoneTarget``. A target Okareo dials is refused.
+        - ``driver``: The person who answers. A registered name or a ``Driver``;
+          omitted = the default driver.
+        - ``checks``: Checks to score each call with.
+        - ``max_turns``: Turn cap for the answering side of each call.
+        - ``first_turn``: ``"driver"`` (default) = the person answering speaks
+          first, as someone picking up a phone does; ``"target"`` = the calling
+          agent speaks first.
+        - ``max_duration_s``: Turn off automatically after this long (60-28800;
+          omitted = 2 hours).
+        - ``idle_timeout_s``: Turn off after this long with no calls (at least
+          60; omitted = 30 minutes).
+        - ``expected_caller_ids``: Numbers the agent calls from. When set here
+          or on the target, a call from any other number is not answered.
+        - ``api_keys``: Provider credentials, as for ``run_simulation``.
+
+        Returns:
+            The outbound simulation's state: ``test_run_id`` (use it to check,
+            stop and read results), ``status`` (``"on"``), ``number`` (the
+            number for the agent to call) and ``max_until`` (when it turns
+            itself off, as a Unix timestamp).
+
+        Raises:
+            ValueError: A limit is out of range, the target is one Okareo
+                dials, or the server refused the request. The message carries
+                the server's reason: the organization is on a trial plan, too
+                many are already on, or no number is free.
+        """
+        if max_duration_s is not None and not 60 <= max_duration_s <= 28800:
+            raise ValueError(
+                "max_duration_s must be between 60 and 28800 seconds (8 hours)."
+            )
+        if idle_timeout_s is not None and idle_timeout_s < 60:
+            raise ValueError("idle_timeout_s must be at least 60 seconds.")
+
+        project_id = self._resolved_project_id(project_id)
+        driver_model, target_model = self._resolve_driver_and_target(
+            driver=driver, target=target, project_id=project_id, tags=tags
+        )
+        target_params = target_model.target
+        if (
+            not isinstance(target_params, dict)
+            or target_params.get("call_direction") != RECEIVING_CALL_DIRECTION
+        ):
+            raise ValueError(
+                f"Target '{target_model.name}' is dialed by Okareo, so it cannot "
+                "receive calls. Use a Target wrapping ReceivingPhoneTarget for "
+                "start_outbound_simulation, or run_simulation for this Target."
+            )
+
+        body = self._outbound_request_body(
+            name=name,
+            scenario=scenario,
+            target_id=target_model.id,
+            driver_id=driver_model.id,
+            checks=checks,
+            max_turns=max_turns,
+            first_turn=first_turn,
+            max_duration_s=max_duration_s,
+            idle_timeout_s=idle_timeout_s,
+            expected_caller_ids=expected_caller_ids,
+            api_keys=api_keys,
+        )
+
+        return self._outbound_item(
+            "start_outbound_simulation",
+            lambda: turn_line_on_v0_outbound_lines_post.sync(
+                client=self.client,
+                api_key=self.api_key,
+                body=OutboundLineRequest.from_dict(body),
+            ),
+        )
+
+    def stop_outbound_simulation(
+        self, test_run_id: Union[str, UUID]
+    ) -> OutboundLineItem:
+        """Turn an outbound simulation off and give its number back.
+
+        No new calls are answered. Calls already in progress finish, so it is
+        safe to call this while one is still connected; the returned ``status``
+        is ``"draining"`` until they end, then ``"off"``. The run is scored
+        once it is off: wait with ``wait_for_test_run(test_run_id)`` and read
+        it like any other run. A simulation that received no calls ends as a
+        failed run that says so.
+
+        Calling this on one that is already off returns its state unchanged.
+
+        Args:
+            test_run_id: The id ``start_outbound_simulation`` returned.
+
+        Raises:
+            ValueError: The server refused the request, e.g. no outbound
+                simulation has this id.
+        """
+        return self._outbound_item(
+            "stop_outbound_simulation",
+            lambda: turn_line_off_v0_outbound_lines_test_run_id_off_post.sync(
+                client=self.client,
+                api_key=self.api_key,
+                test_run_id=UUID(str(test_run_id)),
+            ),
+        )
+
+    def get_outbound_simulation(
+        self, test_run_id: Union[str, UUID]
+    ) -> OutboundLineItem:
+        """Check an outbound simulation: whether it is on, and how many calls
+        it has answered.
+
+        Args:
+            test_run_id: The id ``start_outbound_simulation`` returned.
+
+        Returns:
+            Its state. ``status`` is ``"on"``, ``"draining"`` or ``"off"``;
+            ``calls_received`` counts the calls answered so far; once it is
+            off, ``close_reason`` says why (turned off, a limit reached, or
+            the run ended).
+
+        Raises:
+            ValueError: The server refused the request, e.g. no outbound
+                simulation has this id.
+        """
+        return self._outbound_item(
+            "get_outbound_simulation",
+            lambda: get_line_v0_outbound_lines_test_run_id_get.sync(
+                client=self.client,
+                api_key=self.api_key,
+                test_run_id=UUID(str(test_run_id)),
+            ),
+        )
+
+    def find_outbound_simulations(self) -> List[OutboundLineItem]:
+        """List the outbound simulations that are on right now.
+
+        Covers the whole organization, whichever project each belongs to, since
+        the limit on how many may be on at once is the organization's. Ones
+        that have been turned off are not listed; find those with
+        ``find_test_runs``.
+        """
+        result = self._outbound_call(
+            "find_outbound_simulations",
+            lambda: list_lines_v0_outbound_lines_get.sync(
+                client=self.client, api_key=self.api_key
+            ),
+        )
+        return list(result) if isinstance(result, list) else []
+
+    @staticmethod
+    def _outbound_request_body(
+        *,
+        name: str,
+        scenario: Union[ScenarioSetResponse, str],
+        target_id: Any,
+        driver_id: Any,
+        checks: Optional[list[str]],
+        max_turns: Optional[int],
+        first_turn: Optional[str],
+        max_duration_s: Optional[int],
+        idle_timeout_s: Optional[int],
+        expected_caller_ids: Optional[list[str]],
+        api_keys: Optional[dict],
+    ) -> Dict[str, Any]:
+        """The start request, under the server's field names. Only what was
+        given is sent, so the server's own defaults apply to the rest."""
+        scenario_id = (
+            scenario.scenario_id
+            if isinstance(scenario, ScenarioSetResponse)
+            else scenario
+        )
+        simulation_params = {
+            key: value
+            for key, value in (("max_turns", max_turns), ("first_turn", first_turn))
+            if value is not None
+        }
+        optional: Dict[str, Any] = {
+            "checks": list(checks) if checks else None,
+            "api_keys": api_keys or None,
+            "simulation_params": simulation_params or None,
+            "armed_max_duration_s": max_duration_s,
+            "idle_timeout_s": idle_timeout_s,
+            "expected_caller_ids": (
+                list(expected_caller_ids) if expected_caller_ids else None
+            ),
+        }
+        body: Dict[str, Any] = {
+            "mut_id": str(target_id),
+            "scenario_id": str(scenario_id),
+            "driver_id": str(driver_id),
+            "name": name,
+        }
+        body.update(
+            {key: value for key, value in optional.items() if value is not None}
+        )
+        return body
+
+    def _outbound_item(self, method: str, call: Callable[[], Any]) -> OutboundLineItem:
+        result = self._outbound_call(method, call)
+        if result is None:
+            raise ValueError(f"{method} failed: the server returned no result.")
+        return cast(OutboundLineItem, result)
+
+    @staticmethod
+    def _outbound_call(method: str, call: Callable[[], Any]) -> Any:
+        """Run one outbound request and turn a refusal into a ValueError that
+        carries the server's own reason. The outbound routes document only
+        their success and validation responses, so every other refusal (trial
+        plan, too many on, no number free, not found) arrives as an unexpected
+        status rather than a parsed error."""
+        try:
+            result = call()
+        except UnexpectedStatus as e:
+            detail = e.content.decode("utf-8", errors="replace")
+            try:
+                parsed = json.loads(detail)
+                if isinstance(parsed, dict) and parsed.get("detail"):
+                    detail = str(parsed["detail"])
+            except ValueError:
+                pass
+            raise ValueError(f"{method} failed: {e.status_code} {detail}") from e
+        refused = result.to_dict() if isinstance(result, HTTPValidationError) else None
+        if refused is not None:
+            raise ValueError(f"{method} failed: 422 {refused}")
+        return result
 
     def generate_driver_prompt(
         self,

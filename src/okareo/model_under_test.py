@@ -1804,7 +1804,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _scenario_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(scenario_id, Unset)
-            else UUID(scenario_id) if isinstance(scenario_id, str) else scenario_id
+            else UUID(scenario_id)
+            if isinstance(scenario_id, str)
+            else scenario_id
         )
         _datapoint_ids: Union[Unset, list[UUID], None] = (
             UNSET
@@ -1823,7 +1825,9 @@ class ModelUnderTest(AsyncProcessorMixin):
         _test_run_id: Union[Unset, UUID, None] = (
             UNSET
             if isinstance(test_run_id, Unset)
-            else UUID(test_run_id) if isinstance(test_run_id, str) else test_run_id
+            else UUID(test_run_id)
+            if isinstance(test_run_id, str)
+            else test_run_id
         )
         payload = EvaluationPayload(
             metrics_kwargs=EvaluationPayloadMetricsKwargs.from_dict(
@@ -2582,6 +2586,52 @@ class TelnyxPhoneTarget(VoiceTarget):
         return sensitive
 
 
+# How the server marks a voice target the agent under test calls, rather than
+# one Okareo dials. The value is the server's own (voice/outbound/views.py).
+RECEIVING_CALL_DIRECTION = "agent_calls_okareo"
+
+
+@_attrs_define
+class ReceivingPhoneTarget(VoiceTarget):
+    """Voice target for an agent that *places* calls: the agent calls Okareo.
+
+    Every other voice target tells Okareo how to reach the agent. This one has
+    nothing to dial. Pass it to `Okareo.start_outbound_simulation(...)`, which
+    assigns an Okareo phone number for the agent to call while the simulation
+    is on; a Driver answers each call. `Okareo.run_simulation(...)` cannot run
+    it, since there is no call for Okareo to place.
+
+    It needs no phone number and no carrier credentials: Okareo supplies the
+    number and the carrier.
+
+    Arguments:
+        expected_caller_ids: Phone numbers (E.164) the agent will call *from*.
+            When set, a call from any other number is not answered. Leave it
+            unset only for a number you are comfortable anyone could reach
+            while the simulation is on.
+        max_parallel_requests: How many calls may be answered at once on the
+            assigned number. Defaults to 1; further calls are refused, not
+            queued.
+    """
+
+    # Okareo chooses the carrier for a receiving target, so no edge is sent.
+    edge_type = ""
+    call_direction = RECEIVING_CALL_DIRECTION
+    expected_caller_ids: Optional[List[str]] = None
+    max_parallel_requests: Optional[int] = None
+
+    def params(self) -> dict:
+        out: dict = {
+            "type": self.type,
+            "call_direction": self.call_direction,
+        }
+        if self.expected_caller_ids:
+            out["expected_caller_ids"] = list(self.expected_caller_ids)
+        if self.max_parallel_requests is not None:
+            out["max_parallel_requests"] = self.max_parallel_requests
+        return out
+
+
 @define
 class StopConfig:
     """
@@ -3045,6 +3095,7 @@ class Target:
         SipTarget,
         VonagePhoneTarget,
         TelnyxPhoneTarget,
+        ReceivingPhoneTarget,
         dict,
     ]
     id: Optional[str] = None
