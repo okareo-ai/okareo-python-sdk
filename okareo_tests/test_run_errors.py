@@ -492,8 +492,18 @@ class TestMultiturnErrors:
             sensitive_fields=["api-key"],
         )
 
-        # Register the model using redacted api-key field with api-key rm from sensitive fields.
-        # Anticipate an auth error failure due to bad api-key
+        # Register the model with an api-key that is not valid and no sensitive fields.
+        # The value is not asterisks, so it replaces the key saved above and is sent as is.
+        # Anticipate an auth error failure due to bad api-key, with the api-key still redacted
+        start_config, next_config, end_config = self._create_custom_endpoint_configs(
+            start_status_code=2000, api_key="not-a-valid-okareo-api-key"
+        )
+
+        target_config = {
+            "target": CustomEndpointTarget(start_config, next_config, end_config),
+            "name": "Sensitive Fields Test " + rnd,
+        }
+
         exception_str_match = exception_str_template.replace("{status_code}", "401")
         self._register_and_expect_error(
             okareo=okareo,
@@ -503,7 +513,7 @@ class TestMultiturnErrors:
             run_test=True,
             basic_scenario=basic_scenario,
             api_keys={"openai": OPENAI_API_KEY},
-            sensitive_fields=[],  # api-key should be overwritten with redacted string, causing 401
+            sensitive_fields=[],  # a key that is not valid gets a 401, and the error does not show the key
         )
 
     def test_nl_generation_missing_api_key(
