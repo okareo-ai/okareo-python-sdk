@@ -21,6 +21,7 @@ from attrs import field
 from nkeys import from_seed  # type: ignore
 from tqdm import tqdm  # type: ignore
 
+from okareo.context_token_path import one_context_token_path
 from okareo.error import (
     ListenerBindError,
     MissingApiKeyError,
@@ -809,7 +810,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                 result = await invoker(scenario_input)
                 if not isinstance(result, tuple):
                     raise TypeError(
-                        "session_starter must return a tuple (session_id, ModelInvocation)"
+                        "session_starter must return a tuple (context_token, ModelInvocation)"
                     )
                 return result
         elif call_type == "end_session":
@@ -857,7 +858,7 @@ class ModelUnderTest(AsyncProcessorMixin):
                     result = invoker(scenario_input)
                     if not isinstance(result, tuple):
                         raise TypeError(
-                            "session_starter must return a tuple (session_id, ModelInvocation)"
+                            "session_starter must return a tuple (context_token, ModelInvocation)"
                         )
                     return result
             elif call_type == "end_session":
@@ -872,7 +873,7 @@ class ModelUnderTest(AsyncProcessorMixin):
         if isinstance(result, tuple):
             if len(result) != 2:
                 raise TypeError(
-                    "start_session must return a tuple (session_id, ModelInvocation)"
+                    "start_session must return a tuple (context_token, ModelInvocation)"
                 )
             if result[1] is not None and isinstance(result[1], ModelInvocation):
                 invocation = result[1].params()
@@ -2081,7 +2082,9 @@ class CustomMultiturnTarget(BaseModel):
         """Method for starting a multiturn conversation with a custom model
 
         Returns:
-            - str | None: session_id - the ID of the session started by the model.
+            - str | None: context token - your app's own id for the conversation it started,
+              often called a session ID or conversation ID. Okareo hands it back to `invoke`
+              and `end_session`.
             - ModelInvocation | None: model output - the model's response to the session start, if any.
         """
         return None, None
@@ -2090,7 +2093,8 @@ class CustomMultiturnTarget(BaseModel):
         """Method for ending a multiturn conversation with a custom model
 
         Arguments:
-            session_id: str - the ID of the session to end.
+            session_id: str - the context token: your app's own id for the conversation to end,
+                often called a session ID or conversation ID. It is the one `start_session` returned.
         """
 
     @abstractmethod
@@ -2105,6 +2109,9 @@ class CustomMultiturnTarget(BaseModel):
         Arguments:
             messages: list - list of messages in the conversation
             scenario_input: Optional[dict | list | str] - scenario input for the conversation
+            session_id: Optional[str] - the context token: your app's own id for the conversation,
+                often called a session ID or conversation ID. It is the one `start_session` returned,
+                if any.
 
         Returns:
             Union[ModelInvocation, Any] - model output.
@@ -2165,7 +2172,9 @@ class CustomMultiturnTargetAsync(BaseModel):
         """Method for starting a multiturn conversation with a custom model
 
         Returns:
-            - str | None: session_id - the ID of the session started by the model.
+            - str | None: context token - your app's own id for the conversation it started,
+              often called a session ID or conversation ID. Okareo hands it back to `invoke`
+              and `end_session`.
             - ModelInvocation | None: model output - the model's response to the session start, if any.
         """
         return None, None
@@ -2174,7 +2183,8 @@ class CustomMultiturnTargetAsync(BaseModel):
         """Method for ending a multiturn conversation with a custom model
 
         Arguments:
-            session_id: str - the ID of the session to end.
+            session_id: str - the context token: your app's own id for the conversation to end,
+                often called a session ID or conversation ID. It is the one `start_session` returned.
         """
 
     @abstractmethod
@@ -2189,6 +2199,9 @@ class CustomMultiturnTargetAsync(BaseModel):
         Arguments:
             messages: list - list of messages in the conversation
             scenario_input: Optional[dict | list | str] - scenario input for the conversation
+            session_id: Optional[str] - the context token: your app's own id for the conversation,
+                often called a session ID or conversation ID. It is the one `start_session` returned,
+                if any.
 
         Returns:
             Union[ModelInvocation, Any] - model output.
@@ -2742,8 +2755,10 @@ class SessionConfig:
         headers: Headers to include in the request. Defaults to an empty JSON object.
         body: Body to include in the request. Defaults to an empty JSON object.
         status_code: Expected HTTP status code of the response.
-        response_session_id_path: Path to extract the session ID from the response.
-            E.g., `response.id` will use the `id` field of the response JSON object to set the `session_id`.
+        response_context_token_path: Path to extract the context token from the response:
+            your API's own id for the conversation, often called a session ID or conversation ID.
+            E.g., `response.id` will use the `id` field of the response JSON object as the context token.
+        response_session_id_path: The older name of `response_context_token_path`; still accepted.
     """
 
     def __init__(
@@ -2756,15 +2771,27 @@ class SessionConfig:
         response_session_id_path: str = "",
         response_message_path: str = "",
         streaming: Optional[StreamingConfig] = None,
+        response_context_token_path: str = "",
     ) -> None:
         self.url = url
         self.method = method
         self.headers = headers or json.dumps({})
         self.body = body
         self.status_code = status_code
-        self.response_session_id_path = response_session_id_path
+        self.response_context_token_path = one_context_token_path(
+            response_context_token_path, response_session_id_path
+        )
         self.response_message_path = response_message_path
         self.streaming = streaming
+
+    @property
+    def response_session_id_path(self) -> str:
+        """The older name of `response_context_token_path`."""
+        return self.response_context_token_path
+
+    @response_session_id_path.setter
+    def response_session_id_path(self, path: str) -> None:
+        self.response_context_token_path = path
 
     def to_dict(self) -> dict:
         d = {
@@ -2773,7 +2800,7 @@ class SessionConfig:
             "headers": self.headers,
             "body": self.body,
             "status_code": self.status_code,
-            "response_session_id_path": self.response_session_id_path,
+            "response_session_id_path": self.response_context_token_path,
             "response_message_path": self.response_message_path,
         }
         if self.streaming is not None:
@@ -2797,9 +2824,13 @@ class TurnConfig:
         response_message_path: Path to extract the model message from the
             response JSON (for example,
             response.completion.message.content).
-        response_session_id_path: Path to extract session ID from the
-            response JSON (for example, response.result.contextId) so the same
-            conversation session can continue across turns.
+        response_context_token_path: Path to extract the context token from
+            the response JSON (for example, response.result.contextId) so the
+            same conversation can continue across turns. The context token is
+            your API's own id for the conversation, often called a session ID
+            or conversation ID.
+        response_session_id_path: The older name of
+            `response_context_token_path`; still accepted.
         response_tool_calls_path: Path to extract tool calls from the
             response.
     """
@@ -2815,6 +2846,7 @@ class TurnConfig:
         response_session_id_path: str = "",
         response_tool_calls_path: str = "",
         streaming: Optional[StreamingConfig] = None,
+        response_context_token_path: str = "",
     ) -> None:
         self.url = url
         self.method = method
@@ -2822,11 +2854,22 @@ class TurnConfig:
         self.body = body
         self.status_code = status_code
         self.response_message_path = response_message_path
-        self.response_session_id_path = response_session_id_path
+        self.response_context_token_path = one_context_token_path(
+            response_context_token_path, response_session_id_path
+        )
         self.response_tool_calls_path = (
             response_tool_calls_path  # TODO: populate this once we support on BE
         )
         self.streaming = streaming
+
+    @property
+    def response_session_id_path(self) -> str:
+        """The older name of `response_context_token_path`."""
+        return self.response_context_token_path
+
+    @response_session_id_path.setter
+    def response_session_id_path(self, path: str) -> None:
+        self.response_context_token_path = path
 
     def to_dict(self) -> dict:
         d = {
@@ -2836,7 +2879,7 @@ class TurnConfig:
             "body": self.body,
             "status_code": self.status_code,
             "response_message_path": self.response_message_path,
-            "response_session_id_path": self.response_session_id_path,
+            "response_session_id_path": self.response_context_token_path,
             "response_tool_calls_path": self.response_tool_calls_path,
         }
         if self.streaming is not None:
@@ -2853,7 +2896,9 @@ class EndSessionConfig:
         headers: Headers to include in the request. Defaults to an empty JSON object.
         body: Body to include in the request. Defaults to an empty JSON object.
         status_code: Expected HTTP status code of the response.
-        response_session_id_path: Path to extract the session ID from the response.
+        response_context_token_path: Path to extract the context token from the response:
+            your API's own id for the conversation, often called a session ID or conversation ID.
+        response_session_id_path: The older name of `response_context_token_path`; still accepted.
     """
 
     def __init__(
@@ -2864,13 +2909,25 @@ class EndSessionConfig:
         body: Union[str, dict] = "{}",
         status_code: Optional[int] = None,
         response_session_id_path: str = "",
+        response_context_token_path: str = "",
     ) -> None:
         self.url = url
         self.method = method
         self.headers = headers or json.dumps({})
         self.body = body
         self.status_code = status_code
-        self.response_session_id_path = response_session_id_path
+        self.response_context_token_path = one_context_token_path(
+            response_context_token_path, response_session_id_path
+        )
+
+    @property
+    def response_session_id_path(self) -> str:
+        """The older name of `response_context_token_path`."""
+        return self.response_context_token_path
+
+    @response_session_id_path.setter
+    def response_session_id_path(self, path: str) -> None:
+        self.response_context_token_path = path
 
     def to_dict(self) -> dict:
         return {

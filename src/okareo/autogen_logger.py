@@ -455,7 +455,7 @@ class OkareoLogger(BaseLogger):  # type: ignore
     def stop(self) -> None:
         """Close the file handler and remove it from the logger."""
         if self.verbose:
-            print(f"[Okareo] Evaluating logging Session ID: {self.session_id}")
+            print(f"[Okareo] Evaluating logging context token: {self.session_id}")
         self.okareo.create_trace_eval(self.group, self.session_id)
         print(
             f"[Okareo] Logged data points with:\n-> Context Token '{self.session_id}'\n-> Group Name '{self.group_name}'\n-> Group ID '{self.group['id']}'"
