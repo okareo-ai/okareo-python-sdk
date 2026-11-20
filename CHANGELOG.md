@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `response_context_token_path` on `SessionConfig`, `TurnConfig` and `EndSessionConfig`: the
+  JSONPath to the context token, your API's own id for the conversation (often called a session
+  ID or conversation ID). `response_session_id_path` still works and reads the same value; giving
+  both with different paths raises `ValueError`. What is sent to Okareo does not change. The
+  custom multiturn Target docstrings and the `start_session` errors now say context token; the
+  `invoke` and `end_session` parameter keeps its name, `session_id`.
 - Outbound simulations, for an agent that places calls instead of answering them.
   `ReceivingPhoneTarget` is a voice target with nothing to dial, and four methods on `Okareo`
   run it: `start_outbound_simulation(...)` assigns an Okareo phone number for the agent to call
