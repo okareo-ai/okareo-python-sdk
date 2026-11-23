@@ -6,7 +6,8 @@ BASE_URL = os.environ.get("OKAREO_BASE_URL") or os.environ.get(
 )
 
 DEFAULT_HTTPX_TIME_OUT = 30
-# being generous to support the longer generations
+# Kept for code that imports it. `Okareo(...)` does not read it: the client's
+# default is no timeout, so a long `run_test` is never cut off.
 HTTPX_TIME_OUT = float(os.environ.get("HTTPX_TIME_OUT", DEFAULT_HTTPX_TIME_OUT))
 
 # Client-side wall clock for `calibrate_check`, sized so the server's 504 always wins
