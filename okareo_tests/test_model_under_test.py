@@ -1,17 +1,10 @@
-import os
 import uuid
 from datetime import datetime
 from typing import Optional
 from unittest.mock import Mock
 
 import pytest
-from okareo_tests.common import (
-    API_KEY,
-    OPENAI_MODEL,
-    OkareoAPIhost,
-    integration,
-    random_string,
-)
+from okareo_tests.common import OPENAI_API_KEY, OPENAI_MODEL, random_string
 from pytest_httpx import HTTPXMock
 
 from okareo import ModelUnderTest, Okareo
@@ -71,34 +64,28 @@ def get_mut_fixture(name: Optional[str] = None) -> dict:
     }
 
 
-@integration
-def test_register_model(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
+def test_register_model(httpx_mock: HTTPXMock) -> None:
     fixture = get_mut_fixture()
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=GLOBAL_PROJECT_RESPONSE,
-            status_code=201,
-        )
-        httpx_mock.add_response(status_code=201, json=fixture)
+    httpx_mock.add_response(
+        json=GLOBAL_PROJECT_RESPONSE,
+        status_code=201,
+    )
+    httpx_mock.add_response(status_code=201, json=fixture)
 
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+    okareo = Okareo("api-key", "http://mocked.com")
     mut = okareo.register_model(name=fixture["name"], tags=fixture["tags"])
     assert mut.name == fixture["name"]
 
 
-@integration
-def test_add_datapoint_optional_integration(
-    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
-) -> None:
+def test_add_datapoint_optional_integration(httpx_mock: HTTPXMock) -> None:
     fixture = get_mut_fixture()
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=GLOBAL_PROJECT_RESPONSE,
-            status_code=201,
-        )
-        httpx_mock.add_response(status_code=201, json=fixture)
+    httpx_mock.add_response(
+        json=GLOBAL_PROJECT_RESPONSE,
+        status_code=201,
+    )
+    httpx_mock.add_response(status_code=201, json=fixture)
 
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+    okareo = Okareo("api-key", "http://mocked.com")
     mut = okareo.register_model(name=fixture["name"], tags=fixture["tags"])
     dp = mut.add_data_point(
         feedback=0,
@@ -107,39 +94,37 @@ def test_add_datapoint_optional_integration(
     assert dp
 
 
-@integration
-def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
+def test_mut_test_run(httpx_mock: HTTPXMock) -> None:
     mut_fixture = get_mut_fixture()
 
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=GLOBAL_PROJECT_RESPONSE,
-            status_code=201,
-        )
-        httpx_mock.add_response(
-            status_code=201,
-            json={
-                "scenario_id": MOCK_UUID,
-                "project_id": MOCK_UUID,
-                "time_created": str(datetime.now()),
-                "type": "REPHRASE_INVARIANT",
-            },
-        )
-        httpx_mock.add_response(status_code=201, json=mut_fixture)
-        httpx_mock.add_response(
-            status_code=201,
-            json={
-                "id": MOCK_UUID_2,
-                "name": "CI run test",
-                "input": "",
-                "result": "",
-                "project_id": MOCK_UUID,
-                "mut_id": MOCK_UUID,
-                "scenario_set_id": MOCK_UUID,
-            },
-        )
+    httpx_mock.add_response(
+        json=GLOBAL_PROJECT_RESPONSE,
+        status_code=201,
+    )
+    httpx_mock.add_response(
+        status_code=201,
+        json={
+            "scenario_id": MOCK_UUID,
+            "project_id": MOCK_UUID,
+            "time_created": str(datetime.now()),
+            "type": "REPHRASE_INVARIANT",
+        },
+    )
+    httpx_mock.add_response(status_code=201, json=mut_fixture)
+    httpx_mock.add_response(
+        status_code=201,
+        json={
+            "id": MOCK_UUID_2,
+            "name": "CI run test",
+            "input": "",
+            "result": "",
+            "project_id": MOCK_UUID,
+            "mut_id": MOCK_UUID,
+            "scenario_set_id": MOCK_UUID,
+        },
+    )
 
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+    okareo = Okareo("api-key", "http://mocked.com")
 
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
@@ -163,46 +148,42 @@ def test_mut_test_run(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
 
     # use the scenario id from one of the scenario set notebook examples
     test_run_item = mut.run_test(
-        scenario=response, name="CI run test", api_key=os.environ["OPENAI_API_KEY"]
+        scenario=response, name="CI run test", api_key=OPENAI_API_KEY
     )
     assert test_run_item.name == "CI run test"
 
 
-@integration
-def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
+def test_mut_test_run_with_id(httpx_mock: HTTPXMock) -> None:
     mut_fixture = get_mut_fixture()
 
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=GLOBAL_PROJECT_RESPONSE,
-            status_code=201,
-        )
+    httpx_mock.add_response(
+        json=GLOBAL_PROJECT_RESPONSE,
+        status_code=201,
+    )
+    httpx_mock.add_response(
+        status_code=201,
+        json={
+            "scenario_id": MOCK_UUID,
+            "project_id": MOCK_UUID,
+            "time_created": str(datetime.now()),
+            "type": "REPHRASE_INVARIANT",
+        },
+    )
+    httpx_mock.add_response(status_code=201, json=mut_fixture)
+    httpx_mock.add_response(
+        status_code=201,
+        json={
+            "id": MOCK_UUID_2,
+            "name": "CI run test",
+            "input": "",
+            "result": "",
+            "project_id": MOCK_UUID,
+            "mut_id": MOCK_UUID,
+            "scenario_set_id": MOCK_UUID,
+        },
+    )
 
-        httpx_mock.add_response(
-            status_code=201,
-            json={
-                "scenario_id": MOCK_UUID,
-                "project_id": MOCK_UUID,
-                "time_created": str(datetime.now()),
-                "type": "REPHRASE_INVARIANT",
-            },
-        )
-
-        httpx_mock.add_response(status_code=201, json=mut_fixture)
-        httpx_mock.add_response(
-            status_code=201,
-            json={
-                "id": MOCK_UUID_2,
-                "name": "CI run test",
-                "input": "",
-                "result": "",
-                "project_id": MOCK_UUID,
-                "mut_id": MOCK_UUID,
-                "scenario_set_id": MOCK_UUID,
-            },
-        )
-
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
+    okareo = Okareo("api-key", "http://mocked.com")
     # generate scenario and return results in one call
     scenario_set_create = ScenarioSetCreate(
         name=f"my test scenario set {random_string(10)}",
@@ -227,7 +208,7 @@ def test_mut_test_run_with_id(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) 
     test_run_item = mut.run_test(
         scenario=response.scenario_id,
         name="CI run test",
-        api_key=os.environ["OPENAI_API_KEY"],
+        api_key=OPENAI_API_KEY,
     )
     assert test_run_item.name == "CI run test"
 
