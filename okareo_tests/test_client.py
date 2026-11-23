@@ -4,20 +4,14 @@ from datetime import datetime
 from uuid import UUID
 
 import pytest
-from okareo_tests.common import API_KEY, OkareoAPIhost, integration
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
 from okareo_api_client.models.scenario_set_create import ScenarioSetCreate
 from okareo_api_client.models.scenario_set_generate import ScenarioSetGenerate
 from okareo_api_client.models.seed_data import SeedData
-from okareo_api_client.types import UNSET
 
 MOCK_UUID = str(uuid.uuid4())
-
-
-def test_can_instantiate() -> None:
-    Okareo(API_KEY)
 
 
 @pytest.fixture
@@ -37,50 +31,24 @@ def okareo_client(httpx_mock: HTTPXMock) -> Okareo:
     return Okareo("foo", "http://mocked.com")
 
 
-@integration
-def test_create_scenario_set(httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost) -> None:
-    # Mocking a successful response
+def test_create_scenario_set(okareo_client: Okareo, httpx_mock: HTTPXMock) -> None:
     mock_response = {
         "scenario_id": MOCK_UUID,
         "name": "test_scenario",
         "project_id": MOCK_UUID,
         "type": "test_type",
         "time_created": "2023-10-20T13:51:57.334956",
-        # ... any other fields ...
     }
+    httpx_mock.add_response(json=mock_response, status_code=201)
 
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=[
-                {
-                    "id": "0156f5d7-4ac4-4568-9d44-24750aa08d1a",
-                    "name": "Global",
-                    "onboarding_status": "onboarding_status",
-                    "tags": [],
-                    "additional_properties": {},
-                }
-            ],
-            status_code=201,
-        )
-        httpx_mock.add_response(json=mock_response, status_code=201)
-
-    okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
     scenario_request = ScenarioSetCreate(
         name="test_scenario",
         seed_data=[SeedData(input_="foo", result="bar")],
-        project_id=(
-            UUID("00000000-0000-0000-0000-000000000000")
-            if okareo_api.is_mock
-            else UNSET
-        ),
+        project_id=UUID("00000000-0000-0000-0000-000000000000"),
     )
-    scenario_response = okareo.create_scenario_set(scenario_request)
+    scenario_response = okareo_client.create_scenario_set(scenario_request)
 
-    if okareo_api.is_mock:
-        assert str(scenario_response.scenario_id) == MOCK_UUID
-    else:
-        assert scenario_response.scenario_id
-        assert isinstance(scenario_response.scenario_id, uuid.UUID)
+    assert str(scenario_response.scenario_id) == MOCK_UUID
     assert scenario_response.name == "test_scenario"
 
 

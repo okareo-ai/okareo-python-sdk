@@ -3,9 +3,8 @@ import shutil
 from datetime import datetime
 
 import pytest
-from okareo_tests.common import API_KEY, random_string
+from okareo_tests.common import random_string
 
-from okareo import Okareo
 from okareo.reporter import JSONReporter
 from okareo_api_client.models.test_run_item import TestRunItem
 
@@ -15,12 +14,7 @@ def rnd() -> str:
     return f'{random_string(5)} {datetime.now().strftime("%Y%m%d%H%M%S")}'
 
 
-@pytest.fixture(scope="module")
-def okareo_client() -> Okareo:
-    return Okareo(api_key=API_KEY)
-
-
-def test_new_jsonreporter(okareo_client: Okareo) -> None:
+def test_new_jsonreporter() -> None:
     json_data = {
         "id": "af197dd9-8d93-4ae3-9407-d0e19050bd44",
         "project_id": "5ff115a2-f4b0-4100-bbde-87a54428add4",

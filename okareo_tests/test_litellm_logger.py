@@ -1,6 +1,7 @@
 import time
 import uuid
 from datetime import datetime
+from unittest import mock
 
 import litellm  # type: ignore
 from litellm import completion
@@ -8,9 +9,15 @@ from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_stri
 from pytest_httpx import HTTPXMock
 
 from okareo import Okareo
-from okareo.litellm_logger import LiteLLMLogger, LiteLLMProxyLogger
 from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
+
+# Importing okareo.litellm_logger builds a module-level LiteLLMProxyLogger, which constructs an Okareo client
+# and registers a Target. Stub those two calls during the import so collecting this file sends no request.
+with mock.patch.object(Okareo, "__init__", return_value=None), mock.patch.object(
+    Okareo, "register_model"
+):
+    from okareo.litellm_logger import LiteLLMLogger, LiteLLMProxyLogger
 
 MOCK_UUID = str(uuid.uuid4())
 

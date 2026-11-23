@@ -6,12 +6,10 @@ from datetime import datetime
 from langchain.chains import LLMChain
 from langchain.llms.fake import FakeListLLM
 from langchain.prompts import PromptTemplate
-from okareo_tests.common import API_KEY, OkareoAPIhost, integration, random_string
+from okareo_tests.common import random_string
 from pytest_httpx import HTTPXMock
 
-from okareo import Okareo
 from okareo.callbacks import CallbackHandler
-from okareo_api_client.models.datapoint_search import DatapointSearch
 from okareo_api_client.models.model_under_test_response import ModelUnderTestResponse
 
 MOCK_GLOBAL_RESPONSE = [
@@ -26,6 +24,8 @@ MOCK_GLOBAL_RESPONSE = [
 
 
 MOCK_UUID = str(uuid.uuid4())
+MOCK_HOST = "http://mocked.com"
+MOCK_API_KEY = "api-key"
 
 
 def get_mut_response() -> dict:
@@ -38,100 +38,72 @@ def get_mut_response() -> dict:
     ).to_dict()
 
 
-@integration
-def test_llm_generates_datapoints(
-    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
-) -> None:
+def test_llm_generates_datapoints(httpx_mock: HTTPXMock) -> None:
     context_token = random_string(10)
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=MOCK_GLOBAL_RESPONSE,
-            status_code=201,
-        )
-        httpx_mock.add_response(json=get_mut_response(), status_code=201)
+    httpx_mock.add_response(
+        json=MOCK_GLOBAL_RESPONSE,
+        status_code=201,
+    )
+    httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
     handler = CallbackHandler(
+        api_key=MOCK_API_KEY,
         mut_name="langchain_test",
         context_token=context_token,
-        base_path=okareo_api.path,
+        base_path=MOCK_HOST,
     )
 
     llm = FakeListLLM(responses=["4"])
     llm.predict("what is 2+2?", callbacks=[handler])
 
-    if okareo_api.is_mock:
-        requests = httpx_mock.get_requests()
-        print("requests", requests)
-        assert requests[1].method == "POST"
-        assert "/v0/register_model" in requests[1].url.path
-        assert requests[2].method == "POST"
-        assert "/v0/datapoints" in requests[2].url.path
-    else:
-        okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
-        if isinstance(dp, list):
-            assert len(dp) == 1
+    requests = httpx_mock.get_requests()
+    assert requests[1].method == "POST"
+    assert "/v0/register_model" in requests[1].url.path
+    assert requests[2].method == "POST"
+    assert "/v0/datapoints" in requests[2].url.path
 
 
-@integration
-def test_llm_auto_generate_model(
-    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
-) -> None:
+def test_llm_auto_generate_model(httpx_mock: HTTPXMock) -> None:
     context_token = "".join(random.choices(string.ascii_letters, k=10))
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=MOCK_GLOBAL_RESPONSE,
-            status_code=201,
-        )
-        httpx_mock.add_response(json=get_mut_response(), status_code=201)
+    httpx_mock.add_response(
+        json=MOCK_GLOBAL_RESPONSE,
+        status_code=201,
+    )
+    httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
-    handler = CallbackHandler(context_token=context_token, base_path=okareo_api.path)
+    handler = CallbackHandler(
+        api_key=MOCK_API_KEY, context_token=context_token, base_path=MOCK_HOST
+    )
 
     llm = FakeListLLM(responses=["4"])
     llm.predict("what is 2+2?", callbacks=[handler])
 
-    if okareo_api.is_mock:
-        requests = httpx_mock.get_requests()
-        print("requests", requests)
-        assert requests[1].method == "POST"
-        assert "/v0/register_model" in requests[1].url.path
-        assert requests[2].method == "POST"
-        assert "/v0/datapoints" in requests[2].url.path
-    else:
-        okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
-        if isinstance(dp, list):
-            assert len(dp) == 1
+    requests = httpx_mock.get_requests()
+    assert requests[1].method == "POST"
+    assert "/v0/register_model" in requests[1].url.path
+    assert requests[2].method == "POST"
+    assert "/v0/datapoints" in requests[2].url.path
 
 
-@integration
-def test_chain_generates_datapoints(
-    httpx_mock: HTTPXMock, okareo_api: OkareoAPIhost
-) -> None:
+def test_chain_generates_datapoints(httpx_mock: HTTPXMock) -> None:
     context_token = random_string(10)
-    if okareo_api.is_mock:
-        httpx_mock.add_response(
-            json=MOCK_GLOBAL_RESPONSE,
-            status_code=201,
-        )
-        httpx_mock.add_response(json=get_mut_response(), status_code=201)
+    httpx_mock.add_response(
+        json=MOCK_GLOBAL_RESPONSE,
+        status_code=201,
+    )
+    httpx_mock.add_response(json=get_mut_response(), status_code=201)
 
-    handler = CallbackHandler(context_token=context_token, base_path=okareo_api.path)
+    handler = CallbackHandler(
+        api_key=MOCK_API_KEY, context_token=context_token, base_path=MOCK_HOST
+    )
 
     llm = FakeListLLM(responses=["4"])
     prompt = PromptTemplate.from_template("what is 2+{number}?")
     chain = LLMChain(llm=llm, prompt=prompt, callbacks=[handler])
     chain.run(number=2)
 
-    if okareo_api.is_mock:
-        requests = httpx_mock.get_requests()
-        print("requests", requests)
-        assert requests[1].method == "POST"
-        assert "/v0/register_model" in requests[1].url.path
-        assert requests[2].method == "POST"
-        assert "/v0/datapoints" in requests[2].url.path
-    else:
-        okareo = Okareo(api_key=API_KEY, base_path=okareo_api.path)
-        dp = okareo.find_datapoints(DatapointSearch(context_token=context_token))
-        if isinstance(dp, list):
-            assert len(dp) == 1
+    requests = httpx_mock.get_requests()
+    assert requests[1].method == "POST"
+    assert "/v0/register_model" in requests[1].url.path
+    assert requests[2].method == "POST"
+    assert "/v0/datapoints" in requests[2].url.path
