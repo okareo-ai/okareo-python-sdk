@@ -3055,10 +3055,13 @@ class Driver:
     voice_volume: Optional[float] = None
     # Alias of voice_tone, accepted for older code.
     voice_profile: Optional[str] = None
-    # Scripted Driver: an ordered list of steps ({"message": ...}, {"dtmf": ...}, {"silence": true},
-    # {"end_conversation": ...}; end_conversation last) or one "{scenario_input.<column>}" reference
-    # resolved per scenario row. When set, prompt_template is not used and no Driver
-    # LLM runs.
+    # Driver steps: an ordered list of steps ({"message": ...}, {"dtmf": ...}, {"silence": true},
+    # {"end_conversation": ...}, {"prompt": true}) or one "{scenario_input.<column>}" reference
+    # resolved per scenario row. The list ends with end_conversation or with a Prompt step
+    # ({"prompt": true}), once and last, after at least one other step. Ending in
+    # end_conversation, prompt_template is not used and no Driver LLM runs. Ending in a Prompt
+    # step, the steps before it play word for word, then prompt_template runs the rest of the
+    # conversation; a list from a scenario row may not carry a Prompt step.
     steps: Optional[Union[List[dict], str]] = None
 
     def to_dict(self) -> dict:
