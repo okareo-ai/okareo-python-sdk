@@ -12,8 +12,9 @@ T = TypeVar("T", bound="DriverStepSchema")
 
 @_attrs_define
 class DriverStepSchema:
-    """One scripted step: exactly one of message / dtmf / end_conversation (checked by the
-    steps validator), with an optional reason on end_conversation. Unknown keys are a 422.
+    """One Driver step: exactly one of message / dtmf / silence / end_conversation /
+    prompt (checked by the steps validator), with an optional reason on end_conversation.
+    Unknown keys are a 422.
 
         Attributes:
             message (None | str | Unset): Words the Driver says, verbatim.
@@ -21,6 +22,8 @@ class DriverStepSchema:
             silence (bool | None | Unset): true: the Driver says nothing this turn and listens for the Target's next
                 segment; voice only.
             end_conversation (None | str | Unset): Closing words; the Driver says them and ends the call.
+            prompt (bool | None | Unset): true: the last step, in place of end_conversation. After the steps before it, the
+                Driver's prompt_template runs the rest of the conversation. Not allowed in a list supplied by a scenario row.
             reason (None | str | Unset): Why the script ended the call (with end_conversation only).
             turn (int | None | Unset): Reserved; rejected today.
     """
@@ -29,6 +32,7 @@ class DriverStepSchema:
     dtmf: None | str | Unset = UNSET
     silence: bool | None | Unset = UNSET
     end_conversation: None | str | Unset = UNSET
+    prompt: bool | None | Unset = UNSET
     reason: None | str | Unset = UNSET
     turn: int | None | Unset = UNSET
 
@@ -57,6 +61,12 @@ class DriverStepSchema:
         else:
             end_conversation = self.end_conversation
 
+        prompt: bool | None | Unset
+        if isinstance(self.prompt, Unset):
+            prompt = UNSET
+        else:
+            prompt = self.prompt
+
         reason: None | str | Unset
         if isinstance(self.reason, Unset):
             reason = UNSET
@@ -80,6 +90,8 @@ class DriverStepSchema:
             field_dict["silence"] = silence
         if end_conversation is not UNSET:
             field_dict["end_conversation"] = end_conversation
+        if prompt is not UNSET:
+            field_dict["prompt"] = prompt
         if reason is not UNSET:
             field_dict["reason"] = reason
         if turn is not UNSET:
@@ -127,6 +139,15 @@ class DriverStepSchema:
 
         end_conversation = _parse_end_conversation(d.pop("end_conversation", UNSET))
 
+        def _parse_prompt(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        prompt = _parse_prompt(d.pop("prompt", UNSET))
+
         def _parse_reason(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -150,6 +171,7 @@ class DriverStepSchema:
             dtmf=dtmf,
             silence=silence,
             end_conversation=end_conversation,
+            prompt=prompt,
             reason=reason,
             turn=turn,
         )

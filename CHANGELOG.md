@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- A Driver's `steps` can end with a Prompt step, `{"prompt": True}`, in place of `end_conversation`:
+  the steps before it play word for word, then the Driver's `prompt_template` runs the rest of the
+  conversation. Needs a server that accepts the Prompt step; older servers answer 422.
 - `response_context_token_path` on `SessionConfig`, `TurnConfig` and `EndSessionConfig`: the
   JSONPath to the context token, your API's own id for the conversation (often called a session
   ID or conversation ID). `response_session_id_path` still works and reads the same value; giving

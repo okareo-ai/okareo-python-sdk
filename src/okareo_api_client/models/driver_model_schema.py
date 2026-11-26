@@ -32,9 +32,12 @@ class DriverModelSchema:
             targets, improves STT accuracy by constraining language model. If not specified, defaults to 'multi' for
             automatic language detection.
         project_id (None | Unset | UUID): ID for project
-        steps (list[DriverStepSchema] | None | str | Unset): Scripted Driver: an ordered list of steps ({message},
-            {dtmf}, {end_conversation}), or one {scenario_input.<column>} reference that resolves to that list per scenario
-            row. end_conversation must be last. When set, prompt_template is not used and no Driver LLM runs.
+        steps (list[DriverStepSchema] | None | str | Unset): Driver steps: an ordered list of steps ({message}, {dtmf},
+            {silence}, {end_conversation}, {prompt}), or one {scenario_input.<column>} reference that resolves to that list
+            per scenario row. The list ends with end_conversation or with a prompt step, once and last. A list ending in
+            end_conversation runs no Driver LLM and prompt_template is not used. A list ending in a prompt step plays the
+            steps before it word for word, then hands every later turn to prompt_template; a list from a scenario row may
+            not carry one.
         voice_tone (None | str | Unset): The emotion the driver's voice performs: a supported tone token such as 'angry'
             or 'calm' (GET /v0/driver_profiles lists the presets), or a template such as {scenario_input.voice_tone}.
         voice_speed (float | None | Unset): Speech rate for the driver's voice, 0.6 to 1.5 times the voice's own pace.
